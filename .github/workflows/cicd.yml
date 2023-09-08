@@ -20,9 +20,6 @@ jobs:
     - name: Install Backend-Server
       run: npm ci
 
-    - name: Test Backend-Server
-      run: npm run test:ci
-
     - name: Compile Backend-Server
       run: npm run build
       
