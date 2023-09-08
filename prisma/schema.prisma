@@ -100,7 +100,7 @@ model Lecture {
   //강의 시간
   duration            Int             @db.Integer
   //난이도
-  difficultLevel      String          @db.VarChar(5)
+  difficultyLevel     String          @db.VarChar(5)
   //최소 정원
   minCapacity         Int             @db.Integer
   //최대 정원
