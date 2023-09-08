@@ -93,6 +93,8 @@ model Lecture {
   lectureTypeId       Int
   //춤 장르 id
   danceCategoryId     Int
+  //강의 형식 id
+  lectureMethodId     Int
   //강의명
   title               String          @unique @db.VarChar(30)
   //상세 주소
@@ -129,6 +131,7 @@ model Lecture {
   region              Region          @relation(fields: [regionId], references: [id])
   lectureType         LectureType     @relation(fields: [lectureTypeId], references: [id])
   danceCategory       DanceCategory   @relation(fields: [danceCategoryId], references: [id])
+  lectureMethod       LectureMethod   @relation(fields: [lectureMethodId], references: [id])
   lectureGroup        LectureGroup[]
   lectureReview       LectureReview[]
 }
@@ -189,4 +192,11 @@ model LecturerReview {
   description String?  @db.VarChar(255)
   lecturer    Lecturer @relation(fields: [lecturerId], references: [id])
   users       Users    @relation(fields: [userId], references: [id])
+}
+
+model LectureMethod {
+  //고유 id
+  id      Int       @id @default(autoincrement())
+  name    String    @db.VarChar(255)
+  lecture Lecture[]
 }
