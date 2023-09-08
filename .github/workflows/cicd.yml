@@ -1,0 +1,28 @@
+name: Connection-CICD
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16.x
+        cache: 'npm'
+        
+    - name: Install Backend-Server
+      run: npm ci
+
+    - name: Test Backend-Server
+      run: npm run test:ci
+
+    - name: Compile Backend-Server
+      run: npm run build
+      
