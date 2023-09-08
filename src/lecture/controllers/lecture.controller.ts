@@ -13,7 +13,7 @@ export class LectureController {
   })
   @Post()
   async createLecture(@Body() lecture: CreateLectureDto) {
-    const userId = 1;
-    return await this.lectureService.createLecture(lecture, userId);
+    const danceLecturerId = 1;
+    return await this.lectureService.createLecture(lecture, danceLecturerId);
   }
 }
