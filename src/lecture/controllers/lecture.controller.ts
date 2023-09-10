@@ -1,7 +1,8 @@
 import { LectureService } from './../services/lecture.service';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateLectureDto } from '../dtos/create-lecture.dto';
+import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -15,5 +16,13 @@ export class LectureController {
   async createLecture(@Body() lecture: CreateLectureDto) {
     const danceLecturerId = 1;
     return await this.lectureService.createLecture(lecture, danceLecturerId);
+  }
+
+  @ApiOperation({
+    summary: '강의 전부 조회',
+  })
+  @Get()
+  readManyLecture(@Query() query: ReadManyLectureQueryDto) {
+    return this.lectureService.readManyLecture(query);
   }
 }
