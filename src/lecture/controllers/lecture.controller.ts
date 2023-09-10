@@ -1,5 +1,13 @@
 import { LectureService } from './../services/lecture.service';
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateLectureDto } from '../dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
@@ -24,5 +32,13 @@ export class LectureController {
   @Get()
   readManyLecture(@Query() query: ReadManyLectureQueryDto) {
     return this.lectureService.readManyLecture(query);
+  }
+
+  @ApiOperation({
+    summary: '강의 단일 조회',
+  })
+  @Get('/:id')
+  readOneLecture(@Param('id', ParseIntPipe) lectureId: number) {
+    return this.lectureService.readOneLecture(lectureId);
   }
 }

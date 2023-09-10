@@ -56,4 +56,24 @@ export class LectureService {
       });
     return readManyLectureQuery;
   }
+
+  async readOneLecture(lectureId: number): Promise<any> {
+    return await this.prismaService.lecture.findFirst({
+      where: { id: lectureId },
+      include: {
+        region: true,
+        lectureMethod: true,
+        lecturer: {
+          select: { id: true, users: { select: { nickname: true } } },
+        },
+        lectureReview: {
+          select: {
+            users: { select: { id: true, nickname: true } },
+            stars: true,
+            description: true,
+          },
+        },
+      },
+    });
+  }
 }
