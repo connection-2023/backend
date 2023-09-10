@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { LecturerModule } from './lecturer/lecturer.module';
 import { AuthModule } from './auth/auth.module';
 import { CustomConfigModule } from './common/config/config-module.config';
+import { CustomCacheModule } from './common/config/cache-module.config';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CustomConfigModule } from './common/config/config-module.config';
     LecturerModule,
     AuthModule,
     CustomConfigModule,
+    CustomCacheModule,
   ],
   controllers: [AppController],
   providers: [AppService],

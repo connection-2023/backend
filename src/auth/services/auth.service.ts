@@ -1,9 +1,15 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as CryptoJS from 'crypto-js';
 import { SMSData } from '../interface/interface';
 import { PhoneNumberDto } from '../dtos/phone-number.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +19,10 @@ export class AuthService {
   private readonly naverSecretKey: string;
   private readonly phoneNumber: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly configService: ConfigService,
+  ) {
     this.sensUrl = configService.get<string>('SENS_URL');
     this.sensApiKey = configService.get<string>('SENS_API_KEY');
     this.naverAccessKey = configService.get<string>('NAVER_ACCESS_KEY');
@@ -21,6 +30,8 @@ export class AuthService {
     this.phoneNumber = configService.get<string>('PHONE_NUMBER');
   }
   async sendSMS({ userPhoneNumber }: PhoneNumberDto): Promise<void> {
+    await this.cacheManager.del(`${this.phoneNumber}`);
+
     const signature: string = this.createSensSignature();
     const randomNumber: string = this.createRandomNumber();
 
@@ -48,6 +59,11 @@ export class AuthService {
       await axios.post(`${this.sensUrl}`, data, {
         headers,
       });
+      await this.cacheManager.set(
+        `${userPhoneNumber}`,
+        randomNumber,
+        this.configService.get<number>('REDIS_SMS_TTL'),
+      );
     } catch (error) {
       console.error(error.response.data);
       throw new InternalServerErrorException(error.response.data);
