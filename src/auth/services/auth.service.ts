@@ -2,6 +2,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
@@ -10,6 +11,7 @@ import { SMSData } from '../interface/interface';
 import { PhoneNumberDto } from '../dtos/phone-number.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -101,5 +103,21 @@ export class AuthService {
       .padStart(6, '0');
 
     return randomNumber;
+  }
+
+  async checkVerificationCode({
+    verificationCode,
+    userPhoneNumber,
+  }: CheckVerificationCodeDto): Promise<Boolean> {
+    const cachedVerificationCode = await this.cacheManager.get(
+      `${userPhoneNumber}`,
+    );
+    if (!cachedVerificationCode) {
+      throw new UnauthorizedException('유효시간이 만료되었습니다.');
+    } else if (cachedVerificationCode === verificationCode) {
+      return true;
+    } else {
+      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+    }
   }
 }
