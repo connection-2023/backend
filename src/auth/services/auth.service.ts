@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as CryptoJS from 'crypto-js';
 import { SMSData } from '../interface/interface';
+import { PhoneNumberDto } from '../dtos/phone-number.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,16 +11,16 @@ export class AuthService {
   private readonly sensApiKey: string;
   private readonly naverAccessKey: string;
   private readonly naverSecretKey: string;
-  private readonly phoneNum: string;
+  private readonly phoneNumber: string;
 
   constructor(private readonly configService: ConfigService) {
     this.sensUrl = configService.get<string>('SENS_URL');
     this.sensApiKey = configService.get<string>('SENS_API_KEY');
     this.naverAccessKey = configService.get<string>('NAVER_ACCESS_KEY');
     this.naverSecretKey = configService.get<string>('NAVER_Secret_KEY');
-    this.phoneNum = configService.get<string>('PHONE_NUMBER');
+    this.phoneNumber = configService.get<string>('PHONE_NUMBER');
   }
-  async sendSMS(phoneNumber): Promise<void> {
+  async sendSMS({ userPhoneNumber }: PhoneNumberDto): Promise<void> {
     const signature: string = this.createSensSignature();
     const randomNumber: string = this.createRandomNumber();
 
@@ -27,11 +28,11 @@ export class AuthService {
       type: 'SMS',
       contentType: 'COMM',
       countryCode: '82',
-      from: this.phoneNum,
+      from: this.phoneNumber,
       content: `강사 등록을 위한 인증번호는 [${randomNumber}] 입니다.`,
       messages: [
         {
-          to: phoneNumber,
+          to: userPhoneNumber,
         },
       ],
     };
