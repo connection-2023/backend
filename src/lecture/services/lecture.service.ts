@@ -88,4 +88,8 @@ export class LectureService {
       data: { ...lecture },
     });
   }
+
+  async deleteLecture(lectureId: number): Promise<any> {
+    return this.prismaService.lecture.delete({ where: { id: lectureId } });
+  }
 }

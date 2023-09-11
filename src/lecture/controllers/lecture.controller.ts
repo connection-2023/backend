@@ -2,6 +2,7 @@ import { LectureService } from './../services/lecture.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -51,5 +52,11 @@ export class LectureController {
     @Body() lecture: UpdateLectureDto,
   ) {
     return this.lectureService.updateLecture(lecture, lectureId);
+  }
+
+  @ApiOperation({ summary: '강의 삭제' })
+  @Delete('/:id')
+  deleteLecture(@Param('id', ParseIntPipe) lectureId: number) {
+    return this.lectureService.deleteLecture(lectureId);
   }
 }
