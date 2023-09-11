@@ -5,12 +5,14 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateLectureDto } from '../dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
+import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -40,5 +42,14 @@ export class LectureController {
   @Get('/:id')
   readOneLecture(@Param('id', ParseIntPipe) lectureId: number) {
     return this.lectureService.readOneLecture(lectureId);
+  }
+
+  @ApiOperation({ summary: '강의 수정' })
+  @Patch('/:id')
+  updateLecture(
+    @Param('id', ParseIntPipe) lectureId: number,
+    @Body() lecture: UpdateLectureDto,
+  ) {
+    return this.lectureService.updateLecture(lecture, lectureId);
   }
 }

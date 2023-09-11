@@ -4,6 +4,7 @@ import { CreateLectureDto } from '../dtos/create-lecture.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Lecture, PrismaPromise } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
+import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 
 @Injectable()
 export class LectureService {
@@ -36,6 +37,7 @@ export class LectureService {
           ...where,
         },
         select: {
+          id: true,
           title: true,
           price: true,
           stars: true,
@@ -74,6 +76,16 @@ export class LectureService {
           },
         },
       },
+    });
+  }
+
+  async updateLecture(
+    lecture: UpdateLectureDto,
+    lectureId: number,
+  ): Promise<any> {
+    return await this.prismaService.lecture.update({
+      where: { id: lectureId },
+      data: { ...lecture },
     });
   }
 }
