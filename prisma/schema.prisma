@@ -34,6 +34,7 @@ model Users {
   lectureReview    LectureReview[]
   lecturerReview   LecturerReview[]
   likedLecture     LikedLecture[]
+  dailySmsUsage    DailySmsUsage?
 }
 
 model UserProfileImage {
@@ -216,4 +217,13 @@ model LikedLecture {
   user      Users   @relation(fields: [userId], references: [id])
 
   @@unique([lectureId, userId])
+}
+
+model DailySmsUsage {
+  //고유 id
+  id             Int @id @default(autoincrement())
+  userId         Int @unique
+  dailySentCount Int @default(1) @db.Integer
+
+  users Users @relation(fields: [userId], references: [id])
 }
