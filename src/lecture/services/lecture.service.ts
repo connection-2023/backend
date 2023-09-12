@@ -35,6 +35,7 @@ export class LectureService {
       this.prismaService.lecture.findMany({
         where: {
           ...where,
+          deletedAt: null,
         },
         select: {
           id: true,

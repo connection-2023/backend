@@ -61,6 +61,8 @@ model Lecturer {
   id             Int              @id @default(autoincrement())
   //user id
   userId         Int              @unique
+  //강사nickname
+  nickname       String           @db.VarChar(11)
   //개인 사이트 주소
   siteUrl        String           @db.VarChar(255)
   //연락 가능 시간
