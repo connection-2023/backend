@@ -214,4 +214,6 @@ model LikedLecture {
   userId    Int
   lecture   Lecture @relation(fields: [lectureId], references: [id])
   user      Users   @relation(fields: [userId], references: [id])
+
+  @@unique([lectureId, userId])
 }

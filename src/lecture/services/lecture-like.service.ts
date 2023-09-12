@@ -10,4 +10,10 @@ export class LectureLikeService {
       data: { lectureId, userId },
     });
   }
+
+  async deleteLikeLecture(lectureId: number, userId: number): Promise<any> {
+    return await this.prismaService.likedLecture.delete({
+      where: { lectureId_userId: { lectureId, userId } },
+    });
+  }
 }
