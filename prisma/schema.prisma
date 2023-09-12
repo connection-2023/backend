@@ -33,6 +33,7 @@ model Users {
   lecturer         Lecturer?
   lectureReview    LectureReview[]
   lecturerReview   LecturerReview[]
+  likedLecture     LikedLecture[]
 }
 
 model UserProfileImage {
@@ -136,6 +137,7 @@ model Lecture {
   lectureMethod       LectureMethod   @relation(fields: [lectureMethodId], references: [id])
   lectureGroup        LectureGroup[]
   lectureReview       LectureReview[]
+  likedLecture        LikedLecture[]
 }
 
 model LectureGroup {
@@ -201,4 +203,15 @@ model LectureMethod {
   id      Int       @id @default(autoincrement())
   name    String    @db.VarChar(255)
   lecture Lecture[]
+}
+
+model LikedLecture {
+  //고유 id
+  id        Int     @id @default(autoincrement())
+  //강의 id
+  lectureId Int
+  //유저 id
+  userId    Int
+  lecture   Lecture @relation(fields: [lectureId], references: [id])
+  user      Users   @relation(fields: [userId], references: [id])
 }
