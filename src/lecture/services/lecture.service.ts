@@ -47,9 +47,7 @@ export class LectureService {
           lecturer: {
             select: {
               id: true,
-              users: {
-                select: { nickname: true },
-              },
+              nickname: true,
             },
           },
           region: true,
@@ -67,7 +65,7 @@ export class LectureService {
         region: true,
         lectureMethod: true,
         lecturer: {
-          select: { id: true, users: { select: { nickname: true } } },
+          select: { id: true, nickname: true },
         },
         lectureReview: {
           select: {
