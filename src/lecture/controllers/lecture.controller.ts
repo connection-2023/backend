@@ -1,4 +1,3 @@
-import { LectureService } from './../services/lecture.service';
 import {
   Body,
   Controller,
@@ -11,9 +10,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreateLectureDto } from '../dtos/create-lecture.dto';
-import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
-import { UpdateLectureDto } from '../dtos/update-lecture.dto';
+import { LectureService } from '@src/lecture/services/lecture.service';
+import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
+import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
+import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
