@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { LectureModule } from './lecture/lecture.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { LecturerModule } from './lecturer/lecturer.module';
 import { AuthModule } from './auth/auth.module';
 import { CustomConfigModule } from './common/config/config-module.config';
 import { CustomCacheModule } from './common/config/cache-module.config';
+import { AppController } from '@src/app.controller';
+import { AppService } from '@src/app.service';
+import { UserModule } from '@src/user/user.module';
+import { LectureModule } from '@src/lecture/lecture.module';
+import { PrismaModule } from '@src/prisma/prisma.module';
 
 @Module({
   imports: [

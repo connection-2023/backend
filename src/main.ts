@@ -19,6 +19,12 @@ async function bootstrap() {
   const prisma: PrismaService = app.get(PrismaService);
   prisma.enableShutdownHook(app);
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
+
   await app.listen(3000);
 }
 bootstrap();
