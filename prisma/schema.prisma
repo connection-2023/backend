@@ -33,8 +33,8 @@ model Users {
   lecturer         Lecturer?
   lectureReview    LectureReview[]
   lecturerReview   LecturerReview[]
-  dailySmsUsage    DailySmsUsage?
   likedLecture     LikedLecture[]
+  dailySmsUsage    DailySmsUsage?
 }
 
 model UserProfileImage {
