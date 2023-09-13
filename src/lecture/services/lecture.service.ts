@@ -1,10 +1,10 @@
-import { QueryFilter } from './../../common/query.filter';
+import { QueryFilter } from '@src/common/filters/query.filter';
 import { Injectable } from '@nestjs/common';
-import { CreateLectureDto } from '../dtos/create-lecture.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
+import { PrismaService } from '@src/prisma/prisma.service';
 import { Lecture, PrismaPromise } from '@prisma/client';
-import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
-import { UpdateLectureDto } from '../dtos/update-lecture.dto';
+import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
+import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 
 @Injectable()
 export class LectureService {
