@@ -33,6 +33,7 @@ model Users {
   lecturer         Lecturer?
   lectureReview    LectureReview[]
   lecturerReview   LecturerReview[]
+  dailySmsUsage    DailySmsUsage?
   likedLecture     LikedLecture[]
 }
 
@@ -196,6 +197,15 @@ model LecturerReview {
   description String?  @db.VarChar(255)
   lecturer    Lecturer @relation(fields: [lecturerId], references: [id])
   users       Users    @relation(fields: [userId], references: [id])
+}
+
+model DailySmsUsage {
+  //고유 id
+  id             Int @id @default(autoincrement())
+  userId         Int @unique
+  dailySentCount Int @default(1) @db.Integer
+
+  users Users @relation(fields: [userId], references: [id])
 }
 
 model LectureMethod {
