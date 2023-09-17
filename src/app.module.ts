@@ -8,9 +8,11 @@ import { AppService } from '@src/app.service';
 import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     UserModule,
     LectureModule,
     PrismaModule,
@@ -20,6 +22,6 @@ import { PrismaModule } from '@src/prisma/prisma.module';
     CustomCacheModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ConfigService],
 })
 export class AppModule {}
