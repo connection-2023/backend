@@ -29,7 +29,7 @@ jobs:
         
     #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축
     - name: Make a zip file
-      run: zip -r ./$GITHUB_SHA.zip . -x "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json"  
+      run: zip -r ./$GITHUB_SHA.zip . -x "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "common/*" "tsconfig.json" "tsconfig.build.json" "nest-cli.json"  
       shell: bash
 
     # AWS 자격 증명 수행
