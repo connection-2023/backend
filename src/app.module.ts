@@ -10,6 +10,7 @@ import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PaymentsModule } from './payments/payments.module';
+import { CouponModule } from './coupon/coupon.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PaymentsModule } from './payments/payments.module';
     CustomConfigModule,
     CustomCacheModule,
     PaymentsModule,
+    CouponModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
