@@ -9,7 +9,8 @@ import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UploadsModule } from './uploads/uploads.module';
+import { UploadsModule } from '@src/uploads/uploads.module';
+import { UploadsService } from './uploads/uploads.service';
 
 @Module({
   imports: [
@@ -24,6 +25,6 @@ import { UploadsModule } from './uploads/uploads.module';
     UploadsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService],
+  providers: [AppService, ConfigService, UploadsService],
 })
 export class AppModule {}

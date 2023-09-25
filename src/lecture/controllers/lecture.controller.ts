@@ -8,25 +8,49 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
+import { UploadsService } from '@src/uploads/uploads.service';
 
 @ApiTags('강의')
 @Controller('lectures')
 export class LectureController {
-  constructor(private readonly lectureService: LectureService) {}
+  constructor(
+    private readonly lectureService: LectureService,
+    private readonly uploadsService: UploadsService,
+  ) {}
 
   @ApiOperation({
     summary: '강의 생성',
   })
   @Post()
-  async createLecture(@Body() lecture: CreateLectureDto) {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'thumbnail', maxCount: 1 },
+      { name: 'images', maxCount: 4 },
+    ]),
+  )
+  async createLecture(
+    @UploadedFiles() files: Express.Multer.File,
+    @Body() lecture: CreateLectureDto,
+  ) {
     const danceLecturerId = 1;
-    return await this.lectureService.createLecture(lecture, danceLecturerId);
+    const { thumbnail, images } = JSON.parse(JSON.stringify(files));
+
+    const lectureResponse = await this.lectureService.createLecture(
+      lecture,
+      danceLecturerId,
+    );
+
+    this.uploadsService.uploadImage(thumbnail, 'lectures', lectureResponse.id);
+    return lecture;
   }
 
   @ApiOperation({
