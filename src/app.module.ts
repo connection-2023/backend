@@ -9,6 +9,7 @@ import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     AuthModule,
     CustomConfigModule,
     CustomCacheModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
