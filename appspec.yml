@@ -1,0 +1,12 @@
+version: 0.0
+os: linux # Amazon Linux, RHEL, Ubuntu Server일 경우 "linux", Windows Server일 경우 "windows"
+files:
+  - source: / # 인스턴스에 복사할 S3 파일의 경로. / 로 설정하면S3_BUCKET_NAME/PROJECT_NAME/GITHUB_SHA.zip을 가져온다.
+    destination: /home/ubuntu/backend # S3에서 가져온 파일을 저장할 위치.
+    overwrite: yes # 덮어쓰기를 허용하는 옵션.
+
+hooks:
+  AfterInstall: # LifeCycle Event Hook의 이름
+    - location: scripts/excute.sh # 스크립트의 위치. files.destination에 정의한 경로에 대한 상대경로
+      timeout: 600 # 스크립트 실행시, 여기에 지정된 시간을 초과하면 안됨. 최대 3600초
+      runas: root # 스크립트 실행 시 가장하는 사용자.
