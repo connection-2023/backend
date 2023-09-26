@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateLectureDto {
   @ApiProperty({ example: 1, description: '지역 id', required: true })
@@ -9,6 +10,9 @@ export class CreateLectureDto {
 
   @ApiProperty({ example: 1, description: '춤 장르 id', required: true })
   danceCategoryId: number;
+
+  @ApiProperty({ example: 1, description: '강의 인원 형식 id', required: true })
+  lectureMethodId: number;
 
   @ApiProperty({
     example: '가비쌤과 함께하는 왁킹 클래스',
@@ -48,6 +52,7 @@ export class CreateLectureDto {
     description: '강의 예약 마감일',
     required: true,
   })
+  @Type(() => Date)
   reservationDeadline: Date;
 
   @ApiProperty({

@@ -33,6 +33,7 @@ model Users {
   lecturer         Lecturer?
   lectureReview    LectureReview[]
   lecturerReview   LecturerReview[]
+  likedLecture     LikedLecture[]
   dailySmsUsage    DailySmsUsage?
 }
 
@@ -62,6 +63,8 @@ model Lecturer {
   id             Int              @id @default(autoincrement())
   //user id
   userId         Int              @unique
+  //강사nickname
+  nickname       String           @db.VarChar(11)
   //개인 사이트 주소
   siteUrl        String           @db.VarChar(255)
   //연락 가능 시간
@@ -94,6 +97,8 @@ model Lecture {
   lectureTypeId       Int
   //춤 장르 id
   danceCategoryId     Int
+  //강의 형식 id
+  lectureMethodId     Int
   //강의명
   title               String          @unique @db.VarChar(30)
   //상세 주소
@@ -130,8 +135,10 @@ model Lecture {
   region              Region          @relation(fields: [regionId], references: [id])
   lectureType         LectureType     @relation(fields: [lectureTypeId], references: [id])
   danceCategory       DanceCategory   @relation(fields: [danceCategoryId], references: [id])
+  lectureMethod       LectureMethod   @relation(fields: [lectureMethodId], references: [id])
   lectureGroup        LectureGroup[]
   lectureReview       LectureReview[]
+  likedLecture        LikedLecture[]
 }
 
 model LectureGroup {
@@ -199,4 +206,24 @@ model DailySmsUsage {
   dailySentCount Int @default(0) @db.Integer
 
   users Users @relation(fields: [userId], references: [id])
+}
+
+model LectureMethod {
+  //고유 id
+  id      Int       @id @default(autoincrement())
+  name    String    @db.VarChar(255)
+  lecture Lecture[]
+}
+
+model LikedLecture {
+  //고유 id
+  id        Int     @id @default(autoincrement())
+  //강의 id
+  lectureId Int
+  //유저 id
+  userId    Int
+  lecture   Lecture @relation(fields: [lectureId], references: [id])
+  user      Users   @relation(fields: [userId], references: [id])
+
+  @@unique([lectureId, userId])
 }
