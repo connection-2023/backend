@@ -11,6 +11,7 @@ import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PaymentsModule } from './payments/payments.module';
 import { CouponModule } from './coupon/coupon.module';
+import { CustomJwtModule } from './common/config/jwt-module.cofig';
 
 @Module({
   imports: [
@@ -20,10 +21,11 @@ import { CouponModule } from './coupon/coupon.module';
     PrismaModule,
     LecturerModule,
     AuthModule,
-    CustomConfigModule,
+    CustomJwtModule,
     CustomCacheModule,
     PaymentsModule,
     CouponModule,
+    CustomConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

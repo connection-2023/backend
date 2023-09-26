@@ -203,7 +203,7 @@ model DailySmsUsage {
   //고유 id
   id             Int @id @default(autoincrement())
   userId         Int @unique
-  dailySentCount Int @default(1) @db.Integer
+  dailySentCount Int @default(0) @db.Integer
 
   users Users @relation(fields: [userId], references: [id])
 }
