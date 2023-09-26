@@ -247,4 +247,31 @@ export class AuthService implements OnModuleInit {
       where: { id: payloadUserId, deletedAt: null },
     });
   }
+
+  async validateRefreshToken(
+    userRefreshToken: string,
+    userId: number,
+  ): Promise<void> {
+    const cachedRefreshToken = await this.cacheManager.get(`${userId}`);
+    if (!cachedRefreshToken) {
+      throw new UnauthorizedException(
+        `로그인 정보가 만료되었습니다 다시 로그인해 주세요`,
+      );
+    }
+
+    if (userRefreshToken !== cachedRefreshToken) {
+      await this.cacheManager.del(`${userId}`);
+      throw new UnauthorizedException(
+        `잘못된 로그인 정보입니다. 다시 로그인해 주세요`,
+      );
+    }
+  }
+
+  async regenerateToken(user: Users): Promise<Token> {
+    await this.cacheManager.del(`${user.id}`);
+
+    const token: Token = await this.generateToken({ userId: user.id });
+
+    return token;
+  }
 }
