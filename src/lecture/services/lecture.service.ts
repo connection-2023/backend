@@ -16,6 +16,7 @@ export class LectureService {
   async createLecture(
     lecture: CreateLectureDto,
     danceLecturerId: number,
+    imgurl: string[],
   ): Promise<any> {
     const reservationDeadline = new Date(lecture.reservationDeadline);
     return await this.prismaService.lecture.create({

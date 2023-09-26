@@ -11,7 +11,7 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
@@ -31,26 +31,26 @@ export class LectureController {
     summary: '강의 생성',
   })
   @Post()
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'thumbnail', maxCount: 1 },
-      { name: 'images', maxCount: 4 },
-    ]),
-  )
+  @UseInterceptors(FilesInterceptor('files', 5))
   async createLecture(
-    @UploadedFiles() files: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() lecture: CreateLectureDto,
   ) {
     const danceLecturerId = 1;
-    const { thumbnail, images } = JSON.parse(JSON.stringify(files));
+    const imgurl: string[] = [];
 
-    const lectureResponse = await this.lectureService.createLecture(
-      lecture,
-      danceLecturerId,
+    await Promise.all(
+      files.map(async (file: Express.Multer.File) => {
+        const url = await this.uploadsService.uploadFileToS3('lectures', file);
+        imgurl.push(url);
+      }),
     );
 
-    this.uploadsService.uploadImage(thumbnail, 'lectures', lectureResponse.id);
-    return lecture;
+    return await this.lectureService.createLecture(
+      lecture,
+      danceLecturerId,
+      imgurl,
+    );
   }
 
   @ApiOperation({
