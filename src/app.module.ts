@@ -9,9 +9,9 @@ import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PaymentsModule } from './payments/payments.module';
-import { CouponModule } from './coupon/coupon.module';
 import { CustomJwtModule } from './common/config/jwt-module.cofig';
+import { CouponModule } from './coupon/coupon.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
