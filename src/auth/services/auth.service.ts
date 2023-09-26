@@ -1,79 +1,184 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
+  Logger,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as CryptoJS from 'crypto-js';
-import { SMSData } from '../interface/interface';
-import { PhoneNumberDto } from '../dtos/phone-number.dto';
+import {
+  AxiosPostResult,
+  Payload,
+  SMSData,
+  SelectedDailyUsage,
+} from '../interface/interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { DailySmsUsage, Users } from '@prisma/client';
+import { JwtService } from '@nestjs/jwt';
+import { Token } from 'src/common/interface/common-interface';
 
 @Injectable()
-export class AuthService {
-  private readonly sensUrl: string;
-  private readonly sensApiKey: string;
-  private readonly naverAccessKey: string;
-  private readonly naverSecretKey: string;
-  private readonly phoneNumber: string;
+export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
+
+  private sensUrl: string;
+  private sensApiKey: string;
+  private naverAccessKey: string;
+  private naverSecretKey: string;
+  private phoneNumber: string;
+  private jwtAccessTokenExpiresIn: string;
+  private jwtRefreshTokenExpiresIn: string;
+  private jwtRefreshTokenTtl: number;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
-  ) {
-    this.sensUrl = configService.get<string>('SENS_URL');
-    this.sensApiKey = configService.get<string>('SENS_API_KEY');
-    this.naverAccessKey = configService.get<string>('NAVER_ACCESS_KEY');
-    this.naverSecretKey = configService.get<string>('NAVER_Secret_KEY');
-    this.phoneNumber = configService.get<string>('PHONE_NUMBER');
+    private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  onModuleInit() {
+    this.sensUrl = this.configService.get<string>('SENS_URL');
+    this.sensApiKey = this.configService.get<string>('SENS_API_KEY');
+    this.naverAccessKey = this.configService.get<string>('NAVER_ACCESS_KEY');
+    this.naverSecretKey = this.configService.get<string>('NAVER_Secret_KEY');
+    this.phoneNumber = this.configService.get<string>('PHONE_NUMBER');
+    this.jwtAccessTokenExpiresIn = this.configService.get<string>(
+      'JWT_ACCESS_TOKEN_EXPIRES_IN',
+    );
+    this.jwtRefreshTokenExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_TOKEN_EXPIRES_IN',
+    );
+    this.jwtRefreshTokenTtl = this.configService.get<number>(
+      'JWT_REFRESH_TOKEN_TTL',
+    );
+    this.logger.log('AuthService Init');
   }
-  async sendSMS({ userPhoneNumber }: PhoneNumberDto): Promise<void> {
-    await this.cacheManager.del(`${this.phoneNumber}`);
 
-    const signature: string = this.createSensSignature();
-    const randomNumber: string = this.createRandomNumber();
-
-    const data: SMSData = {
-      type: 'SMS',
-      contentType: 'COMM',
-      countryCode: '82',
-      from: this.phoneNumber,
-      content: `강사 등록을 위한 인증번호는 [${randomNumber}] 입니다.`,
-      messages: [
-        {
-          to: userPhoneNumber,
-        },
-      ],
-    };
-
-    const headers = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'x-ncp-apigw-timestamp': Date.now().toString(),
-      'x-ncp-iam-access-key': this.naverAccessKey,
-      'x-ncp-apigw-signature-v2': signature,
-    };
-
+  async sendVerificationCode(
+    userId: number,
+    userPhoneNumber: string,
+  ): Promise<void> {
     try {
-      await axios.post(`${this.sensUrl}`, data, {
-        headers,
-      });
-      await this.cacheManager.set(
-        `${userPhoneNumber}`,
+      const dailyUsage: SelectedDailyUsage | DailySmsUsage =
+        await this.getOrCreateDailyUsage(userId);
+
+      this.checkDailySentCount(dailyUsage);
+
+      await this.cacheManager.del(`${this.phoneNumber}`);
+
+      const randomNumber: string = this.createRandomNumber();
+      const result: AxiosPostResult = await this.sendSMS(
         randomNumber,
-        this.configService.get<number>('REDIS_SMS_TTL'),
+        userPhoneNumber,
       );
+
+      if (!result.status) {
+        await this.handleFailedSMSAttempt(userId);
+        throw new UnauthorizedException(result.error);
+      }
+
+      await this.cacheRandomNumber(userPhoneNumber, randomNumber);
+      await this.incrementDailySentCount(userId);
     } catch (error) {
-      console.error(error.response.data);
-      throw new InternalServerErrorException(error.response.data);
+      this.logger.error(error);
+      throw error;
     }
   }
 
-  private createSensSignature(): string {
-    const timeStamp = Date.now().toString();
+  private async getOrCreateDailyUsage(
+    userId: number,
+  ): Promise<SelectedDailyUsage | DailySmsUsage> {
+    const dailyUsage = await this.prismaService.dailySmsUsage.findUnique({
+      where: { userId },
+      select: { id: true, dailySentCount: true },
+    });
+
+    if (!dailyUsage) {
+      return this.prismaService.dailySmsUsage.create({
+        data: { userId },
+      });
+    }
+
+    return dailyUsage;
+  }
+
+  private checkDailySentCount(dailyUsage: SelectedDailyUsage | DailySmsUsage) {
+    if (
+      dailyUsage.dailySentCount >=
+      this.configService.get<number>('SMS_USAGE_LIMIT')
+    ) {
+      throw new BadRequestException(`일일 인증 횟수를 초과했습니다.`);
+    }
+  }
+
+  private async handleFailedSMSAttempt(userId: number) {
+    await this.prismaService.dailySmsUsage.updateMany({
+      where: { userId, dailySentCount: { gte: 1 } },
+      data: { dailySentCount: { increment: -1 } },
+    });
+  }
+
+  private async cacheRandomNumber(
+    userPhoneNumber: string,
+    randomNumber: string,
+  ) {
+    await this.cacheManager.set(
+      `${userPhoneNumber}`,
+      randomNumber,
+      this.configService.get<number>('REDIS_SMS_TTL'),
+    );
+  }
+
+  private async incrementDailySentCount(userId: number) {
+    await this.prismaService.dailySmsUsage.update({
+      where: { userId },
+      data: { dailySentCount: { increment: 1 } },
+    });
+  }
+
+  private async sendSMS(
+    randomNumber: string,
+    userPhoneNumber: string,
+  ): Promise<AxiosPostResult> {
+    try {
+      const timeStamp: string = Date.now().toString();
+      const signature: string = this.createSensSignature(timeStamp);
+
+      const data: SMSData = {
+        type: 'SMS',
+        contentType: 'COMM',
+        countryCode: '82',
+        from: this.phoneNumber,
+        content: `강사 등록을 위한 인증번호는 [${randomNumber}] 입니다.`,
+        messages: [
+          {
+            to: userPhoneNumber,
+          },
+        ],
+      };
+      await axios.post(`${this.sensUrl}`, data, {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'x-ncp-apigw-timestamp': timeStamp,
+          'x-ncp-iam-access-key': this.naverAccessKey,
+          'x-ncp-apigw-signature-v2': signature,
+        },
+      });
+
+      return { status: true };
+    } catch (error) {
+      return { status: false, error: error.response.data };
+    }
+  }
+
+  private createSensSignature(timeStamp: string): string {
     const space = ' ';
     const newLine = '\n';
     const method = 'POST';
@@ -91,7 +196,6 @@ export class AuthService {
     hmac.update(timeStamp);
     hmac.update(newLine);
     hmac.update(this.naverAccessKey);
-
     var hash = hmac.finalize();
 
     return hash.toString(CryptoJS.enc.Base64);
@@ -108,16 +212,66 @@ export class AuthService {
   async checkVerificationCode({
     verificationCode,
     userPhoneNumber,
-  }: CheckVerificationCodeDto): Promise<Boolean> {
-    const cachedVerificationCode = await this.cacheManager.get(
-      `${userPhoneNumber}`,
-    );
+  }: CheckVerificationCodeDto): Promise<void> {
+    const cachedVerificationCode = await this.cacheManager.get(userPhoneNumber);
+
     if (!cachedVerificationCode) {
       throw new UnauthorizedException('유효시간이 만료되었습니다.');
-    } else if (cachedVerificationCode === verificationCode) {
-      return true;
-    } else {
+    }
+
+    if (cachedVerificationCode !== verificationCode) {
       throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
     }
+  }
+
+  async generateToken(payload: Payload): Promise<Token> {
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtAccessTokenExpiresIn,
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtRefreshTokenExpiresIn,
+    });
+
+    await this.cacheManager.set(
+      `${payload.userId}`,
+      refreshToken,
+      this.jwtRefreshTokenTtl,
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  async getUserByPayload(payloadUserId): Promise<Users> {
+    return await this.prismaService.users.findFirst({
+      where: { id: payloadUserId, deletedAt: null },
+    });
+  }
+
+  async validateRefreshToken(
+    userRefreshToken: string,
+    userId: number,
+  ): Promise<void> {
+    const cachedRefreshToken = await this.cacheManager.get(`${userId}`);
+    if (!cachedRefreshToken) {
+      throw new UnauthorizedException(
+        `로그인 정보가 만료되었습니다 다시 로그인해 주세요`,
+      );
+    }
+
+    if (userRefreshToken !== cachedRefreshToken) {
+      await this.cacheManager.del(`${userId}`);
+      throw new UnauthorizedException(
+        `잘못된 로그인 정보입니다. 다시 로그인해 주세요`,
+      );
+    }
+  }
+
+  async regenerateToken(user: Users): Promise<Token> {
+    await this.cacheManager.del(`${user.id}`);
+
+    const token: Token = await this.generateToken({ userId: user.id });
+
+    return token;
   }
 }

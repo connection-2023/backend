@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './services/auth.service';
 import { AuthController } from './controllers/auth.controller';
+import { AuthService } from './services/auth.service';
+import { AccessTokenStrategy } from './strategy/access-token.startegy';
+import { CustomJwtModule } from 'src/common/config/jwt-module.cofig';
+import { RefreshTokenStrategy } from './strategy/refresh-token.strategy';
 
 @Module({
-  providers: [AuthService],
+  imports: [CustomJwtModule],
+  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

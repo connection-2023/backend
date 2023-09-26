@@ -10,4 +10,18 @@ interface SMSData {
     },
   ];
 }
-export { SMSData };
+
+interface SelectedDailyUsage {
+  id: number;
+  dailySentCount: number;
+}
+
+interface AxiosPostResult {
+  status: boolean;
+  error?: object;
+}
+interface Payload {
+  userId: number;
+}
+
+export { SMSData, SelectedDailyUsage, AxiosPostResult, Payload };
