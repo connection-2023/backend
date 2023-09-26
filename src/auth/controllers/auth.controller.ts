@@ -5,32 +5,36 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PhoneNumberDto } from '../dtos/phone-number.dto';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
 import { AuthService } from '../services/auth.service';
 import { Token } from 'src/common/interface/common-interface';
+import { AccessTokenGuard } from 'src/common/guards/access-token.guard';
+import { GetAuthorizedUser } from 'src/common/decorator/get-user.decorator';
+import { Users } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   //토큰 생성을 위한 임시 url
-  @Get('/')
-  getAccessToken() {
-    const token: Token = this.authService.generateToken({ userId: 1 });
+  @Get('/token/:userId')
+  async getAccessToken(@Param('userId') userId: number): Promise<Token> {
+    const token: Token = await this.authService.generateToken({ userId });
 
     return token;
   }
 
-  //토큰 사용전까지 userId로 임시사용
-  @Post('/SMS/:userId')
+  @Post('/SMS')
+  @UseGuards(AccessTokenGuard)
   async sendSMS(
-    @Param('userId', ParseIntPipe) userId: number,
+    @GetAuthorizedUser() authorizedUser: Users,
     @Query() phoneNumberDto: PhoneNumberDto,
   ) {
     await this.authService.sendVerificationCode(
-      userId,
+      authorizedUser.id,
       phoneNumberDto.userPhoneNumber,
     );
 

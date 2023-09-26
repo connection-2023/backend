@@ -2,7 +2,8 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
+  Logger,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -10,47 +11,52 @@ import axios from 'axios';
 import * as CryptoJS from 'crypto-js';
 import {
   AxiosPostResult,
+  Payload,
   SMSData,
   SelectedDailyUsage,
 } from '../interface/interface';
-import { PhoneNumberDto } from '../dtos/phone-number.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { error } from 'console';
 import { DailySmsUsage, Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/interface/common-interface';
 
 @Injectable()
-export class AuthService {
-  private readonly sensUrl: string;
-  private readonly sensApiKey: string;
-  private readonly naverAccessKey: string;
-  private readonly naverSecretKey: string;
-  private readonly phoneNumber: string;
-  private readonly jwtAccessTokenExpiresIn: string;
-  private readonly jwtRefreshTokenExpiresIn: string;
+export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
+
+  private sensUrl: string;
+  private sensApiKey: string;
+  private naverAccessKey: string;
+  private naverSecretKey: string;
+  private phoneNumber: string;
+  private jwtAccessTokenExpiresIn: string;
+  private jwtRefreshTokenExpiresIn: string;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
-  ) {
-    this.sensUrl = configService.get<string>('SENS_URL');
-    this.sensApiKey = configService.get<string>('SENS_API_KEY');
-    this.naverAccessKey = configService.get<string>('NAVER_ACCESS_KEY');
-    this.naverSecretKey = configService.get<string>('NAVER_Secret_KEY');
-    this.phoneNumber = configService.get<string>('PHONE_NUMBER');
-    this.jwtAccessTokenExpiresIn = configService.get<string>(
+  ) {}
+
+  onModuleInit() {
+    this.sensUrl = this.configService.get<string>('SENS_URL');
+    this.sensApiKey = this.configService.get<string>('SENS_API_KEY');
+    this.naverAccessKey = this.configService.get<string>('NAVER_ACCESS_KEY');
+    this.naverSecretKey = this.configService.get<string>('NAVER_Secret_KEY');
+    this.phoneNumber = this.configService.get<string>('PHONE_NUMBER');
+    this.jwtAccessTokenExpiresIn = this.configService.get<string>(
       'JWT_ACCESS_TOKEN_EXPIRES_IN',
     );
-    this.jwtRefreshTokenExpiresIn = configService.get<string>(
-      'JWT_REFRESH_TOKEN_EXPIRESIN',
+    this.jwtRefreshTokenExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_TOKEN_EXPIRES_IN',
     );
+    this.logger.log('AuthService Init');
   }
+
   async sendVerificationCode(
     userId: number,
     userPhoneNumber: string,
@@ -77,7 +83,7 @@ export class AuthService {
       await this.cacheRandomNumber(userPhoneNumber, randomNumber);
       await this.incrementDailySentCount(userId);
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -214,14 +220,21 @@ export class AuthService {
     }
   }
 
-  generateToken(userId): Token {
-    const accessToken = this.jwtService.sign(userId, {
-      expiresIn: '1h',
+  async generateToken(payload: Payload): Promise<Token> {
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtAccessTokenExpiresIn,
     });
 
-    const refreshToken = this.jwtService.sign(userId, {
-      expiresIn: '1h',
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtRefreshTokenExpiresIn,
     });
+
     return { accessToken, refreshToken };
+  }
+
+  async getUserByPayload(payloadUserId): Promise<Users> {
+    return await this.prismaService.users.findFirst({
+      where: { id: payloadUserId, deletedAt: null },
+    });
   }
 }

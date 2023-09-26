@@ -12,14 +12,14 @@ import { CustomJwtModule } from './common/config/jwt-module.cofig';
 
 @Module({
   imports: [
-    CustomJwtModule,
     UserModule,
     LectureModule,
     PrismaModule,
     LecturerModule,
     AuthModule,
-    CustomConfigModule,
+    CustomJwtModule,
     CustomCacheModule,
+    CustomConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

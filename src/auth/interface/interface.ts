@@ -20,5 +20,8 @@ interface AxiosPostResult {
   status: boolean;
   error?: object;
 }
+interface Payload {
+  userId: number;
+}
 
-export { SMSData, SelectedDailyUsage, AxiosPostResult };
+export { SMSData, SelectedDailyUsage, AxiosPostResult, Payload };
