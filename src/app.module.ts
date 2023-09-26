@@ -8,9 +8,11 @@ import { LecturerModule } from './lecturer/lecturer.module';
 import { AuthModule } from './auth/auth.module';
 import { CustomConfigModule } from './common/config/config-module.config';
 import { CustomCacheModule } from './common/config/cache-module.config';
+import { CustomJwtModule } from './common/config/jwt-module.cofig';
 
 @Module({
   imports: [
+    CustomJwtModule,
     UserModule,
     LectureModule,
     PrismaModule,

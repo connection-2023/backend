@@ -19,7 +19,9 @@ import { Cache } from 'cache-manager';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { error } from 'console';
-import { DailySmsUsage } from '@prisma/client';
+import { DailySmsUsage, Users } from '@prisma/client';
+import { JwtService } from '@nestjs/jwt';
+import { Token } from 'src/common/interface/common-interface';
 
 @Injectable()
 export class AuthService {
@@ -28,17 +30,26 @@ export class AuthService {
   private readonly naverAccessKey: string;
   private readonly naverSecretKey: string;
   private readonly phoneNumber: string;
+  private readonly jwtAccessTokenExpiresIn: string;
+  private readonly jwtRefreshTokenExpiresIn: string;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
     private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService,
   ) {
     this.sensUrl = configService.get<string>('SENS_URL');
     this.sensApiKey = configService.get<string>('SENS_API_KEY');
     this.naverAccessKey = configService.get<string>('NAVER_ACCESS_KEY');
     this.naverSecretKey = configService.get<string>('NAVER_Secret_KEY');
     this.phoneNumber = configService.get<string>('PHONE_NUMBER');
+    this.jwtAccessTokenExpiresIn = configService.get<string>(
+      'JWT_ACCESS_TOKEN_EXPIRES_IN',
+    );
+    this.jwtRefreshTokenExpiresIn = configService.get<string>(
+      'JWT_REFRESH_TOKEN_EXPIRESIN',
+    );
   }
   async sendVerificationCode(
     userId: number,
@@ -201,5 +212,16 @@ export class AuthService {
     if (cachedVerificationCode !== verificationCode) {
       throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
     }
+  }
+
+  generateToken(userId): Token {
+    const accessToken = this.jwtService.sign(userId, {
+      expiresIn: '1h',
+    });
+
+    const refreshToken = this.jwtService.sign(userId, {
+      expiresIn: '1h',
+    });
+    return { accessToken, refreshToken };
   }
 }

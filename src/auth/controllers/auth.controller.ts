@@ -6,13 +6,22 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { AuthService } from '../services/auth.service';
 import { PhoneNumberDto } from '../dtos/phone-number.dto';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
+import { AuthService } from '../services/auth.service';
+import { Token } from 'src/common/interface/common-interface';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  //토큰 생성을 위한 임시 url
+  @Get('/')
+  getAccessToken() {
+    const token: Token = this.authService.generateToken({ userId: 1 });
+
+    return token;
+  }
 
   //토큰 사용전까지 userId로 임시사용
   @Post('/SMS/:userId')
