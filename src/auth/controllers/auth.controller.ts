@@ -2,9 +2,9 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { PhoneNumberDto } from '../dtos/phone-number.dto';
@@ -14,6 +14,7 @@ import { Token } from 'src/common/interface/common-interface';
 import { AccessTokenGuard } from 'src/common/guards/access-token.guard';
 import { GetAuthorizedUser } from 'src/common/decorator/get-user.decorator';
 import { Users } from '@prisma/client';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -21,10 +22,16 @@ export class AuthController {
 
   //토큰 생성을 위한 임시 url
   @Get('/token/:userId')
-  async getAccessToken(@Param('userId') userId: number): Promise<Token> {
+  async getAccessToken(
+    @Param('userId') userId: number,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const token: Token = await this.authService.generateToken({ userId });
+    response.cookie('refreshToken', token.refreshToken, {
+      httpOnly: true,
+    });
 
-    return token;
+    return { accessToken: token.accessToken };
   }
 
   @Post('/SMS')

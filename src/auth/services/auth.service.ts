@@ -34,6 +34,7 @@ export class AuthService implements OnModuleInit {
   private phoneNumber: string;
   private jwtAccessTokenExpiresIn: string;
   private jwtRefreshTokenExpiresIn: string;
+  private jwtRefreshTokenTtl: number;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -53,6 +54,9 @@ export class AuthService implements OnModuleInit {
     );
     this.jwtRefreshTokenExpiresIn = this.configService.get<string>(
       'JWT_REFRESH_TOKEN_EXPIRES_IN',
+    );
+    this.jwtRefreshTokenTtl = this.configService.get<number>(
+      'JWT_REFRESH_TOKEN_TTL',
     );
     this.logger.log('AuthService Init');
   }
@@ -228,6 +232,12 @@ export class AuthService implements OnModuleInit {
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: this.jwtRefreshTokenExpiresIn,
     });
+
+    await this.cacheManager.set(
+      `${payload.userId}`,
+      refreshToken,
+      this.jwtRefreshTokenTtl,
+    );
 
     return { accessToken, refreshToken };
   }
