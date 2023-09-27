@@ -35,6 +35,7 @@ model Users {
   lecturerReview   LecturerReview[]
   likedLecture     LikedLecture[]
   dailySmsUsage    DailySmsUsage?
+  userCoupon        UserCoupon[]
 }
 
 model UserProfileImage {
@@ -84,6 +85,7 @@ model Lecturer {
   users          Users            @relation(fields: [userId], references: [id])
   lecture        Lecture[]
   lecturerReview LecturerReview[]
+  lectureCoupon  LectureCoupon[]
 }
 
 model Lecture {
@@ -139,6 +141,7 @@ model Lecture {
   lectureGroup        LectureGroup[]
   lectureReview       LectureReview[]
   likedLecture        LikedLecture[]
+  lectureCouponTarget LectureCouponTarget[]
 }
 
 model LectureGroup {
@@ -226,4 +229,54 @@ model LikedLecture {
   user      Users   @relation(fields: [userId], references: [id])
 
   @@unique([lectureId, userId])
+}
+
+model LectureCoupon  {
+  id Int @id @default(autoincrement())
+  //발급인
+  lecturerId Int
+  title String
+  description String?
+  //할인율
+  percentage Int? 
+  //할인 금액
+  discountPrice Int? 
+  //최대 할인 금액
+  maxDiscountPrice Int?
+  //사용 제한 횟수
+  maxUsageCount Int? 
+  //사용 횟수
+  usageCount Int @default(0)
+  //쿠폰 비활성화
+  isDisabled Boolean @default(false)
+  //진행 기간
+  startAt DateTime @db.Timestamp(6)
+  endAt DateTime @db.Timestamp(6)
+  createdAt           DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime          @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt           DateTime        @db.Timestamp(6)
+  lecturer Lecturer @relation(fields: [lecturerId], references: [id])
+  lectureCouponTarget LectureCouponTarget[]
+  userCoupon UserCoupon[]
+}
+
+model LectureCouponTarget {
+  id Int @id @default(autoincrement())
+  lectureCouponId Int
+  lectureId  Int
+  lectureCoupon LectureCoupon @relation(fields: [lectureCouponId], references: [id])
+  lecture Lecture @relation(fields: [lectureId ], references: [id])
+}
+
+model UserCoupon {
+  id Int @id @default(autoincrement())
+  //사용여부
+  isUsed Boolean @default(false)
+  userId  Int
+  lectureCouponId Int
+  createdAt           DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime          @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt           DateTime        @db.Timestamp(6)
+  lectureCoupon LectureCoupon @relation(fields: [lectureCouponId], references: [id])
+  users     Users   @relation(fields: [userId], references: [id])
 }
