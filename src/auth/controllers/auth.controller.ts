@@ -16,9 +16,10 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { GetAuthorizedUser } from 'src/common/decorator/get-user.decorator';
 import { Lecture, Lecturer, Users } from '@prisma/client';
 import { Response } from 'express';
-import { RefreshTokenGuard } from 'src/common/guards/refresh-token.guard';
+import { UserRefreshTokenGuard } from '@src/common/guards/user-refresh-token.guard';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { TokenTypes } from '../enums/token-enums';
+import { LecturerRefreshTokenGuard } from '@src/common/guards/lecturer-refresh-token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -44,14 +45,32 @@ export class AuthController {
 
   //유저 토큰 재발급
   @Get('/token/user/refresh')
-  @UseGuards(RefreshTokenGuard)
-  async refreshJwtToken(
+  @UseGuards(UserRefreshTokenGuard)
+  async refreshUserJwtToken(
     @GetAuthorizedUser() authorizedUser: Users,
     @Res({ passthrough: true }) response: Response,
   ) {
     const token: Token = await this.authService.regenerateToken(
-      authorizedUser,
+      { userId: authorizedUser.id },
       TokenTypes.User,
+    );
+    response.cookie('refreshToken', token.refreshToken, {
+      httpOnly: true,
+    });
+
+    return { accessToken: token.accessToken };
+  }
+
+  //강사 토큰 재발급
+  @Get('/token/lecturer/refresh')
+  @UseGuards(LecturerRefreshTokenGuard)
+  async refreshLecturerJwtToken(
+    @GetAuthorizedUser() authorizedUser: Lecturer,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const token: Token = await this.authService.regenerateToken(
+      { lecturerId: authorizedUser.id },
+      TokenTypes.Lecturer,
     );
     response.cookie('refreshToken', token.refreshToken, {
       httpOnly: true,

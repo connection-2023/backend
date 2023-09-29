@@ -256,31 +256,36 @@ export class AuthService implements OnModuleInit {
   }
 
   async validateRefreshToken(
-    userRefreshToken: string,
-    userId: number,
+    refreshToken: string,
+    targetId: number,
+    tokenType: TokenTypes,
   ): Promise<void> {
-    const cachedRefreshToken = await this.cacheManager.get(`${userId}`);
+    const cachedRefreshToken = await this.cacheManager.get(
+      `${tokenType} ${targetId}`,
+    );
     if (!cachedRefreshToken) {
       throw new UnauthorizedException(
-        `로그인 정보가 만료되었습니다 다시 로그인해 주세요`,
+        `로그인 정보가 만료되었습니다. 다시 로그인해 주세요`,
       );
     }
 
-    if (userRefreshToken !== cachedRefreshToken) {
-      await this.cacheManager.del(`${userId}`);
+    if (refreshToken !== cachedRefreshToken) {
+      await this.cacheManager.del(`${tokenType} ${targetId}`);
       throw new UnauthorizedException(
-        `잘못된 로그인 정보입니다. 다시 로그인해 주세요`,
+        `로그인 정보가 일치하지 않습니다. 다시 로그인해 주세요`,
       );
     }
   }
 
-  async regenerateToken(user: Users, tokenType: TokenTypes): Promise<Token> {
-    await this.cacheManager.del(`${tokenType} ${user.id}`);
+  async regenerateToken(
+    authorizedTarget: Payload,
+    tokenType: TokenTypes,
+  ): Promise<Token> {
+    const targetId: number =
+      authorizedTarget.userId || authorizedTarget.lecturerId;
+    await this.cacheManager.del(`${tokenType} ${targetId}`);
 
-    const token: Token = await this.generateToken(
-      { userId: user.id },
-      tokenType,
-    );
+    const token: Token = await this.generateToken(authorizedTarget, tokenType);
 
     return token;
   }

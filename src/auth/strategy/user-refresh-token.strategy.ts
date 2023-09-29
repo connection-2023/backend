@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
@@ -6,11 +6,12 @@ import { UserTokenPayload } from 'src/common/interface/common-interface';
 import { Users } from '@prisma/client';
 import { AuthService } from '../services/auth.service';
 import { CookiesTokenExtractor } from '../extractor/cookie-token-extractor';
+import { TokenTypes } from '../enums/token-enums';
 
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(
+export class UserRefreshTokenStrategy extends PassportStrategy(
   Strategy,
-  'refreshToken',
+  'userRefreshToken',
 ) {
   constructor(
     private readonly configService: ConfigService,
@@ -24,16 +25,25 @@ export class RefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(request, tokenPayload: UserTokenPayload): Promise<Users> {
-    const cookiesRefreshToken: string = request.cookies.refreshToken;
+    try {
+      if (!tokenPayload.userId) {
+        throw new UnauthorizedException('잘못된 토큰 형식입니다.');
+      }
 
-    const authorizedUser: Users = await this.authService.getUserByPayload(
-      tokenPayload.userId,
-    );
-    await this.authService.validateRefreshToken(
-      cookiesRefreshToken,
-      authorizedUser.id,
-    );
+      const cookiesRefreshToken: string = request.cookies.refreshToken;
 
-    return authorizedUser;
+      const authorizedUser: Users = await this.authService.getUserByPayload(
+        tokenPayload.userId,
+      );
+      await this.authService.validateRefreshToken(
+        cookiesRefreshToken,
+        authorizedUser.id,
+        TokenTypes.User,
+      );
+
+      return authorizedUser;
+    } catch (error) {
+      throw error;
+    }
   }
 }
