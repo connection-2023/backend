@@ -11,7 +11,6 @@ import axios from 'axios';
 import * as CryptoJS from 'crypto-js';
 import {
   AxiosPostResult,
-  Payload,
   SMSData,
   SelectedDailyUsage,
 } from '@src/auth/interface/interface';
@@ -20,7 +19,6 @@ import { Cache } from 'cache-manager';
 import { CheckVerificationCodeDto } from '@src/auth/dtos/check-verification-code.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { DailySmsUsage } from '@prisma/client';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthSmsService implements OnModuleInit {
