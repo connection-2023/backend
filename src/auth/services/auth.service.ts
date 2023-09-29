@@ -234,8 +234,9 @@ export class AuthService implements OnModuleInit {
       expiresIn: this.jwtRefreshTokenExpiresIn,
     });
 
+    const targetId = payload.userId || payload.lecturerId;
     await this.cacheManager.set(
-      `${tokenType} ${payload.userId}`,
+      `${tokenType} ${targetId}`,
       refreshToken,
       this.jwtRefreshTokenTtl,
     );
@@ -279,6 +280,37 @@ export class AuthService implements OnModuleInit {
     const token: Token = await this.generateToken(
       { userId: user.id },
       tokenType,
+    );
+
+    return token;
+  }
+
+  async switchUserToLecturer(user: Users): Promise<Token> {
+    const selectedLecturer: Lecturer =
+      await this.prismaService.lecturer.findFirst({
+        where: { userId: user.id, deletedAt: null },
+      });
+
+    await this.cacheManager.del(`${TokenTypes.User} ${user.id}`);
+
+    const token: Token = await this.generateToken(
+      { lecturerId: selectedLecturer.id },
+      TokenTypes.Lecturer,
+    );
+
+    return token;
+  }
+
+  async switchLecturerToUser(lecturer: Lecturer): Promise<Token> {
+    const selectedUser: Users = await this.prismaService.users.findFirst({
+      where: { id: lecturer.userId, deletedAt: null },
+    });
+
+    await this.cacheManager.del(`${TokenTypes.Lecturer} ${lecturer.id}`);
+
+    const token: Token = await this.generateToken(
+      { userId: selectedUser.id },
+      TokenTypes.User,
     );
 
     return token;

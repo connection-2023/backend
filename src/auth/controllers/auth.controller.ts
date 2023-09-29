@@ -14,7 +14,7 @@ import { AuthService } from '../services/auth.service';
 import { Token } from 'src/common/interface/common-interface';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from 'src/common/decorator/get-user.decorator';
-import { Users } from '@prisma/client';
+import { Lecture, Lecturer, Users } from '@prisma/client';
 import { Response } from 'express';
 import { RefreshTokenGuard } from 'src/common/guards/refresh-token.guard';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
@@ -22,8 +22,6 @@ import { TokenTypes } from '../enums/token-enums';
 
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(private readonly authService: AuthService) {}
 
   //토큰 생성을 위한 임시 url
@@ -36,6 +34,7 @@ export class AuthController {
       { userId },
       TokenTypes.User,
     );
+
     response.cookie('refreshToken', token.refreshToken, {
       httpOnly: true,
     });
@@ -54,6 +53,42 @@ export class AuthController {
       authorizedUser,
       TokenTypes.User,
     );
+    response.cookie('refreshToken', token.refreshToken, {
+      httpOnly: true,
+    });
+
+    return { accessToken: token.accessToken };
+  }
+
+  //유저 -> 강사 전환
+  @Get('/token/switch-user-to-lecturer')
+  @UseGuards(UserAccessTokenGuard)
+  async switchUserToLecturer(
+    @GetAuthorizedUser() authorizedUser: Users,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const token: Token = await this.authService.switchUserToLecturer(
+      authorizedUser,
+    );
+
+    response.cookie('refreshToken', token.refreshToken, {
+      httpOnly: true,
+    });
+
+    return { accessToken: token.accessToken };
+  }
+
+  //강사 -> 유저 전환
+  @Get('/token/switch-lecturer-to-user')
+  @UseGuards(LecturerAccessTokenGuard)
+  async switchLecturerToUser(
+    @GetAuthorizedUser() authorizedUser: Lecturer,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const token: Token = await this.authService.switchLecturerToUser(
+      authorizedUser,
+    );
+
     response.cookie('refreshToken', token.refreshToken, {
       httpOnly: true,
     });
