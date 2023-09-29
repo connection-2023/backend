@@ -5,7 +5,7 @@ import { Lecturer } from '@prisma/client';
 import { ExtractJwt } from 'passport-jwt';
 import { Strategy } from 'passport-jwt';
 import { LecturerTokenPayload } from '@src/common/interface/common-interface';
-import { AuthService } from '@src/auth/services/auth.service';
+import { AuthTokenService } from '@src/auth/services/auth-token.service';
 
 @Injectable()
 export class LecturerAccessTokenStrategy extends PassportStrategy(
@@ -14,7 +14,7 @@ export class LecturerAccessTokenStrategy extends PassportStrategy(
 ) {
   constructor(
     private readonly configService: ConfigService,
-    private readonly authService: AuthService,
+    private readonly authTokenService: AuthTokenService,
   ) {
     super({
       secretOrKey: configService.get<string>('JWT_TOKEN_SECRET_KEY'),
@@ -28,7 +28,9 @@ export class LecturerAccessTokenStrategy extends PassportStrategy(
         throw new UnauthorizedException('잘못된 토큰 형식입니다.');
       }
       const authorizedLecturer: Lecturer =
-        await this.authService.getLecturerByPayload(tokenPayload.lecturerId);
+        await this.authTokenService.getLecturerByPayload(
+          tokenPayload.lecturerId,
+        );
 
       return authorizedLecturer;
     } catch (error) {
