@@ -21,7 +21,8 @@ interface AxiosPostResult {
   error?: object;
 }
 interface Payload {
-  userId: number;
+  userId?: number;
+  lecturerId?: number;
 }
 
 export { SMSData, SelectedDailyUsage, AxiosPostResult, Payload };

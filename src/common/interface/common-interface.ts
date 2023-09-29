@@ -3,8 +3,14 @@ export interface Token {
   refreshToken: string;
 }
 
-export interface TokenPayload {
+export interface UserTokenPayload {
   userId: number;
+  iat: number;
+  exp: number;
+}
+
+export interface LecturerTokenPayload {
+  lecturerId: number;
   iat: number;
   exp: number;
 }

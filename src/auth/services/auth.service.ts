@@ -14,14 +14,15 @@ import {
   Payload,
   SMSData,
   SelectedDailyUsage,
-} from '../interface/interface';
+} from '@src/auth/interface/interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { DailySmsUsage, Users } from '@prisma/client';
+import { CheckVerificationCodeDto } from '@src/auth/dtos/check-verification-code.dto';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { DailySmsUsage, Lecturer, Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
-import { Token } from 'src/common/interface/common-interface';
+import { Token } from '@src/common/interface/common-interface';
+import { TokenTypes } from '@src/auth/enums/token-enums';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -224,7 +225,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async generateToken(payload: Payload): Promise<Token> {
+  async generateToken(payload: Payload, tokenType: TokenTypes): Promise<Token> {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: this.jwtAccessTokenExpiresIn,
     });
@@ -233,8 +234,9 @@ export class AuthService implements OnModuleInit {
       expiresIn: this.jwtRefreshTokenExpiresIn,
     });
 
+    const targetId = payload.userId || payload.lecturerId;
     await this.cacheManager.set(
-      `${payload.userId}`,
+      `${tokenType} ${targetId}`,
       refreshToken,
       this.jwtRefreshTokenTtl,
     );
@@ -242,35 +244,79 @@ export class AuthService implements OnModuleInit {
     return { accessToken, refreshToken };
   }
 
-  async getUserByPayload(payloadUserId): Promise<Users> {
+  async getUserByPayload(payloadUserId: number): Promise<Users> {
     return await this.prismaService.users.findFirst({
+      where: { id: payloadUserId, deletedAt: null },
+    });
+  }
+  async getLecturerByPayload(payloadUserId: number): Promise<Lecturer> {
+    return await this.prismaService.lecturer.findFirst({
       where: { id: payloadUserId, deletedAt: null },
     });
   }
 
   async validateRefreshToken(
-    userRefreshToken: string,
-    userId: number,
+    refreshToken: string,
+    targetId: number,
+    tokenType: TokenTypes,
   ): Promise<void> {
-    const cachedRefreshToken = await this.cacheManager.get(`${userId}`);
+    const cachedRefreshToken = await this.cacheManager.get(
+      `${tokenType} ${targetId}`,
+    );
     if (!cachedRefreshToken) {
       throw new UnauthorizedException(
-        `로그인 정보가 만료되었습니다 다시 로그인해 주세요`,
+        `로그인 정보가 만료되었습니다. 다시 로그인해 주세요`,
       );
     }
 
-    if (userRefreshToken !== cachedRefreshToken) {
-      await this.cacheManager.del(`${userId}`);
+    if (refreshToken !== cachedRefreshToken) {
+      await this.cacheManager.del(`${tokenType} ${targetId}`);
       throw new UnauthorizedException(
-        `잘못된 로그인 정보입니다. 다시 로그인해 주세요`,
+        `로그인 정보가 일치하지 않습니다. 다시 로그인해 주세요`,
       );
     }
   }
 
-  async regenerateToken(user: Users): Promise<Token> {
-    await this.cacheManager.del(`${user.id}`);
+  async regenerateToken(
+    authorizedTarget: Payload,
+    tokenType: TokenTypes,
+  ): Promise<Token> {
+    const targetId: number =
+      authorizedTarget.userId || authorizedTarget.lecturerId;
+    await this.cacheManager.del(`${tokenType} ${targetId}`);
 
-    const token: Token = await this.generateToken({ userId: user.id });
+    const token: Token = await this.generateToken(authorizedTarget, tokenType);
+
+    return token;
+  }
+
+  async switchUserToLecturer(user: Users): Promise<Token> {
+    const selectedLecturer: Lecturer =
+      await this.prismaService.lecturer.findFirst({
+        where: { userId: user.id, deletedAt: null },
+      });
+
+    await this.cacheManager.del(`${TokenTypes.User} ${user.id}`);
+
+    const token: Token = await this.generateToken(
+      { lecturerId: selectedLecturer.id },
+      TokenTypes.Lecturer,
+    );
+
+    return token;
+  }
+
+  async switchLecturerToUser(lecturer: Lecturer): Promise<Token> {
+    const selectedUser: Users = await this.prismaService.users.findFirst({
+      where: { id: lecturer.userId, deletedAt: null },
+    });
+
+    await this.cacheManager.del(`${TokenTypes.Lecturer} ${lecturer.id}`);
+
+    const token: Token = await this.generateToken(
+      { userId: selectedUser.id },
+      TokenTypes.User,
+    );
 
     return token;
   }
