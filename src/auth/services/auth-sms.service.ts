@@ -19,29 +19,23 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { CheckVerificationCodeDto } from '@src/auth/dtos/check-verification-code.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { DailySmsUsage, Lecturer, Users } from '@prisma/client';
+import { DailySmsUsage } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
-import { Token } from '@src/common/interface/common-interface';
-import { TokenTypes } from '@src/auth/enums/token-enums';
 
 @Injectable()
-export class AuthService implements OnModuleInit {
-  private readonly logger = new Logger(AuthService.name);
+export class AuthSmsService implements OnModuleInit {
+  private readonly logger = new Logger(AuthSmsService.name);
 
   private sensUrl: string;
   private sensApiKey: string;
   private naverAccessKey: string;
   private naverSecretKey: string;
   private phoneNumber: string;
-  private jwtAccessTokenExpiresIn: string;
-  private jwtRefreshTokenExpiresIn: string;
-  private jwtRefreshTokenTtl: number;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
     private readonly prismaService: PrismaService,
-    private readonly jwtService: JwtService,
   ) {}
 
   onModuleInit() {

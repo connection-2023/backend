@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from '@src/auth/controllers/auth.controller';
-import { AuthService } from '@src/auth/services/auth.service';
+import { AuthSmsController } from '@src/auth/controllers/auth-sms.controller';
+import { AuthSmsService } from '@src/auth/services/auth-sms.service';
 import { UserAccessTokenStrategy } from '@src/auth/strategy/user-access-token.startegy';
 import { CustomJwtModule } from '@src/common/config/jwt-module.cofig';
 import { LecturerAccessTokenStrategy } from '@src/auth/strategy/lecturer-access-token.startegy';
@@ -12,13 +12,13 @@ import { AuthTokenService } from './services/auth-token.service';
 @Module({
   imports: [CustomJwtModule],
   providers: [
-    AuthService,
+    AuthSmsService,
     AuthTokenService,
     UserAccessTokenStrategy,
     UserRefreshTokenStrategy,
     LecturerAccessTokenStrategy,
     LecturerRefreshTokenStrategy,
   ],
-  controllers: [AuthController, AuthTokenController],
+  controllers: [AuthSmsController, AuthTokenController],
 })
 export class AuthModule {}
