@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Logger,
   Param,
   Post,
   Query,
@@ -11,14 +12,18 @@ import { PhoneNumberDto } from '../dtos/phone-number.dto';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
 import { AuthService } from '../services/auth.service';
 import { Token } from 'src/common/interface/common-interface';
-import { AccessTokenGuard } from 'src/common/guards/access-token.guard';
+import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from 'src/common/decorator/get-user.decorator';
 import { Users } from '@prisma/client';
 import { Response } from 'express';
 import { RefreshTokenGuard } from 'src/common/guards/refresh-token.guard';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { TokenTypes } from '../enums/token-enums';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   //토큰 생성을 위한 임시 url
@@ -27,7 +32,10 @@ export class AuthController {
     @Param('userId') userId: number,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const token: Token = await this.authService.generateToken({ userId });
+    const token: Token = await this.authService.generateToken(
+      { userId },
+      TokenTypes.User,
+    );
     response.cookie('refreshToken', token.refreshToken, {
       httpOnly: true,
     });
@@ -35,13 +43,17 @@ export class AuthController {
     return { accessToken: token.accessToken };
   }
 
-  @Get('/token')
+  //유저 토큰 재발급
+  @Get('/token/user/refresh')
   @UseGuards(RefreshTokenGuard)
   async refreshJwtToken(
     @GetAuthorizedUser() authorizedUser: Users,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const token: Token = await this.authService.regenerateToken(authorizedUser);
+    const token: Token = await this.authService.regenerateToken(
+      authorizedUser,
+      TokenTypes.User,
+    );
     response.cookie('refreshToken', token.refreshToken, {
       httpOnly: true,
     });
@@ -50,7 +62,7 @@ export class AuthController {
   }
 
   @Post('/SMS')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(UserAccessTokenGuard)
   async sendSMS(
     @GetAuthorizedUser() authorizedUser: Users,
     @Query() phoneNumberDto: PhoneNumberDto,

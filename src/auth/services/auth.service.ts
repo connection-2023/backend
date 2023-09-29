@@ -19,9 +19,10 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { DailySmsUsage, Users } from '@prisma/client';
+import { DailySmsUsage, Lecturer, Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from 'src/common/interface/common-interface';
+import { TokenTypes } from '../enums/token-enums';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -224,7 +225,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async generateToken(payload: Payload): Promise<Token> {
+  async generateToken(payload: Payload, tokenType: TokenTypes): Promise<Token> {
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: this.jwtAccessTokenExpiresIn,
     });
@@ -234,7 +235,7 @@ export class AuthService implements OnModuleInit {
     });
 
     await this.cacheManager.set(
-      `${payload.userId}`,
+      `${tokenType} ${payload.userId}`,
       refreshToken,
       this.jwtRefreshTokenTtl,
     );
@@ -242,8 +243,13 @@ export class AuthService implements OnModuleInit {
     return { accessToken, refreshToken };
   }
 
-  async getUserByPayload(payloadUserId): Promise<Users> {
+  async getUserByPayload(payloadUserId: number): Promise<Users> {
     return await this.prismaService.users.findFirst({
+      where: { id: payloadUserId, deletedAt: null },
+    });
+  }
+  async getLecturerByPayload(payloadUserId: number): Promise<Lecturer> {
+    return await this.prismaService.lecturer.findFirst({
       where: { id: payloadUserId, deletedAt: null },
     });
   }
@@ -267,10 +273,13 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async regenerateToken(user: Users): Promise<Token> {
-    await this.cacheManager.del(`${user.id}`);
+  async regenerateToken(user: Users, tokenType: TokenTypes): Promise<Token> {
+    await this.cacheManager.del(`${tokenType} ${user.id}`);
 
-    const token: Token = await this.generateToken({ userId: user.id });
+    const token: Token = await this.generateToken(
+      { userId: user.id },
+      tokenType,
+    );
 
     return token;
   }

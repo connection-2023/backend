@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
-import { TokenPayload } from 'src/common/interface/common-interface';
+import { UserTokenPayload } from 'src/common/interface/common-interface';
 import { Users } from '@prisma/client';
 import { AuthService } from '../services/auth.service';
 import { CookiesTokenExtractor } from '../extractor/cookie-token-extractor';
@@ -23,7 +23,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  async validate(request, tokenPayload: TokenPayload): Promise<Users> {
+  async validate(request, tokenPayload: UserTokenPayload): Promise<Users> {
     const cookiesRefreshToken: string = request.cookies.refreshToken;
 
     const authorizedUser: Users = await this.authService.getUserByPayload(
