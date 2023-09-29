@@ -8,17 +8,17 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { PhoneNumberDto } from '../dtos/phone-number.dto';
-import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
-import { AuthService } from '../services/auth.service';
-import { Token } from 'src/common/interface/common-interface';
+import { PhoneNumberDto } from '@src/auth/dtos/phone-number.dto';
+import { CheckVerificationCodeDto } from '@src/auth/dtos/check-verification-code.dto';
+import { AuthService } from '@src/auth/services/auth.service';
+import { Token } from '@src/common/interface/common-interface';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
-import { GetAuthorizedUser } from 'src/common/decorator/get-user.decorator';
+import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { Lecture, Lecturer, Users } from '@prisma/client';
 import { Response } from 'express';
 import { UserRefreshTokenGuard } from '@src/common/guards/user-refresh-token.guard';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
-import { TokenTypes } from '../enums/token-enums';
+import { TokenTypes } from '@src/auth/enums/token-enums';
 import { LecturerRefreshTokenGuard } from '@src/common/guards/lecturer-refresh-token.guard';
 
 @Controller('auth')

@@ -4,8 +4,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Lecturer } from '@prisma/client';
 import { ExtractJwt } from 'passport-jwt';
 import { Strategy } from 'passport-jwt';
-import { LecturerTokenPayload } from 'src/common/interface/common-interface';
-import { AuthService } from '../services/auth.service';
+import { LecturerTokenPayload } from '@src/common/interface/common-interface';
+import { AuthService } from '@src/auth/services/auth.service';
 
 @Injectable()
 export class LecturerAccessTokenStrategy extends PassportStrategy(

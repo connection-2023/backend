@@ -4,9 +4,9 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { UserTokenPayload } from 'src/common/interface/common-interface';
 import { Users } from '@prisma/client';
-import { AuthService } from '../services/auth.service';
-import { CookiesTokenExtractor } from '../extractor/cookie-token-extractor';
-import { TokenTypes } from '../enums/token-enums';
+import { AuthService } from '@src/auth/services/auth.service';
+import { CookiesTokenExtractor } from '@src/auth/extractor/cookie-token-extractor';
+import { TokenTypes } from '@src/auth/enums/token-enums';
 
 @Injectable()
 export class UserRefreshTokenStrategy extends PassportStrategy(

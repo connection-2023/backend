@@ -14,15 +14,15 @@ import {
   Payload,
   SMSData,
   SelectedDailyUsage,
-} from '../interface/interface';
+} from '@src/auth/interface/interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { CheckVerificationCodeDto } from '@src/auth/dtos/check-verification-code.dto';
+import { PrismaService } from '@src/prisma/prisma.service';
 import { DailySmsUsage, Lecturer, Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
-import { Token } from 'src/common/interface/common-interface';
-import { TokenTypes } from '../enums/token-enums';
+import { Token } from '@src/common/interface/common-interface';
+import { TokenTypes } from '@src/auth/enums/token-enums';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
