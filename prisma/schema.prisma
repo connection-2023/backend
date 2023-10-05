@@ -286,7 +286,7 @@ model Auth {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
   email      String
-  signInType Int
+  signUpType Int
   createdAt  DateTime @default(now()) @db.Timestamp(6)
   deletedAt  DateTime @db.Timestamp(6)
   users      Users    @relation(fields: [userId], references: [id])
