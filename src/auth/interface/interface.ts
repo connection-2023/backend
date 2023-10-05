@@ -20,6 +20,7 @@ interface AxiosPostResult {
   status: boolean;
   error?: object;
 }
+
 interface Payload {
   userId?: number;
   lecturerId?: number;
@@ -56,10 +57,16 @@ interface KakaoUserProfile {
   };
 }
 
+interface GetUserResponse {
+  userId?: number;
+  userEmail?: string;
+}
+
 export {
   SMSData,
   SelectedDailyUsage,
   AxiosPostResult,
   Payload,
   KakaoUserProfile,
+  GetUserResponse,
 };

@@ -277,7 +277,7 @@ model UserCoupon {
   lectureCouponId Int
   createdAt       DateTime      @default(now()) @db.Timestamp(6)
   updatedAt       DateTime      @default(now()) @updatedAt @db.Timestamp(6)
-  deletedAt       DateTime      @db.Timestamp(6)
+  deletedAt       DateTime?      @db.Timestamp(6)
   lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
   users           Users         @relation(fields: [userId], references: [id])
 }
@@ -288,6 +288,6 @@ model Auth {
   email      String
   signUpType Int
   createdAt  DateTime @default(now()) @db.Timestamp(6)
-  deletedAt  DateTime @db.Timestamp(6)
+  deletedAt  DateTime? @db.Timestamp(6)
   users      Users    @relation(fields: [userId], references: [id])
 }
