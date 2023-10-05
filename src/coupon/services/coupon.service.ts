@@ -24,11 +24,11 @@ export class CouponService {
     const couponInputData: CouponInputData = {
       lecturerId,
       ...createLectureCouponDto,
-      deletedAt: '212121',
     };
     const createResult: LectureCoupon =
       await this.prismaService.lectureCoupon.create({
         data: couponInputData,
       });
+    return createResult;
   }
 }

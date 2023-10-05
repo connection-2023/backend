@@ -19,9 +19,10 @@ export class CouponController {
     @GetAuthorizedUser() lecturer: Lecturer,
     @Body() createLectureCouponDto: CreateLectureCouponDto,
   ) {
-    await this.couponService.createLectureCoupon(
+    const createResult = await this.couponService.createLectureCoupon(
       lecturer.id,
       createLectureCouponDto,
     );
+    return createResult;
   }
 }

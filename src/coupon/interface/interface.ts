@@ -13,7 +13,7 @@ interface CouponInputData {
   endAt: Date | string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
-  deletedAt: Date | string;
+  deletedAt?: Date | string;
 }
 
 export { CouponInputData };

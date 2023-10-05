@@ -2,6 +2,41 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 
+// 커스텀 데코레이터를 정의합니다.
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
+} from 'class-validator';
+
+export function IsEitherDiscountPriceOrPercentageFilled(
+  validationOptions?: ValidationOptions,
+) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isEitherDiscountPriceOrPercentageFilled',
+      target: object.constructor,
+      propertyName: propertyName,
+      constraints: [],
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const dto: CreateLectureCouponDto =
+            args.object as CreateLectureCouponDto;
+
+          const discountPrice = dto.discountPrice;
+          const percentage = dto.percentage;
+
+          return (
+            (discountPrice !== undefined && discountPrice !== null) ||
+            (percentage !== undefined && percentage !== null)
+          );
+        },
+      },
+    });
+  };
+}
+
 export class CreateLectureCouponDto {
   @ApiProperty({
     example: '지금까지 이런 쿠폰은 없었다.',
@@ -26,6 +61,9 @@ export class CreateLectureCouponDto {
   @ApiProperty({ example: 1000, description: '할인 금액', required: false })
   @IsOptional()
   discountPrice: number;
+
+  @IsEitherDiscountPriceOrPercentageFilled()
+  readonly customValidation: string;
 
   @ApiProperty({
     example: 1000,
