@@ -1,11 +1,11 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
-import { AuthOAuthService } from '../services/auth-oauth.service';
-import { AuthTokenService } from '../services/auth-token.service';
+import { AuthOAuthService } from '@src/auth/services/auth-oauth.service';
+import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { Token } from '@src/common/interface/common-interface';
 import { Response } from 'express';
-import { TokenTypes } from '../enums/token-enums';
-import { ApiSignInKakao } from '../swagger-decorators/sign-in-kakao-decorators';
-import { GetUserResponse } from '../interface/interface';
+import { TokenTypes } from '@src/auth/enums/token-enums';
+import { ApiSignInKakao } from '@src/auth/swagger-decorators/oauth/sign-in-kakao-decorators';
+import { GetUserResponse } from '@src/auth/interface/interface';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('OAuth')
@@ -29,6 +29,7 @@ export class AuthOAuthController {
       response
         .status(201)
         .json({ authEmail: user.userEmail, signUpType: 'kakao' });
+      return;
     }
 
     const token: Token = await this.authTokenService.generateToken(
