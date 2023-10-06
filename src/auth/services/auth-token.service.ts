@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   Logger,
@@ -84,6 +85,7 @@ export class AuthTokenService implements OnModuleInit {
     if (!cachedRefreshToken) {
       throw new UnauthorizedException(
         `로그인 정보가 만료되었습니다. 다시 로그인해 주세요`,
+        'ExpiredLoginInformation',
       );
     }
 
@@ -91,6 +93,7 @@ export class AuthTokenService implements OnModuleInit {
       await this.cacheManager.del(`${tokenType} ${targetId}`);
       throw new UnauthorizedException(
         `로그인 정보가 일치하지 않습니다. 다시 로그인해 주세요`,
+        'InvalidLoginInformation',
       );
     }
   }
@@ -113,6 +116,12 @@ export class AuthTokenService implements OnModuleInit {
       await this.prismaService.lecturer.findFirst({
         where: { userId: user.id, deletedAt: null },
       });
+    if (!selectedLecturer) {
+      throw new BadRequestException(
+        `유효하지 않는 강사 정보 요청입니다.`,
+        'InvalidLecturerInformation',
+      );
+    }
 
     await this.cacheManager.del(`${TokenTypes.User} ${user.id}`);
 
@@ -128,6 +137,12 @@ export class AuthTokenService implements OnModuleInit {
     const selectedUser: Users = await this.prismaService.users.findFirst({
       where: { id: lecturer.userId, deletedAt: null },
     });
+    if (!selectedUser) {
+      throw new BadRequestException(
+        `유효하지 않는 유저 정보 요청입니다.`,
+        'InvalidUserInformation',
+      );
+    }
 
     await this.cacheManager.del(`${TokenTypes.Lecturer} ${lecturer.id}`);
 
