@@ -75,6 +75,13 @@ interface AuthInputData {
   signUpType: SignUpType;
 }
 
+interface GoogleUserProfile {
+  id?: string;
+  email?: string;
+  verified_email?: boolean;
+  picture?: string;
+}
+
 export {
   SMSData,
   SelectedDailyUsage,
@@ -84,4 +91,5 @@ export {
   GetUserResponse,
   CreateUserAuthData,
   AuthInputData,
+  GoogleUserProfile,
 };

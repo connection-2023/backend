@@ -22,25 +22,48 @@ export class AuthOAuthController {
     @Query('access-token') accessToken: string,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const user: GetUserResponse = await this.authOAuthService.getUserByKakao(
+    const user: GetUserResponse = await this.authOAuthService.signIn(
+      'KAKAO',
       accessToken,
     );
+
     if (user.userEmail) {
       response
         .status(201)
-        .json({ authEmail: user.userEmail, signUpType: 'kakao' });
-      return;
-    }
+        .json({ authEmail: user.userEmail, signUpType: 'KAKAO' });
+    } else {
+      const token: Token = await this.authTokenService.generateToken(
+        { userId: user.userId },
+        TokenTypes.User,
+      );
 
-    const token: Token = await this.authTokenService.generateToken(
-      { userId: user.userId },
-      TokenTypes.User,
+      response.cookie('refreshToken', token.refreshToken, { httpOnly: true });
+      response.status(200).json({ accessToken: token.accessToken });
+    }
+  }
+
+  @Get('/signin/google')
+  async signInGoogle(
+    @Query('access-token') accessToken: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const user: GetUserResponse = await this.authOAuthService.signIn(
+      'GOOGLE',
+      accessToken,
     );
 
-    response.cookie('refreshToken', token.refreshToken, {
-      httpOnly: true,
-    });
+    if (user.userEmail) {
+      response
+        .status(201)
+        .json({ authEmail: user.userEmail, signUpType: 'GOOGLE' });
+    } else {
+      const token: Token = await this.authTokenService.generateToken(
+        { userId: user.userId },
+        TokenTypes.User,
+      );
 
-    response.status(200).json({ accessToken: token.accessToken });
+      response.cookie('refreshToken', token.refreshToken, { httpOnly: true });
+      response.status(200).json({ accessToken: token.accessToken });
+    }
   }
 }
