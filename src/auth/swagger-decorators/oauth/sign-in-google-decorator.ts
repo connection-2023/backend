@@ -31,7 +31,7 @@ export function ApiSignInGoogle() {
     ApiBadRequestResponse(
       SwaggerApiResponse.exception([
         {
-          name: 'alreadyExistEmail',
+          name: 'differentSignUpMethod',
           example: { message: '다른 방식으로 가입된 이메일 입니다.' },
         },
       ]),
