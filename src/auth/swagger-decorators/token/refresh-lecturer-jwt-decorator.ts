@@ -1,0 +1,55 @@
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiInternalServerErrorResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
+
+export function ApiRefreshLecturerJwtToken() {
+  return applyDecorators(
+    ApiOperation({
+      summary: '강사 토큰 재발급',
+      description: 'cookie의 refreshToken을 사용하여 토큰 재발급',
+    }),
+    ApiOkResponse(
+      SwaggerApiResponse.success(
+        'accessToken 반환 및 쿠키엔 refreshToken 저장',
+        {
+          accessToken: '토큰',
+        },
+      ),
+    ),
+    ApiBadRequestResponse(
+      SwaggerApiResponse.exception([
+        {
+          name: 'InvalidLecturerInformation',
+          example: { message: '유효하지 않는 강사 정보 요청입니다.' },
+        },
+      ]),
+    ),
+    ApiUnauthorizedResponse(
+      SwaggerApiResponse.exception([
+        {
+          name: 'InvalidTokenFormat',
+          example: { message: '잘못된 토큰 형식입니다.' },
+        },
+        {
+          name: 'ExpiredLoginInformation',
+          example: {
+            message: '로그인 정보가 만료되었습니다. 다시 로그인해 주세요',
+          },
+        },
+        {
+          name: 'InvalidLoginInformation',
+          example: {
+            message: '로그인 정보가 일치하지 않습니다. 다시 로그인해 주세요',
+          },
+        },
+      ]),
+    ),
+  );
+}

@@ -14,3 +14,13 @@ export interface LecturerTokenPayload {
   iat: number;
   exp: number;
 }
+
+export interface ApiErrorResponse {
+  name: string;
+  example: ApiErrorExample;
+}
+
+export interface ApiErrorExample {
+  msg: string;
+  response?: any;
+}
