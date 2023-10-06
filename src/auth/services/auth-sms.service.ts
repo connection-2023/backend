@@ -43,7 +43,7 @@ export class AuthSmsService implements OnModuleInit {
     this.naverSecretKey = this.configService.get<string>('NAVER_Secret_KEY');
     this.phoneNumber = this.configService.get<string>('PHONE_NUMBER');
 
-    this.logger.log('AuthService Init');
+    this.logger.log('AuthSmsService Init');
   }
 
   async sendVerificationCode(

@@ -1,3 +1,5 @@
+import { SignUpType } from '@src/common/config/sign-up-type.config';
+
 interface SMSData {
   type: string;
   contentType: string;
@@ -62,6 +64,17 @@ interface GetUserResponse {
   userEmail?: string;
 }
 
+interface CreateUserAuthData {
+  authEmail: string;
+  signUpType: string;
+}
+
+interface AuthInputData {
+  userId: number;
+  email: string;
+  signUpType: SignUpType;
+}
+
 export {
   SMSData,
   SelectedDailyUsage,
@@ -69,4 +82,6 @@ export {
   Payload,
   KakaoUserProfile,
   GetUserResponse,
+  CreateUserAuthData,
+  AuthInputData,
 };

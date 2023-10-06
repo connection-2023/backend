@@ -7,13 +7,16 @@ import { LecturerAccessTokenStrategy } from '@src/auth/strategy/lecturer-access-
 import { UserRefreshTokenStrategy } from '@src/auth/strategy/user-refresh-token.strategy';
 import { LecturerRefreshTokenStrategy } from '@src/auth/strategy/lecturer-refresh-token.strategy';
 import { AuthTokenController } from '@src/auth/controllers/auth-token.controller';
-import { AuthTokenService } from './services/auth-token.service';
-import { AuthOAuthController } from './controllers/auth-oauth.controller';
-import { AuthOAuthService } from './services/auth-oauth.service';
+import { AuthTokenService } from '@src/auth/services/auth-token.service';
+import { AuthOAuthController } from '@src/auth/controllers/auth-oauth.controller';
+import { AuthOAuthService } from '@src/auth/services/auth-oauth.service';
+import { AuthController } from '@src/auth/controllers/auth.controller';
+import { AuthService } from '@src/auth/services/auth.service';
 
 @Module({
   imports: [CustomJwtModule],
   providers: [
+    AuthService,
     AuthSmsService,
     AuthTokenService,
     AuthOAuthService,
@@ -22,6 +25,11 @@ import { AuthOAuthService } from './services/auth-oauth.service';
     LecturerAccessTokenStrategy,
     LecturerRefreshTokenStrategy,
   ],
-  controllers: [AuthSmsController, AuthTokenController, AuthOAuthController],
+  controllers: [
+    AuthController,
+    AuthSmsController,
+    AuthTokenController,
+    AuthOAuthController,
+  ],
 })
 export class AuthModule {}

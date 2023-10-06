@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosResponse } from 'axios';
-import { GetUserResponse, KakaoUserProfile } from '../interface/interface';
+import {
+  GetUserResponse,
+  KakaoUserProfile,
+} from '@src/auth/interface/interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { SignUpType } from '@src/common/config/sign-up-type.config';
 import { Auth } from '@prisma/client';
@@ -23,6 +26,7 @@ export class AuthOAuthService implements OnModuleInit {
 
   onModuleInit() {
     this.kakaoGetUserUri = this.configService.get<string>('KAKAO_GET_USER_URI');
+    this.logger.log('AuthOAuthService init');
   }
 
   async getUserByKakao(accessToken: string): Promise<GetUserResponse> {
