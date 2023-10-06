@@ -12,6 +12,7 @@ import { AuthOAuthController } from '@src/auth/controllers/auth-oauth.controller
 import { AuthOAuthService } from '@src/auth/services/auth-oauth.service';
 import { AuthController } from '@src/auth/controllers/auth.controller';
 import { AuthService } from '@src/auth/services/auth.service';
+import { AuthRepository } from './repository/auth.repository';
 
 @Module({
   imports: [CustomJwtModule],
@@ -24,6 +25,7 @@ import { AuthService } from '@src/auth/services/auth.service';
     UserRefreshTokenStrategy,
     LecturerAccessTokenStrategy,
     LecturerRefreshTokenStrategy,
+    AuthRepository,
   ],
   controllers: [
     AuthController,
