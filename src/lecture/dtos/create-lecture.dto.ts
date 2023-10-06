@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsBoolean,
   IsDate,
   IsNotEmpty,
   IsNumber,
@@ -45,6 +44,24 @@ export class CreateLectureDto {
   title: string;
 
   @ApiProperty({
+    example: '안녕하세용',
+    description: '강의 소개',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  introduction: string;
+
+  @ApiProperty({
+    example: '첫날에 모하징',
+    description: '강의 커리큘럼',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  curriculum: string;
+
+  @ApiProperty({
     example: '용마산로 616 18층',
     description: '상세주소',
     required: true,
@@ -80,12 +97,6 @@ export class CreateLectureDto {
   @Type(() => Number)
   maxCapacity: number | null;
 
-  @ApiProperty({ example: true, description: '그룹 여부', required: true })
-  @IsNotEmpty()
-  @IsBoolean()
-  @Type(() => Boolean)
-  isGroup: boolean;
-
   @ApiProperty({
     example: '2023 - 09 - 14',
     description: '강의 예약 마감일',
@@ -120,4 +131,14 @@ export class CreateLectureDto {
   @IsNumber()
   @Type(() => Number)
   noShowDeposit: number | null;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: '강의 이미지 파일 업로드',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  files: string;
 }

@@ -1,49 +1,6 @@
-// import { Injectable } from '@nestjs/common';
-// import * as AWS from 'aws-sdk';
-
-// @Injectable()
-// export class UploadsService {
-//   private readonly s3;
-
-//   constructor() {
-//     AWS.config.update({
-//       region: process.env.AWS_REGION,
-//       credentials: {
-//         accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-//         secretAccessKey: process.env.AWS_S3_SECRET_KEY,
-//       },
-//     });
-//     this.s3 = new AWS.S3();
-//   }
-
-//   async uploadImage(
-//     file: Express.Multer.File,
-//     kind: string,
-//     lectureId: number,
-//   ) {
-//     console.log(file);
-
-//     const key = `${kind}/${lectureId}/${Date.now() + file.originalname}`;
-
-//     const params = {
-//       Key: key,
-//       Body: file.buffer,
-//       Bucket: process.env.AWS_S3_BUCKET_NAME,
-//       // ACL: 'private',
-//     };
-
-//     return new Promise((resolve, reject) => {
-//       this.s3.putObject(params, (err, data) => {
-//         if (err) reject(err);
-//         resolve(key);
-//       });
-//     });
-//   }
-// }
 import * as path from 'path';
 import * as AWS from 'aws-sdk';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PromiseResult } from 'aws-sdk/lib/request';
 
 @Injectable()
 export class UploadsService {

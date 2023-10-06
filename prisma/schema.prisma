@@ -102,7 +102,7 @@ model Lecture {
   //강의명
   title                  String                   @unique @db.VarChar(30)
   //강의 소개
-  lectureIntroduction    String                   @db.VarChar(500)
+  introduction           String                   @db.VarChar(500)
   //커리큘럼
   curriculum             String                   @db.Text
   //상세 주소

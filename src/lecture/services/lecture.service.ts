@@ -1,31 +1,26 @@
-import { QueryFilter } from '@src/common/filters/query.filter';
+import { LectureRepository } from './../repositories/lecture.repository';
 import { Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { PrismaService } from '@src/prisma/prisma.service';
 import { Lecture, PrismaPromise } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 
 @Injectable()
 export class LectureService {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly queryFilter: QueryFilter,
-  ) {}
+  constructor(private readonly lectureRepository: LectureRepository) {}
 
   async createLecture(
     lecture: CreateLectureDto,
-    danceLecturerId: number,
-    imgurl: string[],
-  ): Promise<any> {
+    lecturerId: number,
+    imgUrl: string[],
+  ) {
     const reservationDeadline = new Date(lecture.reservationDeadline);
-    return await this.prismaService.lecture.create({
-      data: {
-        danceLecturerId,
-        ...lecture,
-        reservationDeadline,
-      },
-    });
+    await this.lectureRepository.createLecture(
+      lecturerId,
+      lecture,
+      reservationDeadline,
+      imgUrl,
+    );
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {

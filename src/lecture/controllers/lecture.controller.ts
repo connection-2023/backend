@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
@@ -30,6 +30,7 @@ export class LectureController {
   @ApiOperation({
     summary: '강의 생성',
   })
+  @ApiConsumes('multipart/form-data')
   @Post()
   @UseInterceptors(FilesInterceptor('files', 5))
   async createLecture(
