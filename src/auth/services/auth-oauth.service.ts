@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -11,8 +12,8 @@ import {
   GetUserResponse,
   GoogleUserProfile,
   KakaoUserProfile,
+  NaverUserProfile,
 } from '@src/auth/interface/interface';
-import { PrismaService } from '@src/prisma/prisma.service';
 import { SignUpType } from '@src/common/config/sign-up-type.config';
 import { Auth } from '@prisma/client';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
@@ -22,10 +23,10 @@ export class AuthOAuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthOAuthService.name);
   private kakaoGetUserUri: string;
   private googleGetUserUri: string;
+  private naverGetUserUri: string;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly prismaService: PrismaService,
     private readonly authRepository: AuthRepository,
   ) {}
 
@@ -34,6 +35,7 @@ export class AuthOAuthService implements OnModuleInit {
     this.googleGetUserUri = this.configService.get<string>(
       'GOOGLE_GET_USER_URI',
     );
+    this.naverGetUserUri = this.configService.get<string>('NAVER_GET_USER_URI');
 
     this.logger.log('AuthOAuthService init');
   }
@@ -47,6 +49,8 @@ export class AuthOAuthService implements OnModuleInit {
       userEmail = await this.getKakaoUserEmail(accessToken);
     } else if (provider === 'GOOGLE') {
       userEmail = await this.getGoogleUserEmail(accessToken);
+    } else if (provider === 'NAVER') {
+      userEmail = await this.getNaverUserEmail(accessToken);
     }
 
     const userAuth: Auth = await this.authRepository.getUserAuth(
@@ -56,6 +60,13 @@ export class AuthOAuthService implements OnModuleInit {
 
     if (!userAuth) {
       return { userEmail };
+    }
+
+    if (userAuth.signUpType !== SignUpType[provider]) {
+      throw new BadRequestException(
+        `다른 방식으로 가입된 이메일 입니다.`,
+        'differentSignUpMethod',
+      );
     }
 
     return { userId: userAuth.userId };
@@ -90,6 +101,24 @@ export class AuthOAuthService implements OnModuleInit {
       );
 
       return response.data.email;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'OAuth 서버 요청 오류입니다.',
+        'oAuthServerError',
+      );
+    }
+  }
+
+  private async getNaverUserEmail(accessToken: string): Promise<string> {
+    try {
+      const response: AxiosResponse<NaverUserProfile> = await axios.get(
+        this.naverGetUserUri,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
+
+      return response.data.response.email;
     } catch (error) {
       throw new InternalServerErrorException(
         'OAuth 서버 요청 오류입니다.',

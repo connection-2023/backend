@@ -1,4 +1,5 @@
 import {
+  ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiOkResponse,
@@ -26,6 +27,14 @@ export function ApiSignInGoogle() {
           signUpType: 'GOOGLE',
         },
       ),
+    ),
+    ApiBadRequestResponse(
+      SwaggerApiResponse.exception([
+        {
+          name: 'differentSignUpMethod',
+          example: { message: '다른 방식으로 가입된 이메일 입니다.' },
+        },
+      ]),
     ),
     ApiInternalServerErrorResponse(
       SwaggerApiResponse.exception([

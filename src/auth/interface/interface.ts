@@ -82,6 +82,16 @@ interface GoogleUserProfile {
   picture?: string;
 }
 
+interface NaverUserProfile {
+  resultcode?: string;
+  message?: string;
+  response?: {
+    id?: string;
+    email?: string;
+    name?: string;
+  };
+}
+
 export {
   SMSData,
   SelectedDailyUsage,
@@ -92,4 +102,5 @@ export {
   CreateUserAuthData,
   AuthInputData,
   GoogleUserProfile,
+  NaverUserProfile,
 };

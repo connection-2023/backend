@@ -50,8 +50,8 @@ jobs:
           echo "JWT_REFRESH_TOKEN_TTL=${{ secrets.JWT_REFRESH_TOKEN_TTL }}" >> .env
 
           echo "KAKAO_GET_USER_URI=${{ secrets.KAKAO_GET_USER_URI }}" >> .env
-
           echo "GOOGLE_GET_USER_URI=${{ secrets.GOOGLE_GET_USER_URI }}" >> .env
+          echo "NAVER_GET_USER_URI=${{ secrets.NAVER_GET_USER_URI }}" >> .env
 
           cat .env
 

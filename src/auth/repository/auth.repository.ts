@@ -9,7 +9,7 @@ export class AuthRepository {
 
   async getUserAuth(userEmail: string, signUpType: SignUpType): Promise<Auth> {
     const userAuth: Auth = await this.prismaService.auth.findFirst({
-      where: { email: userEmail, signUpType },
+      where: { email: userEmail, deletedAt: null },
     });
 
     return userAuth;
