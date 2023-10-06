@@ -7,7 +7,7 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiSignInKakao() {
+export function ApiSignInGoogle() {
   return applyDecorators(
     ApiOperation({ summary: '구글 로그인' }),
     ApiOkResponse(

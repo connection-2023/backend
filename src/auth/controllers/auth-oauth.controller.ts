@@ -7,6 +7,7 @@ import { TokenTypes } from '@src/auth/enums/token-enums';
 import { ApiSignInKakao } from '@src/auth/swagger-decorators/oauth/sign-in-kakao-decorators';
 import { GetUserResponse } from '@src/auth/interface/interface';
 import { ApiTags } from '@nestjs/swagger';
+import { ApiSignInGoogle } from '../swagger-decorators/oauth/sign-in-google-decorators';
 
 @ApiTags('OAuth')
 @Controller('auth/oauth')
@@ -41,7 +42,7 @@ export class AuthOAuthController {
       response.status(200).json({ accessToken: token.accessToken });
     }
   }
-
+  @ApiSignInGoogle()
   @Get('/signin/google')
   async signInGoogle(
     @Query('access-token') accessToken: string,
