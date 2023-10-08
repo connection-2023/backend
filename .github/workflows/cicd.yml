@@ -26,19 +26,35 @@ jobs:
 
       - name: Setting .env
         run: |
-          # .env 파일 생성 
+          # .env 파일 생성
+          echo "PORT=${{ secrets.PORT }}" >> .env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+
           echo "SENS_URL=${{ secrets.SENS_URL }}" >> .env
           echo "SENS_API_KEY=${{ secrets.SENS_API_KEY }}" >> .env
           echo "NAVER_ACCESS_KEY=${{ secrets.NAVER_ACCESS_KEY }}" >> .env
           echo "NAVER_SECRET_KEY=${{ secrets.NAVER_SECRET_KEY }}" >> .env
           echo "PHONE_NUMBER=${{ secrets.PHONE_NUMBER }}" >> .env      
           echo "SMS_USAGE_LIMIT=${{ secrets.SMS_USAGE_LIMIT }}" >> .env
+
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
           echo "REDIS_SMS_TTL=${{ secrets.REDIS_SMS_TTL }}" >> .env
+
           echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env
           echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env
+
+          echo "JWT_TOKEN_SECRET_KEY=${{ secrets.JWT_TOKEN_SECRET_KEY }}" >> .env
+          echo "JWT_ACCESS_TOKEN_EXPIRES_IN=${{ secrets.JWT_ACCESS_TOKEN_EXPIRES_IN }}" >> .env
+          echo "JWT_REFRESH_TOKEN_EXPIRES_IN=${{ secrets.JWT_REFRESH_TOKEN_EXPIRES_IN }}" >> .env
+          echo "JWT_REFRESH_TOKEN_TTL=${{ secrets.JWT_REFRESH_TOKEN_TTL }}" >> .env
+
+          echo "KAKAO_GET_USER_URI=${{ secrets.KAKAO_GET_USER_URI }}" >> .env
+          echo "GOOGLE_GET_USER_URI=${{ secrets.GOOGLE_GET_USER_URI }}" >> .env
+          echo "NAVER_GET_USER_URI=${{ secrets.NAVER_GET_USER_URI }}" >> .env
+
+          echo "FRONT_END_URL=${{ secrets.FRONT_END_URL }}" >> .env
+
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축
