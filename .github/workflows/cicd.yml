@@ -55,6 +55,12 @@ jobs:
 
           echo "FRONT_END_URL=${{ secrets.FRONT_END_URL }}" >> .env
 
+          echo "KFT_GET_TOKEN_URI=${{ secrets.KFT_GET_TOKEN_URI }}" >> .env
+          echo "KFT_CLIENT_ID=${{ secrets.KFT_CLIENT_ID }}" >> .env
+          echo "KFT_CLIENT_SECRET=${{ secrets.KFT_CLIENT_SECRET }}" >> .env
+          echo "KFT_SCOPE=${{ secrets.KFT_SCOPE }}" >> .env
+          echo "KFT_GRANT_TYPE=${{ secrets.KFT_GRANT_TYPE }}" >> .env
+
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축
