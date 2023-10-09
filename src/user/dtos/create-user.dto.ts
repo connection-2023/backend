@@ -2,6 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsEmail, IsNumber, IsString } from 'class-validator';
 
 export class CreateUserDto {
+  @ApiProperty({ example: 1, description: '지역id', required: true })
+  @IsNumber()
+  regionId: number;
+
+  @ApiProperty({ example: '이재현', description: '이름', required: true })
+  @IsString()
+  name: string;
+
   @ApiProperty({ example: 'hyun', description: '닉네임', required: true })
   @IsString()
   nickname: string;
@@ -13,7 +21,7 @@ export class CreateUserDto {
     default: false,
   })
   @IsBoolean()
-  isProfileOpen: number;
+  isProfileOpen: boolean;
 
   @ApiProperty({
     example: '010-1234-5678',
@@ -41,7 +49,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'test@test.com',
-    description: '이메일',
+    description: '사용 이메일',
     required: true,
   })
   @IsEmail()
@@ -52,5 +60,14 @@ export class CreateUserDto {
     description: '가입방식',
     required: true,
   })
+  @IsString()
   provider: string;
+
+  @ApiProperty({
+    example: 'test@test.com',
+    description: '소셜 이메일',
+    required: true,
+  })
+  @IsEmail()
+  authEmail: string;
 }

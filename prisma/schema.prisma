@@ -12,6 +12,8 @@ model Users {
   id               Int               @id @default(autoincrement())
   //지역 id
   regionId         Int
+  //이름
+  name             String            @db.VarChar(10)
   //사용자 닉네임
   nickname         String            @unique @db.VarChar(30)
   //프로필 공개 여부(open: true, close: false)
@@ -277,17 +279,17 @@ model UserCoupon {
   lectureCouponId Int
   createdAt       DateTime      @default(now()) @db.Timestamp(6)
   updatedAt       DateTime      @default(now()) @updatedAt @db.Timestamp(6)
-  deletedAt       DateTime?      @db.Timestamp(6)
+  deletedAt       DateTime?     @db.Timestamp(6)
   lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
   users           Users         @relation(fields: [userId], references: [id])
 }
 
 model Auth {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
+  id         Int       @id @default(autoincrement())
+  userId     Int       @unique
   email      String
   signUpType Int
-  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  createdAt  DateTime  @default(now()) @db.Timestamp(6)
   deletedAt  DateTime? @db.Timestamp(6)
-  users      Users    @relation(fields: [userId], references: [id])
+  users      Users     @relation(fields: [userId], references: [id])
 }
