@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DanceCategory } from '@src/common/enum/enum';
-import { IsArray, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  Matches,
+} from 'class-validator';
 
 export class CreateLecturerDto {
   @ApiProperty({
@@ -10,6 +16,26 @@ export class CreateLecturerDto {
   })
   @IsNotEmpty()
   nickname: string;
+
+  @ApiProperty({
+    example: 'illppang@naver.com',
+    description: '이메일 / 이메일 형식이 아니면 에러 반환',
+    required: true,
+  })
+  @Matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
+    message: '잘못된 이메일 형식입니다.',
+  })
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({
+    example: '01012345678',
+    description: '번호인증 후 포함',
+    required: true,
+  })
+  @Matches(/^010\d{8}$/, { message: '유효하지 않은 전화번호 형식입니다.' })
+  @IsNotEmpty()
+  phoneNumber: string;
 
   @ApiProperty({
     example: 'https://www.youtube.com/',

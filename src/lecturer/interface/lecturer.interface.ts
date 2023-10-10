@@ -1,6 +1,8 @@
 interface LecturerInputData {
   userId: number;
   nickname: string;
+  email: string;
+  phoneNumber: string;
   youtubeUrl?: string;
   instagramUrl?: string;
   homepageUrl?: string;
