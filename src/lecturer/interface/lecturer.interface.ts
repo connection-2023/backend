@@ -1,4 +1,4 @@
-interface LecturerCreateInput {
+interface LecturerInputData {
   userId: number;
   nickname: string;
   youtubeUrl?: string;
@@ -9,8 +9,25 @@ interface LecturerCreateInput {
   experience: string;
 }
 
-interface LecturerInputData {
+interface LecturerRegionInputData {
   lecturerId: number;
   regionId: number;
 }
-export { LecturerCreateInput, LecturerInputData };
+
+interface LecturerWebsiteInputData {
+  lecturerId: number;
+  url: string;
+}
+
+interface LecturerDanceGenreInputData {
+  lecturerId: number;
+  danceCategoryId: number;
+  name?: string;
+}
+
+export {
+  LecturerInputData,
+  LecturerRegionInputData,
+  LecturerWebsiteInputData,
+  LecturerDanceGenreInputData,
+};

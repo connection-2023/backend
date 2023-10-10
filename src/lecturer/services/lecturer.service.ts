@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
-import { CreateLecturerDto } from '../dtos/create-lecturer.dto';
-import { LecturerRepository } from '../repositories/lecturer.repository';
+import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
+import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
   Id,
   PrismaTransaction,
@@ -14,13 +15,22 @@ import {
 import { RegionRepository } from '@src/region/repository/region.repository';
 import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { LecturerInputData } from '../interface/lecturer.interface';
+import {
+  LecturerDanceGenreInputData,
+  LecturerInputData,
+  LecturerRegionInputData,
+  LecturerWebsiteInputData,
+} from '@src/lecturer/interface/lecturer.interface';
+import { DanceCategory } from '@src/common/enum/enum';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
   private readonly logger = new Logger(LecturerService.name);
 
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
     private readonly regionRepository: RegionRepository,
@@ -30,12 +40,16 @@ export class LecturerService implements OnModuleInit {
     this.logger.log('LecturerService Init');
   }
 
-  async createLecturer(userId: number, createLecturerDto: CreateLecturerDto) {
+  async createLecturer(
+    userId: number,
+    createLecturerDto: CreateLecturerDto,
+  ): Promise<void> {
     await this.checkLecturerExist(userId);
 
-    const { regions, genres, websiteUrls, ...lecturerData } = createLecturerDto;
+    const { regions, genres, websiteUrls, etcGenres, ...lecturerData } =
+      createLecturerDto;
 
-    const regionIds: Id[] = await this.getRegionsId(regions);
+    const regionIds: Id[] = await this.getValidRegionIds(regions);
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -45,11 +59,31 @@ export class LecturerService implements OnModuleInit {
             ...lecturerData,
           });
 
-        const lecturerInputData: LecturerInputData[] =
-          this.createLecturerInputData(lecturer.id, regionIds);
+        const lecturerRegionInputData: LecturerRegionInputData[] =
+          this.createLecturerRegionInputData(lecturer.id, regionIds);
         await this.lecturerRepository.trxCreateLecturerRegions(
           transaction,
-          lecturerInputData,
+          lecturerRegionInputData,
+        );
+
+        if (websiteUrls) {
+          const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
+            this.createLecturerWebsiteInputData(lecturer.id, websiteUrls);
+          await this.lecturerRepository.trxCreateLecturerWebsiteUrls(
+            transaction,
+            lecturerWebsiteInputData,
+          );
+        }
+
+        const lecturerDanceGenreInputData: LecturerDanceGenreInputData[] =
+          await this.createLecturerDanceGenreInputData(
+            lecturer.id,
+            genres,
+            etcGenres,
+          );
+        await this.lecturerRepository.trxCreateLecturerDanceGenres(
+          transaction,
+          lecturerDanceGenreInputData,
         );
       },
     );
@@ -65,7 +99,7 @@ export class LecturerService implements OnModuleInit {
       );
     }
   }
-  private async getRegionsId(regions: string[]): Promise<Id[]> {
+  private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.regionRepository.getRegionsId(
       extractRegions,
@@ -104,20 +138,24 @@ export class LecturerService implements OnModuleInit {
         addressParts[0].endsWith('구')
       ) {
         district = addressParts.shift();
+      } else {
+        throw new BadRequestException(
+          `잘못된 주소형식입니다`,
+          'InvalidAddressFormat',
+        );
       }
 
       return { administrativeDistrict, district };
     });
 
-    // 추출된 지역 데이터를 반환
     return extractedRegions;
   }
 
-  private createLecturerInputData(
+  private createLecturerRegionInputData(
     lecturerId: number,
     regionIds: Id[],
-  ): LecturerInputData[] {
-    const lecturerInputData: LecturerInputData[] = regionIds.map(
+  ): LecturerRegionInputData[] {
+    const lecturerInputData: LecturerRegionInputData[] = regionIds.map(
       (regionId) => ({
         lecturerId,
         regionId: regionId.id,
@@ -125,5 +163,60 @@ export class LecturerService implements OnModuleInit {
     );
 
     return lecturerInputData;
+  }
+
+  private createLecturerWebsiteInputData(
+    lecturerId: number,
+    websiteUrls: string[],
+  ): LecturerWebsiteInputData[] {
+    const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
+      websiteUrls.map((url) => ({
+        lecturerId,
+        url,
+      }));
+
+    return lecturerWebsiteInputData;
+  }
+
+  private async createLecturerDanceGenreInputData(
+    lecturerId: number,
+    genres: DanceCategory[],
+    etcGenres: string[],
+  ): Promise<LecturerDanceGenreInputData[]> {
+    const danceCategoryIds: number[] = await this.getDanceCategoryIds(genres);
+    const lecturerInputData: LecturerDanceGenreInputData[] =
+      danceCategoryIds.map((danceCategoryId: number) => ({
+        lecturerId,
+        danceCategoryId,
+      }));
+
+    if (etcGenres) {
+      const etcGenreId: number = await this.cacheManager.get('기타');
+      const etcGenreData = etcGenres.map((etcGenre: string) => ({
+        lecturerId,
+        danceCategoryId: etcGenreId,
+        name: etcGenre,
+      }));
+
+      lecturerInputData.push(...etcGenreData);
+    }
+
+    return lecturerInputData;
+  }
+
+  private async getDanceCategoryIds(
+    genres: DanceCategory[],
+  ): Promise<number[]> {
+    const danceCategoryIds: number[] = await Promise.all(
+      genres.map(async (genre: DanceCategory) => {
+        const danceCategoryId: number = await this.cacheManager.get(
+          DanceCategory[genre],
+        );
+
+        return danceCategoryId;
+      }),
+    );
+
+    return danceCategoryIds;
   }
 }

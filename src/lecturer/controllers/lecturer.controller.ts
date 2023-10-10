@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { LecturerService } from '../services/lecturer.service';
 import { CreateLecturerDto } from '../dtos/create-lecturer.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
@@ -17,5 +17,7 @@ export class LecturerController {
     @Body() createLecturerDto: CreateLecturerDto,
   ) {
     await this.lecturerService.createLecturer(user.id, createLecturerDto);
+
+    return { message: '강사 생성 완료' };
   }
 }

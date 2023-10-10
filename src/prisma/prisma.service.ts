@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   INestApplication,
   Inject,
   Injectable,
@@ -8,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-
 import { DanceCategory, PrismaClient } from '@prisma/client';
 
 @Injectable()
@@ -28,7 +26,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       await this.danceCategory.findMany();
 
     for (const danceCategory of danceCategories) {
-      await this.cacheManager.set(danceCategory.genre, danceCategory.id);
+      await this.cacheManager.set(danceCategory.genre, danceCategory.id, 0);
     }
 
     this.logger.log('Cache success');

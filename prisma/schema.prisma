@@ -67,7 +67,7 @@ model Lecturer {
   //user id
   userId             Int                  @unique
   //강사nickname
-  nickname           String               @db.VarChar(11)
+  nickname           String               @unique @db.VarChar(11)
   //개인 사이트 주소
   youtubeUrl         String?
   instagramUrl       String?

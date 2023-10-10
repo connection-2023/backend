@@ -1,4 +1,5 @@
-import { IsArray, IsNotEmpty, IsOptional } from 'class-validator';
+import { DanceCategory } from '@src/common/enum/enum';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateLecturerDto {
   @IsNotEmpty()
@@ -27,10 +28,15 @@ export class CreateLecturerDto {
   regions: string[];
 
   @IsArray()
+  @IsEnum(DanceCategory, { each: true })
   @IsNotEmpty()
-  genres: string[];
+  genres: DanceCategory[];
 
   @IsArray()
   @IsOptional()
   websiteUrls: string[];
+
+  @IsArray()
+  @IsOptional()
+  etcGenres: string[];
 }
