@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { CreateLecturerDto } from '../dtos/create-lecturer.dto';
 import {
   LecturerRegionInputData,
   LecturerWebsiteInputData,
   LecturerInputData,
   LecturerDanceGenreInputData,
-} from '../interface/lecturer.interface';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+} from '@src/lecturer/interface/lecturer.interface';
+import {
+  Id,
+  PrismaTransaction,
+  Region,
+} from '@src/common/interface/common-interface';
 import { Lecturer } from '@prisma/client';
 
 @Injectable()
@@ -50,5 +53,13 @@ export class LecturerRepository {
     await transaction.lecturerDanceGenre.createMany({
       data: lecturerWebsiteInputData,
     });
+  }
+
+  async getRegionsId(regions: Region[]): Promise<Id[]> {
+    const regionsId: Id[] = await this.prismaService.region.findMany({
+      where: { OR: regions },
+      select: { id: true },
+    });
+    return regionsId;
   }
 }

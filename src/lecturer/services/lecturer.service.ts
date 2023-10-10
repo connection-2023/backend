@@ -12,7 +12,6 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { RegionRepository } from '@src/region/repository/region.repository';
 import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
@@ -33,7 +32,6 @@ export class LecturerService implements OnModuleInit {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
-    private readonly regionRepository: RegionRepository,
   ) {}
 
   onModuleInit() {
@@ -99,9 +97,10 @@ export class LecturerService implements OnModuleInit {
       );
     }
   }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
-    const regionIds: Id[] = await this.regionRepository.getRegionsId(
+    const regionIds: Id[] = await this.lecturerRepository.getRegionsId(
       extractRegions,
     );
     if (regionIds.length !== extractRegions.length) {
@@ -127,7 +126,7 @@ export class LecturerService implements OnModuleInit {
         administrativeDistrict = addressParts.shift();
       } else {
         throw new BadRequestException(
-          `잘못된 주소형식입니다`,
+          `잘못된 주소형식입니다.`,
           'InvalidAddressFormat',
         );
       }

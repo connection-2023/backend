@@ -10,7 +10,6 @@ import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CustomJwtModule } from './common/config/jwt-module.cofig';
-import { RegionModule } from './region/region.module';
 
 @Module({
   imports: [
@@ -23,7 +22,6 @@ import { RegionModule } from './region/region.module';
     CustomJwtModule,
     CustomCacheModule,
     CustomConfigModule,
-    RegionModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
