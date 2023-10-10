@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Lecturer } from '@prisma/client';
@@ -25,12 +29,22 @@ export class LecturerAccessTokenStrategy extends PassportStrategy(
   async validate(tokenPayload: LecturerTokenPayload): Promise<Lecturer> {
     try {
       if (!tokenPayload.lecturerId) {
-        throw new UnauthorizedException('잘못된 토큰 형식입니다.');
+        throw new UnauthorizedException(
+          '잘못된 토큰 형식입니다.',
+          'InvalidTokenFormat',
+        );
       }
       const authorizedLecturer: Lecturer =
         await this.authTokenService.getLecturerByPayload(
           tokenPayload.lecturerId,
         );
+
+      if (!authorizedLecturer) {
+        throw new BadRequestException(
+          `유효하지 않는 강사 정보 요청입니다.`,
+          'InvalidLecturerInformation',
+        );
+      }
 
       return authorizedLecturer;
     } catch (error) {

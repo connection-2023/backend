@@ -53,6 +53,10 @@ jobs:
           echo "GOOGLE_GET_USER_URI=${{ secrets.GOOGLE_GET_USER_URI }}" >> .env
           echo "NAVER_GET_USER_URI=${{ secrets.NAVER_GET_USER_URI }}" >> .env
 
+          echo "FRONT_END_URL=${{ secrets.FRONT_END_URL }}" >> .env
+
+          echo "REDIS_CATEGORY_TTL=${{ secrets.REDIS_CATEGORY_TTL }}" >> .env
+
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축

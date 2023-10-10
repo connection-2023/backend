@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
@@ -27,13 +31,23 @@ export class UserRefreshTokenStrategy extends PassportStrategy(
   async validate(request, tokenPayload: UserTokenPayload): Promise<Users> {
     try {
       if (!tokenPayload.userId) {
-        throw new UnauthorizedException('잘못된 토큰 형식입니다.');
+        throw new UnauthorizedException(
+          '잘못된 토큰 형식입니다.',
+          'InvalidTokenFormat',
+        );
       }
 
       const cookiesRefreshToken: string = request.cookies.refreshToken;
 
       const authorizedUser: Users =
         await this.authTokenService.getUserByPayload(tokenPayload.userId);
+      if (!authorizedUser) {
+        throw new BadRequestException(
+          `유효하지 않는 유저 정보 요청입니다.`,
+          'InvalidUserInformation',
+        );
+      }
+
       await this.authTokenService.validateRefreshToken(
         cookiesRefreshToken,
         authorizedUser.id,

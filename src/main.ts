@@ -12,6 +12,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port: number = configService.get<number>('PORT');
 
+  app.enableCors({
+    origin: configService.get<string>('FRONT_END_URL'),
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -34,15 +38,12 @@ async function bootstrap() {
     .setTitle('connection')
     .setDescription('Connection api description')
     .setVersion('1.0.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        name: 'JWT',
-        in: 'header',
-      },
-      'access-token',
-    )
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      name: 'JWT',
+      in: 'header',
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

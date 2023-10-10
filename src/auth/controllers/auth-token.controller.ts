@@ -9,7 +9,13 @@ import { Token } from '@src/common/interface/common-interface';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
+import { ApiRefreshUserJwtToken } from '../swagger-decorators/token/refresh-user-jwt-decorator';
+import { ApiRefreshLecturerJwtToken } from '../swagger-decorators/token/refresh-lecturer-jwt-decorator';
+import { ApiTags } from '@nestjs/swagger';
+import { ApiSwitchUserToLecturer } from '../swagger-decorators/token/switch-user-to-lecturer-decorator';
+import { ApiSwitchLecturerToUser } from '../swagger-decorators/token/switch-lecturer-to-user-decorator';
 
+@ApiTags('토큰')
 @Controller('auth/token')
 export class AuthTokenController {
   constructor(private readonly authTokenService: AuthTokenService) {}
@@ -33,6 +39,7 @@ export class AuthTokenController {
   }
 
   //유저 토큰 재발급
+  @ApiRefreshUserJwtToken()
   @Get('/user/refresh')
   @UseGuards(UserRefreshTokenGuard)
   async refreshUserJwtToken(
@@ -51,6 +58,7 @@ export class AuthTokenController {
   }
 
   //강사 토큰 재발급
+  @ApiRefreshLecturerJwtToken()
   @Get('/lecturer/refresh')
   @UseGuards(LecturerRefreshTokenGuard)
   async refreshLecturerJwtToken(
@@ -69,6 +77,7 @@ export class AuthTokenController {
   }
 
   //유저 -> 강사 전환
+  @ApiSwitchUserToLecturer()
   @Get('/switch-user-to-lecturer')
   @UseGuards(UserAccessTokenGuard)
   async switchUserToLecturer(
@@ -87,6 +96,7 @@ export class AuthTokenController {
   }
 
   //강사 -> 유저 전환
+  @ApiSwitchLecturerToUser()
   @Get('/switch-lecturer-to-user')
   @UseGuards(LecturerAccessTokenGuard)
   async switchLecturerToUser(
