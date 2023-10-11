@@ -1,123 +1,159 @@
 import {
-  Inject,
+  BadRequestException,
   Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
-import * as CryptoJS from 'crypto-js';
-import { SMSData } from '../interface/interface';
-import { PhoneNumberDto } from '../dtos/phone-number.dto';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { CheckVerificationCodeDto } from '../dtos/check-verification-code.dto';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { CreateUserAuthDto } from '@src/auth/dtos/create-user-auth.dto';
+import { Auth, Users } from '@prisma/client';
+import { SignUpType } from '@src/common/config/sign-up-type.config';
+import { AuthInputData } from '@src/auth/interface/interface';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
-export class AuthService {
-  private readonly sensUrl: string;
-  private readonly sensApiKey: string;
-  private readonly naverAccessKey: string;
-  private readonly naverSecretKey: string;
-  private readonly phoneNumber: string;
+export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
 
-  constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly configService: ConfigService,
-  ) {
-    this.sensUrl = configService.get<string>('SENS_URL');
-    this.sensApiKey = configService.get<string>('SENS_API_KEY');
-    this.naverAccessKey = configService.get<string>('NAVER_ACCESS_KEY');
-    this.naverSecretKey = configService.get<string>('NAVER_Secret_KEY');
-    this.phoneNumber = configService.get<string>('PHONE_NUMBER');
+  constructor(private readonly prismaService: PrismaService) {}
+  onModuleInit() {
+    this.logger.log('AuthService Init');
   }
-  async sendSMS({ userPhoneNumber }: PhoneNumberDto): Promise<void> {
-    await this.cacheManager.del(`${this.phoneNumber}`);
 
-    const signature: string = this.createSensSignature();
-    const randomNumber: string = this.createRandomNumber();
+  async createUserAuth({
+    userId,
+    authEmail,
+    signUpType,
+  }: CreateUserAuthDto): Promise<void> {
+    const mappedSignUpType: SignUpType = this.mapSignUpType(signUpType);
+    await this.validateUserAuth(userId);
 
-    const data: SMSData = {
-      type: 'SMS',
-      contentType: 'COMM',
-      countryCode: '82',
-      from: this.phoneNumber,
-      content: `강사 등록을 위한 인증번호는 [${randomNumber}] 입니다.`,
-      messages: [
-        {
-          to: userPhoneNumber,
-        },
-      ],
+    const authData: AuthInputData = {
+      userId,
+      email: authEmail,
+      signUpType: mappedSignUpType,
     };
 
-    const headers = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'x-ncp-apigw-timestamp': Date.now().toString(),
-      'x-ncp-iam-access-key': this.naverAccessKey,
-      'x-ncp-apigw-signature-v2': signature,
+    await this.prismaService.auth.create({ data: authData });
+  }
+
+  async trxCreateUserAuth(
+    tx: PrismaTransaction,
+    { userId, authEmail, signUpType }: CreateUserAuthDto,
+  ): Promise<any> {
+    const mappedSignUpType: SignUpType = this.mapSignUpType(signUpType);
+    await this.trxValidateUserAuth(tx, userId, authEmail);
+
+    const authData: AuthInputData = {
+      userId,
+      email: authEmail,
+      signUpType: mappedSignUpType,
     };
 
+    return await tx.auth.create({ data: authData });
+  }
+
+  private async validateUserAuth(userId: number): Promise<void> {
     try {
-      await axios.post(`${this.sensUrl}`, data, {
-        headers,
+      const selectedUser: Users = await this.prismaService.users.findUnique({
+        where: { id: userId },
       });
-      await this.cacheManager.set(
-        `${userPhoneNumber}`,
-        randomNumber,
-        this.configService.get<number>('REDIS_SMS_TTL'),
-      );
+
+      if (!selectedUser) {
+        throw new NotFoundException(
+          '존재하지 않는 유저 데이터입니다.',
+          'notFoundUserData',
+        );
+      }
+      if (selectedUser.deletedAt) {
+        throw new BadRequestException(
+          '유효하지 않는 유저 정보 요청입니다.',
+          'invalidUserInformation',
+        );
+      }
+
+      const selectedUserAuth: Auth | null =
+        await this.prismaService.auth.findUnique({
+          where: { userId: selectedUser.id },
+        });
+      if (selectedUserAuth) {
+        throw new BadRequestException(
+          '이미 가입되어있는 유저입니다.',
+          'alreadyExistUser',
+        );
+      }
     } catch (error) {
-      console.error(error.response.data);
-      throw new InternalServerErrorException(error.response.data);
+      this.logger.error(error);
+      throw error;
     }
   }
 
-  private createSensSignature(): string {
-    const timeStamp = Date.now().toString();
-    const space = ' ';
-    const newLine = '\n';
-    const method = 'POST';
-    const url = `/sms/v2/services/${this.sensApiKey}/messages`;
+  private async trxValidateUserAuth(
+    tx: PrismaTransaction,
+    userId: number,
+    authEmail: string,
+  ): Promise<void> {
+    try {
+      const selectedUser: Users = await tx.users.findUnique({
+        where: { id: userId },
+      });
 
-    let hmac = CryptoJS.algo.HMAC.create(
-      CryptoJS.algo.SHA256,
-      this.naverSecretKey,
-    );
+      if (!selectedUser) {
+        throw new NotFoundException(
+          '존재하지 않는 유저 데이터입니다.',
+          'notFoundUserData',
+        );
+      }
+      if (selectedUser.deletedAt) {
+        throw new BadRequestException(
+          '유효하지 않는 유저 정보 요청입니다.',
+          'invalidUserInformation',
+        );
+      }
 
-    hmac.update(method);
-    hmac.update(space);
-    hmac.update(url);
-    hmac.update(newLine);
-    hmac.update(timeStamp);
-    hmac.update(newLine);
-    hmac.update(this.naverAccessKey);
+      const selectedUserAuth: Auth | null = await tx.auth.findUnique({
+        where: { userId: selectedUser.id },
+      });
+      if (selectedUserAuth) {
+        throw new BadRequestException(
+          '이미 가입되어있는 유저입니다.',
+          'alreadyExistUser',
+        );
+      }
 
-    var hash = hmac.finalize();
-
-    return hash.toString(CryptoJS.enc.Base64);
-  }
-
-  private createRandomNumber(): string {
-    const randomNumber = Math.floor(Math.random() * 1000000)
-      .toString()
-      .padStart(6, '0');
-
-    return randomNumber;
-  }
-
-  async checkVerificationCode({
-    verificationCode,
-    userPhoneNumber,
-  }: CheckVerificationCodeDto): Promise<Boolean> {
-    const cachedVerificationCode = await this.cacheManager.get(
-      `${userPhoneNumber}`,
-    );
-    if (!cachedVerificationCode) {
-      throw new UnauthorizedException('유효시간이 만료되었습니다.');
-    } else if (cachedVerificationCode === verificationCode) {
-      return true;
-    } else {
-      throw new UnauthorizedException('인증번호가 일치하지 않습니다.');
+      const selectedEmailAuth: Auth | null = await tx.auth.findUnique({
+        where: { email: authEmail },
+      });
+      if (selectedEmailAuth) {
+        throw new BadRequestException('이미 가입되어있는 이메일입니다.');
+      }
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
     }
+  }
+
+  private mapSignUpType(signUpTypeString): SignUpType {
+    let mappedSignUpType: SignUpType;
+
+    switch (signUpTypeString) {
+      case 'KAKAO':
+        mappedSignUpType = SignUpType.KAKAO;
+        break;
+      case 'GOOGLE':
+        mappedSignUpType = SignUpType.GOOGLE;
+        break;
+      case 'NAVER':
+        mappedSignUpType = SignUpType.NAVER;
+        break;
+      default:
+        throw new BadRequestException(
+          '잘못된 SignUpType 입니다.',
+          'invalidSignUpType',
+        );
+    }
+
+    return mappedSignUpType;
   }
 }

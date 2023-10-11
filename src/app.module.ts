@@ -9,8 +9,8 @@ import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UploadsModule } from '@src/uploads/uploads.module';
-import { UploadsService } from './uploads/uploads.service';
+import { CustomJwtModule } from './common/config/jwt-module.cofig';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -20,11 +20,12 @@ import { UploadsService } from './uploads/uploads.service';
     PrismaModule,
     LecturerModule,
     AuthModule,
-    CustomConfigModule,
+    CustomJwtModule,
     CustomCacheModule,
-    UploadsModule,
+    CustomConfigModule,
+    UploadsModule
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService, UploadsService],
+  providers: [AppService, ConfigService],
 })
 export class AppModule {}
