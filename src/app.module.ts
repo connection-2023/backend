@@ -10,6 +10,8 @@ import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CustomJwtModule } from './common/config/jwt-module.cofig';
+import { CouponModule } from './coupon/coupon.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { CustomJwtModule } from './common/config/jwt-module.cofig';
     AuthModule,
     CustomJwtModule,
     CustomCacheModule,
+    PaymentsModule,
+    CouponModule,
     CustomConfigModule,
   ],
   controllers: [AppController],

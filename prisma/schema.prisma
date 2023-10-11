@@ -12,8 +12,12 @@ model Users {
   id               Int               @id @default(autoincrement())
   //지역 id
   regionId         Int
+  //이름
+  name             String            @db.VarChar(10)
   //사용자 닉네임
   nickname         String            @unique @db.VarChar(30)
+  //사용 이메일
+  email            String            @unique
   //프로필 공개 여부(open: true, close: false)
   isProfileOpen    Boolean           @default(false) @db.Boolean
   //핸드폰 번호
@@ -69,7 +73,7 @@ model Lecturer {
   //강사nickname
   nickname           String               @unique @db.VarChar(11)
   email              String
-  phoneNumber        String                  
+  phoneNumber        String
   //개인 사이트 주소
   youtubeUrl         String?
   instagramUrl       String?
@@ -251,7 +255,6 @@ model LectureCoupon {
   //발급인
   lecturerId          Int
   title               String
-  description         String?
   //할인율
   percentage          Int?
   //할인 금액
@@ -264,6 +267,7 @@ model LectureCoupon {
   usageCount          Int                   @default(0)
   //쿠폰 비활성화
   isDisabled          Boolean               @default(false)
+  isStackable   Boolean
   //진행 기간
   startAt             DateTime              @db.Timestamp(6)
   endAt               DateTime              @db.Timestamp(6)
@@ -299,7 +303,7 @@ model UserCoupon {
 model Auth {
   id         Int       @id @default(autoincrement())
   userId     Int       @unique
-  email      String
+  email      String    @unique
   signUpType Int
   createdAt  DateTime  @default(now()) @db.Timestamp(6)
   deletedAt  DateTime? @db.Timestamp(6)
