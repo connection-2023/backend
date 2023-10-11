@@ -2,13 +2,14 @@ interface CouponInputData {
   id?: number;
   lecturerId: number;
   title: string;
-  description?: string | null;
+  isStackable: boolean;
   percentage?: number | null;
   discountPrice?: number | null;
   maxDiscountPrice?: number | null;
   maxUsageCount?: number | null;
   usageCount?: number;
   isDisabled?: boolean;
+
   startAt: Date | string;
   endAt: Date | string;
   createdAt?: Date | string;
@@ -16,4 +17,14 @@ interface CouponInputData {
   deletedAt?: Date | string;
 }
 
-export { CouponInputData };
+interface LectureData {
+  id: number;
+  danceLecturerId: number;
+}
+
+interface CouponTargetInputData {
+  lectureId: number;
+  lectureCouponId: number;
+}
+
+export { CouponInputData, LectureData, CouponTargetInputData };

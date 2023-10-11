@@ -13,16 +13,17 @@ export class CouponController {
   constructor(private couponService: CouponService) {}
 
   @ApiCreateLectureCoupon()
-  @Post('/')
+  @Post()
   @UseGuards(LecturerAccessTokenGuard)
   async createLectureCoupon(
     @GetAuthorizedUser() lecturer: Lecturer,
     @Body() createLectureCouponDto: CreateLectureCouponDto,
   ) {
-    const createResult = await this.couponService.createLectureCoupon(
+    await this.couponService.createLectureCoupon(
       lecturer.id,
       createLectureCouponDto,
     );
-    return createResult;
+
+    return { message: '쿠폰 생성 완료' };
   }
 }

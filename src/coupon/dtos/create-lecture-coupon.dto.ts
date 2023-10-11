@@ -2,12 +2,25 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 
-// 커스텀 데코레이터를 정의합니다.
 import {
   registerDecorator,
   ValidationOptions,
   ValidationArguments,
 } from 'class-validator';
+
+function isEitherDiscountPriceOrPercentageFilled(
+  value: any,
+  args: ValidationArguments,
+): boolean {
+  const dto: CreateLectureCouponDto = args.object as CreateLectureCouponDto;
+  const discountPrice = dto.discountPrice;
+  const percentage = dto.percentage;
+
+  return (
+    (discountPrice !== null && discountPrice !== undefined) !==
+    (percentage !== null && percentage !== undefined)
+  );
+}
 
 export function IsEitherDiscountPriceOrPercentageFilled(
   validationOptions?: ValidationOptions,
@@ -20,18 +33,7 @@ export function IsEitherDiscountPriceOrPercentageFilled(
       constraints: [],
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
-          const dto: CreateLectureCouponDto =
-            args.object as CreateLectureCouponDto;
-
-          const discountPrice = dto.discountPrice;
-          const percentage = dto.percentage;
-
-          return (
-            (discountPrice !== undefined && discountPrice !== null) ||
-            (percentage !== undefined && percentage !== null)
-          );
-        },
+        validate: isEitherDiscountPriceOrPercentageFilled,
       },
     });
   };
@@ -46,14 +48,6 @@ export class CreateLectureCouponDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({
-    example: '두번 다시 없을 기회',
-    description: '쿠폰 설명',
-    required: false,
-  })
-  @IsOptional()
-  description: string;
-
   @ApiProperty({ example: 10, description: '할인률', required: false })
   @IsOptional()
   percentage: number;
@@ -62,8 +56,10 @@ export class CreateLectureCouponDto {
   @IsOptional()
   discountPrice: number;
 
-  @IsEitherDiscountPriceOrPercentageFilled()
-  readonly customValidation: string;
+  @IsEitherDiscountPriceOrPercentageFilled({
+    message: '할인률, 할인 금액 중 반드시 하나를 선택해야합니다.',
+  })
+  readonly validatePercentageAndDiscountPrice: string;
 
   @ApiProperty({
     example: 1000,
@@ -99,4 +95,21 @@ export class CreateLectureCouponDto {
   @IsNotEmpty()
   @Type(() => Date)
   endAt: Date;
+
+  @ApiProperty({
+    example: true,
+    description: '쿠폰 중복적용 가능 여부',
+    required: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  isStackable: boolean;
+
+  @ApiProperty({
+    example: [1, 2],
+    description: '강의 Id',
+    required: false,
+  })
+  @IsOptional()
+  lectureIds: number[];
 }
