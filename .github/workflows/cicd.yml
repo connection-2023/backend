@@ -55,6 +55,8 @@ jobs:
 
           echo "FRONT_END_URL=${{ secrets.FRONT_END_URL }}" >> .env
 
+          echo "REDIS_CATEGORY_TTL=${{ secrets.REDIS_CATEGORY_TTL }}" >> .env
+
           echo "KFT_GET_TOKEN_URI=${{ secrets.KFT_GET_TOKEN_URI }}" >> .env
           echo "KFT_CLIENT_ID=${{ secrets.KFT_CLIENT_ID }}" >> .env
           echo "KFT_CLIENT_SECRET=${{ secrets.KFT_CLIENT_SECRET }}" >> .env
