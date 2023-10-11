@@ -11,6 +11,8 @@ import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CustomJwtModule } from './common/config/jwt-module.cofig';
 import { UploadsModule } from './uploads/uploads.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { SuccessInterceptor } from './common/interceptors/success.interceptor';
 
 @Module({
   imports: [
@@ -23,9 +25,13 @@ import { UploadsModule } from './uploads/uploads.module';
     CustomJwtModule,
     CustomCacheModule,
     CustomConfigModule,
-    UploadsModule
+    UploadsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: SuccessInterceptor },
+    AppService,
+    ConfigService,
+  ],
 })
 export class AppModule {}
