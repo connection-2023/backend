@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Lecturer" ALTER COLUMN "affiliation" DROP NOT NULL,
+ALTER COLUMN "homepageUrl" DROP NOT NULL,
+ALTER COLUMN "instagramUrl" DROP NOT NULL,
+ALTER COLUMN "youtubeUrl" DROP NOT NULL;
