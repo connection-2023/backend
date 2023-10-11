@@ -33,5 +33,6 @@ import { AuthRepository } from './repository/auth.repository';
     AuthTokenController,
     AuthOAuthController,
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}
