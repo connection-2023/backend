@@ -7,23 +7,25 @@ import { PrismaTransaction } from '@src/common/interface/common-interface';
 export class UserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createUser(
-    transaction: PrismaTransaction,
+  async trxCreateUser(
+    tx: PrismaTransaction,
     {
       regionId,
       name,
       nickname,
+      email,
       isProfileOpen,
       phoneNumber,
       detailAddress,
       gender,
     }: CreateUserDto,
   ): Promise<any> {
-    return await this.prismaService.users.create({
+    return await tx.users.create({
       data: {
         regionId,
         name,
         nickname,
+        email,
         isProfileOpen,
         phoneNumber,
         detailAddress,

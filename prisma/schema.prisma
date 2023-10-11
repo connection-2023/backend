@@ -16,6 +16,8 @@ model Users {
   name             String            @db.VarChar(10)
   //사용자 닉네임
   nickname         String            @unique @db.VarChar(30)
+  //사용 이메일
+  email            String            @unique
   //프로필 공개 여부(open: true, close: false)
   isProfileOpen    Boolean           @default(false) @db.Boolean
   //핸드폰 번호
@@ -301,7 +303,7 @@ model UserCoupon {
 model Auth {
   id         Int       @id @default(autoincrement())
   userId     Int       @unique
-  email      String
+  email      String    @unique
   signUpType Int
   createdAt  DateTime  @default(now()) @db.Timestamp(6)
   deletedAt  DateTime? @db.Timestamp(6)
