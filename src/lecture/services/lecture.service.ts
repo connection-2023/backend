@@ -1,4 +1,4 @@
-import { LectureRepository } from './../repositories/lecture.repository';
+import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import { Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { Lecture, PrismaPromise } from '@prisma/client';
@@ -18,22 +18,22 @@ export class LectureService {
     lecturerId: number,
     imgUrl: string[],
   ) {
-    const scheduleObj = {};
+    const scheduleArr = [];
     lecture.schedule.map((date) => {
-      scheduleObj['lectureId'] = 1;
-      scheduleObj['startDateTime'] = date;
-      scheduleObj['numberOfParticipants'] = 0;
+      scheduleArr.push({
+        lectureId: 1,
+        startDateTime: new Date(date),
+        numberOfParticipants: 0,
+      });
     });
+    await this.lectureRepository.trxCreateLectureSchedule(scheduleArr);
 
-    console.log(scheduleObj);
-    const reservationDeadline = new Date(lecture.reservationDeadline);
-    const newLecture = await this.lectureRepository.trxCreateLecture(
-      lecturerId,
-      lecture,
-      reservationDeadline,
-    );
-
-    await this.lectureRepository.trxCreateLectureSchedule(scheduleObj);
+    // const reservationDeadline = new Date(lecture.reservationDeadline);
+    // const newLecture = await this.lectureRepository.trxCreateLecture(
+    //   lecturerId,
+    //   lecture,
+    //   reservationDeadline,
+    // );
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {

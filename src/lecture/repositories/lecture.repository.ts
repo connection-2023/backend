@@ -24,7 +24,7 @@ export class LectureRepository {
 
   async trxCreateLectureSchedule(schedule): Promise<any> {
     return await this.prismaService.lectureSchedule.createMany({
-      data: [schedule],
+      data: schedule,
     });
   }
 }
