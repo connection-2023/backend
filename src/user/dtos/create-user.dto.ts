@@ -24,7 +24,7 @@ export class CreateUserDto {
   isProfileOpen: boolean;
 
   @ApiProperty({
-    example: '010-1234-5678',
+    example: '01012345678',
     description: '핸드폰 번호',
     required: false,
   })
