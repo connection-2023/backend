@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsDate,
   IsNotEmpty,
   IsNumber,
@@ -133,12 +134,24 @@ export class CreateLectureDto {
   noShowDeposit: number | null;
 
   @ApiProperty({
+    example: [
+      '2023-10-11 07:32:54.337',
+      '2023-10-11 07:32:54.337',
+      '2023-10-11 07:32:54.337',
+    ],
+    description: '클래스 일정',
+    required: true,
+  })
+  @IsArray()
+  @IsNotEmpty()
+  @Type(() => Array)
+  schedule: string[];
+
+  @ApiProperty({
     type: 'string',
     format: 'binary',
     description: '강의 이미지 파일 업로드',
     required: true,
   })
-  @IsNotEmpty()
-  @IsString()
   files: string;
 }

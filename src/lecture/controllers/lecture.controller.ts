@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
@@ -54,34 +54,34 @@ export class LectureController {
     );
   }
 
-  @ApiOperation({
-    summary: '강의 전부 조회',
-  })
-  @Get()
-  readManyLecture(@Query() query: ReadManyLectureQueryDto) {
-    return this.lectureService.readManyLecture(query);
-  }
+  // @ApiOperation({
+  //   summary: '강의 전부 조회',
+  // })
+  // @Get()
+  // readManyLecture(@Query() query: ReadManyLectureQueryDto) {
+  //   return this.lectureService.readManyLecture(query);
+  // }
 
-  @ApiOperation({
-    summary: '강의 단일 조회',
-  })
-  @Get('/:id')
-  readOneLecture(@Param('id', ParseIntPipe) lectureId: number) {
-    return this.lectureService.readOneLecture(lectureId);
-  }
+  // @ApiOperation({
+  //   summary: '강의 단일 조회',
+  // })
+  // @Get('/:id')
+  // readOneLecture(@Param('id', ParseIntPipe) lectureId: number) {
+  //   return this.lectureService.readOneLecture(lectureId);
+  // }
 
-  @ApiOperation({ summary: '강의 수정' })
-  @Patch('/:id')
-  updateLecture(
-    @Param('id', ParseIntPipe) lectureId: number,
-    @Body() lecture: UpdateLectureDto,
-  ) {
-    return this.lectureService.updateLecture(lecture, lectureId);
-  }
+  // @ApiOperation({ summary: '강의 수정' })
+  // @Patch('/:id')
+  // updateLecture(
+  //   @Param('id', ParseIntPipe) lectureId: number,
+  //   @Body() lecture: UpdateLectureDto,
+  // ) {
+  //   return this.lectureService.updateLecture(lecture, lectureId);
+  // }
 
-  @ApiOperation({ summary: '강의 삭제' })
-  @Delete('/:id')
-  deleteLecture(@Param('id', ParseIntPipe) lectureId: number) {
-    return this.lectureService.deleteLecture(lectureId);
-  }
+  // @ApiOperation({ summary: '강의 삭제' })
+  // @Delete('/:id')
+  // deleteLecture(@Param('id', ParseIntPipe) lectureId: number) {
+  //   return this.lectureService.deleteLecture(lectureId);
+  // }
 }

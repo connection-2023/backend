@@ -126,7 +126,7 @@ export class AuthService implements OnModuleInit {
         where: { email: authEmail },
       });
       if (selectedEmailAuth) {
-        throw new BadRequestException('이미 가입되어있는 이메일입니다.');
+        throw new BadRequestException('이미 가입된 이메일입니다.');
       }
     } catch (error) {
       this.logger.error(error);

@@ -13,6 +13,8 @@ import { CustomJwtModule } from './common/config/jwt-module.cofig';
 import { UploadsModule } from './uploads/uploads.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { SuccessInterceptor } from './common/interceptors/success.interceptor';
+import { CouponModule } from './coupon/coupon.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { SuccessInterceptor } from './common/interceptors/success.interceptor';
     AuthModule,
     CustomJwtModule,
     CustomCacheModule,
+    PaymentsModule,
+    CouponModule,
     CustomConfigModule,
     UploadsModule,
   ],
