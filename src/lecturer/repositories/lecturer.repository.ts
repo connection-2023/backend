@@ -62,4 +62,11 @@ export class LecturerRepository {
     });
     return regionsId;
   }
+
+  async getLecturerNickname(nickname: string): Promise<{ nickname: string }> {
+    return await this.prismaService.lecturer.findUnique({
+      where: { nickname },
+      select: { nickname: true },
+    });
+  }
 }

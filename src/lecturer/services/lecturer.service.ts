@@ -16,7 +16,6 @@ import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerDanceGenreInputData,
-  LecturerInputData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
 } from '@src/lecturer/interface/lecturer.interface';
@@ -217,5 +216,16 @@ export class LecturerService implements OnModuleInit {
     );
 
     return danceCategoryIds;
+  }
+
+  async checkAvailableNickname(nickname: string): Promise<Boolean> {
+    const duplicatedNickname =
+      await this.lecturerRepository.getLecturerNickname(nickname);
+
+    if (duplicatedNickname) {
+      return false;
+    }
+
+    return true;
   }
 }

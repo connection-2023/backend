@@ -255,7 +255,6 @@ model LectureCoupon {
   //발급인
   lecturerId          Int
   title               String
-  description         String?
   //할인율
   percentage          Int?
   //할인 금액
@@ -268,6 +267,7 @@ model LectureCoupon {
   usageCount          Int                   @default(0)
   //쿠폰 비활성화
   isDisabled          Boolean               @default(false)
+  isStackable   Boolean
   //진행 기간
   startAt             DateTime              @db.Timestamp(6)
   endAt               DateTime              @db.Timestamp(6)
