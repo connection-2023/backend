@@ -1,7 +1,7 @@
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from './../../prisma/prisma.service';
 import { CreateLectureDto } from '../dtos/create-lecture.dto';
-import { Lecture, LectureSchedule } from '@prisma/client';
+import { Lecture, LectureImage, LectureSchedule } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 
@@ -24,13 +24,25 @@ export class LectureRepository {
 
   async trxCreateLectureSchedule(
     transaction: PrismaTransaction,
-    schedule,
+    lectureSchedule,
   ): Promise<LectureSchedule[]> {
     await transaction.lectureSchedule.createMany({
-      data: schedule,
+      data: lectureSchedule,
     });
     return await transaction.lectureSchedule.findMany({
-      where: { lectureId: schedule.lectureId },
+      where: { lectureId: lectureSchedule.lectureId },
+    });
+  }
+
+  async trxCreateLectureImg(
+    transaction: PrismaTransaction,
+    lectureImg,
+  ): Promise<LectureImage[]> {
+    await transaction.lectureImage.createMany({
+      data: lectureImg,
+    });
+    return await transaction.lectureImage.findMany({
+      where: { lectureId: lectureImg.lectureId },
     });
   }
 }

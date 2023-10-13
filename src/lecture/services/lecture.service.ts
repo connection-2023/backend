@@ -19,7 +19,7 @@ export class LectureService {
   async createLecture(
     createLectureDto: CreateLectureDto,
     lecturerId: number,
-    imgUrl: string[],
+    lectureImage: string[],
   ) {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -30,10 +30,23 @@ export class LectureService {
           lecture,
         );
 
-        const scheduleArr = [];
+        const lectureImageInputData = [];
+        lectureImage.map((url) => {
+          lectureImageInputData.push({
+            lectureId: newLecture.id,
+            imageUrl: url,
+          });
+        });
+        const newLectureImage =
+          await this.lectureRepository.trxCreateLectureImg(
+            transaction,
+            lectureImageInputData,
+          );
+
+        const scheduleInputData = [];
         schedule.map((date) => {
-          scheduleArr.push({
-            lectureId: 1,
+          scheduleInputData.push({
+            lectureId: newLecture.id,
             startDateTime: new Date(date),
             numberOfParticipants: 0,
           });
@@ -41,10 +54,10 @@ export class LectureService {
         const newLectureSchedule =
           await this.lectureRepository.trxCreateLectureSchedule(
             transaction,
-            scheduleArr,
+            scheduleInputData,
           );
 
-        return { newLecture, newLectureSchedule };
+        return { newLecture, newLectureImage, newLectureSchedule };
       },
     );
   }

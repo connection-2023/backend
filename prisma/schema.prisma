@@ -272,6 +272,8 @@ model LectureImage {
   id        Int     @id @default(autoincrement())
   //강의 id
   lectureId Int
+  //이미지 url
+  imageUrl  String
   lecture   Lecture @relation(fields: [lectureId], references: [id])
 }
 
