@@ -10,14 +10,12 @@ export class LectureRepository {
 
   async trxCreateLecture(
     lecturerId: number,
-    lecture: CreateLectureDto,
-    reservationDeadline: Date,
+    lecture: LectureInputData,
   ): Promise<Lecture> {
     return await this.prismaService.lecture.create({
       data: {
         lecturerId,
         ...lecture,
-        reservationDeadline,
       },
     });
   }

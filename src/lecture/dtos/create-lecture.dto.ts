@@ -29,7 +29,11 @@ export class CreateLectureDto {
   danceCategoryId: number;
 
   //원데이,다회차
-  @ApiProperty({ example: 1, description: '강의 방식 id', required: true })
+  @ApiProperty({
+    example: 1,
+    description: '강의 방식 id(원데이,다회차)',
+    required: true,
+  })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)

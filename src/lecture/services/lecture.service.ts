@@ -14,12 +14,18 @@ export class LectureService {
   ) {}
 
   async createLecture(
-    lecture: CreateLectureDto,
+    createLectureDto: CreateLectureDto,
     lecturerId: number,
     imgUrl: string[],
   ) {
+    const { schedule, ...lecture } = createLectureDto;
+    const newLecture = await this.lectureRepository.trxCreateLecture(
+      lecturerId,
+      lecture,
+    );
+
     const scheduleArr = [];
-    lecture.schedule.map((date) => {
+    schedule.map((date) => {
       scheduleArr.push({
         lectureId: 1,
         startDateTime: new Date(date),
@@ -27,13 +33,6 @@ export class LectureService {
       });
     });
     await this.lectureRepository.trxCreateLectureSchedule(scheduleArr);
-
-    // const reservationDeadline = new Date(lecture.reservationDeadline);
-    // const newLecture = await this.lectureRepository.trxCreateLecture(
-    //   lecturerId,
-    //   lecture,
-    //   reservationDeadline,
-    // );
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
