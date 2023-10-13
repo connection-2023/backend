@@ -38,6 +38,7 @@ export class UserService {
       if (selectedPhoneNumberUser) {
         throw new BadRequestException('사용 중인 번호입니다.');
       }
+
       return await this.prismaServcie.$transaction(
         async (tx: PrismaTransaction) => {
           const createUser = await this.userRepository.trxCreateUser(tx, user);

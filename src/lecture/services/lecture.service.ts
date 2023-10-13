@@ -5,12 +5,15 @@ import { Lecture, PrismaPromise } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class LectureService {
   constructor(
     private readonly lectureRepository: LectureRepository,
     private readonly queryFilter: QueryFilter,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async createLecture(
@@ -18,21 +21,32 @@ export class LectureService {
     lecturerId: number,
     imgUrl: string[],
   ) {
-    const { schedule, ...lecture } = createLectureDto;
-    const newLecture = await this.lectureRepository.trxCreateLecture(
-      lecturerId,
-      lecture,
-    );
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const { schedule, ...lecture } = createLectureDto;
+        const newLecture = await this.lectureRepository.trxCreateLecture(
+          transaction,
+          lecturerId,
+          lecture,
+        );
 
-    const scheduleArr = [];
-    schedule.map((date) => {
-      scheduleArr.push({
-        lectureId: 1,
-        startDateTime: new Date(date),
-        numberOfParticipants: 0,
-      });
-    });
-    await this.lectureRepository.trxCreateLectureSchedule(scheduleArr);
+        const scheduleArr = [];
+        schedule.map((date) => {
+          scheduleArr.push({
+            lectureId: 1,
+            startDateTime: new Date(date),
+            numberOfParticipants: 0,
+          });
+        });
+        const newLectureSchedule =
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            scheduleArr,
+          );
+
+        return { newLecture, newLectureSchedule };
+      },
+    );
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {

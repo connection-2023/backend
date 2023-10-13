@@ -32,10 +32,6 @@ import { PaymentsModule } from './payments/payments.module';
     UploadsModule,
   ],
   controllers: [AppController],
-  providers: [
-    { provide: APP_INTERCEPTOR, useClass: SuccessInterceptor },
-    AppService,
-    ConfigService,
-  ],
+  providers: [AppService, ConfigService],
 })
 export class AppModule {}
