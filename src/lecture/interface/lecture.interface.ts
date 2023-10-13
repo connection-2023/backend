@@ -1,5 +1,4 @@
 interface LectureInputData {
-  regionId: number;
   lectureTypeId: number;
   danceCategoryId: number;
   lectureMethodId: number;
@@ -15,4 +14,20 @@ interface LectureInputData {
   reservationDeadline: Date;
   price: number;
   noShowDeposit: number | null;
+}
+
+interface LectureToRegionInputData {
+  lectureId: number;
+  regionId: number;
+}
+
+interface LectureScheduleInputData [{
+  lectureId: number;
+  startDateTime: Date;
+  numberOfParticipants: number;
+}]
+
+interface LectureImageInputData {
+  lectureId: number;
+  imageUrl: string;
 }

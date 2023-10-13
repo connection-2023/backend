@@ -1,9 +1,9 @@
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from './../../prisma/prisma.service';
 import { CreateLectureDto } from '../dtos/create-lecture.dto';
-import { Lecture, LectureImage, LectureSchedule } from '@prisma/client';
+import { Lecture, LectureImage, LectureSchedule, Region } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class LectureRepository {
@@ -44,5 +44,22 @@ export class LectureRepository {
     return await transaction.lectureImage.findMany({
       where: { lectureId: lectureImg.lectureId },
     });
+  }
+
+  async trxCreateLectureToRegions(
+    transaction: PrismaTransaction,
+    lectureToRegionInputData: LectureToRegionInputData[],
+  ): Promise<void> {
+    await transaction.lectureToRegion.createMany({
+      data: lectureToRegionInputData,
+    });
+  }
+
+  async getRegionsId(regions: Region[]): Promise<Id[]> {
+    const regionsId: Id[] = await this.prismaService.region.findMany({
+      where: { OR: regions },
+      select: { id: true },
+    });
+    return regionsId;
   }
 }

@@ -6,7 +6,7 @@ import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-que
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class LectureService {
@@ -21,53 +21,52 @@ export class LectureService {
     lecturerId: number,
     lectureImage: string[],
   ) {
-    try {
-      return await this.prismaService.$transaction(
-        async (transaction: PrismaTransaction) => {
-          const { schedule, ...lecture } = createLectureDto;
-          const newLecture = await this.lectureRepository.trxCreateLecture(
+    const { regions, schedule, ...lecture } = createLectureDto;
+
+    const regionIds: Id[] = await this.getValidRegionIds(regions);
+
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const newLecture = await this.lectureRepository.trxCreateLecture(
+          transaction,
+          lecturerId,
+          lecture,
+        );
+
+        const lectureImageInputData = [];
+        lectureImage.map((url) => {
+          lectureImageInputData.push({
+            lectureId: newLecture.id,
+            imageUrl: url,
+          });
+        });
+        const newLectureImage =
+          await this.lectureRepository.trxCreateLectureImg(
             transaction,
-            lecturerId,
-            lecture,
+            lectureImageInputData,
           );
 
-          const lectureImageInputData = [];
-          lectureImage.map((url) => {
-            lectureImageInputData.push({
-              lectureId: newLecture.id,
-              imageUrl: url,
-            });
+        const scheduleInputData = [];
+        schedule.map((date) => {
+          scheduleInputData.push({
+            lectureId: newLecture.id,
+            startDateTime: new Date(date),
+            numberOfParticipants: 0,
           });
-          const newLectureImage =
-            await this.lectureRepository.trxCreateLectureImg(
-              transaction,
-              lectureImageInputData,
-            );
+        });
+        const newLectureSchedule =
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            scheduleInputData,
+          );
 
-          const scheduleInputData = [];
-          schedule.map((date) => {
-            scheduleInputData.push({
-              lectureId: newLecture.id,
-              startDateTime: new Date(date),
-              numberOfParticipants: 0,
-            });
-          });
-          const newLectureSchedule =
-            await this.lectureRepository.trxCreateLectureSchedule(
-              transaction,
-              scheduleInputData,
-            );
-
-          return { newLecture, newLectureImage, newLectureSchedule };
-        },
-      );
-    } catch (error) {
-      throw error;
-    }
+        return { newLecture, newLectureImage, newLectureSchedule };
+      },
+    );
   }
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
-    const regionIds: Id[] = await this.lecturerRepository.getRegionsId(
+    const regionIds: Id[] = await this.lectureRepository.getRegionsId(
       extractRegions,
     );
     if (regionIds.length !== extractRegions.length) {

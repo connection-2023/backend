@@ -10,11 +10,15 @@ import {
 } from 'class-validator';
 
 export class CreateLectureDto {
-  @ApiProperty({ example: 1, description: '지역 id', required: true })
+  @ApiProperty({
+    example: ['서울특별시 도봉구', '서울특별시 중구'],
+    description: '강사 강의 지역',
+    required: true,
+  })
+  @IsArray()
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  regionId: number;
+  @Type(() => Array)
+  regions: string[];
 
   @ApiProperty({ example: 1, description: '강의 종류 id', required: true })
   @IsNotEmpty()
