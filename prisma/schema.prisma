@@ -10,8 +10,6 @@ datasource db {
 model Users {
   //고유 id
   id               Int               @id @default(autoincrement())
-  //지역 id
-  regionId         Int
   //이름
   name             String            @db.VarChar(10)
   //사용자 닉네임
@@ -32,7 +30,6 @@ model Users {
   updatedAt        DateTime          @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
   deletedAt        DateTime?         @db.Timestamp(6)
-  region           Region            @relation(fields: [regionId], references: [id], onDelete: Cascade)
   auth             Auth?
   userProfileImage UserProfileImage?
   lecturer         Lecturer?
@@ -41,6 +38,9 @@ model Users {
   likedLecture     LikedLecture[]
   dailySmsUsage    DailySmsUsage?
   userCoupon       UserCoupon[]
+  userToRegion     UserToRegion[]
+  Region           Region?           @relation(fields: [regionId], references: [id])
+  regionId         Int?
 }
 
 model UserProfileImage {
@@ -55,14 +55,15 @@ model UserProfileImage {
 
 model Region {
   //고유 id
-  id                     Int              @id @default(autoincrement())
+  id                     Int               @id @default(autoincrement())
   //시/도
-  administrativeDistrict String           @db.VarChar(19)
+  administrativeDistrict String            @db.VarChar(19)
   //시/군/구
-  district               String?          @db.VarChar(10)
+  district               String?           @db.VarChar(10)
   users                  Users[]
-  lecture                Lecture[]
   lecturerRegion         LecturerRegion[]
+  lectureToRegion        LectureToRegion[]
+  userToRegion           UserToRegion[]
 }
 
 model Lecturer {
@@ -111,8 +112,6 @@ model Lecture {
   id                     Int                      @id @default(autoincrement())
   //강사 id
   lecturerId             Int
-  //지역 id
-  regionId               Int
   //강의 종류 id
   lectureTypeId          Int
   //춤 장르 id
@@ -156,7 +155,6 @@ model Lecture {
   //삭제일자
   deletedAt              DateTime?                @db.Timestamp(6)
   lecturer               Lecturer                 @relation(fields: [lecturerId], references: [id])
-  region                 Region                   @relation(fields: [regionId], references: [id])
   lectureType            LectureType              @relation(fields: [lectureTypeId], references: [id])
   danceCategory          DanceCategory            @relation(fields: [danceCategoryId], references: [id])
   lectureMethod          LectureMethod            @relation(fields: [lectureMethodId], references: [id])
@@ -167,6 +165,7 @@ model Lecture {
   lectureCurriculumImage LectureCurriculumImage[]
   lectureCouponTarget    LectureCouponTarget[]
   lectureSchedule        LectureSchedule[]
+  lectureToRegion        LectureToRegion[]
 }
 
 model DanceCategory {
@@ -367,4 +366,20 @@ model LectureSchedule {
   startDateTime        DateTime
   numberOfParticipants Int
   lecture              Lecture  @relation(fields: [lectureId], references: [id])
+}
+
+model LectureToRegion {
+  id        Int     @id @default(autoincrement())
+  regionId  Int
+  lectureId Int
+  region    Region  @relation(fields: [regionId], references: [id])
+  lecture   Lecture @relation(fields: [lectureId], references: [id])
+}
+
+model UserToRegion {
+  id       Int    @id @default(autoincrement())
+  regionId Int
+  userId   Int
+  region   Region @relation(fields: [regionId], references: [id])
+  users    Users  @relation(fields: [userId], references: [id])
 }

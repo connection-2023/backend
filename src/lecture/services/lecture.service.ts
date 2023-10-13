@@ -1,7 +1,7 @@
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, PrismaPromise } from '@prisma/client';
+import { Lecture, PrismaPromise, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -21,45 +21,100 @@ export class LectureService {
     lecturerId: number,
     lectureImage: string[],
   ) {
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const { schedule, ...lecture } = createLectureDto;
-        const newLecture = await this.lectureRepository.trxCreateLecture(
-          transaction,
-          lecturerId,
-          lecture,
-        );
-
-        const lectureImageInputData = [];
-        lectureImage.map((url) => {
-          lectureImageInputData.push({
-            lectureId: newLecture.id,
-            imageUrl: url,
-          });
-        });
-        const newLectureImage =
-          await this.lectureRepository.trxCreateLectureImg(
+    try {
+      return await this.prismaService.$transaction(
+        async (transaction: PrismaTransaction) => {
+          const { schedule, ...lecture } = createLectureDto;
+          const newLecture = await this.lectureRepository.trxCreateLecture(
             transaction,
-            lectureImageInputData,
+            lecturerId,
+            lecture,
           );
 
-        const scheduleInputData = [];
-        schedule.map((date) => {
-          scheduleInputData.push({
-            lectureId: newLecture.id,
-            startDateTime: new Date(date),
-            numberOfParticipants: 0,
+          const lectureImageInputData = [];
+          lectureImage.map((url) => {
+            lectureImageInputData.push({
+              lectureId: newLecture.id,
+              imageUrl: url,
+            });
           });
-        });
-        const newLectureSchedule =
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            scheduleInputData,
-          );
+          const newLectureImage =
+            await this.lectureRepository.trxCreateLectureImg(
+              transaction,
+              lectureImageInputData,
+            );
 
-        return { newLecture, newLectureImage, newLectureSchedule };
-      },
+          const scheduleInputData = [];
+          schedule.map((date) => {
+            scheduleInputData.push({
+              lectureId: newLecture.id,
+              startDateTime: new Date(date),
+              numberOfParticipants: 0,
+            });
+          });
+          const newLectureSchedule =
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              scheduleInputData,
+            );
+
+          return { newLecture, newLectureImage, newLectureSchedule };
+        },
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+  private async getValidRegionIds(regions: string[]): Promise<Id[]> {
+    const extractRegions: Region[] = this.extractRegions(regions);
+    const regionIds: Id[] = await this.lecturerRepository.getRegionsId(
+      extractRegions,
     );
+    if (regionIds.length !== extractRegions.length) {
+      throw new BadRequestException(
+        `유효하지 않은 주소입니다.`,
+        'InvalidAddress',
+      );
+    }
+
+    return regionIds;
+  }
+
+  private extractRegions(regions) {
+    const extractedRegions: Region[] = regions.map((region) => {
+      const addressParts = region.split(' ');
+      let administrativeDistrict = null;
+      let district = null;
+
+      if (addressParts[0] === '세종특별자치시') {
+        administrativeDistrict = addressParts.shift();
+      }
+      if (addressParts[0].endsWith('시') || addressParts[0].endsWith('도')) {
+        administrativeDistrict = addressParts.shift();
+      } else {
+        throw new BadRequestException(
+          `잘못된 주소형식입니다.`,
+          'InvalidAddressFormat',
+        );
+      }
+
+      if (
+        addressParts[0].endsWith('시') ||
+        addressParts[0].endsWith('군') ||
+        addressParts[0].endsWith('구')
+      ) {
+        district = addressParts.shift();
+      } else {
+        throw new BadRequestException(
+          `잘못된 주소형식입니다`,
+          'InvalidAddressFormat',
+        );
+      }
+
+      return { administrativeDistrict, district };
+    });
+
+    return extractedRegions;
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
