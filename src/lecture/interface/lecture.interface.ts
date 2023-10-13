@@ -21,11 +21,11 @@ interface LectureToRegionInputData {
   regionId: number;
 }
 
-interface LectureScheduleInputData [{
+interface LectureScheduleInputData {
   lectureId: number;
   startDateTime: Date;
   numberOfParticipants: number;
-}]
+}
 
 interface LectureImageInputData {
   lectureId: number;

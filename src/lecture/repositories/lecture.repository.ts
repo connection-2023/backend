@@ -36,13 +36,14 @@ export class LectureRepository {
 
   async trxCreateLectureImg(
     transaction: PrismaTransaction,
-    lectureImg,
+    lectureImg: LectureImageInputData[],
+    lectureId: number,
   ): Promise<LectureImage[]> {
     await transaction.lectureImage.createMany({
       data: lectureImg,
     });
     return await transaction.lectureImage.findMany({
-      where: { lectureId: lectureImg.lectureId },
+      where: { lectureId: lectureId },
     });
   }
 

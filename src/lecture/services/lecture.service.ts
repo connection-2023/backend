@@ -19,7 +19,7 @@ export class LectureService {
   async createLecture(
     createLectureDto: CreateLectureDto,
     lecturerId: number,
-    lectureImage: string[],
+    imageUrl: string[],
   ) {
     const { regions, schedule, ...lecture } = createLectureDto;
 
@@ -33,18 +33,22 @@ export class LectureService {
           lecture,
         );
 
-        const lectureImageInputData = [];
-        lectureImage.map((url) => {
-          lectureImageInputData.push({
-            lectureId: newLecture.id,
-            imageUrl: url,
-          });
-        });
+        const lectureToRegionInputData: LectureToRegionInputData[] =
+          this.createLectureToRegionInputData(newLecture.id, regionIds);
+        await this.lectureRepository.trxCreateLectureToRegions(
+          transaction,
+          lectureToRegionInputData,
+        );
+
+        const lectureImageInputData: LectureImageInputData[] =
+          this.createLectureImageInputData(newLecture.id, imageUrl);
         const newLectureImage =
           await this.lectureRepository.trxCreateLectureImg(
             transaction,
             lectureImageInputData,
+            newLecture.id,
           );
+        console.log(lectureImageInputData);
 
         const scheduleInputData = [];
         schedule.map((date) => {
@@ -114,6 +118,28 @@ export class LectureService {
     });
 
     return extractedRegions;
+  }
+
+  private createLectureToRegionInputData(
+    lectureId: number,
+    regionIds: Id[],
+  ): LectureToRegionInputData[] {
+    const lectureInputData: LectureToRegionInputData[] = regionIds.map(
+      (regionId) => ({
+        lectureId,
+        regionId: regionId.id,
+      }),
+    );
+
+    return lectureInputData;
+  }
+
+  private createLectureImageInputData(lectureId: number, imageUrl: string[]) {
+    const imageInputData: LectureImageInputData[] = imageUrl.map((url) => ({
+      lectureId: lectureId,
+      imageUrl: url,
+    }));
+    return imageInputData;
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
