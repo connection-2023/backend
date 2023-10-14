@@ -153,7 +153,7 @@ export class CreateLectureDto {
   @IsArray()
   @IsNotEmpty()
   @Type(() => Array)
-  schedule: string[];
+  schedules: string[];
 
   @ApiProperty({
     type: 'string',

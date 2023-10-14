@@ -19,9 +19,9 @@ export class LectureService {
   async createLecture(
     createLectureDto: CreateLectureDto,
     lecturerId: number,
-    imageUrl: string[],
+    imageUrls: string[],
   ) {
-    const { regions, schedule, ...lecture } = createLectureDto;
+    const { regions, schedules, ...lecture } = createLectureDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
 
@@ -41,27 +41,20 @@ export class LectureService {
         );
 
         const lectureImageInputData: LectureImageInputData[] =
-          this.createLectureImageInputData(newLecture.id, imageUrl);
+          this.createLectureImageInputData(newLecture.id, imageUrls);
         const newLectureImage =
           await this.lectureRepository.trxCreateLectureImg(
             transaction,
             lectureImageInputData,
             newLecture.id,
           );
-        console.log(lectureImageInputData);
 
-        const scheduleInputData = [];
-        schedule.map((date) => {
-          scheduleInputData.push({
-            lectureId: newLecture.id,
-            startDateTime: new Date(date),
-            numberOfParticipants: 0,
-          });
-        });
+        const lectureScheduleInputData: LectureScheduleInputData[] =
+          this.createLectureScheduleInputData(newLecture.id, schedules);
         const newLectureSchedule =
           await this.lectureRepository.trxCreateLectureSchedule(
             transaction,
-            scheduleInputData,
+            lectureScheduleInputData,
           );
 
         return { newLecture, newLectureImage, newLectureSchedule };
@@ -134,12 +127,26 @@ export class LectureService {
     return lectureInputData;
   }
 
-  private createLectureImageInputData(lectureId: number, imageUrl: string[]) {
-    const imageInputData: LectureImageInputData[] = imageUrl.map((url) => ({
+  private createLectureImageInputData(lectureId: number, imageUrls: string[]) {
+    const imageInputData: LectureImageInputData[] = imageUrls.map((url) => ({
       lectureId: lectureId,
       imageUrl: url,
     }));
     return imageInputData;
+  }
+
+  private createLectureScheduleInputData(
+    lectureId: number,
+    schedules: string[],
+  ) {
+    const scheduleInputData: LectureScheduleInputData[] = schedules.map(
+      (date) => ({
+        lectureId: lectureId,
+        startDateTime: new Date(date),
+        numberOfParticipants: 0,
+      }),
+    );
+    return scheduleInputData;
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
