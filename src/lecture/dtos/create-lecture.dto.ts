@@ -176,5 +176,6 @@ export class CreateLectureDto {
     description: '강의 이미지 파일 업로드',
     required: true,
   })
+  @IsOptional()
   files: string;
 }
