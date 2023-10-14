@@ -242,7 +242,7 @@ export class LecturerService implements OnModuleInit {
     return danceCategoryIds;
   }
 
-  async checkAvailableNickname(nickname: string): Promise<Boolean> {
+  async checkAvailableNickname(nickname: string): Promise<boolean> {
     const duplicatedNickname =
       await this.lecturerRepository.getLecturerNickname(nickname);
 

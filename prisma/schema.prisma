@@ -36,17 +36,16 @@ model Users {
   likedLecture     LikedLecture[]
   dailySmsUsage    DailySmsUsage?
   userCoupon       UserCoupon[]
-  userToRegion     UserToRegion[]
 }
 
 model UserProfileImage {
   //고유 id
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   //user id
-  userId   Int    @unique
+  userId   Int     @unique
   //이미지 url
-  imageUrl String @db.VarChar(255)
-  users    Users  @relation(fields: [userId], references: [id])
+  imageUrl String? @db.VarChar(255)
+  users    Users   @relation(fields: [userId], references: [id])
 }
 
 model Region {
@@ -58,7 +57,6 @@ model Region {
   district               String?           @db.VarChar(10)
   lecturerRegion         LecturerRegion[]
   lectureToRegion        LectureToRegion[]
-  userToRegion           UserToRegion[]
 }
 
 model Lecturer {
@@ -110,8 +108,6 @@ model Lecture {
   lecturerId             Int
   //강의 종류 id
   lectureTypeId          Int
-  //춤 장르 id
-  danceCategoryId        Int
   //강의 형식 id
   lectureMethodId        Int
   //강의명
@@ -152,7 +148,6 @@ model Lecture {
   deletedAt              DateTime?                @db.Timestamp(6)
   lecturer               Lecturer                 @relation(fields: [lecturerId], references: [id])
   lectureType            LectureType              @relation(fields: [lectureTypeId], references: [id])
-  danceCategory          DanceCategory            @relation(fields: [danceCategoryId], references: [id])
   lectureMethod          LectureMethod            @relation(fields: [lectureMethodId], references: [id])
   lectureReview          LectureReview[]
   likedLecture           LikedLecture[]
@@ -162,15 +157,16 @@ model Lecture {
   lectureCouponTarget    LectureCouponTarget[]
   lectureSchedule        LectureSchedule[]
   lectureToRegion        LectureToRegion[]
+  lectureToDanceGenre    LectureToDanceGenre[]
 }
 
 model DanceCategory {
   //고유 id
-  id                 Int                  @id @default(autoincrement())
+  id                  Int                   @id @default(autoincrement())
   //장르(hiphop,locking)
-  genre              String
-  lecture            Lecture[]
-  lecturerDanceGenre LecturerDanceGenre[]
+  genre               String
+  lecturerDanceGenre  LecturerDanceGenre[]
+  lectureToDanceGenre LectureToDanceGenre[]
 }
 
 model LectureType {
@@ -259,6 +255,7 @@ model LectureCurriculumImage {
   id        Int     @id @default(autoincrement())
   //강의 id
   lectureId Int
+  imageUrl  String
   lecture   Lecture @relation(fields: [lectureId], references: [id])
 }
 
@@ -379,10 +376,11 @@ model LectureToRegion {
   lecture   Lecture @relation(fields: [lectureId], references: [id])
 }
 
-model UserToRegion {
-  id       Int    @id @default(autoincrement())
-  regionId Int
-  userId   Int
-  region   Region @relation(fields: [regionId], references: [id])
-  users    Users  @relation(fields: [userId], references: [id])
+model LectureToDanceGenre {
+  id              Int           @id @default(autoincrement())
+  danceCategoryId Int
+  lectureId       Int
+  name            String?
+  danceCategory   DanceCategory @relation(fields: [danceCategoryId], references: [id])
+  lecture         Lecture       @relation(fields: [lectureId], references: [id])
 }
