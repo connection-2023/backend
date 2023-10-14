@@ -14,7 +14,7 @@ export class UserService {
     private readonly prismaServcie: PrismaService,
   ) {}
 
-  async createUser(user: CreateUserDto) {
+  async createUser(user: CreateUserDto, imageUrl: string) {
     try {
       const selectedEmailUser = await this.prismaServcie.users.findUnique({
         where: { email: user.email },
@@ -40,16 +40,27 @@ export class UserService {
       }
 
       return await this.prismaServcie.$transaction(
-        async (tx: PrismaTransaction) => {
-          const createUser = await this.userRepository.trxCreateUser(tx, user);
+        async (transaction: PrismaTransaction) => {
+          const createUser = await this.userRepository.trxCreateUser(
+            transaction,
+            user,
+          );
           const auth: CreateUserAuthDto = {
             userId: createUser.id,
             authEmail: user.authEmail,
             signUpType: user.provider,
           };
-          const createAuth = await this.authService.trxCreateUserAuth(tx, auth);
+          const createAuth = await this.authService.trxCreateUserAuth(
+            transaction,
+            auth,
+          );
+          const createImage = await this.userRepository.trxCreateUserImage(
+            transaction,
+            createUser.id,
+            imageUrl,
+          );
 
-          return { createUser, createAuth };
+          return { createUser, createAuth, createImage };
         },
       );
     } catch (error) {

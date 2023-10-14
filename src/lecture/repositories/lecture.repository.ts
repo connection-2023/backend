@@ -74,7 +74,7 @@ export class LectureRepository {
     transaction: PrismaTransaction,
     lectureToDanceGenreInputData: LectureToDanceGenreInputData[],
   ): Promise<void> {
-    await transaction.lecturerDanceGenre.createMany({
+    await transaction.lectureToDanceGenre.createMany({
       data: lectureToDanceGenreInputData,
     });
   }

@@ -9,29 +9,35 @@ export class UserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async trxCreateUser(
-    tx: PrismaTransaction,
+    transaction: PrismaTransaction,
     {
-      regionId,
       name,
       nickname,
       email,
       isProfileOpen,
       phoneNumber,
-      detailAddress,
       gender,
     }: CreateUserDto,
-  ): Promise<Users> {
-    return await tx.users.create({
+  ): Promise<any> {
+    return await transaction.users.create({
       data: {
-        regionId,
         name,
         nickname,
         email,
         isProfileOpen,
         phoneNumber,
-        detailAddress,
         gender,
       },
+    });
+  }
+
+  async trxCreateUserImage(
+    transaction: PrismaTransaction,
+    userId: number,
+    imageUrl: string,
+  ): Promise<any> {
+    return await transaction.userProfileImage.create({
+      data: { userId, imageUrl },
     });
   }
 }

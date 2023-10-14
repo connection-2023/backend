@@ -1,17 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsNumber, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
+import { boolean, number } from 'joi';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 1, description: '지역id', required: true })
-  @IsNumber()
-  regionId: number;
-
   @ApiProperty({ example: '이재현', description: '이름', required: true })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty({ example: 'hyun', description: '닉네임', required: true })
   @IsString()
+  @IsNotEmpty()
   nickname: string;
 
   @ApiProperty({
@@ -20,24 +28,19 @@ export class CreateUserDto {
     required: false,
     default: false,
   })
+  @IsOptional()
   @IsBoolean()
+  @Type(() => Boolean)
   isProfileOpen: boolean;
 
   @ApiProperty({
-    example: '010-1234-5678',
+    example: '01012345678',
     description: '핸드폰 번호',
-    required: false,
+    required: true,
   })
-  @IsString()
+  @Matches(/^010\d{8}$/, { message: '유효하지 않은 전화번호 형식입니다.' })
+  @IsOptional()
   phoneNumber: string;
-
-  @ApiProperty({
-    example: '용마산로 616',
-    description: '상세주소',
-    required: false,
-  })
-  @IsString()
-  detailAddress: string;
 
   @ApiProperty({
     example: '0',
@@ -45,14 +48,20 @@ export class CreateUserDto {
     required: false,
   })
   @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
   gender: number;
 
   @ApiProperty({
-    example: 'test@test.com',
-    description: '사용 이메일',
+    example: 'illppang@naver.com',
+    description: '이메일 / 이메일 형식이 아니면 에러 반환',
     required: true,
   })
+  @Matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
+    message: '잘못된 이메일 형식입니다.',
+  })
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @ApiProperty({
@@ -61,13 +70,27 @@ export class CreateUserDto {
     required: true,
   })
   @IsString()
+  @IsOptional()
   provider: string;
 
   @ApiProperty({
-    example: 'test@test.com',
-    description: '소셜 이메일',
+    example: 'illppang@naver.com',
+    description: '소셜이메일 / 소셜이메일 형식이 아니면 에러 반환',
     required: true,
   })
+  @Matches(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
+    message: '잘못된 이메일 형식입니다.',
+  })
   @IsEmail()
+  @IsNotEmpty()
   authEmail: string;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: '유저 이미지 파일 업로드',
+    required: false,
+  })
+  @IsOptional()
+  image: string;
 }
