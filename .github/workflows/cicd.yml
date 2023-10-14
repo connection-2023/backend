@@ -40,6 +40,7 @@ jobs:
           echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
           echo "REDIS_SMS_TTL=${{ secrets.REDIS_SMS_TTL }}" >> .env
+          echo "REDIS_CATEGORY_TTL=${{ secrets.REDIS_CATEGORY_TTL }}" >> .env
 
           echo "SWAGGER_USER=${{ secrets.SWAGGER_USER }}" >> .env
           echo "SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}" >> .env
@@ -55,7 +56,12 @@ jobs:
 
           echo "FRONT_END_URL=${{ secrets.FRONT_END_URL }}" >> .env
 
-          echo "REDIS_CATEGORY_TTL=${{ secrets.REDIS_CATEGORY_TTL }}" >> .env
+
+          echo "AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}" >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
+          echo "AWS_S3_ACCESS_KEY=${{ secrets.AWS_S3_ACCESS_KEY }}" >> .env
+          echo "AWS_S3_SECRET_KEY=${{ secrets.AWS_S3_SECRET_KEY }}" >> .env
+
 
           cat .env
 
