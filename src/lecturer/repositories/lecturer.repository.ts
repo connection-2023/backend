@@ -5,6 +5,7 @@ import {
   LecturerWebsiteInputData,
   LecturerInputData,
   LecturerDanceGenreInputData,
+  LecturerProfileImageInputData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -67,6 +68,15 @@ export class LecturerRepository {
     return await this.prismaService.lecturer.findUnique({
       where: { nickname },
       select: { nickname: true },
+    });
+  }
+
+  async trxCreateLecturerProfileImages(
+    transaction: PrismaTransaction,
+    lecturerProfileImageInputData: LecturerProfileImageInputData[],
+  ): Promise<void> {
+    await transaction.lecturerProfileImageUrl.createMany({
+      data: lecturerProfileImageInputData,
     });
   }
 }

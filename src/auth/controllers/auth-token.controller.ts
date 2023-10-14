@@ -35,7 +35,7 @@ export class AuthTokenController {
       httpOnly: true,
     });
 
-    return { accessToken: token.accessToken };
+    return { response: { accessToken: token.accessToken } };
   }
 
   //유저 토큰 재발급
@@ -54,7 +54,7 @@ export class AuthTokenController {
       httpOnly: true,
     });
 
-    return { accessToken: token.accessToken };
+    return { response: { accessToken: token.accessToken } };
   }
 
   //강사 토큰 재발급
