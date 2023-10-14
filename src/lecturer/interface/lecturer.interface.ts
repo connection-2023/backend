@@ -27,9 +27,15 @@ interface LecturerDanceGenreInputData {
   name?: string;
 }
 
+interface LecturerProfileImageInputData {
+  lecturerId: number;
+  url: string;
+}
+
 export {
   LecturerInputData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
   LecturerDanceGenreInputData,
+  LecturerProfileImageInputData,
 };

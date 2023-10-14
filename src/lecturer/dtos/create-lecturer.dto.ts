@@ -84,18 +84,19 @@ export class CreateLecturerDto {
   experience: string;
 
   @ApiProperty({
+    type: 'array',
     example: ['서울특별시 도봉구', '서울특별시 중구'],
     description: '강사 강의 지역',
-    required: true,
+    required: false,
   })
   @IsArray()
   @IsNotEmpty()
   regions: string[];
 
   @ApiProperty({
-    example: ['K-pop', '팝핑'],
+    type: 'array',
     description: '강사 강의 장르',
-    required: true,
+    required: false,
   })
   @IsArray()
   @IsEnum(DanceCategory, { each: true })
@@ -103,20 +104,30 @@ export class CreateLecturerDto {
   genres: DanceCategory[];
 
   @ApiProperty({
-    example: ['URL', 'URL'],
     description: '그외 사이트',
     required: false,
   })
   @IsArray()
   @IsOptional()
   websiteUrls: string[];
-
   @ApiProperty({
-    example: ['직접입력한 것들', '직접입력한 것들'],
     description: '기타일때 직접입력한 것들',
     required: false,
+    type: 'array',
   })
   @IsArray()
   @IsOptional()
   etcGenres: string[];
+
+  @ApiProperty({
+    type: 'file',
+    isArray: true,
+    properties: {
+      image: {
+        type: 'string',
+        format: 'binary',
+      },
+    },
+  })
+  image: Express.Multer.File[];
 }

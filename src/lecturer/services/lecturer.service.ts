@@ -16,29 +16,43 @@ import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerDanceGenreInputData,
+  LecturerProfileImageInputData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import * as AWS from 'aws-sdk';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
   private readonly logger = new Logger(LecturerService.name);
+  private awsS3: AWS.S3;
+  private awsS3BucketName: string;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   onModuleInit() {
+    this.awsS3 = new AWS.S3({
+      accessKeyId: this.configService.get<'string'>('AWS_S3_ACCESS_KEY'),
+      secretAccessKey: this.configService.get<'string'>('AWS_S3_SECRET_KEY'),
+      region: this.configService.get<string>('AWS_REGION'),
+    });
+    this.awsS3BucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME');
+
     this.logger.log('LecturerService Init');
   }
 
   async createLecturer(
     userId: number,
+    profileImages: Express.Multer.File[],
     createLecturerDto: CreateLecturerDto,
   ): Promise<void> {
     await this.checkLecturerExist(userId);
@@ -81,6 +95,16 @@ export class LecturerService implements OnModuleInit {
         await this.lecturerRepository.trxCreateLecturerDanceGenres(
           transaction,
           lecturerDanceGenreInputData,
+        );
+
+        const lecturerProfileImageUrlInputData: LecturerProfileImageInputData[] =
+          await this.createLecturerProfileImageInputData(
+            lecturer.id,
+            profileImages,
+          );
+        await this.lecturerRepository.trxCreateLecturerProfileImages(
+          transaction,
+          lecturerProfileImageUrlInputData,
         );
       },
     );
@@ -227,5 +251,34 @@ export class LecturerService implements OnModuleInit {
     }
 
     return true;
+  }
+
+  async createLecturerProfileImageInputData(
+    lecturerId: number,
+    profileImages: Express.Multer.File[],
+  ): Promise<LecturerProfileImageInputData[]> {
+    const lecturerProfileImageUrls: LecturerProfileImageInputData[] = [];
+
+    for (const profileImage of profileImages) {
+      const key = `lecturer/${lecturerId}/${Date.now()}_${
+        profileImage.originalname
+      }`;
+
+      await this.awsS3
+        .putObject({
+          Bucket: this.awsS3BucketName,
+          Key: key,
+          Body: profileImage.buffer,
+          ACL: 'private',
+          ContentType: profileImage.mimetype,
+        })
+        .promise();
+
+      const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
+
+      lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
+    }
+
+    return lecturerProfileImageUrls;
   }
 }
