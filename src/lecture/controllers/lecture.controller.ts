@@ -27,32 +27,32 @@ export class LectureController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  @ApiOperation({
-    summary: '강의 생성',
-  })
-  @ApiConsumes('multipart/form-data')
-  @Post()
-  @UseInterceptors(FilesInterceptor('files', 5))
-  async createLecture(
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body() lecture: CreateLectureDto,
-  ) {
-    const danceLecturerId = 1;
-    const imgurl: string[] = [];
+  // @ApiOperation({
+  //   summary: '강의 생성',
+  // })
+  // @ApiConsumes('multipart/form-data')
+  // @Post()
+  // @UseInterceptors(FilesInterceptor('files', 5))
+  // async createLecture(
+  //   @UploadedFiles() files: Express.Multer.File[],
+  //   @Body() lecture: CreateLectureDto,
+  // ) {
+  //   const danceLecturerId = 1;
+  //   const imgurl: string[] = [];
 
-    await Promise.all(
-      files.map(async (file: Express.Multer.File) => {
-        const url = await this.uploadsService.uploadFileToS3('lectures', file);
-        imgurl.push(url);
-      }),
-    );
+  //   await Promise.all(
+  //     files.map(async (file: Express.Multer.File) => {
+  //       const url = await this.uploadsService.uploadFileToS3('lectures', file);
+  //       imgurl.push(url);
+  //     }),
+  //   );
 
-    return await this.lectureService.createLecture(
-      lecture,
-      danceLecturerId,
-      imgurl,
-    );
-  }
+  //   return await this.lectureService.createLecture(
+  //     lecture,
+  //     danceLecturerId,
+  //     imgurl,
+  //   );
+  // }
 
   // @ApiOperation({
   //   summary: '강의 전부 조회',

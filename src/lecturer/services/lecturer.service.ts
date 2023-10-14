@@ -242,7 +242,7 @@ export class LecturerService implements OnModuleInit {
     return danceCategoryIds;
   }
 
-  async checkAvailableNickname(nickname: string): Promise<Boolean> {
+  async checkAvailableNickname(nickname: string): Promise<boolean> {
     const duplicatedNickname =
       await this.lecturerRepository.getLecturerNickname(nickname);
 
@@ -274,9 +274,9 @@ export class LecturerService implements OnModuleInit {
         })
         .promise();
 
-      const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
+      // const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
 
-      lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
+      // lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
     }
 
     return lecturerProfileImageUrls;
