@@ -38,17 +38,29 @@ export class UserService {
       if (selectedPhoneNumberUser) {
         throw new BadRequestException('사용 중인 번호입니다.');
       }
+
       return await this.prismaServcie.$transaction(
-        async (tx: PrismaTransaction) => {
-          const createUser = await this.userRepository.trxCreateUser(tx, user);
+        async (transaction: PrismaTransaction) => {
+          const createUser = await this.userRepository.trxCreateUser(
+            transaction,
+            user,
+          );
           const auth: CreateUserAuthDto = {
             userId: createUser.id,
             authEmail: user.authEmail,
             signUpType: user.provider,
           };
-          const createAuth = await this.authService.trxCreateUserAuth(tx, auth);
+          const createAuth = await this.authService.trxCreateUserAuth(
+            transaction,
+            auth,
+          );
+          const createImage = await this.userRepository.trxCreateUserImage(
+            transaction,
+            createUser.id,
+            imageUrl,
+          );
 
-          return { createUser, createAuth };
+          return { createUser, createAuth, createImage };
         },
       );
     } catch (error) {

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -8,6 +9,7 @@ import {
   IsString,
   Matches,
 } from 'class-validator';
+import { boolean, number } from 'joi';
 
 export class CreateUserDto {
   @ApiProperty({ example: '이재현', description: '이름', required: true })
@@ -28,6 +30,7 @@ export class CreateUserDto {
   })
   @IsOptional()
   @IsBoolean()
+  @Type(() => Boolean)
   isProfileOpen: boolean;
 
   @ApiProperty({
@@ -46,6 +49,7 @@ export class CreateUserDto {
   })
   @IsNumber()
   @IsOptional()
+  @Type(() => Number)
   gender: number;
 
   @ApiProperty({
@@ -80,4 +84,13 @@ export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
   authEmail: string;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    description: '유저 이미지 파일 업로드',
+    required: false,
+  })
+  @IsOptional()
+  image: string;
 }

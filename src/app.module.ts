@@ -10,6 +10,9 @@ import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CustomJwtModule } from './common/config/jwt-module.cofig';
+import { UploadsModule } from './uploads/uploads.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { SuccessInterceptor } from './common/interceptors/success.interceptor';
 import { CouponModule } from './coupon/coupon.module';
 import { PaymentsModule } from './payments/payments.module';
 
@@ -26,6 +29,7 @@ import { PaymentsModule } from './payments/payments.module';
     PaymentsModule,
     CouponModule,
     CustomConfigModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
