@@ -1,6 +1,5 @@
 interface LectureInputData {
   lectureTypeId: number;
-  danceCategoryId: number;
   lectureMethodId: number;
   title: string;
   introduction: string;
@@ -31,3 +30,17 @@ interface LectureImageInputData {
   lectureId: number;
   imageUrl: string;
 }
+
+interface LectureToDanceGenreInputData {
+  lectureId: number;
+  danceCategoryId: number;
+  name?: string;
+}
+
+export {
+  LectureInputData,
+  LectureToRegionInputData,
+  LectureImageInputData,
+  LectureScheduleInputData,
+  LectureToDanceGenreInputData,
+};

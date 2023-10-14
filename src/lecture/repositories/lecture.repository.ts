@@ -4,6 +4,12 @@ import { CreateLectureDto } from '../dtos/create-lecture.dto';
 import { Lecture, LectureImage, LectureSchedule, Region } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  LectureImageInputData,
+  LectureInputData,
+  LectureToDanceGenreInputData,
+  LectureToRegionInputData,
+} from '../interface/lecture.interface';
 
 @Injectable()
 export class LectureRepository {
@@ -62,5 +68,14 @@ export class LectureRepository {
       select: { id: true },
     });
     return regionsId;
+  }
+
+  async trxCreateLectureToDanceGenres(
+    transaction: PrismaTransaction,
+    lectureToDanceGenreInputData: LectureToDanceGenreInputData[],
+  ): Promise<void> {
+    await transaction.lecturerDanceGenre.createMany({
+      data: lectureToDanceGenreInputData,
+    });
   }
 }

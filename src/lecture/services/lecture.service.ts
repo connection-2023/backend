@@ -1,5 +1,5 @@
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { Lecture, PrismaPromise, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
@@ -7,10 +7,20 @@ import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
+  LectureImageInputData,
+  LectureScheduleInputData,
+  LectureToDanceGenreInputData,
+  LectureToRegionInputData,
+} from '../interface/lecture.interface';
+import { Cache } from 'cache-manager';
+import { DanceCategory } from '@src/common/enum/enum';
 
 @Injectable()
 export class LectureService {
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly lectureRepository: LectureRepository,
     private readonly queryFilter: QueryFilter,
     private readonly prismaService: PrismaService,
@@ -21,7 +31,8 @@ export class LectureService {
     lecturerId: number,
     imageUrls: string[],
   ) {
-    const { regions, schedules, ...lecture } = createLectureDto;
+    const { regions, schedules, genres, etcGenres, ...lecture } =
+      createLectureDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
 
@@ -56,6 +67,17 @@ export class LectureService {
             transaction,
             lectureScheduleInputData,
           );
+
+        const lectureToDanceGenreInputData: LectureToDanceGenreInputData[] =
+          await this.createLecturerDanceGenreInputData(
+            newLecture.id,
+            genres,
+            etcGenres,
+          );
+        await this.lectureRepository.trxCreateLectureToDanceGenres(
+          transaction,
+          lectureToDanceGenreInputData,
+        );
 
         return { newLecture, newLectureImage, newLectureSchedule };
       },
@@ -147,6 +169,48 @@ export class LectureService {
       }),
     );
     return scheduleInputData;
+  }
+
+  private async createLecturerDanceGenreInputData(
+    lectureId: number,
+    genres: DanceCategory[],
+    etcGenres: string[],
+  ): Promise<LectureToDanceGenreInputData[]> {
+    const danceCategoryIds: number[] = await this.getDanceCategoryIds(genres);
+    const lectureInputData: LectureToDanceGenreInputData[] =
+      danceCategoryIds.map((danceCategoryId: number) => ({
+        lectureId,
+        danceCategoryId,
+      }));
+
+    if (etcGenres) {
+      const etcGenreId: number = await this.cacheManager.get('기타');
+      const etcGenreData = etcGenres.map((etcGenre: string) => ({
+        lectureId,
+        danceCategoryId: etcGenreId,
+        name: etcGenre,
+      }));
+
+      lectureInputData.push(...etcGenreData);
+    }
+
+    return lectureInputData;
+  }
+
+  private async getDanceCategoryIds(
+    genres: DanceCategory[],
+  ): Promise<number[]> {
+    const danceCategoryIds: number[] = await Promise.all(
+      genres.map(async (genre: DanceCategory) => {
+        const danceCategoryId: number = await this.cacheManager.get(
+          DanceCategory[genre],
+        );
+
+        return danceCategoryId;
+      }),
+    );
+
+    return danceCategoryIds;
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {

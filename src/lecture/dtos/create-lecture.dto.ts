@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { DanceCategory } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -26,11 +28,24 @@ export class CreateLectureDto {
   @Type(() => Number)
   lectureTypeId: number;
 
-  @ApiProperty({ example: 1, description: '춤 장르 id', required: true })
+  @ApiProperty({
+    example: ['K-pop', '팝핑'],
+    description: '강사 강의 장르',
+    required: true,
+  })
+  @IsArray()
+  @IsEnum(DanceCategory, { each: true })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  danceCategoryId: number;
+  genres: DanceCategory[];
+
+  @ApiProperty({
+    example: ['직접입력한 것들', '직접입력한 것들'],
+    description: '기타일때 직접입력한 것들',
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  etcGenres: string[];
 
   //원데이,다회차
   @ApiProperty({
