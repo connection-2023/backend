@@ -10,8 +10,6 @@ datasource db {
 model Users {
   //고유 id
   id               Int               @id @default(autoincrement())
-  //지역 id
-  regionId         Int
   //이름
   name             String            @db.VarChar(10)
   //사용자 닉네임
@@ -22,8 +20,6 @@ model Users {
   isProfileOpen    Boolean           @default(false) @db.Boolean
   //핸드폰 번호
   phoneNumber      String?           @unique @db.VarChar(11)
-  //상세주소
-  detailAddress    String?           @db.VarChar(255)
   //성별
   gender           Int?              @db.SmallInt
   //생성일자
@@ -32,7 +28,6 @@ model Users {
   updatedAt        DateTime          @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
   deletedAt        DateTime?         @db.Timestamp(6)
-  region           Region            @relation(fields: [regionId], references: [id], onDelete: Cascade)
   auth             Auth?
   userProfileImage UserProfileImage?
   lecturer         Lecturer?
@@ -45,12 +40,12 @@ model Users {
 
 model UserProfileImage {
   //고유 id
-  id        Int    @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   //user id
-  userId    Int    @unique
+  userId   Int    @unique
   //이미지 url
-  image_url String @db.VarChar(255)
-  users     Users  @relation(fields: [userId], references: [id])
+  imageUrl String @db.VarChar(255)
+  users    Users  @relation(fields: [userId], references: [id])
 }
 
 model Region {
@@ -60,7 +55,6 @@ model Region {
   administrativeDistrict String           @db.VarChar(19)
   //시/군/구
   district               String?          @db.VarChar(10)
-  users                  Users[]
   lecture                Lecture[]
   lecturerRegion         LecturerRegion[]
 }
@@ -267,7 +261,7 @@ model LectureCoupon {
   usageCount          Int                   @default(0)
   //쿠폰 비활성화
   isDisabled          Boolean               @default(false)
-  isStackable   Boolean
+  isStackable         Boolean
   //진행 기간
   startAt             DateTime              @db.Timestamp(6)
   endAt               DateTime              @db.Timestamp(6)

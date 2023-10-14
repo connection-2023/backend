@@ -14,7 +14,7 @@ export class UserService {
     private readonly prismaServcie: PrismaService,
   ) {}
 
-  async createUser(user: CreateUserDto) {
+  async createUser(user: CreateUserDto, imageUrl: string) {
     try {
       const selectedEmailUser = await this.prismaServcie.users.findUnique({
         where: { email: user.email },
