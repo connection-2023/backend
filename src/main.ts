@@ -6,11 +6,14 @@ import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
 import { ConfigService } from '@nestjs/config';
+import { SuccessInterceptor } from './common/interceptors/success.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port: number = configService.get<number>('PORT');
+
+  app.useGlobalInterceptors(new SuccessInterceptor());
 
   app.enableCors({
     origin: configService.get<string>('FRONT_END_URL'),
