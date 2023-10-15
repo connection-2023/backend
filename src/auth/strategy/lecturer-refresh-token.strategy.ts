@@ -6,8 +6,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
-import { LecturerTokenPayload } from 'src/common/interface/common-interface';
-import { Lecturer } from '@prisma/client';
+import {
+  GetLecturerResult,
+  LecturerTokenPayload,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { CookiesTokenExtractor } from '@src/auth/extractor/cookie-token-extractor';
 import { TokenTypes } from '@src/auth/enums/token-enums';
@@ -23,7 +26,7 @@ export class LecturerRefreshTokenStrategy extends PassportStrategy(
   ) {
     super({
       secretOrKey: configService.get<string>('JWT_TOKEN_SECRET_KEY'),
-      jwtFromRequest: CookiesTokenExtractor.fromCookies(),
+      jwtFromRequest: CookiesTokenExtractor.refreshTokenFromCookies(),
       passReqToCallback: true,
     });
   }
@@ -31,7 +34,7 @@ export class LecturerRefreshTokenStrategy extends PassportStrategy(
   async validate(
     request,
     tokenPayload: LecturerTokenPayload,
-  ): Promise<Lecturer> {
+  ): Promise<ValidateResult> {
     try {
       if (!tokenPayload.lecturerId) {
         throw new UnauthorizedException(
@@ -42,7 +45,7 @@ export class LecturerRefreshTokenStrategy extends PassportStrategy(
 
       const cookiesRefreshToken: string = request.cookies.refreshToken;
 
-      const authorizedLecturer: Lecturer =
+      const authorizedLecturer: GetLecturerResult =
         await this.authTokenService.getLecturerByPayload(
           tokenPayload.lecturerId,
         );
@@ -59,7 +62,7 @@ export class LecturerRefreshTokenStrategy extends PassportStrategy(
         TokenTypes.Lecturer,
       );
 
-      return authorizedLecturer;
+      return { lecturer: authorizedLecturer };
     } catch (error) {
       throw error;
     }
