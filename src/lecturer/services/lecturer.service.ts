@@ -276,9 +276,9 @@ export class LecturerService implements OnModuleInit {
         })
         .promise();
 
-      // const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
+      const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
 
-      // lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
+      lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
     }
 
     return lecturerProfileImageUrls;
