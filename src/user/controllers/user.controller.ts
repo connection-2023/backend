@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -33,5 +35,11 @@ export class UserController {
     } else {
       return await this.userService.createUser(createUserDto, null);
     }
+  }
+
+  @ApiOperation({ summary: '닉네임 중복검사' })
+  @Get(':nickname')
+  async findByNickname(@Param('nickname') nickname: string) {
+    return this.userService.findByNickname(nickname);
   }
 }

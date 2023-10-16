@@ -1,7 +1,12 @@
 import { AuthService } from '@src/auth/services/auth.service';
 import { CreateUserDto } from '@src/user/dtos/create-user.dto';
 import { UserRepository } from '@src/user/repositories/user.repository';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { CreateUserAuthDto } from '@src/auth/dtos/create-user-auth.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
@@ -66,6 +71,16 @@ export class UserService {
       );
     } catch (error) {
       throw error;
+    }
+  }
+
+  async findByNickname(nickname: string) {
+    const existNickname = await this.prismaServcie.users.findUnique({
+      where: { nickname },
+    });
+
+    if (existNickname) {
+      throw new HttpException('duplicated nickname', HttpStatus.FORBIDDEN);
     }
   }
 }
