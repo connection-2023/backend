@@ -30,13 +30,14 @@ export class UserService {
         throw new BadRequestException('사용 중인 닉네임 입니다.');
       }
 
-      const selectedPhoneNumberUser = await this.prismaServcie.users.findUnique(
-        {
-          where: { phoneNumber: user.phoneNumber },
-        },
-      );
-      if (selectedPhoneNumberUser) {
-        throw new BadRequestException('사용 중인 번호입니다.');
+      if (user.phoneNumber) {
+        const selectedPhoneNumberUser =
+          await this.prismaServcie.users.findUnique({
+            where: { phoneNumber: user.phoneNumber },
+          });
+        if (selectedPhoneNumberUser) {
+          throw new BadRequestException('사용 중인 번호입니다.');
+        }
       }
 
       return await this.prismaServcie.$transaction(
