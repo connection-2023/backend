@@ -73,7 +73,7 @@ export class AuthTokenService implements OnModuleInit {
       where: { id: payloadUserId, deletedAt: null },
       select: { id: true },
     });
-    if (!user.id) {
+    if (!user) {
       throw new BadRequestException(
         `유효하지 않는 유저 정보 요청입니다.`,
         'InvalidUserInformation',
@@ -89,7 +89,7 @@ export class AuthTokenService implements OnModuleInit {
       where: { id: payloadUserId, deletedAt: null },
       select: { id: true, userId: true },
     });
-    if (!lecturer.id) {
+    if (!lecturer) {
       throw new BadRequestException(
         `유효하지 않는 강사 정보 요청입니다.`,
         'InvalidUserInformation',
