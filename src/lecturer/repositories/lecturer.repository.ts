@@ -6,6 +6,7 @@ import {
   LecturerInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
+  LecturerCoupon,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -77,6 +78,24 @@ export class LecturerRepository {
   ): Promise<void> {
     await transaction.lecturerProfileImageUrl.createMany({
       data: lecturerProfileImageInputData,
+    });
+  }
+
+  async getLecturerCouponsByLecturerId(
+    lecturerId: number,
+  ): Promise<LecturerCoupon[]> {
+    return await this.prismaService.lectureCoupon.findMany({
+      where: { lecturerId, isDisabled: false },
+      select: {
+        id: true,
+        title: true,
+        percentage: true,
+        discountPrice: true,
+        isStackable: true,
+        maxDiscountPrice: true,
+        startAt: true,
+        endAt: true,
+      },
     });
   }
 }
