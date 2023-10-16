@@ -13,7 +13,7 @@ export function ApiCreateUser() {
     ApiOperation({ summary: '회원가입' }),
     ApiConsumes('multipart/form-data'),
     ApiOkResponse(
-      SwaggerApiResponse.success({
+      SwaggerApiResponse.success('회원가입 성공', {
         statusCode: 201,
         data: {
           createUser: {

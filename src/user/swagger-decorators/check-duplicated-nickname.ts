@@ -1,5 +1,5 @@
 import {
-  ApiBadRequestResponse,
+  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
@@ -17,11 +17,13 @@ export function ApiCheckDubplicatedNickname() {
         statusCode: 200,
       }),
     ),
-    ApiBadRequestResponse(
-      SwaggerApiResponse.exception({
-        statusCode: 403,
-        message: 'duplicated nickname',
-      }),
+    ApiForbiddenResponse(
+      SwaggerApiResponse.exception([
+        {
+          name: 'dubplicated nickname',
+          example: 'duplicated nickname',
+        },
+      ]),
     ),
   );
 }
