@@ -288,4 +288,20 @@ export class LecturerService implements OnModuleInit {
       lecturerId,
     );
   }
+
+  async updateLecturerNickname(
+    lectureId: number,
+    nickname: string,
+  ): Promise<void> {
+    const duplicatedNickname =
+      await this.lecturerRepository.getLecturerNickname(nickname);
+    if (duplicatedNickname) {
+      throw new BadRequestException(
+        `닉네임 중복입니다.`,
+        'duplicatedLecturerNickname',
+      );
+    }
+
+    await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
+  }
 }

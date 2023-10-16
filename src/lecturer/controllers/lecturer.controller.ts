@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   UploadedFiles,
   UseGuards,
@@ -21,6 +22,7 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { LecturerCoupon } from '@src/lecturer/interface/lecturer.interface';
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
+import { ApiUpdateLecturerNickname } from '../swagger-decorators/update-lecturer-nickname-decorater';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -56,12 +58,25 @@ export class LecturerController {
   }
 
   @ApiCheckAvailableNickname()
-  @Get('/:nickname')
+  @Get('/nickname/:nickname')
   async checkAvailableNickname(@Param('nickname') nickname: string) {
     const result: Boolean = await this.lecturerService.checkAvailableNickname(
       nickname,
     );
 
     return { status: result };
+  }
+
+  @ApiUpdateLecturerNickname()
+  @Patch('/nickname/:nickname')
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateLecturerNickname(
+    @Param('nickname') nickname: string,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    await this.lecturerService.updateLecturerNickname(
+      authorizedData.lecturer.id,
+      nickname,
+    );
   }
 }

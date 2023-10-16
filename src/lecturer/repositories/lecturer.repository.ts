@@ -98,4 +98,11 @@ export class LecturerRepository {
       },
     });
   }
+
+  async updateLecturerNickname(lectureId, nickname) {
+    await this.prismaService.lecturer.update({
+      where: { id: lectureId },
+      data: { nickname },
+    });
+  }
 }
