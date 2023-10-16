@@ -20,9 +20,13 @@ import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/chec
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { LecturerCoupon } from '@src/lecturer/interface/lecturer.interface';
+import {
+  LecturerCoupon,
+  LecturerProfile,
+} from '@src/lecturer/interface/lecturer.interface';
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
-import { ApiUpdateLecturerNickname } from '../swagger-decorators/update-lecturer-nickname-decorater';
+import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
+import { ApiGetMyLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -31,7 +35,7 @@ export class LecturerController {
 
   @ApiCreateLecturer()
   @UseInterceptors(FilesInterceptor('image', 5))
-  @Post('/')
+  @Post()
   @UseGuards(UserAccessTokenGuard)
   async createLecturer(
     @GetAuthorizedUser() user: Users,
@@ -45,6 +49,18 @@ export class LecturerController {
     );
 
     return { message: '강사 생성 완료' };
+  }
+
+  @ApiGetMyLecturerProfile()
+  @Get('/profile')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getMyLecturerProfile(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const myLecturerProfile: LecturerProfile =
+      await this.lecturerService.getLecturerProfile(authorizedData.lecturer.id);
+
+    return { myLecturerProfile };
   }
 
   @ApiGetMyCoupons()

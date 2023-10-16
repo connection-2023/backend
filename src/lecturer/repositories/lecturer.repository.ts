@@ -7,6 +7,7 @@ import {
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerCoupon,
+  LecturerProfile,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -103,6 +104,38 @@ export class LecturerRepository {
     await this.prismaService.lecturer.update({
       where: { id: lectureId },
       data: { nickname },
+    });
+  }
+
+  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
+    return await this.prismaService.lecturer.findUnique({
+      where: { id: lectureId },
+      select: {
+        nickname: true,
+        email: true,
+        phoneNumber: true,
+        youtubeUrl: true,
+        instagramUrl: true,
+        homepageUrl: true,
+        affiliation: true,
+        introduction: true,
+        experience: true,
+        lecturerRegion: {
+          select: {
+            region: {
+              select: { administrativeDistrict: true, district: true },
+            },
+          },
+        },
+        lecturerDanceGenre: {
+          select: {
+            name: true,
+            danceCategory: { select: { genre: true } },
+          },
+        },
+        lecturerWebsiteUrl: true,
+        lecturerProfileImageUrl: true,
+      },
     });
   }
 }
