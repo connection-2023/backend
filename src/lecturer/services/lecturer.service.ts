@@ -17,6 +17,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerCoupon,
   LecturerDanceGenreInputData,
+  LecturerProfile,
   LecturerProfileImageInputData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
@@ -303,5 +304,9 @@ export class LecturerService implements OnModuleInit {
     }
 
     await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
+  }
+
+  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
+    return await this.lecturerRepository.getLecturerProfile(lectureId);
   }
 }
