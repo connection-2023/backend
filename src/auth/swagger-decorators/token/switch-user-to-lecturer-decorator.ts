@@ -14,14 +14,17 @@ export function ApiSwitchUserToLecturer() {
   return applyDecorators(
     ApiOperation({
       summary: '유저 => 강사 전환',
-      description: 'accessToken을 사용하여 강사 토큰으로 전환',
+      description: 'userAccessToken을 사용하여 강사 토큰으로 전환',
     }),
     ApiBearerAuth(),
     ApiOkResponse(
       SwaggerApiResponse.success(
-        '강사 전용 accessToken 반환 및 쿠키엔 refreshToken 저장',
+        '강사 전용 lecturerAccessToken 반환 및 쿠키엔 refreshToken 저장',
         {
-          accessToken: '강사 전용 토큰',
+          statusCode: 200,
+          data: {
+            lecturerAccessToken: '토오오큰',
+          },
         },
       ),
     ),

@@ -16,6 +16,7 @@ import { ApiSwitchUserToLecturer } from '../swagger-decorators/token/switch-user
 import { ApiSwitchLecturerToUser } from '../swagger-decorators/token/switch-lecturer-to-user-decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { Payload } from '@prisma/client/runtime';
+import { ApiRefreshToken } from '../swagger-decorators/token/refresh-target-decorator';
 
 @ApiTags('토큰')
 @Controller('auth/token')
@@ -116,6 +117,7 @@ export class AuthTokenController {
     return { userAccessToken: token.accessToken };
   }
 
+  @ApiRefreshToken()
   @Get('/refresh')
   @UseGuards(AuthGuard('refreshToken'))
   async refreshTargetToken(
