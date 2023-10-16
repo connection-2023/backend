@@ -32,7 +32,7 @@ export class UserService {
         where: { nickname: user.nickname },
       });
       if (selectedNicknameUser) {
-        throw new BadRequestException('사용 중인 닉네임 입니다.');
+        throw new BadRequestException('사용 중인 닉네임입니다.');
       }
 
       if (user.phoneNumber) {
