@@ -22,11 +22,20 @@ export class CreateLectureDto {
   @Type(() => Array)
   regions: string[];
 
-  @ApiProperty({ example: 1, description: '강의 종류 id', required: true })
+  @ApiProperty({ example: 'dance', description: '강의 종류', required: true })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
   lectureTypeId: number;
+
+  @ApiProperty({
+    example: '15일 영업 안합니다요',
+    description: '강의 공지사항',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  notification: string;
 
   @ApiProperty({
     example: ['K-pop', '팝핑'],

@@ -9,7 +9,6 @@ import {
   IsString,
   Matches,
 } from 'class-validator';
-import { boolean, number } from 'joi';
 
 export class CreateUserDto {
   @ApiProperty({ example: '이재현', description: '이름', required: true })
@@ -36,7 +35,7 @@ export class CreateUserDto {
   @ApiProperty({
     example: '01012345678',
     description: '핸드폰 번호',
-    required: true,
+    required: false,
   })
   @Matches(/^010\d{8}$/, { message: '유효하지 않은 전화번호 형식입니다.' })
   @IsOptional()
@@ -70,7 +69,7 @@ export class CreateUserDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   provider: string;
 
   @ApiProperty({

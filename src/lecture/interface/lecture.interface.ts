@@ -37,10 +37,15 @@ interface LectureToDanceGenreInputData {
   name?: string;
 }
 
+interface LectureNotificationResponse {
+  notification: string;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
   LectureImageInputData,
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
+  LectureNotificationResponse,
 };

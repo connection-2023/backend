@@ -31,7 +31,7 @@ export class LectureService {
     lecturerId: number,
     imageUrls: string[],
   ) {
-    const { regions, schedules, genres, etcGenres, ...lecture } =
+    const { regions, schedules, genres, etcGenres, notification, ...lecture } =
       createLectureDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
@@ -74,12 +74,26 @@ export class LectureService {
             genres,
             etcGenres,
           );
-        await this.lectureRepository.trxCreateLectureToDanceGenres(
-          transaction,
-          lectureToDanceGenreInputData,
-        );
+        const newLectureGenre =
+          await this.lectureRepository.trxCreateLectureToDanceGenres(
+            transaction,
+            lectureToDanceGenreInputData,
+          );
 
-        return { newLecture, newLectureImage, newLectureSchedule };
+        const newLectureNotification =
+          await this.lectureRepository.trxCreateLectureNotification(
+            transaction,
+            newLecture.id,
+            notification,
+          );
+
+        return {
+          newLecture,
+          newLectureImage,
+          newLectureSchedule,
+          newLectureGenre,
+          newLectureNotification,
+        };
       },
     );
   }
