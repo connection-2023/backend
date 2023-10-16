@@ -37,10 +37,21 @@ interface LectureToDanceGenreInputData {
   name?: string;
 }
 
+interface LectureNotificationResponse {
+  notification: string;
+}
+
+interface LectureHolidayInputData {
+  lectureId: number;
+  holiday: Date;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
   LectureImageInputData,
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
+  LectureNotificationResponse,
+  LectureHolidayInputData,
 };

@@ -22,11 +22,20 @@ export class CreateLectureDto {
   @Type(() => Array)
   regions: string[];
 
-  @ApiProperty({ example: 1, description: '강의 종류 id', required: true })
+  @ApiProperty({ example: 'dance', description: '강의 종류', required: true })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
   lectureTypeId: number;
+
+  @ApiProperty({
+    example: '15일 영업 안합니다요',
+    description: '강의 공지사항',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  notification: string;
 
   @ApiProperty({
     example: ['K-pop', '팝핑'],
@@ -158,9 +167,9 @@ export class CreateLectureDto {
 
   @ApiProperty({
     example: [
-      '2023-10-11 07:32:54.337',
-      '2023-10-11 07:32:54.337',
-      '2023-10-11 07:32:54.337',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
     description: '클래스 일정',
     required: true,
@@ -169,6 +178,20 @@ export class CreateLectureDto {
   @IsNotEmpty()
   @Type(() => Array)
   schedules: string[];
+
+  @ApiProperty({
+    example: [
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+    ],
+    description: '클래스 일정',
+    required: true,
+  })
+  @IsArray()
+  @IsNotEmpty()
+  @Type(() => Array)
+  holidays: string[];
 
   @ApiProperty({
     type: 'string',

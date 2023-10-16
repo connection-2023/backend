@@ -1,15 +1,25 @@
-import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from './../../prisma/prisma.service';
-import { CreateLectureDto } from '../dtos/create-lecture.dto';
-import { Lecture, LectureImage, LectureSchedule, Region } from '@prisma/client';
+import {
+  Lecture,
+  LectureHoliday,
+  LectureImage,
+  LectureSchedule,
+  LectureToDanceGenre,
+  LectureToRegion,
+  Region,
+} from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
+  LectureHolidayInputData,
   LectureImageInputData,
   LectureInputData,
+  LectureNotificationResponse,
+  LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
 } from '../interface/lecture.interface';
+import { DanceCategory } from '@src/common/enum/enum';
 
 @Injectable()
 export class LectureRepository {
@@ -30,26 +40,19 @@ export class LectureRepository {
 
   async trxCreateLectureSchedule(
     transaction: PrismaTransaction,
-    lectureSchedule,
-  ): Promise<LectureSchedule[]> {
+    lectureSchedule: LectureScheduleInputData[],
+  ): Promise<void> {
     await transaction.lectureSchedule.createMany({
       data: lectureSchedule,
-    });
-    return await transaction.lectureSchedule.findMany({
-      where: { lectureId: lectureSchedule.lectureId },
     });
   }
 
   async trxCreateLectureImg(
     transaction: PrismaTransaction,
     lectureImg: LectureImageInputData[],
-    lectureId: number,
-  ): Promise<LectureImage[]> {
+  ): Promise<void> {
     await transaction.lectureImage.createMany({
       data: lectureImg,
-    });
-    return await transaction.lectureImage.findMany({
-      where: { lectureId: lectureId },
     });
   }
 
@@ -67,6 +70,7 @@ export class LectureRepository {
       where: { OR: regions },
       select: { id: true },
     });
+
     return regionsId;
   }
 
@@ -76,6 +80,24 @@ export class LectureRepository {
   ): Promise<void> {
     await transaction.lectureToDanceGenre.createMany({
       data: lectureToDanceGenreInputData,
+    });
+  }
+
+  async trxCreateLectureNotification(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    notification: string,
+  ): Promise<void> {
+    await transaction.lectureNotification.create({
+      data: { lectureId, notification },
+    });
+  }
+  async trxCreateLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureHoliday: LectureHolidayInputData[],
+  ): Promise<void> {
+    await transaction.lectureHoliday.createMany({
+      data: lectureHoliday,
     });
   }
 }
