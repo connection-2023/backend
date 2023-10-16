@@ -12,6 +12,8 @@ import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from '@src/uploads/uploads.service';
+import { ApiCreateUser } from '../swagger-decorators/create-user';
+import { ApiCheckDubplicatedNickname } from '../swagger-decorators/check-duplicated-nickname';
 
 @ApiTags('유저')
 @Controller('users')
@@ -21,8 +23,7 @@ export class UserController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  @ApiOperation({ summary: '회원가입' })
-  @ApiConsumes('multipart/form-data')
+  @ApiCreateUser()
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async createUser(
@@ -37,7 +38,7 @@ export class UserController {
     }
   }
 
-  @ApiOperation({ summary: '닉네임 중복검사' })
+  @ApiCheckDubplicatedNickname()
   @Get(':nickname')
   async findByNickname(@Param('nickname') nickname: string) {
     return this.userService.findByNickname(nickname);
