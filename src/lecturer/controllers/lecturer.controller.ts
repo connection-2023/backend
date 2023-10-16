@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   UploadedFiles,
   UseGuards,
@@ -17,15 +18,24 @@ import { ApiCreateLecturer } from '@src/lecturer/swagger-decorators/create-lectu
 import { ApiTags } from '@nestjs/swagger';
 import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/check-available-nickname-decorater';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { ValidateResult } from '@src/common/interface/common-interface';
+import {
+  LecturerCoupon,
+  LecturerProfile,
+} from '@src/lecturer/interface/lecturer.interface';
+import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
+import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
+import { ApiGetMyLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
 
 @ApiTags('강사')
-@Controller('lecturer')
+@Controller('lecturers')
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
   @ApiCreateLecturer()
   @UseInterceptors(FilesInterceptor('image', 5))
-  @Post('/test')
+  @Post()
   @UseGuards(UserAccessTokenGuard)
   async createLecturer(
     @GetAuthorizedUser() user: Users,
@@ -41,13 +51,48 @@ export class LecturerController {
     return { message: '강사 생성 완료' };
   }
 
+  @ApiGetMyLecturerProfile()
+  @Get('/profile')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getMyLecturerProfile(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const myLecturerProfile: LecturerProfile =
+      await this.lecturerService.getLecturerProfile(authorizedData.lecturer.id);
+
+    return { myLecturerProfile };
+  }
+
+  @ApiGetMyCoupons()
+  @Get('/my-coupons')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getMyCoupons(@GetAuthorizedUser() authorizedData: ValidateResult) {
+    const coupons: LecturerCoupon[] =
+      await this.lecturerService.getLecturerCoupons(authorizedData.lecturer.id);
+
+    return { coupons };
+  }
+
   @ApiCheckAvailableNickname()
-  @Get('/:nickname')
+  @Get('/nickname/:nickname')
   async checkAvailableNickname(@Param('nickname') nickname: string) {
     const result: Boolean = await this.lecturerService.checkAvailableNickname(
       nickname,
     );
 
     return { status: result };
+  }
+
+  @ApiUpdateLecturerNickname()
+  @Patch('/nickname/:nickname')
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateLecturerNickname(
+    @Param('nickname') nickname: string,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    await this.lecturerService.updateLecturerNickname(
+      authorizedData.lecturer.id,
+      nickname,
+    );
   }
 }

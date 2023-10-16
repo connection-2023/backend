@@ -39,8 +39,10 @@ export class AuthOAuthController {
         TokenTypes.User,
       );
 
-      response.cookie('refreshToken', token.refreshToken, { httpOnly: true });
-      response.status(200).json({ accessToken: token.accessToken });
+      response.cookie('userRefreshToken', token.refreshToken, {
+        httpOnly: true,
+      });
+      response.status(200).json({ userAccessToken: token.accessToken });
     }
   }
   @ApiSignInGoogle()
@@ -64,8 +66,10 @@ export class AuthOAuthController {
         TokenTypes.User,
       );
 
-      response.cookie('refreshToken', token.refreshToken, { httpOnly: true });
-      response.status(200).json({ accessToken: token.accessToken });
+      response.cookie('userRefreshToken', token.refreshToken, {
+        httpOnly: true,
+      });
+      response.status(200).json({ userAccessToken: token.accessToken });
     }
   }
 
@@ -90,8 +94,10 @@ export class AuthOAuthController {
         TokenTypes.User,
       );
 
-      response.cookie('refreshToken', token.refreshToken, { httpOnly: true });
-      response.status(200).json({ accessToken: token.accessToken });
+      response.cookie('userRefreshToken', token.refreshToken, {
+        httpOnly: true,
+      });
+      response.status(200).json({ userAccessToken: token.accessToken });
     }
   }
 }

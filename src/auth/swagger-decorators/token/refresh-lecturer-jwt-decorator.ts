@@ -17,9 +17,12 @@ export function ApiRefreshLecturerJwtToken() {
     }),
     ApiOkResponse(
       SwaggerApiResponse.success(
-        'accessToken 반환 및 쿠키엔 refreshToken 저장',
+        'lecturerAccessToken 반환 및 쿠키엔 refreshToken 저장',
         {
-          accessToken: '토큰',
+          statusCode: 200,
+          data: {
+            lecturerAccessToken: '토오오큰',
+          },
         },
       ),
     ),

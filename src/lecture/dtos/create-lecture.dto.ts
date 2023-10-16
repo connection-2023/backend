@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { DanceCategory } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -20,17 +22,39 @@ export class CreateLectureDto {
   @Type(() => Array)
   regions: string[];
 
-  @ApiProperty({ example: 1, description: '강의 종류 id', required: true })
+  @ApiProperty({ example: 'dance', description: '강의 종류', required: true })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
   lectureTypeId: number;
 
-  @ApiProperty({ example: 1, description: '춤 장르 id', required: true })
+  @ApiProperty({
+    example: '15일 영업 안합니다요',
+    description: '강의 공지사항',
+    required: true,
+  })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  danceCategoryId: number;
+  @IsString()
+  notification: string;
+
+  @ApiProperty({
+    example: ['K-pop', '팝핑'],
+    description: '강사 강의 장르',
+    required: true,
+  })
+  @IsArray()
+  @IsEnum(DanceCategory, { each: true })
+  @IsNotEmpty()
+  genres: DanceCategory[];
+
+  @ApiProperty({
+    example: ['직접입력한 것들', '직접입력한 것들'],
+    description: '기타일때 직접입력한 것들',
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  etcGenres: string[];
 
   //원데이,다회차
   @ApiProperty({
@@ -143,9 +167,9 @@ export class CreateLectureDto {
 
   @ApiProperty({
     example: [
-      '2023-10-11 07:32:54.337',
-      '2023-10-11 07:32:54.337',
-      '2023-10-11 07:32:54.337',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
     description: '클래스 일정',
     required: true,
@@ -153,7 +177,21 @@ export class CreateLectureDto {
   @IsArray()
   @IsNotEmpty()
   @Type(() => Array)
-  schedule: string[];
+  schedules: string[];
+
+  @ApiProperty({
+    example: [
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+    ],
+    description: '클래스 일정',
+    required: true,
+  })
+  @IsArray()
+  @IsNotEmpty()
+  @Type(() => Array)
+  holidays: string[];
 
   @ApiProperty({
     type: 'string',

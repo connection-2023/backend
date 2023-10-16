@@ -4,7 +4,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 export class CookiesTokenExtractor {
   constructor() {}
 
-  static fromCookies = function () {
+  static refreshTokenFromCookies = function () {
     return function (request) {
       let token = null;
       if (!request.cookies) {

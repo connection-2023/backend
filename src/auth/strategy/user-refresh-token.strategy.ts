@@ -6,7 +6,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
-import { UserTokenPayload } from 'src/common/interface/common-interface';
+import {
+  GetUserResult,
+  UserTokenPayload,
+  ValidateResult,
+} from 'src/common/interface/common-interface';
 import { Users } from '@prisma/client';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { CookiesTokenExtractor } from '@src/auth/extractor/cookie-token-extractor';
@@ -23,12 +27,15 @@ export class UserRefreshTokenStrategy extends PassportStrategy(
   ) {
     super({
       secretOrKey: configService.get<string>('JWT_TOKEN_SECRET_KEY'),
-      jwtFromRequest: CookiesTokenExtractor.fromCookies(),
+      jwtFromRequest: CookiesTokenExtractor.refreshTokenFromCookies(),
       passReqToCallback: true,
     });
   }
 
-  async validate(request, tokenPayload: UserTokenPayload): Promise<Users> {
+  async validate(
+    request,
+    tokenPayload: UserTokenPayload,
+  ): Promise<ValidateResult> {
     try {
       if (!tokenPayload.userId) {
         throw new UnauthorizedException(
@@ -39,14 +46,8 @@ export class UserRefreshTokenStrategy extends PassportStrategy(
 
       const cookiesRefreshToken: string = request.cookies.refreshToken;
 
-      const authorizedUser: Users =
+      const authorizedUser: GetUserResult =
         await this.authTokenService.getUserByPayload(tokenPayload.userId);
-      if (!authorizedUser) {
-        throw new BadRequestException(
-          `유효하지 않는 유저 정보 요청입니다.`,
-          'InvalidUserInformation',
-        );
-      }
 
       await this.authTokenService.validateRefreshToken(
         cookiesRefreshToken,
@@ -54,7 +55,7 @@ export class UserRefreshTokenStrategy extends PassportStrategy(
         TokenTypes.User,
       );
 
-      return authorizedUser;
+      return { user: authorizedUser };
     } catch (error) {
       throw error;
     }

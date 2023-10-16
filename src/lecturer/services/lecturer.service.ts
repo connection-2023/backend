@@ -15,7 +15,9 @@ import {
 import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  LecturerCoupon,
   LecturerDanceGenreInputData,
+  LecturerProfile,
   LecturerProfileImageInputData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
@@ -280,5 +282,31 @@ export class LecturerService implements OnModuleInit {
     }
 
     return lecturerProfileImageUrls;
+  }
+
+  async getLecturerCoupons(lecturerId: number): Promise<LecturerCoupon[]> {
+    return await this.lecturerRepository.getLecturerCouponsByLecturerId(
+      lecturerId,
+    );
+  }
+
+  async updateLecturerNickname(
+    lectureId: number,
+    nickname: string,
+  ): Promise<void> {
+    const duplicatedNickname =
+      await this.lecturerRepository.getLecturerNickname(nickname);
+    if (duplicatedNickname) {
+      throw new BadRequestException(
+        `닉네임 중복입니다.`,
+        'duplicatedLecturerNickname',
+      );
+    }
+
+    await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
+  }
+
+  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
+    return await this.lecturerRepository.getLecturerProfile(lectureId);
   }
 }

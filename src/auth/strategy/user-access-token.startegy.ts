@@ -8,7 +8,11 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Users } from '@prisma/client';
 import { ExtractJwt } from 'passport-jwt';
 import { Strategy } from 'passport-jwt';
-import { UserTokenPayload } from '@src/common/interface/common-interface';
+import {
+  GetUserResult,
+  UserTokenPayload,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 
 @Injectable()
@@ -26,7 +30,7 @@ export class UserAccessTokenStrategy extends PassportStrategy(
     });
   }
 
-  async validate(tokenPayload: UserTokenPayload): Promise<Users> {
+  async validate(tokenPayload: UserTokenPayload): Promise<ValidateResult> {
     try {
       if (!tokenPayload.userId) {
         throw new UnauthorizedException(
@@ -34,7 +38,7 @@ export class UserAccessTokenStrategy extends PassportStrategy(
           'InvalidTokenFormat',
         );
       }
-      const authorizedUser: Users =
+      const authorizedUser: GetUserResult =
         await this.authTokenService.getUserByPayload(tokenPayload.userId);
       if (!authorizedUser) {
         throw new BadRequestException(
@@ -43,7 +47,7 @@ export class UserAccessTokenStrategy extends PassportStrategy(
         );
       }
 
-      return authorizedUser;
+      return { user: authorizedUser };
     } catch (error) {
       throw error;
     }

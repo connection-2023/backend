@@ -13,7 +13,12 @@ import { Cache } from 'cache-manager';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Lecturer, Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
-import { Token } from '@src/common/interface/common-interface';
+import {
+  GetLecturerResult,
+  GetUserResult,
+  Token,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { TokenTypes } from '@src/auth/enums/token-enums';
 
 @Injectable()
@@ -63,15 +68,35 @@ export class AuthTokenService implements OnModuleInit {
     return { accessToken, refreshToken };
   }
 
-  async getUserByPayload(payloadUserId: number): Promise<Users> {
-    return await this.prismaService.users.findFirst({
+  async getUserByPayload(payloadUserId: number): Promise<GetUserResult> {
+    const user = await this.prismaService.users.findFirst({
       where: { id: payloadUserId, deletedAt: null },
+      select: { id: true },
     });
+    if (!user) {
+      throw new BadRequestException(
+        `유효하지 않는 유저 정보 요청입니다.`,
+        'InvalidUserInformation',
+      );
+    }
+    return user;
   }
-  async getLecturerByPayload(payloadUserId: number): Promise<Lecturer> {
-    return await this.prismaService.lecturer.findFirst({
+
+  async getLecturerByPayload(
+    payloadUserId: number,
+  ): Promise<GetLecturerResult> {
+    const lecturer = await this.prismaService.lecturer.findFirst({
       where: { id: payloadUserId, deletedAt: null },
+      select: { id: true, userId: true },
     });
+    if (!lecturer) {
+      throw new BadRequestException(
+        `유효하지 않는 강사 정보 요청입니다.`,
+        'InvalidUserInformation',
+      );
+    }
+
+    return lecturer;
   }
 
   async validateRefreshToken(
@@ -111,7 +136,7 @@ export class AuthTokenService implements OnModuleInit {
     return token;
   }
 
-  async switchUserToLecturer(user: Users): Promise<Token> {
+  async switchUserToLecturer({ user }: ValidateResult): Promise<Token> {
     const selectedLecturer: Lecturer =
       await this.prismaService.lecturer.findFirst({
         where: { userId: user.id, deletedAt: null },
@@ -133,13 +158,15 @@ export class AuthTokenService implements OnModuleInit {
     return token;
   }
 
-  async switchLecturerToUser(lecturer: Lecturer): Promise<Token> {
-    const selectedUser: Users = await this.prismaService.users.findFirst({
-      where: { id: lecturer.userId, deletedAt: null },
-    });
-    if (!selectedUser) {
+  async switchLecturerToUser({ lecturer }: ValidateResult): Promise<Token> {
+    const selectedLecturerUserInfo: Users =
+      await this.prismaService.users.findFirst({
+        where: { id: lecturer.userId, deletedAt: null },
+      });
+
+    if (!selectedLecturerUserInfo) {
       throw new BadRequestException(
-        `유효하지 않는 유저 정보 요청입니다.`,
+        `유효하지 않는 강사 정보 요청입니다.`,
         'InvalidUserInformation',
       );
     }
@@ -147,7 +174,7 @@ export class AuthTokenService implements OnModuleInit {
     await this.cacheManager.del(`${TokenTypes.Lecturer} ${lecturer.id}`);
 
     const token: Token = await this.generateToken(
-      { userId: selectedUser.id },
+      { userId: selectedLecturerUserInfo.id },
       TokenTypes.User,
     );
 
