@@ -9,6 +9,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
+  LectureHolidayInputData,
   LectureImageInputData,
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
@@ -31,8 +32,15 @@ export class LectureService {
     lecturerId: number,
     imageUrls: string[],
   ) {
-    const { regions, schedules, genres, etcGenres, notification, ...lecture } =
-      createLectureDto;
+    const {
+      regions,
+      schedules,
+      genres,
+      etcGenres,
+      notification,
+      holidays,
+      ...lecture
+    } = createLectureDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
 
@@ -57,7 +65,6 @@ export class LectureService {
           await this.lectureRepository.trxCreateLectureImg(
             transaction,
             lectureImageInputData,
-            newLecture.id,
           );
 
         const lectureScheduleInputData: LectureScheduleInputData[] =
@@ -74,6 +81,7 @@ export class LectureService {
             genres,
             etcGenres,
           );
+
         const newLectureGenre =
           await this.lectureRepository.trxCreateLectureToDanceGenres(
             transaction,
@@ -87,10 +95,19 @@ export class LectureService {
             notification,
           );
 
+        const lectureHolidayInputData: LectureHolidayInputData[] =
+          this.createLectureHolidayInputData(newLecture.id, holidays);
+        const newLectureHoliday =
+          await this.lectureRepository.trxCreateLectureHoliday(
+            transaction,
+            lectureHolidayInputData,
+          );
+
         return {
           newLecture,
           newLectureImage,
           newLectureSchedule,
+          newLectureHoliday,
           newLectureGenre,
           newLectureNotification,
         };
@@ -183,6 +200,16 @@ export class LectureService {
       }),
     );
     return scheduleInputData;
+  }
+
+  private createLectureHolidayInputData(lectureId: number, holidays: string[]) {
+    const holidayInputData: LectureHolidayInputData[] = holidays.map(
+      (date) => ({
+        lectureId: lectureId,
+        holiday: new Date(date),
+      }),
+    );
+    return holidayInputData;
   }
 
   private async createLecturerDanceGenreInputData(

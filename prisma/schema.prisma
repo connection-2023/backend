@@ -111,7 +111,7 @@ model Lecture {
   //강의 형식 id
   lectureMethodId        Int
   //강의명
-  title                  String                   @unique @db.VarChar(30)
+  title                  String                   @db.VarChar(30)
   //강의 소개
   introduction           String                   @db.VarChar(500)
   //커리큘럼
@@ -158,6 +158,7 @@ model Lecture {
   lectureSchedule        LectureSchedule[]
   lectureToRegion        LectureToRegion[]
   lectureToDanceGenre    LectureToDanceGenre[]
+  lectureHoliday         LectureHoliday[]
 }
 
 model DanceCategory {
@@ -383,4 +384,11 @@ model LectureToDanceGenre {
   name            String?
   danceCategory   DanceCategory @relation(fields: [danceCategoryId], references: [id])
   lecture         Lecture       @relation(fields: [lectureId], references: [id])
+}
+
+model LectureHoliday {
+  id        Int      @id @default(autoincrement())
+  lectureId Int
+  holiday   DateTime
+  lecture   Lecture  @relation(fields: [lectureId], references: [id])
 }

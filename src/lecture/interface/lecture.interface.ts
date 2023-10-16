@@ -41,6 +41,11 @@ interface LectureNotificationResponse {
   notification: string;
 }
 
+interface LectureHolidayInputData {
+  lectureId: number;
+  holiday: Date;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -48,4 +53,5 @@ export {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureNotificationResponse,
+  LectureHolidayInputData,
 };
