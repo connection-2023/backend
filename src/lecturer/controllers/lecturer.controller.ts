@@ -19,8 +19,8 @@ import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/chec
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { LecturerCoupon } from '../interface/lecturer.interface';
-import { ApiGetMyCoupons } from '../swagger-decorators/get-my-coupons-decorater';
+import { LecturerCoupon } from '@src/lecturer/interface/lecturer.interface';
+import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
 
 @ApiTags('강사')
 @Controller('lecturers')
