@@ -19,6 +19,7 @@ async function bootstrap() {
     origin: configService.get<string>('FRONT_END_URL'),
     credentials: true,
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

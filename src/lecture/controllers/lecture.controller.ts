@@ -18,6 +18,8 @@ import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { UploadsService } from '@src/uploads/uploads.service';
+import { Lecture } from '@prisma/client';
+import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -27,10 +29,7 @@ export class LectureController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  @ApiOperation({
-    summary: '강의 생성',
-  })
-  @ApiConsumes('multipart/form-data')
+  @ApiCreateLecture()
   @Post()
   @UseInterceptors(FilesInterceptor('files', 5))
   async createLecture(
@@ -47,11 +46,13 @@ export class LectureController {
       }),
     );
 
-    return await this.lectureService.createLecture(
+    const newLecture: Lecture = await this.lectureService.createLecture(
       lecture,
       danceLecturerId,
       imgurl,
     );
+
+    return { newLecture };
   }
 
   // @ApiOperation({
