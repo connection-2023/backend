@@ -31,6 +31,16 @@ interface LecturerProfileImageInputData {
   lecturerId: number;
   url: string;
 }
+interface LecturerCoupon {
+  id: number;
+  title: string;
+  percentage: number;
+  discountPrice: number;
+  isStackable: boolean;
+  maxDiscountPrice: number;
+  startAt: Date;
+  endAt: Date;
+}
 
 export {
   LecturerInputData,
@@ -38,4 +48,5 @@ export {
   LecturerWebsiteInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
+  LecturerCoupon,
 };

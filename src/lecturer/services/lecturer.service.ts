@@ -15,6 +15,7 @@ import {
 import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  LecturerCoupon,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerRegionInputData,
@@ -280,5 +281,11 @@ export class LecturerService implements OnModuleInit {
     }
 
     return lecturerProfileImageUrls;
+  }
+
+  async getLecturerCoupons(lecturerId: number): Promise<LecturerCoupon[]> {
+    return await this.lecturerRepository.getLecturerCouponsByLecturerId(
+      lecturerId,
+    );
   }
 }

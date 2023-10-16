@@ -17,15 +17,19 @@ import { ApiCreateLecturer } from '@src/lecturer/swagger-decorators/create-lectu
 import { ApiTags } from '@nestjs/swagger';
 import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/check-available-nickname-decorater';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { ValidateResult } from '@src/common/interface/common-interface';
+import { LecturerCoupon } from '../interface/lecturer.interface';
+import { ApiGetMyCoupons } from '../swagger-decorators/get-my-coupons-decorater';
 
 @ApiTags('강사')
-@Controller('lecturer')
+@Controller('lecturers')
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
   @ApiCreateLecturer()
   @UseInterceptors(FilesInterceptor('image', 5))
-  @Post('/test')
+  @Post('/')
   @UseGuards(UserAccessTokenGuard)
   async createLecturer(
     @GetAuthorizedUser() user: Users,
@@ -39,6 +43,16 @@ export class LecturerController {
     );
 
     return { message: '강사 생성 완료' };
+  }
+
+  @ApiGetMyCoupons()
+  @Get('/my-coupons')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getMyCoupons(@GetAuthorizedUser() authorizedData: ValidateResult) {
+    const coupons: LecturerCoupon[] =
+      await this.lecturerService.getLecturerCoupons(authorizedData.lecturer.id);
+
+    return { coupons };
   }
 
   @ApiCheckAvailableNickname()

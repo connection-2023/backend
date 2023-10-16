@@ -5,10 +5,11 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiCreateLectureCoupon } from '../swagger-decorators/create-lecture-coupon.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
-import { Lecturer, Users } from '@prisma/client';
+import { Lecturer } from '@prisma/client';
+import { ValidateResult } from '@src/common/interface/common-interface';
 
 @ApiTags('쿠폰')
-@Controller('coupons')
+@Controller('/coupons')
 export class CouponController {
   constructor(private couponService: CouponService) {}
 
@@ -16,11 +17,11 @@ export class CouponController {
   @Post()
   @UseGuards(LecturerAccessTokenGuard)
   async createLectureCoupon(
-    @GetAuthorizedUser() lecturer: Lecturer,
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
     @Body() createLectureCouponDto: CreateLectureCouponDto,
   ) {
     await this.couponService.createLectureCoupon(
-      lecturer.id,
+      AuthorizedData.lecturer.id,
       createLectureCouponDto,
     );
 
