@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -18,8 +19,10 @@ import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { UploadsService } from '@src/uploads/uploads.service';
-import { Lecture } from '@prisma/client';
+import { Lecture, Users } from '@prisma/client';
 import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
+import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
+import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -32,11 +35,12 @@ export class LectureController {
   @ApiCreateLecture()
   @Post()
   @UseInterceptors(FilesInterceptor('files', 5))
+  @UseGuards(UserAccessTokenGuard)
   async createLecture(
+    @GetAuthorizedUser() user: Users,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() lecture: CreateLectureDto,
   ) {
-    const danceLecturerId = 1;
     const imgurl: string[] = [];
 
     await Promise.all(
@@ -48,41 +52,17 @@ export class LectureController {
 
     const newLecture: Lecture = await this.lectureService.createLecture(
       lecture,
-      danceLecturerId,
+      user.id,
       imgurl,
     );
 
     return { newLecture };
   }
 
-  // @ApiOperation({
-  //   summary: '강의 전부 조회',
-  // })
-  // @Get()
-  // readManyLecture(@Query() query: ReadManyLectureQueryDto) {
-  //   return this.lectureService.readManyLecture(query);
-  // }
-
-  // @ApiOperation({
-  //   summary: '강의 단일 조회',
-  // })
-  // @Get('/:id')
-  // readOneLecture(@Param('id', ParseIntPipe) lectureId: number) {
-  //   return this.lectureService.readOneLecture(lectureId);
-  // }
-
-  // @ApiOperation({ summary: '강의 수정' })
-  // @Patch('/:id')
-  // updateLecture(
-  //   @Param('id', ParseIntPipe) lectureId: number,
-  //   @Body() lecture: UpdateLectureDto,
-  // ) {
-  //   return this.lectureService.updateLecture(lecture, lectureId);
-  // }
-
-  // @ApiOperation({ summary: '강의 삭제' })
-  // @Delete('/:id')
-  // deleteLecture(@Param('id', ParseIntPipe) lectureId: number) {
-  //   return this.lectureService.deleteLecture(lectureId);
-  // }
+  @Patch(':lectureId')
+  @UseInterceptors(FilesInterceptor('files', 5))
+  async updateLecture(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() lecture: UpdateLectureDto,
+  ) {}
 }
