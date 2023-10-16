@@ -61,7 +61,9 @@ export class LectureController {
 
   @Patch(':lectureId')
   @UseInterceptors(FilesInterceptor('files', 5))
+  @UseGuards(UserAccessTokenGuard)
   async updateLecture(
+    @GetAuthorizedUser() user: Users,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() lecture: UpdateLectureDto,
   ) {}
