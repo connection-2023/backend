@@ -15,7 +15,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { UploadsService } from '@src/uploads/uploads.service';
+import { UploadsService } from '@src/uploads/services/uploads.service';
 
 @ApiTags('강의')
 @Controller('lectures')

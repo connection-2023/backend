@@ -1,19 +1,27 @@
+import { UploadsService } from '@src/uploads/services/uploads.service';
 import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadsService } from '@src/uploads/uploads.service';
 import { ApiCreateUser } from '../swagger-decorators/create-user';
 import { ApiCheckDubplicatedNickname } from '../swagger-decorators/check-duplicated-nickname';
+import { ApiCreateUserImage } from '../swagger-decorators/create-user-image';
+import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
+import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
+import { Users } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ValidateResult } from '@src/common/interface/common-interface';
 
 @ApiTags('유저')
 @Controller('users')
@@ -25,17 +33,33 @@ export class UserController {
 
   @ApiCreateUser()
   @Post()
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    return await this.userService.createUser(createUserDto);
+  }
+
+  @ApiCreateUserImage()
+  @UseGuards(UserAccessTokenGuard)
   @UseInterceptors(FileInterceptor('image'))
-  async createUser(
+  @Post('images')
+  async createUserImage(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @UploadedFile() image: Express.Multer.File,
-    @Body() createUserDto: CreateUserDto,
   ) {
-    if (image) {
-      const imageUrl = await this.uploadsService.uploadFileToS3('users', image);
-      return await this.userService.createUser(createUserDto, imageUrl);
-    } else {
-      return await this.userService.createUser(createUserDto, null);
+    const findByUserId = this.userService.findByUserId(authorizedData.user.id);
+    if (findByUserId) {
+      throw new HttpException(
+        '이미 프로필 사진이 존재하는 유저입니다',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    const imageUrl = await this.uploadsService.uploadFileToS3('users', image);
+    const newUserImage = await this.userService.createUserImage(
+      authorizedData.user.id,
+      imageUrl,
+    );
+
+    return { newUserImage };
   }
 
   @ApiCheckDubplicatedNickname()

@@ -83,13 +83,4 @@ export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
   authEmail: string;
-
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: '유저 이미지 파일 업로드',
-    required: false,
-  })
-  @IsOptional()
-  image: string;
 }

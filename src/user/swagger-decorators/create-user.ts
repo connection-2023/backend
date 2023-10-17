@@ -11,7 +11,6 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiCreateUser() {
   return applyDecorators(
     ApiOperation({ summary: '회원가입' }),
-    ApiConsumes('multipart/form-data'),
     ApiOkResponse(
       SwaggerApiResponse.success('회원가입 성공', {
         statusCode: 201,
@@ -35,11 +34,6 @@ export function ApiCreateUser() {
             signUpType: 0,
             createdAt: '2023-10-16T14:59:46.835Z',
             deletedAt: null,
-          },
-          createImage: {
-            id: 5,
-            userId: 13,
-            imageUrl: null,
           },
         },
       }),

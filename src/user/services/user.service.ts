@@ -10,6 +10,7 @@ import {
 import { CreateUserAuthDto } from '@src/auth/dtos/create-user-auth.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { UserProfileImage, Users } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -19,7 +20,7 @@ export class UserService {
     private readonly prismaServcie: PrismaService,
   ) {}
 
-  async createUser(user: CreateUserDto, imageUrl: string) {
+  async createUser(user: CreateUserDto) {
     try {
       const selectedEmailUser = await this.prismaServcie.users.findUnique({
         where: { email: user.email },
@@ -60,18 +61,28 @@ export class UserService {
             transaction,
             auth,
           );
-          const createImage = await this.userRepository.trxCreateUserImage(
-            transaction,
-            createUser.id,
-            imageUrl,
-          );
 
-          return { createUser, createAuth, createImage };
+          return { createUser, createAuth };
         },
       );
     } catch (error) {
       throw error;
     }
+  }
+
+  async createUserImage(
+    userId: number,
+    imageUrl: string,
+  ): Promise<UserProfileImage> {
+    return await this.prismaServcie.userProfileImage.create({
+      data: { userId, imageUrl },
+    });
+  }
+
+  async findByUserId(userId: number): Promise<UserProfileImage> {
+    return await this.prismaServcie.userProfileImage.findUnique({
+      where: { userId },
+    });
   }
 
   async findByNickname(nickname: string) {
