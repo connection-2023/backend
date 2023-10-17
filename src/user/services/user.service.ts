@@ -10,6 +10,7 @@ import {
 import { CreateUserAuthDto } from '@src/auth/dtos/create-user-auth.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { UserProfileImage, Users } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -44,7 +45,6 @@ export class UserService {
           throw new BadRequestException('사용 중인 번호입니다.');
         }
       }
-      const { image } = user;
 
       return await this.prismaServcie.$transaction(
         async (transaction: PrismaTransaction) => {
@@ -62,18 +62,27 @@ export class UserService {
             auth,
           );
 
-          const createImage = await this.userRepository.trxCreateUserImage(
-            transaction,
-            createUser.id,
-            image,
-          );
-
-          return { createUser, createAuth, createImage };
+          return { createUser, createAuth };
         },
       );
     } catch (error) {
       throw error;
     }
+  }
+
+  async createUserImage(
+    userId: number,
+    imageUrl: string,
+  ): Promise<UserProfileImage> {
+    return await this.prismaServcie.userProfileImage.create({
+      data: { userId, imageUrl },
+    });
+  }
+
+  async findByUserId(userId: number): Promise<UserProfileImage> {
+    return await this.prismaServcie.userProfileImage.findUnique({
+      where: { userId },
+    });
   }
 
   async findByNickname(nickname: string) {

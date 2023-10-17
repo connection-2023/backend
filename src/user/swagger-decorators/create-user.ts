@@ -35,11 +35,6 @@ export function ApiCreateUser() {
             createdAt: '2023-10-16T14:59:46.835Z',
             deletedAt: null,
           },
-          createImage: {
-            id: 5,
-            userId: 13,
-            imageUrl: null,
-          },
         },
       }),
     ),

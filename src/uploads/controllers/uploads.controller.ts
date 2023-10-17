@@ -8,7 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadsService } from './uploads.service';
+import { UploadsService } from '@src/uploads/services/uploads.service';
 import {
   ApiBody,
   ApiConsumes,
@@ -16,7 +16,7 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
-import { DeleteImageDto } from './dtos/delete-image.dto';
+import { DeleteImageDto } from '@src/uploads/dtos/delete-image.dto';
 
 @ApiTags('uploads')
 @Controller('uploads')
