@@ -22,7 +22,7 @@ export function ApiCreateLecturer() {
       SwaggerApiResponse.success(
         '강사 생성 완료, 강사 전환 요청 시 전환 가능',
         {
-          message: '강사 생성 완료',
+          statusCode: 201,
         },
       ),
     ),

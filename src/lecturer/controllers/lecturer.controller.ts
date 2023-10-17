@@ -27,6 +27,7 @@ import {
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
 import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
 import { ApiGetMyLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
+import { UpdateMyLecturerProfileDto } from '../dtos/update-my-lecturer-profile.dto';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -34,21 +35,34 @@ export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
   @ApiCreateLecturer()
-  @UseInterceptors(FilesInterceptor('image', 5))
+  @UseInterceptors(FilesInterceptor('images', 5))
   @Post()
   @UseGuards(UserAccessTokenGuard)
   async createLecturer(
-    @GetAuthorizedUser() user: Users,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @UploadedFiles() profileImages: Express.Multer.File[],
     @Body() createLecturerDto: CreateLecturerDto,
   ) {
     await this.lecturerService.createLecturer(
-      user.id,
+      authorizedData.user.id,
       profileImages,
       createLecturerDto,
     );
+  }
 
-    return { message: '강사 생성 완료' };
+  @Patch('/profile')
+  @UseInterceptors(FilesInterceptor('images', 5))
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateMyLecturerProfile(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @UploadedFiles() newProfileImages: Express.Multer.File[],
+    @Body() updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
+  ) {
+    await this.lecturerService.updateMyLecturerProfile(
+      authorizedData.lecturer.id,
+      newProfileImages,
+      updateMyLecturerProfileDto,
+    );
   }
 
   @ApiGetMyLecturerProfile()
@@ -80,7 +94,7 @@ export class LecturerController {
       nickname,
     );
 
-    return { status: result };
+    return { isAvailable: result };
   }
 
   @ApiUpdateLecturerNickname()

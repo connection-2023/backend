@@ -64,3 +64,8 @@ export interface GetLecturerResult {
   id: number;
   userId: number;
 }
+
+export interface AwsS3Param {
+  Bucket: string;
+  Key: string;
+}

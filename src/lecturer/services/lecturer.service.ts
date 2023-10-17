@@ -2,12 +2,14 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
+  AwsS3Param,
   Id,
   PrismaTransaction,
   Region,
@@ -21,12 +23,14 @@ import {
   LecturerProfileImageInputData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
+  ProfileImageData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
+import { UpdateMyLecturerProfileDto } from '../dtos/update-my-lecturer-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -308,5 +312,73 @@ export class LecturerService implements OnModuleInit {
 
   async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
     return await this.lecturerRepository.getLecturerProfile(lectureId);
+  }
+
+  async updateMyLecturerProfile(
+    lecturerId: number,
+    newProfileImages: Express.Multer.File[],
+    updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
+  ) {
+    const { deletedProfileImageData } = updateMyLecturerProfileDto;
+
+    if (deletedProfileImageData) {
+      const awsS3Params: AwsS3Param[] = this.createAwsS3Params(
+        deletedProfileImageData,
+      );
+      await this.deleteS3ProfileImages(awsS3Params);
+      await this.deleteLecturerProfileImages(
+        lecturerId,
+        deletedProfileImageData,
+      );
+    }
+  }
+
+  private async deleteS3ProfileImages(
+    awsS3Params: AwsS3Param[],
+  ): Promise<void> {
+    try {
+      await Promise.all(
+        awsS3Params.map((awsS3param) =>
+          this.awsS3.deleteObject(awsS3param).promise(),
+        ),
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `${error}`,
+        `failedToDeleteS3object`,
+      );
+    }
+  }
+
+  private createAwsS3Params(deletedProfileImageData: ProfileImageData[]) {
+    try {
+      return deletedProfileImageData.map((deletedProfileImage) => {
+        const key = deletedProfileImage.url.replace(
+          this.awsS3.endpoint.href + this.awsS3BucketName + '/',
+          '',
+        );
+
+        return { Bucket: this.awsS3BucketName, Key: key };
+      });
+    } catch (error) {
+      throw new BadRequestException(
+        `올바르지 않은 s3 url형식입니다`,
+        'invalidS3URLFormat',
+      );
+    }
+  }
+
+  private async deleteLecturerProfileImages(
+    lecturerId: number,
+    deletedProfileImageData: ProfileImageData[],
+  ): Promise<void> {
+    const profileImageIds: number[] = deletedProfileImageData.map((image) =>
+      parseInt(image.profileImageId, 10),
+    );
+
+    await this.lecturerRepository.deleteLecturerProfileImages(
+      lecturerId,
+      profileImageIds,
+    );
   }
 }

@@ -96,7 +96,7 @@ export class CreateLecturerDto {
   @ApiProperty({
     type: 'array',
     description: '강사 강의 장르',
-    required: false,
+    required: true,
   })
   @IsArray()
   @IsEnum(DanceCategory, { each: true })
@@ -123,11 +123,11 @@ export class CreateLecturerDto {
     type: 'file',
     isArray: true,
     properties: {
-      image: {
+      images: {
         type: 'string',
         format: 'binary',
       },
     },
   })
-  image: Express.Multer.File[];
+  images: Express.Multer.File[];
 }

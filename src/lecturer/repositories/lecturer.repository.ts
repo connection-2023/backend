@@ -138,4 +138,12 @@ export class LecturerRepository {
       },
     });
   }
+  async deleteLecturerProfileImages(
+    lecturerId: number,
+    profileImageIds: number[],
+  ): Promise<void> {
+    await this.prismaService.lecturerProfileImageUrl.deleteMany({
+      where: { id: { in: profileImageIds }, lecturerId },
+    });
+  }
 }
