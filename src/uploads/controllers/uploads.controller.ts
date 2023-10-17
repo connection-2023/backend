@@ -55,8 +55,6 @@ export class UploadsController {
     const bucketName = urlParts[2];
     const imageKey = urlParts.slice(3).join('/');
 
-    const deleteImage = await this.uploadsService.deleteS3Object(imageKey);
-
-    return { deleteImage };
+    await this.uploadsService.deleteS3Object(imageKey);
   }
 }
