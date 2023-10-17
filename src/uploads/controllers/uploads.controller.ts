@@ -57,6 +57,6 @@ export class UploadsController {
 
     const deleteImage = await this.uploadsService.deleteS3Object(imageKey);
 
-    return deleteImage;
+    return { deleteImage };
   }
 }
