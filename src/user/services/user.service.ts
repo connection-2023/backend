@@ -19,7 +19,7 @@ export class UserService {
     private readonly prismaServcie: PrismaService,
   ) {}
 
-  async createUser(user: CreateUserDto, imageUrl: string) {
+  async createUser(user: CreateUserDto) {
     try {
       const selectedEmailUser = await this.prismaServcie.users.findUnique({
         where: { email: user.email },
@@ -44,6 +44,7 @@ export class UserService {
           throw new BadRequestException('사용 중인 번호입니다.');
         }
       }
+      const { image } = user;
 
       return await this.prismaServcie.$transaction(
         async (transaction: PrismaTransaction) => {
@@ -60,10 +61,11 @@ export class UserService {
             transaction,
             auth,
           );
+
           const createImage = await this.userRepository.trxCreateUserImage(
             transaction,
             createUser.id,
-            imageUrl,
+            image,
           );
 
           return { createUser, createAuth, createImage };

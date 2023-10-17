@@ -11,7 +11,6 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiCreateUser() {
   return applyDecorators(
     ApiOperation({ summary: '회원가입' }),
-    ApiConsumes('multipart/form-data'),
     ApiOkResponse(
       SwaggerApiResponse.success('회원가입 성공', {
         statusCode: 201,
