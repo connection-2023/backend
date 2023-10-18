@@ -241,7 +241,7 @@ model LectureNotification {
   //고유 id
   id           Int       @id @default(autoincrement())
   //강의 id
-  lectureId    Int
+  lectureId    Int       @unique
   //공지사항
   notification String    @db.VarChar(200)
   //수정일자
