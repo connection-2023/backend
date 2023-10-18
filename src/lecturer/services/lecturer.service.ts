@@ -60,13 +60,18 @@ export class LecturerService implements OnModuleInit {
 
   async createLecturer(
     userId: number,
-    profileImages: Express.Multer.File[],
     createLecturerDto: CreateLecturerDto,
   ): Promise<void> {
     await this.checkLecturerExist(userId);
 
-    const { regions, genres, websiteUrls, etcGenres, ...lecturerData } =
-      createLecturerDto;
+    const {
+      regions,
+      genres,
+      websiteUrls,
+      etcGenres,
+      profileImageUrls,
+      ...lecturerData
+    } = createLecturerDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
 
@@ -106,9 +111,9 @@ export class LecturerService implements OnModuleInit {
         );
 
         const lecturerProfileImageUrlInputData: LecturerProfileImageInputData[] =
-          await this.createLecturerProfileImageInputData(
+          this.createLecturerProfileImageInputData(
             lecturer.id,
-            profileImages,
+            profileImageUrls,
           );
         await this.lecturerRepository.trxCreateLecturerProfileImages(
           transaction,
@@ -261,31 +266,15 @@ export class LecturerService implements OnModuleInit {
     return true;
   }
 
-  async createLecturerProfileImageInputData(
+  private createLecturerProfileImageInputData(
     lecturerId: number,
-    profileImages: Express.Multer.File[],
-  ): Promise<LecturerProfileImageInputData[]> {
-    const lecturerProfileImageUrls: LecturerProfileImageInputData[] = [];
-
-    for (const profileImage of profileImages) {
-      const key = `lecturer/${lecturerId}/${Date.now()}_${
-        profileImage.originalname
-      }`;
-
-      await this.awsS3
-        .putObject({
-          Bucket: this.awsS3BucketName,
-          Key: key,
-          Body: profileImage.buffer,
-          ACL: 'private',
-          ContentType: profileImage.mimetype,
-        })
-        .promise();
-
-      const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
-
-      lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
-    }
+    profileImageUrls: string[],
+  ): LecturerProfileImageInputData[] {
+    const lecturerProfileImageUrls: LecturerProfileImageInputData[] =
+      profileImageUrls.map((profileImageUrl) => ({
+        lecturerId,
+        url: profileImageUrl,
+      }));
 
     return lecturerProfileImageUrls;
   }

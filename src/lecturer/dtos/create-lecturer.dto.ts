@@ -70,6 +70,7 @@ export class CreateLecturerDto {
   affiliation: string;
 
   @ApiProperty({
+    example: '강사 소개글',
     description: '강사 소개',
     required: true,
   })
@@ -77,6 +78,7 @@ export class CreateLecturerDto {
   introduction: string;
 
   @ApiProperty({
+    example: '강사 경력',
     description: '강사 경력',
     required: true,
   })
@@ -84,9 +86,7 @@ export class CreateLecturerDto {
   experience: string;
 
   @ApiProperty({
-    type: 'array',
     example: ['서울특별시 도봉구', '서울특별시 중구'],
-    description: '강사 강의 지역',
     required: false,
   })
   @IsArray()
@@ -94,8 +94,7 @@ export class CreateLecturerDto {
   regions: string[];
 
   @ApiProperty({
-    type: 'array',
-    description: '강사 강의 장르',
+    example: ['K-pop', '기타 장르들은 etcGenres로'],
     required: true,
   })
   @IsArray()
@@ -104,30 +103,27 @@ export class CreateLecturerDto {
   genres: DanceCategory[];
 
   @ApiProperty({
+    example: ['그 외 사이트 url', '그 외 사이트 url'],
+
     description: '그외 사이트',
     required: false,
   })
   @IsArray()
   @IsOptional()
   websiteUrls: string[];
+
   @ApiProperty({
-    description: '기타일때 직접입력한 것들',
+    example: ['기타일때 직접입력한 것들', '기타일때 직접입력한 것들'],
     required: false,
-    type: 'array',
   })
   @IsArray()
   @IsOptional()
   etcGenres: string[];
 
   @ApiProperty({
-    type: 'file',
-    isArray: true,
-    properties: {
-      images: {
-        type: 'string',
-        format: 'binary',
-      },
-    },
+    example: ['url', 'url'],
   })
-  images: Express.Multer.File[];
+  @IsArray()
+  @IsOptional()
+  profileImageUrls: string[];
 }

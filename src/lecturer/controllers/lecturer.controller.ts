@@ -35,17 +35,14 @@ export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
   @ApiCreateLecturer()
-  @UseInterceptors(FilesInterceptor('images', 5))
   @Post()
   @UseGuards(UserAccessTokenGuard)
   async createLecturer(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @UploadedFiles() profileImages: Express.Multer.File[],
     @Body() createLecturerDto: CreateLecturerDto,
   ) {
     await this.lecturerService.createLecturer(
       authorizedData.user.id,
-      profileImages,
       createLecturerDto,
     );
   }
