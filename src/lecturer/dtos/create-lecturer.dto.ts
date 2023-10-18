@@ -10,6 +10,13 @@ import {
 
 export class CreateLecturerDto {
   @ApiProperty({
+    example: ['url', 'url'],
+  })
+  @IsArray()
+  @IsNotEmpty()
+  profileImageUrls: string[];
+
+  @ApiProperty({
     example: '올리버쌤',
     description: '닉네임 중복 확인 후 진행',
     required: true,
@@ -119,11 +126,4 @@ export class CreateLecturerDto {
   @IsArray()
   @IsOptional()
   etcGenres: string[];
-
-  @ApiProperty({
-    example: ['url', 'url'],
-  })
-  @IsArray()
-  @IsOptional()
-  profileImageUrls: string[];
 }
