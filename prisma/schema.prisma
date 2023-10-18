@@ -45,7 +45,7 @@ model UserProfileImage {
   userId   Int     @unique
   //이미지 url
   imageUrl String? @db.VarChar(255)
-  users    Users   @relation(fields: [userId], references: [id])
+  users    Users   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Region {
@@ -327,7 +327,7 @@ model Auth {
   signUpType Int
   createdAt  DateTime  @default(now()) @db.Timestamp(6)
   deletedAt  DateTime? @db.Timestamp(6)
-  users      Users     @relation(fields: [userId], references: [id])
+  users      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model LecturerRegion {
