@@ -52,16 +52,13 @@ export class LecturerController {
 
   @UpdateLecturerProfile()
   @Patch('/profile')
-  @UseInterceptors(FilesInterceptor('images', 5))
   @UseGuards(LecturerAccessTokenGuard)
   async updateMyLecturerProfile(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @UploadedFiles() newProfileImages: Express.Multer.File[],
     @Body() updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
     await this.lecturerService.updateMyLecturerProfile(
       authorizedData.lecturer.id,
-      newProfileImages,
       updateMyLecturerProfileDto,
     );
   }

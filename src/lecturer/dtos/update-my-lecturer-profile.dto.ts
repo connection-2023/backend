@@ -11,19 +11,20 @@ import { ProfileImageData } from '../interface/lecturer.interface';
 
 export class UpdateMyLecturerProfileDto {
   @ApiProperty({
-    description: '업로드한 이미지의 url',
+    description: `다중 이미지 업로드 api에서 받아온 url배열`,
     example: ['url', 'url'],
     required: false,
   })
-  newProfileImages: string[];
+  @IsArray()
+  @IsOptional()
+  newProfileImageUrls: string[];
 
   @ApiProperty({
     example: [
-      { profileImageId: 1, url: 'url' },
-      { profileImageId: 0, url: 'url' },
+      { profileImageId: 1, url: '수정된 이미지url' },
+      { profileImageId: 12, url: '새로운 이미지일때 null' },
+      { profileImageId: 0, url: '이미지가 더 추가됐으면 id: 0' },
     ],
-    description: `이미지 순서가 [1, 2, 3] => [1, 3, 새이미지, 2] 순서로 변경된다면 =>
-    [ {id:2 url:3번 이미지의 url,}, { id:3, url: 새 이미지는 url null,},{ id:0, url: 2번 url}] `,
     required: false,
   })
   @IsArray()
@@ -31,11 +32,11 @@ export class UpdateMyLecturerProfileDto {
   updatedProfileImageData: ProfileImageData[];
 
   @ApiProperty({
+    description: '삭제되는 이미지의 id 와 url',
     example: [
       { profileImageId: 1, url: 'url' },
       { profileImageId: 2, url: 'url' },
     ],
-    description: '삭제되는 이미지의 id 와 url',
     required: false,
   })
   @IsArray()

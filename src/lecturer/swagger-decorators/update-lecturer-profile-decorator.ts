@@ -3,6 +3,7 @@ import {
   ApiBearerAuth,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiUnauthorizedResponse,
@@ -13,10 +14,9 @@ export function UpdateLecturerProfile() {
   return applyDecorators(
     ApiOperation({
       summary: '강사 프로필 업데이트',
-      description: '강사 프로필 업데이트',
     }),
     ApiBearerAuth(),
-    ApiCreatedResponse(
+    ApiOkResponse(
       SwaggerApiResponse.success('강사 프로필 업데이트 완료', {
         statusCode: 201,
       }),

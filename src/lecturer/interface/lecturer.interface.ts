@@ -84,11 +84,11 @@ interface LecturerProfile {
   lecturerProfileImageUrl: ProfileImageUrl[];
 }
 interface LecturerProfileImageUpdateData {
-  id?: number;
+  id: number;
   url: string;
 }
 interface ProfileImageData {
-  profileImageId: string;
+  profileImageId: number;
   url: string;
 }
 

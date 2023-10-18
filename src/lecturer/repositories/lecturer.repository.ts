@@ -154,17 +154,14 @@ export class LecturerRepository {
     lecturerId: number,
     lecturerProfileUpdateData: LecturerProfileImageUpdateData[],
   ) {
-    for (const data of lecturerProfileUpdateData) {
-      if (data.id) {
-        await this.prismaService.lecturerProfileImageUrl.update({
-          where: { id: data.id }, // ID가 있는 경우
-          data: { url: data.url },
+    await Promise.all(
+      lecturerProfileUpdateData.map(async (data) => {
+        await this.prismaService.lecturerProfileImageUrl.upsert({
+          where: { id: data.id },
+          update: { url: data.url },
+          create: { lecturerId, url: data.url },
         });
-      } else {
-        await this.prismaService.lecturerProfileImageUrl.create({
-          data: { lecturerId, url: data.url },
-        });
-      }
-    }
+      }),
+    );
   }
 }
