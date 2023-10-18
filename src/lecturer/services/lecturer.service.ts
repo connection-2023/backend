@@ -9,6 +9,7 @@ import {
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
+  AwsS3DeleteParam,
   AwsS3Param,
   Id,
   PrismaTransaction,
@@ -21,6 +22,7 @@ import {
   LecturerDanceGenreInputData,
   LecturerProfile,
   LecturerProfileImageInputData,
+  LecturerProfileImageUpdateData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
   ProfileImageData,
@@ -30,7 +32,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
-import { UpdateMyLecturerProfileDto } from '../dtos/update-my-lecturer-profile.dto';
+import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -319,10 +321,11 @@ export class LecturerService implements OnModuleInit {
     newProfileImages: Express.Multer.File[],
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const { deletedProfileImageData } = updateMyLecturerProfileDto;
+    const { deletedProfileImageData, updatedProfileImageData } =
+      updateMyLecturerProfileDto;
 
     if (deletedProfileImageData) {
-      const awsS3Params: AwsS3Param[] = this.createAwsS3Params(
+      const awsS3Params: AwsS3DeleteParam[] = this.createAwsS3Params(
         deletedProfileImageData,
       );
       await this.deleteS3ProfileImages(awsS3Params);
@@ -331,10 +334,24 @@ export class LecturerService implements OnModuleInit {
         deletedProfileImageData,
       );
     }
+
+    if (updatedProfileImageData) {
+      const newProfileImageParams: AwsS3Param[] =
+        await this.createNewProfileImageParams(lecturerId, newProfileImages);
+      const lecturerProfileUpdateData: LecturerProfileImageUpdateData[] =
+        await this.createLecturerProfileUpdateData(
+          updatedProfileImageData,
+          newProfileImageParams,
+        );
+      await this.lecturerRepository.updateLecturerProfileImages(
+        lecturerId,
+        lecturerProfileUpdateData,
+      );
+    }
   }
 
   private async deleteS3ProfileImages(
-    awsS3Params: AwsS3Param[],
+    awsS3Params: AwsS3DeleteParam[],
   ): Promise<void> {
     try {
       await Promise.all(
@@ -380,5 +397,91 @@ export class LecturerService implements OnModuleInit {
       lecturerId,
       profileImageIds,
     );
+  }
+
+  private createLecturerProfileUpdateData(
+    updatedProfileImageData: ProfileImageData[],
+    newProfileImageParams: AwsS3Param[],
+  ): LecturerProfileImageUpdateData[] {
+    const updateData: LecturerProfileImageUpdateData[] =
+      updatedProfileImageData.map((updatedProfileImage) => {
+        // 새로운 이미지 추가 원래 있던 이미지 순서가 뒤로
+        if (
+          updatedProfileImage.profileImageId === '0' &&
+          updatedProfileImage.url
+        ) {
+          return { url: updatedProfileImage.url };
+        }
+        // 새로운 이미지를 추가하고 해당 순서가 원래 있던 이미지일 때
+        if (
+          updatedProfileImage.profileImageId === '0' &&
+          !updatedProfileImage.url
+        ) {
+          return this.getNewProfileImage(newProfileImageParams);
+        }
+        // 원래 위치에 새로운 이미지로 바꿀 때
+        if (updatedProfileImage.profileImageId && !updatedProfileImage.url) {
+          return this.getUpdatedProfileImage(
+            updatedProfileImage.profileImageId,
+            newProfileImageParams,
+          );
+        }
+        // 이미지의 순서만 바뀌었을 때
+        if (updatedProfileImage.profileImageId && updatedProfileImage.url) {
+          return {
+            id: parseInt(updatedProfileImage.profileImageId, 10),
+            url: updatedProfileImage.url,
+          };
+        }
+      });
+
+    return updateData;
+  }
+
+  private getNewProfileImage(newProfileImageParams: AwsS3Param[]) {
+    if (newProfileImageParams.length > 0) {
+      return { url: newProfileImageParams.shift().url };
+    }
+    throw new BadRequestException(
+      `전달된 이미지 데이터가 올바르지 않습니다.`,
+      'invalidImageData',
+    );
+  }
+
+  private getUpdatedProfileImage(
+    profileImageId: string,
+    newProfileImageParams: AwsS3Param[],
+  ) {
+    if (newProfileImageParams.length > 0) {
+      const data = {
+        id: parseInt(profileImageId, 10),
+        url: newProfileImageParams.shift().url,
+      };
+      return data;
+    }
+    throw new BadRequestException(
+      `전달된 이미지 데이터가 올바르지 않습니다.`,
+      'invalidImageData',
+    );
+  }
+
+  private createNewProfileImageParams(
+    lecturerId: number,
+    newProfileImages: Express.Multer.File[],
+  ): AwsS3Param[] {
+    return newProfileImages.map((newProfileImage) => {
+      const key = `lecturer/${lecturerId}/${Date.now()}_${
+        newProfileImage.originalname
+      }`;
+      const url = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
+      return {
+        url,
+        Bucket: this.awsS3BucketName,
+        Key: key,
+        Body: newProfileImage.buffer,
+        ACL: 'private',
+        ContentType: newProfileImage.mimetype,
+      };
+    });
   }
 }

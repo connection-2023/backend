@@ -8,6 +8,7 @@ import {
   LecturerProfileImageInputData,
   LecturerCoupon,
   LecturerProfile,
+  LecturerProfileImageUpdateData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -134,7 +135,9 @@ export class LecturerRepository {
           },
         },
         lecturerWebsiteUrl: true,
-        lecturerProfileImageUrl: true,
+        lecturerProfileImageUrl: {
+          orderBy: { id: 'asc' },
+        },
       },
     });
   }
@@ -145,5 +148,23 @@ export class LecturerRepository {
     await this.prismaService.lecturerProfileImageUrl.deleteMany({
       where: { id: { in: profileImageIds }, lecturerId },
     });
+  }
+
+  async updateLecturerProfileImages(
+    lecturerId: number,
+    lecturerProfileUpdateData: LecturerProfileImageUpdateData[],
+  ) {
+    for (const data of lecturerProfileUpdateData) {
+      if (data.id) {
+        await this.prismaService.lecturerProfileImageUrl.update({
+          where: { id: data.id }, // ID가 있는 경우
+          data: { url: data.url },
+        });
+      } else {
+        await this.prismaService.lecturerProfileImageUrl.create({
+          data: { lecturerId, url: data.url },
+        });
+      }
+    }
   }
 }
