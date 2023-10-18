@@ -5,46 +5,49 @@ import {
   Param,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadsService } from '@src/uploads/services/uploads.service';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiProperty,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { DeleteImageDto } from '@src/uploads/dtos/delete-image.dto';
+import { ApiUploadS3Images } from '@src/uploads/swagger-decorators/upload-s3-images-decorator';
+import { ApiUploadS3Image } from '@src/uploads/swagger-decorators/upload-s3-image-decorator';
 
-@ApiTags('uploads')
+@ApiTags('파일 업로드')
 @Controller('uploads')
 export class UploadsController {
   constructor(private readonly uploadsService: UploadsService) {}
 
-  @ApiOperation({ summary: '이미지 업로드' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
+  @ApiUploadS3Image()
   @UseInterceptors(FileInterceptor('image'))
-  @Post(':folders')
+  @Post(':folder/image')
   async uploadS3Image(
-    @Param('folders') folders: string,
+    @Param('folder') folder: string,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    const imageUrl = await this.uploadsService.uploadFileToS3(folders, image);
+    const imageUrl = await this.uploadsService.uploadFileToS3(folder, image);
 
     return { imageUrl };
+  }
+
+  @ApiUploadS3Images()
+  @UseInterceptors(FilesInterceptor('images', 5))
+  @Post('/:folder/images')
+  async uploadS3Images(
+    @Param('folder') folder: string,
+    @UploadedFiles() images: Express.Multer.File[],
+  ) {
+    const imageUrls: string[] = [];
+
+    for (const image of images) {
+      const url = await this.uploadsService.uploadFileToS3(folder, image);
+
+      imageUrls.push(url);
+    }
+
+    return { imageUrls };
   }
 
   @ApiOperation({ summary: '이미지 삭제' })
