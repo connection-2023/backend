@@ -150,18 +150,11 @@ export class LecturerRepository {
     });
   }
 
-  async updateLecturerProfileImages(
-    lecturerId: number,
+  async createLecturerProfileImageUrls(
     lecturerProfileUpdateData: LecturerProfileImageUpdateData[],
   ) {
-    await Promise.all(
-      lecturerProfileUpdateData.map(async (data) => {
-        await this.prismaService.lecturerProfileImageUrl.upsert({
-          where: { id: data.id },
-          update: { url: data.url },
-          create: { lecturerId, url: data.url },
-        });
-      }),
-    );
+    await this.prismaService.lecturerProfileImageUrl.createMany({
+      data: lecturerProfileUpdateData,
+    });
   }
 }

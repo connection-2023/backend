@@ -2,15 +2,12 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
-  AwsS3DeleteParam,
-  AwsS3Param,
   Id,
   PrismaTransaction,
   Region,
@@ -25,20 +22,16 @@ import {
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
-  ProfileImageData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
   private readonly logger = new Logger(LecturerService.name);
-  private awsS3: AWS.S3;
-  private awsS3BucketName: string;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -48,13 +41,6 @@ export class LecturerService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.awsS3 = new AWS.S3({
-      accessKeyId: this.configService.get<'string'>('AWS_S3_ACCESS_KEY'),
-      secretAccessKey: this.configService.get<'string'>('AWS_S3_SECRET_KEY'),
-      region: this.configService.get<string>('AWS_REGION'),
-    });
-    this.awsS3BucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME');
-
     this.logger.log('LecturerService Init');
   }
 
@@ -110,14 +96,10 @@ export class LecturerService implements OnModuleInit {
           lecturerDanceGenreInputData,
         );
 
-        const lecturerProfileImageUrlInputData: LecturerProfileImageInputData[] =
-          this.createLecturerProfileImageInputData(
-            lecturer.id,
-            profileImageUrls,
-          );
-        await this.lecturerRepository.trxCreateLecturerProfileImages(
+        await this.createLecturerProfileImageUrls(
           transaction,
-          lecturerProfileImageUrlInputData,
+          lecturer.id,
+          profileImageUrls,
         );
       },
     );
@@ -266,19 +248,6 @@ export class LecturerService implements OnModuleInit {
     return true;
   }
 
-  private createLecturerProfileImageInputData(
-    lecturerId: number,
-    profileImageUrls: string[],
-  ): LecturerProfileImageInputData[] {
-    const lecturerProfileImageUrls: LecturerProfileImageInputData[] =
-      profileImageUrls.map((profileImageUrl) => ({
-        lecturerId,
-        url: profileImageUrl,
-      }));
-
-    return lecturerProfileImageUrls;
-  }
-
   async getLecturerCoupons(lecturerId: number): Promise<LecturerCoupon[]> {
     return await this.lecturerRepository.getLecturerCouponsByLecturerId(
       lecturerId,
@@ -301,74 +270,50 @@ export class LecturerService implements OnModuleInit {
     await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
   }
 
-  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
-    return await this.lecturerRepository.getLecturerProfile(lectureId);
+  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
+    return await this.lecturerRepository.getLecturerProfile(lecturerId);
   }
 
   async updateMyLecturerProfile(
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const {
-      deletedProfileImageData,
-      newProfileImageUrls,
-      updatedProfileImageData,
-    } = updateMyLecturerProfileDto;
+    const { newProfileImageUrls } = updateMyLecturerProfileDto;
 
-    if (deletedProfileImageData) {
-      await this.deleteLecturerProfileImages(
-        lecturerId,
-        deletedProfileImageData,
-      );
-    }
-
-    if (updatedProfileImageData) {
-      const lecturerProfileUpdateData: LecturerProfileImageUpdateData[] =
-        await this.createLecturerProfileUpdateData(
-          updatedProfileImageData,
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.createLecturerProfileImageUrls(
+          transaction,
+          lecturerId,
           newProfileImageUrls,
         );
-
-      await this.lecturerRepository.updateLecturerProfileImages(
-        lecturerId,
-        lecturerProfileUpdateData,
-      );
-    }
+      },
+    );
   }
 
-  private async deleteLecturerProfileImages(
+  private async createLecturerProfileImageUrls(
+    transaction: PrismaTransaction,
     lecturerId: number,
-    deletedProfileImageData: ProfileImageData[],
-  ): Promise<void> {
-    const profileImageIds: number[] = deletedProfileImageData.map(
-      (image) => image.profileImageId,
-    );
+    profileImageUrls: string[],
+  ) {
+    const lecturerProfileImageUrlInputData: LecturerProfileImageUpdateData[] =
+      await this.createLecturerProfileUpdateData(lecturerId, profileImageUrls);
 
-    await this.lecturerRepository.deleteLecturerProfileImages(
-      lecturerId,
-      profileImageIds,
+    await this.lecturerRepository.trxCreateLecturerProfileImages(
+      transaction,
+      lecturerProfileImageUrlInputData,
     );
   }
 
   private createLecturerProfileUpdateData(
-    updatedProfileImageData: ProfileImageData[],
+    lecturerId: number,
     newProfileImageUrls: string[],
   ): LecturerProfileImageUpdateData[] {
     const updateData: LecturerProfileImageUpdateData[] =
-      updatedProfileImageData.map((updatedProfileImage) => {
-        if (updatedProfileImage.url) {
-          return {
-            id: updatedProfileImage.profileImageId,
-            url: updatedProfileImage.url,
-          };
-        }
-        if (!updatedProfileImage.url) {
-          return {
-            id: updatedProfileImage.profileImageId,
-            url: newProfileImageUrls.shift(),
-          };
-        }
-      });
+      newProfileImageUrls.map((profileImageUrl) => ({
+        lecturerId,
+        url: profileImageUrl,
+      }));
 
     return updateData;
   }
