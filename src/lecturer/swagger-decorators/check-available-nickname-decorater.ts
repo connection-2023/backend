@@ -9,8 +9,8 @@ export function ApiCheckAvailableNickname() {
       description: '사용가능하면 true, 불가능하면 false',
     }),
     ApiOkResponse(
-      SwaggerApiResponse.success('닉네임 사용가능 or 불가능', {
-        status: true || false,
+      SwaggerApiResponse.success('닉네임 사용가능true or 불가능false', {
+        isAvailable: true || false,
       }),
     ),
   );

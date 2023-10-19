@@ -12,7 +12,6 @@ import {
 import { LecturerService } from '@src/lecturer/services/lecturer.service';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
-import { Users } from '@prisma/client';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiCreateLecturer } from '@src/lecturer/swagger-decorators/create-lecturer-decorator';
 import { ApiTags } from '@nestjs/swagger';
@@ -27,6 +26,8 @@ import {
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
 import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
 import { ApiGetMyLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
+import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
+import { UpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -34,21 +35,29 @@ export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
   @ApiCreateLecturer()
-  @UseInterceptors(FilesInterceptor('image', 5))
   @Post()
   @UseGuards(UserAccessTokenGuard)
   async createLecturer(
-    @GetAuthorizedUser() user: Users,
-    @UploadedFiles() profileImages: Express.Multer.File[],
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLecturerDto: CreateLecturerDto,
   ) {
     await this.lecturerService.createLecturer(
-      user.id,
-      profileImages,
+      authorizedData.user.id,
       createLecturerDto,
     );
+  }
 
-    return { message: '강사 생성 완료' };
+  @UpdateLecturerProfile()
+  @Patch('/profile')
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateMyLecturerProfile(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
+  ) {
+    await this.lecturerService.updateMyLecturerProfile(
+      authorizedData.lecturer.id,
+      updateMyLecturerProfileDto,
+    );
   }
 
   @ApiGetMyLecturerProfile()
@@ -80,7 +89,7 @@ export class LecturerController {
       nickname,
     );
 
-    return { status: result };
+    return { isAvailable: result };
   }
 
   @ApiUpdateLecturerNickname()

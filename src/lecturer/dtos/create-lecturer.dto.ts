@@ -10,6 +10,13 @@ import {
 
 export class CreateLecturerDto {
   @ApiProperty({
+    example: ['url', 'url'],
+  })
+  @IsArray()
+  @IsNotEmpty()
+  profileImageUrls: string[];
+
+  @ApiProperty({
     example: '올리버쌤',
     description: '닉네임 중복 확인 후 진행',
     required: true,
@@ -70,6 +77,7 @@ export class CreateLecturerDto {
   affiliation: string;
 
   @ApiProperty({
+    example: '강사 소개글',
     description: '강사 소개',
     required: true,
   })
@@ -77,6 +85,7 @@ export class CreateLecturerDto {
   introduction: string;
 
   @ApiProperty({
+    example: '강사 경력',
     description: '강사 경력',
     required: true,
   })
@@ -84,9 +93,7 @@ export class CreateLecturerDto {
   experience: string;
 
   @ApiProperty({
-    type: 'array',
     example: ['서울특별시 도봉구', '서울특별시 중구'],
-    description: '강사 강의 지역',
     required: false,
   })
   @IsArray()
@@ -94,9 +101,8 @@ export class CreateLecturerDto {
   regions: string[];
 
   @ApiProperty({
-    type: 'array',
-    description: '강사 강의 장르',
-    required: false,
+    example: ['K-pop', '기타 장르들은 etcGenres로'],
+    required: true,
   })
   @IsArray()
   @IsEnum(DanceCategory, { each: true })
@@ -104,30 +110,20 @@ export class CreateLecturerDto {
   genres: DanceCategory[];
 
   @ApiProperty({
+    example: ['그 외 사이트 url', '그 외 사이트 url'],
+
     description: '그외 사이트',
     required: false,
   })
   @IsArray()
   @IsOptional()
   websiteUrls: string[];
+
   @ApiProperty({
-    description: '기타일때 직접입력한 것들',
+    example: ['기타일때 직접입력한 것들', '기타일때 직접입력한 것들'],
     required: false,
-    type: 'array',
   })
   @IsArray()
   @IsOptional()
   etcGenres: string[];
-
-  @ApiProperty({
-    type: 'file',
-    isArray: true,
-    properties: {
-      image: {
-        type: 'string',
-        format: 'binary',
-      },
-    },
-  })
-  image: Express.Multer.File[];
 }

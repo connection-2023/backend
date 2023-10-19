@@ -64,3 +64,16 @@ export interface GetLecturerResult {
   id: number;
   userId: number;
 }
+
+export interface AwsS3DeleteParam {
+  Bucket: string;
+  Key: string;
+}
+export interface AwsS3Param {
+  url: string;
+  Bucket: string;
+  Key: string;
+  Body: Buffer;
+  ACL: string;
+  ContentType: string;
+}

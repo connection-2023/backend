@@ -2,12 +2,15 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
+  AwsS3DeleteParam,
+  AwsS3Param,
   Id,
   PrismaTransaction,
   Region,
@@ -19,14 +22,17 @@ import {
   LecturerDanceGenreInputData,
   LecturerProfile,
   LecturerProfileImageInputData,
+  LecturerProfileImageUpdateData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
+  ProfileImageData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
+import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -54,13 +60,18 @@ export class LecturerService implements OnModuleInit {
 
   async createLecturer(
     userId: number,
-    profileImages: Express.Multer.File[],
     createLecturerDto: CreateLecturerDto,
   ): Promise<void> {
     await this.checkLecturerExist(userId);
 
-    const { regions, genres, websiteUrls, etcGenres, ...lecturerData } =
-      createLecturerDto;
+    const {
+      regions,
+      genres,
+      websiteUrls,
+      etcGenres,
+      profileImageUrls,
+      ...lecturerData
+    } = createLecturerDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
 
@@ -100,9 +111,9 @@ export class LecturerService implements OnModuleInit {
         );
 
         const lecturerProfileImageUrlInputData: LecturerProfileImageInputData[] =
-          await this.createLecturerProfileImageInputData(
+          this.createLecturerProfileImageInputData(
             lecturer.id,
-            profileImages,
+            profileImageUrls,
           );
         await this.lecturerRepository.trxCreateLecturerProfileImages(
           transaction,
@@ -255,31 +266,15 @@ export class LecturerService implements OnModuleInit {
     return true;
   }
 
-  async createLecturerProfileImageInputData(
+  private createLecturerProfileImageInputData(
     lecturerId: number,
-    profileImages: Express.Multer.File[],
-  ): Promise<LecturerProfileImageInputData[]> {
-    const lecturerProfileImageUrls: LecturerProfileImageInputData[] = [];
-
-    for (const profileImage of profileImages) {
-      const key = `lecturer/${lecturerId}/${Date.now()}_${
-        profileImage.originalname
-      }`;
-
-      await this.awsS3
-        .putObject({
-          Bucket: this.awsS3BucketName,
-          Key: key,
-          Body: profileImage.buffer,
-          ACL: 'private',
-          ContentType: profileImage.mimetype,
-        })
-        .promise();
-
-      const imageUrl: string = `${this.awsS3.endpoint.href}${this.awsS3BucketName}/${key}`;
-
-      lecturerProfileImageUrls.push({ lecturerId, url: imageUrl });
-    }
+    profileImageUrls: string[],
+  ): LecturerProfileImageInputData[] {
+    const lecturerProfileImageUrls: LecturerProfileImageInputData[] =
+      profileImageUrls.map((profileImageUrl) => ({
+        lecturerId,
+        url: profileImageUrl,
+      }));
 
     return lecturerProfileImageUrls;
   }
@@ -308,5 +303,73 @@ export class LecturerService implements OnModuleInit {
 
   async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
     return await this.lecturerRepository.getLecturerProfile(lectureId);
+  }
+
+  async updateMyLecturerProfile(
+    lecturerId: number,
+    updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
+  ) {
+    const {
+      deletedProfileImageData,
+      newProfileImageUrls,
+      updatedProfileImageData,
+    } = updateMyLecturerProfileDto;
+
+    if (deletedProfileImageData) {
+      await this.deleteLecturerProfileImages(
+        lecturerId,
+        deletedProfileImageData,
+      );
+    }
+
+    if (updatedProfileImageData) {
+      const lecturerProfileUpdateData: LecturerProfileImageUpdateData[] =
+        await this.createLecturerProfileUpdateData(
+          updatedProfileImageData,
+          newProfileImageUrls,
+        );
+
+      await this.lecturerRepository.updateLecturerProfileImages(
+        lecturerId,
+        lecturerProfileUpdateData,
+      );
+    }
+  }
+
+  private async deleteLecturerProfileImages(
+    lecturerId: number,
+    deletedProfileImageData: ProfileImageData[],
+  ): Promise<void> {
+    const profileImageIds: number[] = deletedProfileImageData.map(
+      (image) => image.profileImageId,
+    );
+
+    await this.lecturerRepository.deleteLecturerProfileImages(
+      lecturerId,
+      profileImageIds,
+    );
+  }
+
+  private createLecturerProfileUpdateData(
+    updatedProfileImageData: ProfileImageData[],
+    newProfileImageUrls: string[],
+  ): LecturerProfileImageUpdateData[] {
+    const updateData: LecturerProfileImageUpdateData[] =
+      updatedProfileImageData.map((updatedProfileImage) => {
+        if (updatedProfileImage.url) {
+          return {
+            id: updatedProfileImage.profileImageId,
+            url: updatedProfileImage.url,
+          };
+        }
+        if (!updatedProfileImage.url) {
+          return {
+            id: updatedProfileImage.profileImageId,
+            url: newProfileImageUrls.shift(),
+          };
+        }
+      });
+
+    return updateData;
   }
 }

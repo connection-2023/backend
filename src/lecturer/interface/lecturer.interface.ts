@@ -83,6 +83,14 @@ interface LecturerProfile {
   lecturerWebsiteUrl: WebsiteUrl[];
   lecturerProfileImageUrl: ProfileImageUrl[];
 }
+interface LecturerProfileImageUpdateData {
+  id: number;
+  url: string;
+}
+interface ProfileImageData {
+  profileImageId: number;
+  url: string;
+}
 
 export {
   LecturerInputData,
@@ -92,4 +100,6 @@ export {
   LecturerProfileImageInputData,
   LecturerCoupon,
   LecturerProfile,
+  ProfileImageData,
+  LecturerProfileImageUpdateData,
 };
