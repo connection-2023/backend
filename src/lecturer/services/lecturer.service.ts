@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
@@ -85,15 +86,11 @@ export class LecturerService implements OnModuleInit {
           );
         }
 
-        const lecturerDanceGenreInputData: LecturerDanceGenreInputData[] =
-          await this.createLecturerDanceGenreInputData(
-            lecturer.id,
-            genres,
-            etcGenres,
-          );
-        await this.lecturerRepository.trxCreateLecturerDanceGenres(
+        await this.createLecturerDanceGenres(
           transaction,
-          lecturerDanceGenreInputData,
+          lecturer.id,
+          genres,
+          etcGenres,
         );
 
         await this.createLecturerProfileImageUrls(
@@ -278,16 +275,64 @@ export class LecturerService implements OnModuleInit {
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const { newProfileImageUrls } = updateMyLecturerProfileDto;
+    const { newProfileImageUrls, genres, etcGenres } =
+      updateMyLecturerProfileDto;
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.createLecturerProfileImageUrls(
+        await this.updateLecturerProfileImageUrls(
           transaction,
           lecturerId,
           newProfileImageUrls,
         );
+        await this.updateLecturerDanceGenres(
+          transaction,
+          lecturerId,
+          genres,
+          etcGenres,
+        );
       },
+    );
+  }
+  private async updateLecturerDanceGenres(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    genres: DanceCategory[],
+    etcGenres: string[],
+  ) {
+    try {
+      await this.lecturerRepository.trxDeleteDanceGenres(
+        transaction,
+        lecturerId,
+      );
+
+      await this.createLecturerDanceGenres(
+        transaction,
+        lecturerId,
+        genres,
+        etcGenres,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async createLecturerDanceGenres(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    genres: DanceCategory[],
+    etcGenres: string[],
+  ): Promise<void> {
+    const lecturerDanceGenreInputData: LecturerDanceGenreInputData[] =
+      await this.createLecturerDanceGenreInputData(
+        lecturerId,
+        genres,
+        etcGenres,
+      );
+
+    await this.lecturerRepository.trxCreateLecturerDanceGenres(
+      transaction,
+      lecturerDanceGenreInputData,
     );
   }
 
@@ -295,17 +340,26 @@ export class LecturerService implements OnModuleInit {
     transaction: PrismaTransaction,
     lecturerId: number,
     profileImageUrls: string[],
-  ) {
-    const lecturerProfileImageUrlInputData: LecturerProfileImageUpdateData[] =
-      await this.createLecturerProfileUpdateData(lecturerId, profileImageUrls);
+  ): Promise<void> {
+    try {
+      if (profileImageUrls) {
+        const lecturerProfileImageUrlInputData: LecturerProfileImageUpdateData[] =
+          await this.generateLecturerProfileUpdateData(
+            lecturerId,
+            profileImageUrls,
+          );
 
-    await this.lecturerRepository.trxCreateLecturerProfileImages(
-      transaction,
-      lecturerProfileImageUrlInputData,
-    );
+        await this.lecturerRepository.trxCreateLecturerProfileImages(
+          transaction,
+          lecturerProfileImageUrlInputData,
+        );
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
-  private createLecturerProfileUpdateData(
+  private generateLecturerProfileUpdateData(
     lecturerId: number,
     newProfileImageUrls: string[],
   ): LecturerProfileImageUpdateData[] {
@@ -316,5 +370,25 @@ export class LecturerService implements OnModuleInit {
       }));
 
     return updateData;
+  }
+
+  private async updateLecturerProfileImageUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    profileImageUrls: string[],
+  ) {
+    try {
+      await this.lecturerRepository.trxDeleteLecturerProfileImages(
+        transaction,
+        lecturerId,
+      );
+      await this.createLecturerProfileImageUrls(
+        transaction,
+        lecturerId,
+        profileImageUrls,
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 }

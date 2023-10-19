@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerRegionInputData,
@@ -52,10 +52,10 @@ export class LecturerRepository {
 
   async trxCreateLecturerDanceGenres(
     transaction: PrismaTransaction,
-    lecturerWebsiteInputData: LecturerDanceGenreInputData[],
+    lecturerDanceGenresInputData: LecturerDanceGenreInputData[],
   ): Promise<void> {
     await transaction.lecturerDanceGenre.createMany({
-      data: lecturerWebsiteInputData,
+      data: lecturerDanceGenresInputData,
     });
   }
 
@@ -78,9 +78,16 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerProfileImageInputData: LecturerProfileImageInputData[],
   ): Promise<void> {
-    await transaction.lecturerProfileImageUrl.createMany({
-      data: lecturerProfileImageInputData,
-    });
+    try {
+      await transaction.lecturerProfileImageUrl.createMany({
+        data: lecturerProfileImageInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 프로필 이미지 생성 실패: ${error}`,
+        'LecturerProfileImageUpdateFailed',
+      );
+    }
   }
 
   async getLecturerCouponsByLecturerId(
@@ -150,11 +157,35 @@ export class LecturerRepository {
     });
   }
 
-  async createLecturerProfileImageUrls(
-    lecturerProfileUpdateData: LecturerProfileImageUpdateData[],
-  ) {
-    await this.prismaService.lecturerProfileImageUrl.createMany({
-      data: lecturerProfileUpdateData,
-    });
+  async trxDeleteLecturerProfileImages(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturerProfileImageUrl.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 프로필 이미지 삭제 실패: ${error}`,
+        'LecturerProfileImageDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteDanceGenres(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturerDanceGenre.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 장르 삭제 실패: ${error}`,
+        'LecturerDanceGenresDeleteFailed',
+      );
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
+import { DanceCategory } from '@src/common/enum/enum';
 
 export class UpdateMyLecturerProfileDto {
   @ApiProperty({
@@ -10,4 +11,21 @@ export class UpdateMyLecturerProfileDto {
   @IsArray()
   @IsOptional()
   newProfileImageUrls: string[];
+
+  @ApiProperty({
+    example: ['K-pop', '기타 장르들은 etcGenres로'],
+    required: true,
+  })
+  @IsArray()
+  @IsEnum(DanceCategory, { each: true })
+  @IsNotEmpty()
+  genres: DanceCategory[];
+
+  @ApiProperty({
+    example: ['기타일때 직접입력한 것들', '기타일때 직접입력한 것들'],
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  etcGenres: string[];
 }
