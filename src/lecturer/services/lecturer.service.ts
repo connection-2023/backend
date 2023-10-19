@@ -2,15 +2,12 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
-  AwsS3DeleteParam,
-  AwsS3Param,
   Id,
   PrismaTransaction,
   Region,
@@ -25,20 +22,16 @@ import {
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
-  ProfileImageData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
   private readonly logger = new Logger(LecturerService.name);
-  private awsS3: AWS.S3;
-  private awsS3BucketName: string;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -48,13 +41,6 @@ export class LecturerService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.awsS3 = new AWS.S3({
-      accessKeyId: this.configService.get<'string'>('AWS_S3_ACCESS_KEY'),
-      secretAccessKey: this.configService.get<'string'>('AWS_S3_SECRET_KEY'),
-      region: this.configService.get<string>('AWS_REGION'),
-    });
-    this.awsS3BucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME');
-
     this.logger.log('LecturerService Init');
   }
 
@@ -260,19 +246,6 @@ export class LecturerService implements OnModuleInit {
     }
 
     return true;
-  }
-
-  private createLecturerProfileImageInputData(
-    lecturerId: number,
-    profileImageUrls: string[],
-  ): LecturerProfileImageInputData[] {
-    const lecturerProfileImageUrls: LecturerProfileImageInputData[] =
-      profileImageUrls.map((profileImageUrl) => ({
-        lecturerId,
-        url: profileImageUrl,
-      }));
-
-    return lecturerProfileImageUrls;
   }
 
   async getLecturerCoupons(lecturerId: number): Promise<LecturerCoupon[]> {
