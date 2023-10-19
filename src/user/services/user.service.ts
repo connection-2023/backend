@@ -94,4 +94,8 @@ export class UserService {
       throw new HttpException('duplicated nickname', HttpStatus.FORBIDDEN);
     }
   }
+
+  async getMyProfile(userId: number) {
+    return await this.userRepository.getMyProfile(userId);
+  }
 }

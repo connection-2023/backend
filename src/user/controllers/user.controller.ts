@@ -11,7 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { ApiCreateUser } from '../swagger-decorators/create-user';
@@ -45,7 +45,9 @@ export class UserController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    const findByUserId = this.userService.findByUserId(authorizedData.user.id);
+    const findByUserId = await this.userService.findByUserId(
+      authorizedData.user.id,
+    );
     if (findByUserId) {
       throw new HttpException(
         '이미 프로필 사진이 존재하는 유저입니다',
@@ -63,8 +65,20 @@ export class UserController {
   }
 
   @ApiCheckDubplicatedNickname()
-  @Get(':nickname')
+  @Get('/nicknames/:nickname')
   async findByNickname(@Param('nickname') nickname: string) {
     return this.userService.findByNickname(nickname);
+  }
+
+  @ApiOperation({ summary: '회원 프로필 조회' })
+  @UseGuards(UserAccessTokenGuard)
+  @ApiBearerAuth()
+  @Get('my-pages')
+  async getMyProfile(@GetAuthorizedUser() authorizedData: ValidateResult) {
+    const myProfile = await this.userService.getMyProfile(
+      authorizedData.user.id,
+    );
+
+    return { myProfile };
   }
 }
