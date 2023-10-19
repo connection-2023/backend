@@ -22,6 +22,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { Users } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ValidateResult } from '@src/common/interface/common-interface';
+import { ApiReadMyProfile } from '../swagger-decorators/read-my-profile';
 
 @ApiTags('유저')
 @Controller('users')
@@ -70,9 +71,8 @@ export class UserController {
     return this.userService.findByNickname(nickname);
   }
 
-  @ApiOperation({ summary: '회원 프로필 조회' })
+  @ApiReadMyProfile()
   @UseGuards(UserAccessTokenGuard)
-  @ApiBearerAuth()
   @Get('my-pages')
   async getMyProfile(@GetAuthorizedUser() authorizedData: ValidateResult) {
     const myProfile = await this.userService.getMyProfile(
