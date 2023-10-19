@@ -84,7 +84,7 @@ interface LecturerProfile {
   lecturerProfileImageUrl: ProfileImageUrl[];
 }
 interface LecturerProfileImageUpdateData {
-  id: number;
+  lecturerId: number;
   url: string;
 }
 interface ProfileImageData {

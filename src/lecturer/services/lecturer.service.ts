@@ -110,14 +110,10 @@ export class LecturerService implements OnModuleInit {
           lecturerDanceGenreInputData,
         );
 
-        const lecturerProfileImageUrlInputData: LecturerProfileImageInputData[] =
-          this.createLecturerProfileImageInputData(
-            lecturer.id,
-            profileImageUrls,
-          );
-        await this.lecturerRepository.trxCreateLecturerProfileImages(
+        await this.createLecturerProfileImageUrls(
           transaction,
-          lecturerProfileImageUrlInputData,
+          lecturer.id,
+          profileImageUrls,
         );
       },
     );
@@ -301,74 +297,50 @@ export class LecturerService implements OnModuleInit {
     await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
   }
 
-  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
-    return await this.lecturerRepository.getLecturerProfile(lectureId);
+  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
+    return await this.lecturerRepository.getLecturerProfile(lecturerId);
   }
 
   async updateMyLecturerProfile(
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const {
-      deletedProfileImageData,
-      newProfileImageUrls,
-      updatedProfileImageData,
-    } = updateMyLecturerProfileDto;
+    const { newProfileImageUrls } = updateMyLecturerProfileDto;
 
-    if (deletedProfileImageData) {
-      await this.deleteLecturerProfileImages(
-        lecturerId,
-        deletedProfileImageData,
-      );
-    }
-
-    if (updatedProfileImageData) {
-      const lecturerProfileUpdateData: LecturerProfileImageUpdateData[] =
-        await this.createLecturerProfileUpdateData(
-          updatedProfileImageData,
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.createLecturerProfileImageUrls(
+          transaction,
+          lecturerId,
           newProfileImageUrls,
         );
-
-      await this.lecturerRepository.updateLecturerProfileImages(
-        lecturerId,
-        lecturerProfileUpdateData,
-      );
-    }
+      },
+    );
   }
 
-  private async deleteLecturerProfileImages(
+  private async createLecturerProfileImageUrls(
+    transaction: PrismaTransaction,
     lecturerId: number,
-    deletedProfileImageData: ProfileImageData[],
-  ): Promise<void> {
-    const profileImageIds: number[] = deletedProfileImageData.map(
-      (image) => image.profileImageId,
-    );
+    profileImageUrls: string[],
+  ) {
+    const lecturerProfileImageUrlInputData: LecturerProfileImageUpdateData[] =
+      await this.createLecturerProfileUpdateData(lecturerId, profileImageUrls);
 
-    await this.lecturerRepository.deleteLecturerProfileImages(
-      lecturerId,
-      profileImageIds,
+    await this.lecturerRepository.trxCreateLecturerProfileImages(
+      transaction,
+      lecturerProfileImageUrlInputData,
     );
   }
 
   private createLecturerProfileUpdateData(
-    updatedProfileImageData: ProfileImageData[],
+    lecturerId: number,
     newProfileImageUrls: string[],
   ): LecturerProfileImageUpdateData[] {
     const updateData: LecturerProfileImageUpdateData[] =
-      updatedProfileImageData.map((updatedProfileImage) => {
-        if (updatedProfileImage.url) {
-          return {
-            id: updatedProfileImage.profileImageId,
-            url: updatedProfileImage.url,
-          };
-        }
-        if (!updatedProfileImage.url) {
-          return {
-            id: updatedProfileImage.profileImageId,
-            url: newProfileImageUrls.shift(),
-          };
-        }
-      });
+      newProfileImageUrls.map((profileImageUrl) => ({
+        lecturerId,
+        url: profileImageUrl,
+      }));
 
     return updateData;
   }
