@@ -40,4 +40,14 @@ export class UserRepository {
       data: { userId, imageUrl },
     });
   }
+
+  async getMyProfile(userId: number): Promise<Users> {
+    return await this.prismaService.users.findUnique({
+      where: { id: userId },
+      include: {
+        auth: { select: { email: true, signUpType: true } },
+        userProfileImage: { select: { imageUrl: true } },
+      },
+    });
+  }
 }
