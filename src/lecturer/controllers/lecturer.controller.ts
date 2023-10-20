@@ -5,9 +5,7 @@ import {
   Param,
   Patch,
   Post,
-  UploadedFiles,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { LecturerService } from '@src/lecturer/services/lecturer.service';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
@@ -16,7 +14,6 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { ApiCreateLecturer } from '@src/lecturer/swagger-decorators/create-lecturer-decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/check-available-nickname-decorater';
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import {

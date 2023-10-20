@@ -3,12 +3,12 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerRegionInputData,
   LecturerWebsiteInputData,
-  LecturerInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerCoupon,
   LecturerProfile,
-  LecturerProfileImageUpdateData,
+  LecturerInputData,
+  LecturerUpdateData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -155,14 +155,6 @@ export class LecturerRepository {
       },
     });
   }
-  async deleteLecturerProfileImages(
-    lecturerId: number,
-    profileImageIds: number[],
-  ): Promise<void> {
-    await this.prismaService.lecturerProfileImageUrl.deleteMany({
-      where: { id: { in: profileImageIds }, lecturerId },
-    });
-  }
 
   async trxDeleteLecturerProfileImages(
     transaction: PrismaTransaction,
@@ -224,6 +216,24 @@ export class LecturerRepository {
       throw new InternalServerErrorException(
         `강사 웹사이트 삭제 실패: ${error}`,
         'LecturerWebsiteUrlsDeleteFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturer(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    lecturerUpdateData: LecturerUpdateData,
+  ) {
+    try {
+      await transaction.lecturer.update({
+        where: { id: lecturerId },
+        data: lecturerUpdateData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사정보 업데이트 실패: ${error}`,
+        'LecturerUpdateFailed',
       );
     }
   }

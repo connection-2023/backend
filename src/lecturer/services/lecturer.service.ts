@@ -272,11 +272,23 @@ export class LecturerService implements OnModuleInit {
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const { newProfileImageUrls, genres, etcGenres, regions, websiteUrls } =
-      updateMyLecturerProfileDto;
+    const {
+      newProfileImageUrls,
+      genres,
+      etcGenres,
+      regions,
+      websiteUrls,
+      ...lecturerUpdateData
+    } = updateMyLecturerProfileDto;
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        await this.lecturerRepository.trxUpdateLecturer(
+          transaction,
+          lecturerId,
+          { ...lecturerUpdateData },
+        );
+
         await this.updateLecturerProfileImageUrls(
           transaction,
           lecturerId,
@@ -289,13 +301,11 @@ export class LecturerService implements OnModuleInit {
           etcGenres,
         );
         await this.updateLecturerRegions(transaction, lecturerId, regions);
-        if (websiteUrls) {
-          await this.updateLecturerWebsiteUrls(
-            transaction,
-            lecturerId,
-            websiteUrls,
-          );
-        }
+        await this.updateLecturerWebsiteUrls(
+          transaction,
+          lecturerId,
+          websiteUrls,
+        );
       },
     );
   }
@@ -322,16 +332,18 @@ export class LecturerService implements OnModuleInit {
     lecturerId: number,
     regions: string[],
   ): Promise<void> {
-    const regionIds: Id[] = await this.getValidRegionIds(regions);
-    const lecturerRegionInputData = await this.createLecturerRegionInputData(
-      lecturerId,
-      regionIds,
-    );
+    if (regions) {
+      const regionIds: Id[] = await this.getValidRegionIds(regions);
+      const lecturerRegionInputData = await this.createLecturerRegionInputData(
+        lecturerId,
+        regionIds,
+      );
 
-    await this.lecturerRepository.trxCreateLecturerRegions(
-      transaction,
-      lecturerRegionInputData,
-    );
+      await this.lecturerRepository.trxCreateLecturerRegions(
+        transaction,
+        lecturerRegionInputData,
+      );
+    }
   }
 
   private async updateLecturerDanceGenres(
@@ -341,17 +353,19 @@ export class LecturerService implements OnModuleInit {
     etcGenres: string[],
   ): Promise<void> {
     try {
-      await this.lecturerRepository.trxDeleteLecturerDanceGenres(
-        transaction,
-        lecturerId,
-      );
+      if (genres) {
+        await this.lecturerRepository.trxDeleteLecturerDanceGenres(
+          transaction,
+          lecturerId,
+        );
 
-      await this.createLecturerDanceGenres(
-        transaction,
-        lecturerId,
-        genres,
-        etcGenres,
-      );
+        await this.createLecturerDanceGenres(
+          transaction,
+          lecturerId,
+          genres,
+          etcGenres,
+        );
+      }
     } catch (error) {
       throw error;
     }
@@ -363,17 +377,21 @@ export class LecturerService implements OnModuleInit {
     genres: DanceCategory[],
     etcGenres: string[],
   ): Promise<void> {
-    const lecturerDanceGenreInputData: LecturerDanceGenreInputData[] =
-      await this.createLecturerDanceGenreInputData(
-        lecturerId,
-        genres,
-        etcGenres,
-      );
+    try {
+      const lecturerDanceGenreInputData: LecturerDanceGenreInputData[] =
+        await this.createLecturerDanceGenreInputData(
+          lecturerId,
+          genres,
+          etcGenres,
+        );
 
-    await this.lecturerRepository.trxCreateLecturerDanceGenres(
-      transaction,
-      lecturerDanceGenreInputData,
-    );
+      await this.lecturerRepository.trxCreateLecturerDanceGenres(
+        transaction,
+        lecturerDanceGenreInputData,
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 
   private async createLecturerProfileImageUrls(
@@ -384,10 +402,7 @@ export class LecturerService implements OnModuleInit {
     try {
       if (profileImageUrls) {
         const lecturerProfileImageUrlInputData: LecturerProfileImageUpdateData[] =
-          await this.generateLecturerProfileUpdateData(
-            lecturerId,
-            profileImageUrls,
-          );
+          this.generateLecturerProfileUpdateData(lecturerId, profileImageUrls);
 
         await this.lecturerRepository.trxCreateLecturerProfileImages(
           transaction,
@@ -418,15 +433,17 @@ export class LecturerService implements OnModuleInit {
     profileImageUrls: string[],
   ): Promise<void> {
     try {
-      await this.lecturerRepository.trxDeleteLecturerProfileImages(
-        transaction,
-        lecturerId,
-      );
-      await this.createLecturerProfileImageUrls(
-        transaction,
-        lecturerId,
-        profileImageUrls,
-      );
+      if (profileImageUrls) {
+        await this.lecturerRepository.trxDeleteLecturerProfileImages(
+          transaction,
+          lecturerId,
+        );
+        await this.createLecturerProfileImageUrls(
+          transaction,
+          lecturerId,
+          profileImageUrls,
+        );
+      }
     } catch (error) {
       throw error;
     }
@@ -438,15 +455,17 @@ export class LecturerService implements OnModuleInit {
     websiteUrls: string[],
   ): Promise<void> {
     try {
-      await this.lecturerRepository.trxDeleteLecturerWebsiteUrls(
-        transaction,
-        lecturerId,
-      );
-      await this.createLecturerWebsiteUrls(
-        transaction,
-        lecturerId,
-        websiteUrls,
-      );
+      if (websiteUrls) {
+        await this.lecturerRepository.trxDeleteLecturerWebsiteUrls(
+          transaction,
+          lecturerId,
+        );
+        await this.createLecturerWebsiteUrls(
+          transaction,
+          lecturerId,
+          websiteUrls,
+        );
+      }
     } catch (error) {
       throw error;
     }
