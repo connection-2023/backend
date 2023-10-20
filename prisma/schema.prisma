@@ -77,7 +77,7 @@ model Lecturer {
   //강사 소개
   introduction            String
   //강사 경력,경험
-  experience              String
+  experience              String?
   //평점
   stars                   Int                       @default(0)
   //리뷰 수
