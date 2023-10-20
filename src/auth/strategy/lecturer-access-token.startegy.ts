@@ -8,7 +8,11 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Lecturer } from '@prisma/client';
 import { ExtractJwt } from 'passport-jwt';
 import { Strategy } from 'passport-jwt';
-import { LecturerTokenPayload } from '@src/common/interface/common-interface';
+import {
+  GetLecturerResult,
+  LecturerTokenPayload,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 
 @Injectable()
@@ -26,7 +30,7 @@ export class LecturerAccessTokenStrategy extends PassportStrategy(
     });
   }
 
-  async validate(tokenPayload: LecturerTokenPayload): Promise<Lecturer> {
+  async validate(tokenPayload: LecturerTokenPayload): Promise<ValidateResult> {
     try {
       if (!tokenPayload.lecturerId) {
         throw new UnauthorizedException(
@@ -34,7 +38,7 @@ export class LecturerAccessTokenStrategy extends PassportStrategy(
           'InvalidTokenFormat',
         );
       }
-      const authorizedLecturer: Lecturer =
+      const authorizedLecturer: GetLecturerResult =
         await this.authTokenService.getLecturerByPayload(
           tokenPayload.lecturerId,
         );
@@ -46,7 +50,7 @@ export class LecturerAccessTokenStrategy extends PassportStrategy(
         );
       }
 
-      return authorizedLecturer;
+      return { lecturer: authorizedLecturer };
     } catch (error) {
       throw error;
     }

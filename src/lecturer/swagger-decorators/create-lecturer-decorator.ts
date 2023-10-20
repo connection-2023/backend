@@ -1,8 +1,10 @@
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOperation,
+  ApiParam,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
@@ -19,7 +21,7 @@ export function ApiCreateLecturer() {
       SwaggerApiResponse.success(
         '강사 생성 완료, 강사 전환 요청 시 전환 가능',
         {
-          message: '강사 생성 완료',
+          statusCode: 201,
         },
       ),
     ),

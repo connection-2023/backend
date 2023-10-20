@@ -17,9 +17,12 @@ export function ApiRefreshUserJwtToken() {
     }),
     ApiOkResponse(
       SwaggerApiResponse.success(
-        'accessToken 반환 및 쿠키엔 refreshToken 저장',
+        'userAccessToken 반환 및 쿠키엔 refreshToken 저장',
         {
-          accessToken: '토큰',
+          statusCode: 200,
+          data: {
+            userAccessToken: '토오오큰',
+          },
         },
       ),
     ),

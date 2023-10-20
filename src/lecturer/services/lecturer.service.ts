@@ -15,14 +15,19 @@ import {
 import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  LecturerCoupon,
   LecturerDanceGenreInputData,
-  LecturerInputData,
+  LecturerProfile,
+  LecturerProfileImageInputData,
+  LecturerProfileImageUpdateData,
   LecturerRegionInputData,
   LecturerWebsiteInputData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -32,6 +37,7 @@ export class LecturerService implements OnModuleInit {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   onModuleInit() {
@@ -44,8 +50,14 @@ export class LecturerService implements OnModuleInit {
   ): Promise<void> {
     await this.checkLecturerExist(userId);
 
-    const { regions, genres, websiteUrls, etcGenres, ...lecturerData } =
-      createLecturerDto;
+    const {
+      regions,
+      genres,
+      websiteUrls,
+      etcGenres,
+      profileImageUrls,
+      ...lecturerData
+    } = createLecturerDto;
 
     const regionIds: Id[] = await this.getValidRegionIds(regions);
 
@@ -82,6 +94,12 @@ export class LecturerService implements OnModuleInit {
         await this.lecturerRepository.trxCreateLecturerDanceGenres(
           transaction,
           lecturerDanceGenreInputData,
+        );
+
+        await this.createLecturerProfileImageUrls(
+          transaction,
+          lecturer.id,
+          profileImageUrls,
         );
       },
     );
@@ -217,5 +235,86 @@ export class LecturerService implements OnModuleInit {
     );
 
     return danceCategoryIds;
+  }
+
+  async checkAvailableNickname(nickname: string): Promise<boolean> {
+    const duplicatedNickname =
+      await this.lecturerRepository.getLecturerNickname(nickname);
+
+    if (duplicatedNickname) {
+      return false;
+    }
+
+    return true;
+  }
+
+  async getLecturerCoupons(lecturerId: number): Promise<LecturerCoupon[]> {
+    return await this.lecturerRepository.getLecturerCouponsByLecturerId(
+      lecturerId,
+    );
+  }
+
+  async updateLecturerNickname(
+    lectureId: number,
+    nickname: string,
+  ): Promise<void> {
+    const duplicatedNickname =
+      await this.lecturerRepository.getLecturerNickname(nickname);
+    if (duplicatedNickname) {
+      throw new BadRequestException(
+        `닉네임 중복입니다.`,
+        'duplicatedLecturerNickname',
+      );
+    }
+
+    await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
+  }
+
+  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
+    return await this.lecturerRepository.getLecturerProfile(lecturerId);
+  }
+
+  async updateMyLecturerProfile(
+    lecturerId: number,
+    updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
+  ) {
+    const { newProfileImageUrls } = updateMyLecturerProfileDto;
+
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.createLecturerProfileImageUrls(
+          transaction,
+          lecturerId,
+          newProfileImageUrls,
+        );
+      },
+    );
+  }
+
+  private async createLecturerProfileImageUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    profileImageUrls: string[],
+  ) {
+    const lecturerProfileImageUrlInputData: LecturerProfileImageUpdateData[] =
+      await this.createLecturerProfileUpdateData(lecturerId, profileImageUrls);
+
+    await this.lecturerRepository.trxCreateLecturerProfileImages(
+      transaction,
+      lecturerProfileImageUrlInputData,
+    );
+  }
+
+  private createLecturerProfileUpdateData(
+    lecturerId: number,
+    newProfileImageUrls: string[],
+  ): LecturerProfileImageUpdateData[] {
+    const updateData: LecturerProfileImageUpdateData[] =
+      newProfileImageUrls.map((profileImageUrl) => ({
+        lecturerId,
+        url: profileImageUrl,
+      }));
+
+    return updateData;
   }
 }

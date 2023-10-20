@@ -5,6 +5,10 @@ import {
   LecturerWebsiteInputData,
   LecturerInputData,
   LecturerDanceGenreInputData,
+  LecturerProfileImageInputData,
+  LecturerCoupon,
+  LecturerProfile,
+  LecturerProfileImageUpdateData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -61,5 +65,96 @@ export class LecturerRepository {
       select: { id: true },
     });
     return regionsId;
+  }
+
+  async getLecturerNickname(nickname: string): Promise<{ nickname: string }> {
+    return await this.prismaService.lecturer.findUnique({
+      where: { nickname },
+      select: { nickname: true },
+    });
+  }
+
+  async trxCreateLecturerProfileImages(
+    transaction: PrismaTransaction,
+    lecturerProfileImageInputData: LecturerProfileImageInputData[],
+  ): Promise<void> {
+    await transaction.lecturerProfileImageUrl.createMany({
+      data: lecturerProfileImageInputData,
+    });
+  }
+
+  async getLecturerCouponsByLecturerId(
+    lecturerId: number,
+  ): Promise<LecturerCoupon[]> {
+    return await this.prismaService.lectureCoupon.findMany({
+      where: { lecturerId, isDisabled: false },
+      select: {
+        id: true,
+        title: true,
+        percentage: true,
+        discountPrice: true,
+        isStackable: true,
+        maxDiscountPrice: true,
+        startAt: true,
+        endAt: true,
+      },
+    });
+  }
+
+  async updateLecturerNickname(lectureId, nickname) {
+    await this.prismaService.lecturer.update({
+      where: { id: lectureId },
+      data: { nickname },
+    });
+  }
+
+  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
+    return await this.prismaService.lecturer.findUnique({
+      where: { id: lectureId },
+      select: {
+        nickname: true,
+        email: true,
+        phoneNumber: true,
+        youtubeUrl: true,
+        instagramUrl: true,
+        homepageUrl: true,
+        affiliation: true,
+        introduction: true,
+        experience: true,
+        lecturerRegion: {
+          select: {
+            region: {
+              select: { administrativeDistrict: true, district: true },
+            },
+          },
+        },
+        lecturerDanceGenre: {
+          select: {
+            name: true,
+            danceCategory: { select: { genre: true } },
+          },
+        },
+        lecturerWebsiteUrl: true,
+        lecturerProfileImageUrl: {
+          orderBy: { id: 'asc' },
+        },
+      },
+    });
+  }
+  async deleteLecturerProfileImages(
+    lecturerId: number,
+    profileImageIds: number[],
+  ): Promise<void> {
+    await this.prismaService.lecturerProfileImageUrl.deleteMany({
+      where: { id: { in: profileImageIds }, lecturerId },
+    });
+  }
+
+  async createLecturerProfileImageUrls(
+    lecturerProfileUpdateData: LecturerProfileImageUpdateData[],
+  ) {
+    await this.prismaService.lecturerProfileImageUrl.createMany({
+      data: lecturerProfileUpdateData,
+    });
   }
 }

@@ -1,94 +1,314 @@
-import { QueryFilter } from '@src/common/filters/query.filter';
-import { Injectable } from '@nestjs/common';
+import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, PrismaPromise } from '@prisma/client';
+import { Lecture, PrismaPromise, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
+import { QueryFilter } from '@src/common/filters/query.filter';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
+  LectureHolidayInputData,
+  LectureImageInputData,
+  LectureScheduleInputData,
+  LectureToDanceGenreInputData,
+  LectureToRegionInputData,
+} from '../interface/lecture.interface';
+import { Cache } from 'cache-manager';
+import { DanceCategory } from '@src/common/enum/enum';
 
 @Injectable()
 export class LectureService {
   constructor(
-    private readonly prismaService: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly lectureRepository: LectureRepository,
     private readonly queryFilter: QueryFilter,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async createLecture(
-    lecture: CreateLectureDto,
-    danceLecturerId: number,
-  ): Promise<CreateLectureDto> {
-    const reservationDeadline = new Date(lecture.reservationDeadline);
-    return await this.prismaService.lecture.create({
-      data: {
-        danceLecturerId,
-        ...lecture,
-        reservationDeadline,
+    createLectureDto: CreateLectureDto,
+    lecturerId: number,
+    imageUrls: string[],
+  ) {
+    const {
+      regions,
+      schedules,
+      genres,
+      etcGenres,
+      notification,
+      holidays,
+      ...lecture
+    } = createLectureDto;
+
+    const regionIds: Id[] = await this.getValidRegionIds(regions);
+
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const newLecture = await this.lectureRepository.trxCreateLecture(
+          transaction,
+          lecturerId,
+          lecture,
+        );
+
+        const lectureToRegionInputData: LectureToRegionInputData[] =
+          this.createLectureToRegionInputData(newLecture.id, regionIds);
+        await this.lectureRepository.trxCreateLectureToRegions(
+          transaction,
+          lectureToRegionInputData,
+        );
+
+        const lectureImageInputData: LectureImageInputData[] =
+          this.createLectureImageInputData(newLecture.id, imageUrls);
+        const newLectureImage =
+          await this.lectureRepository.trxCreateLectureImg(
+            transaction,
+            lectureImageInputData,
+          );
+
+        const lectureScheduleInputData: LectureScheduleInputData[] =
+          this.createLectureScheduleInputData(newLecture.id, schedules);
+        const newLectureSchedule =
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            lectureScheduleInputData,
+          );
+
+        const lectureToDanceGenreInputData: LectureToDanceGenreInputData[] =
+          await this.createLecturerDanceGenreInputData(
+            newLecture.id,
+            genres,
+            etcGenres,
+          );
+
+        const newLectureGenre =
+          await this.lectureRepository.trxCreateLectureToDanceGenres(
+            transaction,
+            lectureToDanceGenreInputData,
+          );
+
+        const newLectureNotification =
+          await this.lectureRepository.trxCreateLectureNotification(
+            transaction,
+            newLecture.id,
+            notification,
+          );
+
+        const lectureHolidayInputData: LectureHolidayInputData[] =
+          this.createLectureHolidayInputData(newLecture.id, holidays);
+        const newLectureHoliday =
+          await this.lectureRepository.trxCreateLectureHoliday(
+            transaction,
+            lectureHolidayInputData,
+          );
+
+        return newLecture;
       },
+    );
+  }
+  private async getValidRegionIds(regions: string[]): Promise<Id[]> {
+    const extractRegions: Region[] = this.extractRegions(regions);
+    const regionIds: Id[] = await this.lectureRepository.getRegionsId(
+      extractRegions,
+    );
+    if (regionIds.length !== extractRegions.length) {
+      throw new BadRequestException(
+        `유효하지 않은 주소입니다.`,
+        'InvalidAddress',
+      );
+    }
+
+    return regionIds;
+  }
+
+  private extractRegions(regions) {
+    const extractedRegions: Region[] = regions.map((region) => {
+      const addressParts = region.split(' ');
+      let administrativeDistrict = null;
+      let district = null;
+
+      if (addressParts[0] === '세종특별자치시') {
+        administrativeDistrict = addressParts.shift();
+      }
+      if (addressParts[0].endsWith('시') || addressParts[0].endsWith('도')) {
+        administrativeDistrict = addressParts.shift();
+      } else {
+        throw new BadRequestException(
+          `잘못된 주소형식입니다.`,
+          'InvalidAddressFormat',
+        );
+      }
+
+      if (
+        addressParts[0].endsWith('시') ||
+        addressParts[0].endsWith('군') ||
+        addressParts[0].endsWith('구')
+      ) {
+        district = addressParts.shift();
+      } else {
+        throw new BadRequestException(
+          `잘못된 주소형식입니다`,
+          'InvalidAddressFormat',
+        );
+      }
+
+      return { administrativeDistrict, district };
     });
+
+    return extractedRegions;
   }
 
-  async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
-    const { ...filter } = query;
-    const where = this.queryFilter.buildWherePropForFind(filter);
-
-    const readManyLectureQuery: PrismaPromise<any> =
-      this.prismaService.lecture.findMany({
-        where: {
-          ...where,
-          deletedAt: null,
-        },
-        select: {
-          id: true,
-          title: true,
-          price: true,
-          stars: true,
-          reviewCount: true,
-          duration: true,
-          lecturer: {
-            select: {
-              id: true,
-              nickname: true,
-            },
-          },
-          region: true,
-          danceCategory: true,
-          lectureMethod: true,
-        },
-      });
-    return readManyLectureQuery;
-  }
-
-  async readOneLecture(lectureId: number): Promise<any> {
-    return await this.prismaService.lecture.findFirst({
-      where: { id: lectureId },
-      include: {
-        region: true,
-        lectureMethod: true,
-        lecturer: {
-          select: { id: true, nickname: true },
-        },
-        lectureReview: {
-          select: {
-            users: { select: { id: true, nickname: true } },
-            stars: true,
-            description: true,
-          },
-        },
-      },
-    });
-  }
-
-  async updateLecture(
-    lecture: UpdateLectureDto,
+  private createLectureToRegionInputData(
     lectureId: number,
-  ): Promise<any> {
-    return await this.prismaService.lecture.update({
-      where: { id: lectureId },
-      data: { ...lecture },
-    });
+    regionIds: Id[],
+  ): LectureToRegionInputData[] {
+    const lectureInputData: LectureToRegionInputData[] = regionIds.map(
+      (regionId) => ({
+        lectureId,
+        regionId: regionId.id,
+      }),
+    );
+
+    return lectureInputData;
   }
 
-  async deleteLecture(lectureId: number): Promise<any> {
-    return this.prismaService.lecture.delete({ where: { id: lectureId } });
+  private createLectureImageInputData(lectureId: number, imageUrls: string[]) {
+    const imageInputData: LectureImageInputData[] = imageUrls.map((url) => ({
+      lectureId: lectureId,
+      imageUrl: url,
+    }));
+    return imageInputData;
   }
+
+  private createLectureScheduleInputData(
+    lectureId: number,
+    schedules: string[],
+  ) {
+    const scheduleInputData: LectureScheduleInputData[] = schedules.map(
+      (date) => ({
+        lectureId: lectureId,
+        startDateTime: new Date(date),
+        numberOfParticipants: 0,
+      }),
+    );
+    return scheduleInputData;
+  }
+
+  private createLectureHolidayInputData(lectureId: number, holidays: string[]) {
+    const holidayInputData: LectureHolidayInputData[] = holidays.map(
+      (date) => ({
+        lectureId: lectureId,
+        holiday: new Date(date),
+      }),
+    );
+    return holidayInputData;
+  }
+
+  private async createLecturerDanceGenreInputData(
+    lectureId: number,
+    genres: DanceCategory[],
+    etcGenres: string[],
+  ): Promise<LectureToDanceGenreInputData[]> {
+    const danceCategoryIds: number[] = await this.getDanceCategoryIds(genres);
+    const lectureInputData: LectureToDanceGenreInputData[] =
+      danceCategoryIds.map((danceCategoryId: number) => ({
+        lectureId,
+        danceCategoryId,
+      }));
+
+    if (etcGenres) {
+      const etcGenreId: number = await this.cacheManager.get('기타');
+      const etcGenreData = etcGenres.map((etcGenre: string) => ({
+        lectureId,
+        danceCategoryId: etcGenreId,
+        name: etcGenre,
+      }));
+
+      lectureInputData.push(...etcGenreData);
+    }
+
+    return lectureInputData;
+  }
+
+  private async getDanceCategoryIds(
+    genres: DanceCategory[],
+  ): Promise<number[]> {
+    const danceCategoryIds: number[] = await Promise.all(
+      genres.map(async (genre: DanceCategory) => {
+        const danceCategoryId: number = await this.cacheManager.get(
+          DanceCategory[genre],
+        );
+
+        return danceCategoryId;
+      }),
+    );
+
+    return danceCategoryIds;
+  }
+
+  // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
+  //   const { ...filter } = query;
+  //   const where = this.queryFilter.buildWherePropForFind(filter);
+
+  //   const readManyLectureQuery: PrismaPromise<any> =
+  //     this.prismaService.lecture.findMany({
+  //       where: {
+  //         ...where,
+  //         deletedAt: null,
+  //       },
+  //       select: {
+  //         id: true,
+  //         title: true,
+  //         price: true,
+  //         stars: true,
+  //         reviewCount: true,
+  //         duration: true,
+  //         lecturer: {
+  //           select: {
+  //             id: true,
+  //             nickname: true,
+  //           },
+  //         },
+  //         region: true,
+  //         danceCategory: true,
+  //         lectureMethod: true,
+  //       },
+  //     });
+  //   return readManyLectureQuery;
+  // }
+
+  // async readOneLecture(lectureId: number): Promise<any> {
+  //   return await this.prismaService.lecture.findFirst({
+  //     where: { id: lectureId },
+  //     include: {
+  //       region: true,
+  //       lectureMethod: true,
+  //       lecturer: {
+  //         select: { id: true, nickname: true },
+  //       },
+  //       lectureReview: {
+  //         select: {
+  //           users: { select: { id: true, nickname: true } },
+  //           stars: true,
+  //           description: true,
+  //         },
+  //       },
+  //     },
+  //   });
+  // }
+
+  // async updateLecture(
+  //   lecture: UpdateLectureDto,
+  //   lectureId: number,
+  // ): Promise<any> {
+  //   return await this.prismaService.lecture.update({
+  //     where: { id: lectureId },
+  //     data: { ...lecture },
+  //   });
+  // }
+
+  // async deleteLecture(lectureId: number): Promise<any> {
+  //   return this.prismaService.lecture.delete({ where: { id: lectureId } });
+  // }
 }
