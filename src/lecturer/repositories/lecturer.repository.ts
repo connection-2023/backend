@@ -173,7 +173,7 @@ export class LecturerRepository {
     }
   }
 
-  async trxDeleteDanceGenres(
+  async trxDeleteLecturerDanceGenres(
     transaction: PrismaTransaction,
     lecturerId: number,
   ): Promise<void> {
@@ -185,6 +185,22 @@ export class LecturerRepository {
       throw new InternalServerErrorException(
         `강사 장르 삭제 실패: ${error}`,
         'LecturerDanceGenresDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerRegions(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ) {
+    try {
+      await transaction.lecturerRegion.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 지역 삭제 실패: ${error}`,
+        'LecturerRegionsDeleteFailed',
       );
     }
   }

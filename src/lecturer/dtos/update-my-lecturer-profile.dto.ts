@@ -28,4 +28,12 @@ export class UpdateMyLecturerProfileDto {
   @IsArray()
   @IsOptional()
   etcGenres: string[];
+
+  @ApiProperty({
+    example: ['서울특별시 도봉구', '서울특별시 전 지역', '온라인'],
+    required: false,
+  })
+  @IsArray()
+  @IsNotEmpty()
+  regions: string[];
 }

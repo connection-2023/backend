@@ -69,13 +69,7 @@ export class LecturerService implements OnModuleInit {
             userId,
             ...lecturerData,
           });
-
-        const lecturerRegionInputData: LecturerRegionInputData[] =
-          this.createLecturerRegionInputData(lecturer.id, regionIds);
-        await this.lecturerRepository.trxCreateLecturerRegions(
-          transaction,
-          lecturerRegionInputData,
-        );
+        await this.createLecturerRegions(transaction, lecturer.id, regions);
 
         if (websiteUrls) {
           const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
@@ -134,9 +128,13 @@ export class LecturerService implements OnModuleInit {
       let administrativeDistrict = null;
       let district = null;
 
-      if (addressParts[0] === '세종특별자치시') {
-        administrativeDistrict = addressParts.shift();
+      if (
+        addressParts[0] === '세종특별자치시' ||
+        addressParts[0] === '온라인'
+      ) {
+        return { administrativeDistrict: addressParts[0] };
       }
+
       if (addressParts[0].endsWith('시') || addressParts[0].endsWith('도')) {
         administrativeDistrict = addressParts.shift();
       } else {
@@ -152,9 +150,11 @@ export class LecturerService implements OnModuleInit {
         addressParts[0].endsWith('구')
       ) {
         district = addressParts.shift();
+      } else if (addressParts[0] === '전' && addressParts[1] === '지역') {
+        district = addressParts.join(' ');
       } else {
         throw new BadRequestException(
-          `잘못된 주소형식입니다`,
+          '잘못된 주소형식입니다',
           'InvalidAddressFormat',
         );
       }
@@ -275,7 +275,7 @@ export class LecturerService implements OnModuleInit {
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const { newProfileImageUrls, genres, etcGenres } =
+    const { newProfileImageUrls, genres, etcGenres, regions } =
       updateMyLecturerProfileDto;
 
     await this.prismaService.$transaction(
@@ -291,9 +291,45 @@ export class LecturerService implements OnModuleInit {
           genres,
           etcGenres,
         );
+        await this.updateLecturerRegions(transaction, lecturerId, regions);
       },
     );
   }
+
+  private async updateLecturerRegions(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    regions: string[],
+  ) {
+    try {
+      await this.lecturerRepository.trxDeleteLecturerRegions(
+        transaction,
+        lecturerId,
+      );
+
+      await this.createLecturerRegions(transaction, lecturerId, regions);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async createLecturerRegions(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    regions: string[],
+  ) {
+    const regionIds = await this.getValidRegionIds(regions);
+    const lecturerRegionInputData = await this.createLecturerRegionInputData(
+      lecturerId,
+      regionIds,
+    );
+
+    await this.lecturerRepository.trxCreateLecturerRegions(
+      transaction,
+      lecturerRegionInputData,
+    );
+  }
+
   private async updateLecturerDanceGenres(
     transaction: PrismaTransaction,
     lecturerId: number,
@@ -301,7 +337,7 @@ export class LecturerService implements OnModuleInit {
     etcGenres: string[],
   ) {
     try {
-      await this.lecturerRepository.trxDeleteDanceGenres(
+      await this.lecturerRepository.trxDeleteLecturerDanceGenres(
         transaction,
         lecturerId,
       );
