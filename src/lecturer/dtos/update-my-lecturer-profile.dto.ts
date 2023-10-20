@@ -36,4 +36,13 @@ export class UpdateMyLecturerProfileDto {
   @IsArray()
   @IsNotEmpty()
   regions: string[];
+
+  @ApiProperty({
+    example: ['그 외 사이트 url', '그 외 사이트 url'],
+    description: '그외 사이트',
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  websiteUrls: string[];
 }

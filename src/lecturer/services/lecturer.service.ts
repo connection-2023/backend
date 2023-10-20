@@ -60,8 +60,6 @@ export class LecturerService implements OnModuleInit {
       ...lecturerData
     } = createLecturerDto;
 
-    const regionIds: Id[] = await this.getValidRegionIds(regions);
-
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const lecturer: Lecturer =
@@ -72,11 +70,10 @@ export class LecturerService implements OnModuleInit {
         await this.createLecturerRegions(transaction, lecturer.id, regions);
 
         if (websiteUrls) {
-          const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
-            this.createLecturerWebsiteInputData(lecturer.id, websiteUrls);
-          await this.lecturerRepository.trxCreateLecturerWebsiteUrls(
+          await this.createLecturerWebsiteUrls(
             transaction,
-            lecturerWebsiteInputData,
+            lecturer.id,
+            websiteUrls,
           );
         }
 
@@ -275,7 +272,7 @@ export class LecturerService implements OnModuleInit {
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
   ) {
-    const { newProfileImageUrls, genres, etcGenres, regions } =
+    const { newProfileImageUrls, genres, etcGenres, regions, websiteUrls } =
       updateMyLecturerProfileDto;
 
     await this.prismaService.$transaction(
@@ -292,6 +289,13 @@ export class LecturerService implements OnModuleInit {
           etcGenres,
         );
         await this.updateLecturerRegions(transaction, lecturerId, regions);
+        if (websiteUrls) {
+          await this.updateLecturerWebsiteUrls(
+            transaction,
+            lecturerId,
+            websiteUrls,
+          );
+        }
       },
     );
   }
@@ -300,7 +304,7 @@ export class LecturerService implements OnModuleInit {
     transaction: PrismaTransaction,
     lecturerId: number,
     regions: string[],
-  ) {
+  ): Promise<void> {
     try {
       await this.lecturerRepository.trxDeleteLecturerRegions(
         transaction,
@@ -317,8 +321,8 @@ export class LecturerService implements OnModuleInit {
     transaction: PrismaTransaction,
     lecturerId: number,
     regions: string[],
-  ) {
-    const regionIds = await this.getValidRegionIds(regions);
+  ): Promise<void> {
+    const regionIds: Id[] = await this.getValidRegionIds(regions);
     const lecturerRegionInputData = await this.createLecturerRegionInputData(
       lecturerId,
       regionIds,
@@ -335,7 +339,7 @@ export class LecturerService implements OnModuleInit {
     lecturerId: number,
     genres: DanceCategory[],
     etcGenres: string[],
-  ) {
+  ): Promise<void> {
     try {
       await this.lecturerRepository.trxDeleteLecturerDanceGenres(
         transaction,
@@ -412,7 +416,7 @@ export class LecturerService implements OnModuleInit {
     transaction: PrismaTransaction,
     lecturerId: number,
     profileImageUrls: string[],
-  ) {
+  ): Promise<void> {
     try {
       await this.lecturerRepository.trxDeleteLecturerProfileImages(
         transaction,
@@ -422,6 +426,43 @@ export class LecturerService implements OnModuleInit {
         transaction,
         lecturerId,
         profileImageUrls,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async updateLecturerWebsiteUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    websiteUrls: string[],
+  ): Promise<void> {
+    try {
+      await this.lecturerRepository.trxDeleteLecturerWebsiteUrls(
+        transaction,
+        lecturerId,
+      );
+      await this.createLecturerWebsiteUrls(
+        transaction,
+        lecturerId,
+        websiteUrls,
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async createLecturerWebsiteUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    websiteUrls: string[],
+  ): Promise<void> {
+    try {
+      const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
+        this.createLecturerWebsiteInputData(lecturerId, websiteUrls);
+      await this.lecturerRepository.trxCreateLecturerWebsiteUrls(
+        transaction,
+        lecturerWebsiteInputData,
       );
     } catch (error) {
       throw error;

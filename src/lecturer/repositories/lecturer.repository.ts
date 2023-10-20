@@ -45,9 +45,16 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerWebsiteInputData: LecturerWebsiteInputData[],
   ): Promise<void> {
-    await transaction.lecturerWebsiteUrl.createMany({
-      data: lecturerWebsiteInputData,
-    });
+    try {
+      await transaction.lecturerWebsiteUrl.createMany({
+        data: lecturerWebsiteInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 웹사이트 생성 실패: ${error}`,
+        'LecturerWebsiteUrlsCreateFailed',
+      );
+    }
   }
 
   async trxCreateLecturerDanceGenres(
@@ -201,6 +208,22 @@ export class LecturerRepository {
       throw new InternalServerErrorException(
         `강사 지역 삭제 실패: ${error}`,
         'LecturerRegionsDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerWebsiteUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ) {
+    try {
+      await transaction.lecturerWebsiteUrl.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 웹사이트 삭제 실패: ${error}`,
+        'LecturerWebsiteUrlsDeleteFailed',
       );
     }
   }
