@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerRegionInputData,
   LecturerWebsiteInputData,
-  LecturerInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerCoupon,
   LecturerProfile,
-  LecturerProfileImageUpdateData,
+  LecturerInputData,
+  LecturerUpdateData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -45,17 +45,24 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerWebsiteInputData: LecturerWebsiteInputData[],
   ): Promise<void> {
-    await transaction.lecturerWebsiteUrl.createMany({
-      data: lecturerWebsiteInputData,
-    });
+    try {
+      await transaction.lecturerWebsiteUrl.createMany({
+        data: lecturerWebsiteInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 웹사이트 생성 실패: ${error}`,
+        'LecturerWebsiteUrlsCreateFailed',
+      );
+    }
   }
 
   async trxCreateLecturerDanceGenres(
     transaction: PrismaTransaction,
-    lecturerWebsiteInputData: LecturerDanceGenreInputData[],
+    lecturerDanceGenresInputData: LecturerDanceGenreInputData[],
   ): Promise<void> {
     await transaction.lecturerDanceGenre.createMany({
-      data: lecturerWebsiteInputData,
+      data: lecturerDanceGenresInputData,
     });
   }
 
@@ -78,9 +85,16 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerProfileImageInputData: LecturerProfileImageInputData[],
   ): Promise<void> {
-    await transaction.lecturerProfileImageUrl.createMany({
-      data: lecturerProfileImageInputData,
-    });
+    try {
+      await transaction.lecturerProfileImageUrl.createMany({
+        data: lecturerProfileImageInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 프로필 이미지 생성 실패: ${error}`,
+        'LecturerProfileImageUpdateFailed',
+      );
+    }
   }
 
   async getLecturerCouponsByLecturerId(
@@ -141,20 +155,86 @@ export class LecturerRepository {
       },
     });
   }
-  async deleteLecturerProfileImages(
+
+  async trxDeleteLecturerProfileImages(
+    transaction: PrismaTransaction,
     lecturerId: number,
-    profileImageIds: number[],
   ): Promise<void> {
-    await this.prismaService.lecturerProfileImageUrl.deleteMany({
-      where: { id: { in: profileImageIds }, lecturerId },
-    });
+    try {
+      await transaction.lecturerProfileImageUrl.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 프로필 이미지 삭제 실패: ${error}`,
+        'LecturerProfileImageDeleteFailed',
+      );
+    }
   }
 
-  async createLecturerProfileImageUrls(
-    lecturerProfileUpdateData: LecturerProfileImageUpdateData[],
+  async trxDeleteLecturerDanceGenres(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturerDanceGenre.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 장르 삭제 실패: ${error}`,
+        'LecturerDanceGenresDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerRegions(
+    transaction: PrismaTransaction,
+    lecturerId: number,
   ) {
-    await this.prismaService.lecturerProfileImageUrl.createMany({
-      data: lecturerProfileUpdateData,
-    });
+    try {
+      await transaction.lecturerRegion.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 지역 삭제 실패: ${error}`,
+        'LecturerRegionsDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerWebsiteUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ) {
+    try {
+      await transaction.lecturerWebsiteUrl.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 웹사이트 삭제 실패: ${error}`,
+        'LecturerWebsiteUrlsDeleteFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturer(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    lecturerUpdateData: LecturerUpdateData,
+  ) {
+    try {
+      await transaction.lecturer.update({
+        where: { id: lecturerId },
+        data: lecturerUpdateData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사정보 업데이트 실패: ${error}`,
+        'LecturerUpdateFailed',
+      );
+    }
   }
 }

@@ -81,19 +81,20 @@ export class CreateLecturerDto {
     description: '강사 소개',
     required: true,
   })
-  @IsNotEmpty()
+  @IsOptional()
   introduction: string;
 
   @ApiProperty({
     example: '강사 경력',
     description: '강사 경력',
-    required: true,
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   experience: string;
 
   @ApiProperty({
-    example: ['서울특별시 도봉구', '서울특별시 중구'],
+    description: '전 지역일때: 서울특별시 전 지역, 온라인일때: 온라인',
+    example: ['서울특별시 도봉구', '서울특별시 전 지역', '온라인'],
     required: false,
   })
   @IsArray()
@@ -101,7 +102,8 @@ export class CreateLecturerDto {
   regions: string[];
 
   @ApiProperty({
-    example: ['K-pop', '기타 장르들은 etcGenres로'],
+    description: '기타일때는 extGenres에',
+    example: ['K-pop', '보깅'],
     required: true,
   })
   @IsArray()
@@ -111,7 +113,6 @@ export class CreateLecturerDto {
 
   @ApiProperty({
     example: ['그 외 사이트 url', '그 외 사이트 url'],
-
     description: '그외 사이트',
     required: false,
   })

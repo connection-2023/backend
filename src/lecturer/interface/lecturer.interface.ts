@@ -1,3 +1,5 @@
+import { LectureInputData } from '@src/lecture/interface/lecture.interface';
+
 interface LecturerInputData {
   userId: number;
   nickname: string;
@@ -8,7 +10,15 @@ interface LecturerInputData {
   homepageUrl?: string;
   affiliation?: string;
   introduction: string;
-  experience: string;
+  experience?: string;
+}
+interface LecturerUpdateData {
+  youtubeUrl?: string;
+  instagramUrl?: string;
+  homepageUrl?: string;
+  affiliation?: string;
+  introduction: string;
+  experience?: string;
 }
 
 interface LecturerRegionInputData {
@@ -97,4 +107,5 @@ export {
   LecturerCoupon,
   LecturerProfile,
   LecturerProfileImageUpdateData,
+  LecturerUpdateData,
 };
