@@ -8,10 +8,12 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
+import { RegularLectureSchedules } from '../interface/lecture.interface';
 
 export class CreateLectureDto {
   @ApiProperty({
@@ -39,15 +41,6 @@ export class CreateLectureDto {
   @IsEnum(DanceMethod, { each: true })
   @IsNotEmpty()
   lectureMethod: DanceMethod;
-
-  @ApiProperty({
-    example: 'A',
-    description: '정기 클래스일 때 팀 이름',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  team: string;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',
@@ -191,12 +184,32 @@ export class CreateLectureDto {
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
     description: '클래스 일정',
-    required: true,
+    required: false,
   })
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Array)
   schedules: string[];
+
+  @ApiProperty({
+    example: {
+      A: [
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      ],
+      B: [
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      ],
+    },
+    description: '정기 클래스일 때 일정',
+    required: false,
+  })
+  @IsObject()
+  @IsOptional()
+  regularSchedules: RegularLectureSchedules;
 
   @ApiProperty({
     example: [
@@ -204,7 +217,7 @@ export class CreateLectureDto {
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
-    description: '클래스 일정',
+    description: '클래스 휴무일',
     required: true,
   })
   @IsArray()

@@ -38,8 +38,6 @@ export class LectureController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() lecture: CreateLectureDto,
   ) {
-    console.log(authorizedData);
-
     return await this.lectureService.createLecture(
       lecture,
       authorizedData.lecturer.id,

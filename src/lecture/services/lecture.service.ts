@@ -14,6 +14,8 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
+  RegularLectureScheduleInputData,
+  RegularLectureSchedules,
 } from '../interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
@@ -31,6 +33,7 @@ export class LectureService {
     const {
       regions,
       schedules,
+      regularSchedules,
       genres,
       etcGenres,
       notification,
@@ -70,12 +73,25 @@ export class LectureService {
           lectureImageInputData,
         );
 
-        const lectureScheduleInputData: LectureScheduleInputData[] =
-          this.createLectureScheduleInputData(newLecture.id, schedules);
-        await this.lectureRepository.trxCreateLectureSchedule(
-          transaction,
-          lectureScheduleInputData,
-        );
+        if (lectureMethod === '원데이') {
+          const lectureScheduleInputData: LectureScheduleInputData[] =
+            this.createLectureScheduleInputData(newLecture.id, schedules);
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            lectureScheduleInputData,
+          );
+        } else if (lectureMethod === '정기') {
+          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
+            this.createRegularLectureScheduleInputData(
+              newLecture.id,
+              regularSchedules,
+            );
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            regularLectureScheduleInputData,
+          );
+        }
+
         const lectureHolidayInputData: LectureHolidayInputData[] =
           this.createLectureHolidayInputData(newLecture.id, holidays);
         await this.lectureRepository.trxCreateLectureHoliday(
@@ -107,6 +123,7 @@ export class LectureService {
       },
     );
   }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
@@ -271,5 +288,25 @@ export class LectureService {
     }
 
     return lectureTypeId.id;
+  }
+
+  private createRegularLectureScheduleInputData(
+    lectureId: number,
+    regularSchedules: RegularLectureSchedules,
+  ) {
+    const regularScheduleInputData = [];
+    for (const team in regularSchedules) {
+      regularSchedules[team].map((date) => {
+        const regularSchedule = {
+          lectureId,
+          team,
+          startDateTime: new Date(date),
+          numberOfParticipants: 0,
+        };
+        regularScheduleInputData.push(regularSchedule);
+      });
+    }
+
+    return regularScheduleInputData;
   }
 }

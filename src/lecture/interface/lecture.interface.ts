@@ -24,6 +24,13 @@ interface LectureScheduleInputData {
   numberOfParticipants: number;
 }
 
+interface RegularLectureScheduleInputData {
+  lectureId: number;
+  team: string;
+  startDateTime: Date;
+  numberOfParticipants: number;
+}
+
 interface LectureImageInputData {
   lectureId: number;
   imageUrl: string;
@@ -44,6 +51,10 @@ interface LectureHolidayInputData {
   holiday: Date;
 }
 
+interface RegularLectureSchedules {
+  regularSchedules: { [key: string]: string[] };
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -52,4 +63,6 @@ export {
   LectureToDanceGenreInputData,
   LectureNotificationResponse,
   LectureHolidayInputData,
+  RegularLectureSchedules,
+  RegularLectureScheduleInputData,
 };
