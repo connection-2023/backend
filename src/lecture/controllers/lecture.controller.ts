@@ -17,10 +17,11 @@ import { ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { UploadsService } from '@src/uploads/services/uploads.service';
-import { Lecture, Users } from '@prisma/client';
+import { Lecture, Lecturer, Users } from '@prisma/client';
 import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
-import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { ValidateResult } from '@src/common/interface/common-interface';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -32,12 +33,17 @@ export class LectureController {
 
   @ApiCreateLecture()
   @Post()
-  @UseGuards(UserAccessTokenGuard)
+  @UseGuards(LecturerAccessTokenGuard)
   async createLecture(
-    @GetAuthorizedUser() user: Users,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() lecture: CreateLectureDto,
   ) {
-    return await this.lectureService.createLecture(lecture, user.id);
+    console.log(authorizedData);
+
+    return await this.lectureService.createLecture(
+      lecture,
+      authorizedData.lecturer.id,
+    );
   }
 
   // @Patch(':lectureId')

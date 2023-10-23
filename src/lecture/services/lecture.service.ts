@@ -1,7 +1,7 @@
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, PrismaPromise, Region } from '@prisma/client';
+import { Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -37,6 +37,7 @@ export class LectureService {
       holidays,
       images,
       lectureMethod,
+      lectureType,
       ...lecture
     } = createLectureDto;
 
@@ -45,11 +46,13 @@ export class LectureService {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const lectureMethodId = await this.getLectureMethodId(lectureMethod);
+        const lectureTypeId = await this.getLectureTypeId(lectureType);
 
         const newLecture = await this.lectureRepository.trxCreateLecture(
           transaction,
           lecturerId,
           lectureMethodId,
+          lectureTypeId,
           lecture,
         );
 
@@ -62,26 +65,23 @@ export class LectureService {
 
         const lectureImageInputData: LectureImageInputData[] =
           this.createLectureImageInputData(newLecture.id, images);
-        const newLectureImage =
-          await this.lectureRepository.trxCreateLectureImg(
-            transaction,
-            lectureImageInputData,
-          );
+        await this.lectureRepository.trxCreateLectureImg(
+          transaction,
+          lectureImageInputData,
+        );
 
         const lectureScheduleInputData: LectureScheduleInputData[] =
           this.createLectureScheduleInputData(newLecture.id, schedules);
-        const newLectureSchedule =
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            lectureScheduleInputData,
-          );
+        await this.lectureRepository.trxCreateLectureSchedule(
+          transaction,
+          lectureScheduleInputData,
+        );
         const lectureHolidayInputData: LectureHolidayInputData[] =
           this.createLectureHolidayInputData(newLecture.id, holidays);
-        const newLectureHoliday =
-          await this.lectureRepository.trxCreateLectureHoliday(
-            transaction,
-            lectureHolidayInputData,
-          );
+        await this.lectureRepository.trxCreateLectureHoliday(
+          transaction,
+          lectureHolidayInputData,
+        );
 
         const lectureToDanceGenreInputData: LectureToDanceGenreInputData[] =
           await this.createLecturerDanceGenreInputData(
@@ -90,26 +90,19 @@ export class LectureService {
             etcGenres,
           );
 
-        const newLectureGenre =
-          await this.lectureRepository.trxCreateLectureToDanceGenres(
-            transaction,
-            lectureToDanceGenreInputData,
-          );
+        await this.lectureRepository.trxCreateLectureToDanceGenres(
+          transaction,
+          lectureToDanceGenreInputData,
+        );
 
-        const newLectureNotification =
-          await this.lectureRepository.trxCreateLectureNotification(
-            transaction,
-            newLecture.id,
-            notification,
-          );
+        await this.lectureRepository.trxCreateLectureNotification(
+          transaction,
+          newLecture.id,
+          notification,
+        );
 
         return {
           newLecture,
-          newLectureImage,
-          newLectureSchedule,
-          newLectureGenre,
-          newLectureNotification,
-          newLectureHoliday,
         };
       },
     );
@@ -260,6 +253,23 @@ export class LectureService {
       select: { id: true },
     });
 
+    if (!lectureMethodId) {
+      throw new BadRequestException('잘못된 강의 메소드입니다.');
+    }
+
     return lectureMethodId.id;
+  }
+
+  private async getLectureTypeId(type: string): Promise<number> {
+    const lectureTypeId = await this.prismaService.lectureType.findFirst({
+      where: { name: type },
+      select: { id: true },
+    });
+
+    if (!lectureTypeId) {
+      throw new BadRequestException('잘못된 강의 타입입니다.');
+    }
+
+    return lectureTypeId.id;
   }
 }

@@ -1,5 +1,4 @@
 interface LectureInputData {
-  lectureTypeId: number;
   title: string;
   introduction?: string;
   curriculum: string;

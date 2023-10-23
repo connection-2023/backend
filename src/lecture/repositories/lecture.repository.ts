@@ -1,5 +1,5 @@
-import { PrismaService } from './../../prisma/prisma.service';
-import { Lecture, Region } from '@prisma/client';
+import { PrismaService } from '@src/prisma/prisma.service';
+import { Lecture, LectureSchedule, Region } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
@@ -9,7 +9,7 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
-} from '../interface/lecture.interface';
+} from '@src/lecture/interface/lecture.interface';
 
 @Injectable()
 export class LectureRepository {
@@ -19,12 +19,14 @@ export class LectureRepository {
     transaction: PrismaTransaction,
     lecturerId: number,
     lectureMethodId: number,
+    lectureTypeId: number,
     lecture: LectureInputData,
   ): Promise<Lecture> {
     return await transaction.lecture.create({
       data: {
         lecturerId,
         lectureMethodId,
+        lectureTypeId,
         ...lecture,
       },
     });

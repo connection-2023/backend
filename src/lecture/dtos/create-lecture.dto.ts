@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DanceCategory, DanceMethod } from '@src/common/enum/enum';
+import { DanceCategory, DanceMethod, LectureType } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -24,10 +25,10 @@ export class CreateLectureDto {
   regions: string[];
 
   @ApiProperty({ example: 'dance', description: '강의 종류', required: true })
+  @IsEnum(LectureType, { each: true })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  lectureTypeId: number;
+  @IsString()
+  lectureType: LectureType;
 
   //원데이,다회차
   @ApiProperty({
@@ -38,6 +39,15 @@ export class CreateLectureDto {
   @IsEnum(DanceMethod, { each: true })
   @IsNotEmpty()
   lectureMethod: DanceMethod;
+
+  @ApiProperty({
+    example: 'A',
+    description: '정기 클래스일 때 팀 이름',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  team: string;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',
@@ -74,7 +84,6 @@ export class CreateLectureDto {
   })
   @IsNotEmpty()
   @IsArray()
-  @MaxLength(5)
   images: string[];
 
   @ApiProperty({
@@ -141,7 +150,7 @@ export class CreateLectureDto {
   maxCapacity: number | null;
 
   @ApiProperty({
-    example: '2023 - 09 - 14',
+    example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     description: '강의 예약 마감일',
     required: true,
   })

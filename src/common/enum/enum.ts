@@ -17,3 +17,7 @@ export enum DanceMethod {
   '원데이' = '원데이',
   '정기' = '정기',
 }
+
+export enum LectureType {
+  'dance' = 'dance',
+}

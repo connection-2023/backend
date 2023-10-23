@@ -15,7 +15,6 @@ export function ApiCreateLecture() {
       summary: '강의 생성',
     }),
     ApiBearerAuth(),
-    ApiConsumes('multipart/form-data'),
     ApiCreatedResponse(
       SwaggerApiResponse.success('강의생성완료', {
         statusCode: 201,
