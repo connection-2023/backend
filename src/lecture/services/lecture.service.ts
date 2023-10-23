@@ -75,6 +75,13 @@ export class LectureService {
             transaction,
             lectureScheduleInputData,
           );
+        const lectureHolidayInputData: LectureHolidayInputData[] =
+          this.createLectureHolidayInputData(newLecture.id, holidays);
+        const newLectureHoliday =
+          await this.lectureRepository.trxCreateLectureHoliday(
+            transaction,
+            lectureHolidayInputData,
+          );
 
         const lectureToDanceGenreInputData: LectureToDanceGenreInputData[] =
           await this.createLecturerDanceGenreInputData(
@@ -94,14 +101,6 @@ export class LectureService {
             transaction,
             newLecture.id,
             notification,
-          );
-
-        const lectureHolidayInputData: LectureHolidayInputData[] =
-          this.createLectureHolidayInputData(newLecture.id, holidays);
-        const newLectureHoliday =
-          await this.lectureRepository.trxCreateLectureHoliday(
-            transaction,
-            lectureHolidayInputData,
           );
 
         return {
@@ -263,69 +262,4 @@ export class LectureService {
 
     return lectureMethodId.id;
   }
-
-  // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
-  //   const { ...filter } = query;
-  //   const where = this.queryFilter.buildWherePropForFind(filter);
-
-  //   const readManyLectureQuery: PrismaPromise<any> =
-  //     this.prismaService.lecture.findMany({
-  //       where: {
-  //         ...where,
-  //         deletedAt: null,
-  //       },
-  //       select: {
-  //         id: true,
-  //         title: true,
-  //         price: true,
-  //         stars: true,
-  //         reviewCount: true,
-  //         duration: true,
-  //         lecturer: {
-  //           select: {
-  //             id: true,
-  //             nickname: true,
-  //           },
-  //         },
-  //         region: true,
-  //         danceCategory: true,
-  //         lectureMethod: true,
-  //       },
-  //     });
-  //   return readManyLectureQuery;
-  // }
-
-  // async readOneLecture(lectureId: number): Promise<any> {
-  //   return await this.prismaService.lecture.findFirst({
-  //     where: { id: lectureId },
-  //     include: {
-  //       region: true,
-  //       lectureMethod: true,
-  //       lecturer: {
-  //         select: { id: true, nickname: true },
-  //       },
-  //       lectureReview: {
-  //         select: {
-  //           users: { select: { id: true, nickname: true } },
-  //           stars: true,
-  //           description: true,
-  //         },
-  //       },
-  //     },
-  //   });
-  // }
-
-  // async updateLecture(
-  //   lecture: UpdateLectureDto,
-  //   lectureId: number,
-  // ): Promise<any> {
-  //   return await this.prismaService.lecture.update({
-  //     where: { id: lectureId },
-  //     data: { ...lecture },
-  //   });
-  // }
-
-  // async deleteLecture(lectureId: number): Promise<any> {
-  //   return this.prismaService.lecture.delete({ where: { id: lectureId } });
-  // }
 }

@@ -1,9 +1,9 @@
 interface LectureInputData {
   lectureTypeId: number;
   title: string;
-  introduction: string;
+  introduction?: string;
   curriculum: string;
-  detailAddress: string;
+  detailAddress?: string;
   duration: number;
   difficultyLevel: string;
   minCapacity: number;

@@ -10,6 +10,7 @@ datasource db {
 model Users {
   //고유 id
   id               Int               @id @default(autoincrement())
+  uuid             String            @default(uuid())
   //이름
   name             String            @db.VarChar(10)
   //사용자 닉네임
@@ -113,11 +114,11 @@ model Lecture {
   //강의명
   title                  String                   @db.VarChar(30)
   //강의 소개
-  introduction           String                   @db.VarChar(500)
+  introduction           String?                  @db.VarChar(500)
   //커리큘럼
   curriculum             String                   @db.Text
   //상세 주소
-  detailAddress          String                   @db.VarChar(30)
+  detailAddress          String?                  @db.VarChar(30)
   //강의 시간
   duration               Int                      @db.Integer
   //난이도
@@ -125,7 +126,7 @@ model Lecture {
   //최소 정원
   minCapacity            Int                      @db.Integer
   //최대 정원
-  maxCapacity            Int?                     @db.Integer
+  maxCapacity            Int                      @db.Integer
   //강의 예약 마감일
   reservationDeadline    DateTime                 @db.Date
   //예약 설명
@@ -159,8 +160,6 @@ model Lecture {
   lectureToRegion        LectureToRegion[]
   lectureToDanceGenre    LectureToDanceGenre[]
   lectureHoliday         LectureHoliday[]
-  regularLectureSchedule RegularLectureSchedule[]
-  regularLectureHoliday  RegularLectureHoliday[]
 }
 
 model DanceCategory {
@@ -366,6 +365,7 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int      @id @default(autoincrement())
   lectureId            Int
+  team                 String?
   startDateTime        DateTime
   numberOfParticipants Int
   lecture              Lecture  @relation(fields: [lectureId], references: [id])
@@ -389,20 +389,6 @@ model LectureToDanceGenre {
 }
 
 model LectureHoliday {
-  id        Int      @id @default(autoincrement())
-  lectureId Int
-  holiday   DateTime
-  lecture   Lecture  @relation(fields: [lectureId], references: [id])
-}
-
-model RegularLectureSchedule {
-  id            Int      @id @default(autoincrement())
-  lectureId     Int
-  startDateTime DateTime
-  lecture       Lecture  @relation(fields: [lectureId], references: [id])
-}
-
-model RegularLectureHoliday {
   id        Int      @id @default(autoincrement())
   lectureId Int
   holiday   DateTime

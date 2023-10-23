@@ -37,20 +37,15 @@ export class LectureController {
     @GetAuthorizedUser() user: Users,
     @Body() lecture: CreateLectureDto,
   ) {
-    const newLecture: Lecture = await this.lectureService.createLecture(
-      lecture,
-      user.id,
-    );
-
-    return { newLecture };
+    return await this.lectureService.createLecture(lecture, user.id);
   }
 
-  @Patch(':lectureId')
-  @UseInterceptors(FilesInterceptor('files', 5))
-  @UseGuards(UserAccessTokenGuard)
-  async updateLecture(
-    @GetAuthorizedUser() user: Users,
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body() lecture: UpdateLectureDto,
-  ) {}
+  // @Patch(':lectureId')
+  // @UseInterceptors(FilesInterceptor('files', 5))
+  // @UseGuards(UserAccessTokenGuard)
+  // async updateLecture(
+  //   @GetAuthorizedUser() user: Users,
+  //   @UploadedFiles() files: Express.Multer.File[],
+  //   @Body() lecture: UpdateLectureDto,
+  // ) {}
 }

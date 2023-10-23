@@ -93,66 +93,66 @@ export class LectureRepository {
     });
   }
 
-  async trxUpdateLecture(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    lecture: LectureInputData,
-  ): Promise<Lecture> {
-    return await transaction.lecture.update({
-      where: { id: lectureId },
-      data: lecture,
-    });
-  }
+  // async trxUpdateLecture(
+  //   transaction: PrismaTransaction,
+  //   lectureId: number,
+  //   lecture: LectureInputData,
+  // ): Promise<Lecture> {
+  //   return await transaction.lecture.update({
+  //     where: { id: lectureId },
+  //     data: lecture,
+  //   });
+  // }
 
-  async trxUpdateLectureImg(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    lectureImg: LectureImageInputData[],
-  ): Promise<void> {
-    await transaction.lectureImage.updateMany({
-      where: { lectureId },
-      data: lectureImg,
-    });
-  }
+  // async trxUpdateLectureImg(
+  //   transaction: PrismaTransaction,
+  //   lectureId: number,
+  //   lectureImg: LectureImageInputData[],
+  // ): Promise<void> {
+  //   await transaction.lectureImage.updateMany({
+  //     where: { lectureId },
+  //     data: lectureImg,
+  //   });
+  // }
 
-  async trxUpdateLectureToRegions(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    lectureToRegion: LectureToRegionInputData[],
-  ): Promise<void> {
-    await transaction.lectureToRegion.updateMany({
-      where: { lectureId },
-      data: lectureToRegion,
-    });
-  }
+  // async trxUpdateLectureToRegions(
+  //   transaction: PrismaTransaction,
+  //   lectureId: number,
+  //   lectureToRegion: LectureToRegionInputData[],
+  // ): Promise<void> {
+  //   await transaction.lectureToRegion.updateMany({
+  //     where: { lectureId },
+  //     data: lectureToRegion,
+  //   });
+  // }
 
-  async trxUpdateLectureToDanceGenres(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    lectureToDanceGenre: LectureToDanceGenreInputData[],
-  ): Promise<void> {
-    await transaction.lectureToDanceGenre.updateMany({
-      where: { lectureId },
-      data: lectureToDanceGenre,
-    });
-  }
+  // async trxUpdateLectureToDanceGenres(
+  //   transaction: PrismaTransaction,
+  //   lectureId: number,
+  //   lectureToDanceGenre: LectureToDanceGenreInputData[],
+  // ): Promise<void> {
+  //   await transaction.lectureToDanceGenre.updateMany({
+  //     where: { lectureId },
+  //     data: lectureToDanceGenre,
+  //   });
+  // }
 
-  async trxUpdateLectureNotification(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    notification: string,
-  ): Promise<void> {
-    await transaction.lectureNotification.update({
-      where: { lectureId },
-      data: { lectureId, notification },
-    });
-  }
-  async trxUpdateLectureHoliday(
-    transaction: PrismaTransaction,
-    lectureHoliday: LectureHolidayInputData[],
-  ): Promise<void> {
-    await transaction.lectureHoliday.createMany({
-      data: lectureHoliday,
-    });
-  }
+  // async trxUpdateLectureNotification(
+  //   transaction: PrismaTransaction,
+  //   lectureId: number,
+  //   notification: string,
+  // ): Promise<void> {
+  //   await transaction.lectureNotification.update({
+  //     where: { lectureId },
+  //     data: { lectureId, notification },
+  //   });
+  // }
+  // async trxUpdateLectureHoliday(
+  //   transaction: PrismaTransaction,
+  //   lectureHoliday: LectureHolidayInputData[],
+  // ): Promise<void> {
+  //   await transaction.lectureHoliday.createMany({
+  //     data: lectureHoliday,
+  //   });
+  // }
 }
