@@ -18,11 +18,13 @@ export class LectureRepository {
   async trxCreateLecture(
     transaction: PrismaTransaction,
     lecturerId: number,
+    lectureMethodId: number,
     lecture: LectureInputData,
   ): Promise<Lecture> {
     return await transaction.lecture.create({
       data: {
         lecturerId,
+        lectureMethodId,
         ...lecture,
       },
     });

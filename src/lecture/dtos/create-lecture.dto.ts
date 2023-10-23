@@ -37,7 +37,7 @@ export class CreateLectureDto {
   })
   @IsEnum(DanceMethod, { each: true })
   @IsNotEmpty()
-  lectureMethodId: DanceMethod;
+  lectureMethod: DanceMethod;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',

@@ -27,11 +27,7 @@ export class LectureService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async createLecture(
-    createLectureDto: CreateLectureDto,
-    lecturerId: number,
-    imageUrls: string[],
-  ) {
+  async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
     const {
       regions,
       schedules,
@@ -39,6 +35,8 @@ export class LectureService {
       etcGenres,
       notification,
       holidays,
+      images,
+      lectureMethod,
       ...lecture
     } = createLectureDto;
 
@@ -46,9 +44,12 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        const lectureMethodId = await this.getLectureMethodId(lectureMethod);
+
         const newLecture = await this.lectureRepository.trxCreateLecture(
           transaction,
           lecturerId,
+          lectureMethodId,
           lecture,
         );
 
@@ -60,7 +61,7 @@ export class LectureService {
         );
 
         const lectureImageInputData: LectureImageInputData[] =
-          this.createLectureImageInputData(newLecture.id, imageUrls);
+          this.createLectureImageInputData(newLecture.id, images);
         const newLectureImage =
           await this.lectureRepository.trxCreateLectureImg(
             transaction,
@@ -245,6 +246,15 @@ export class LectureService {
     );
 
     return danceCategoryIds;
+  }
+
+  private async getLectureMethodId(method: string): Promise<number> {
+    const lectureMethodId = await this.prismaService.lectureMethod.findFirst({
+      where: { name: method },
+      select: { id: true },
+    });
+
+    return lectureMethodId.id;
   }
 
   // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
