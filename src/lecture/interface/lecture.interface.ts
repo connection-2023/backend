@@ -1,6 +1,5 @@
 interface LectureInputData {
   lectureTypeId: number;
-  lectureMethodId: number;
   title: string;
   introduction: string;
   curriculum: string;
@@ -8,7 +7,7 @@ interface LectureInputData {
   duration: number;
   difficultyLevel: string;
   minCapacity: number;
-  maxCapacity: number | null;
+  maxCapacity: number;
   reservationComment: string | null;
   reservationDeadline: Date;
   price: number;

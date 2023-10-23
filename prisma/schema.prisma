@@ -159,6 +159,8 @@ model Lecture {
   lectureToRegion        LectureToRegion[]
   lectureToDanceGenre    LectureToDanceGenre[]
   lectureHoliday         LectureHoliday[]
+  regularLectureSchedule RegularLectureSchedule[]
+  regularLectureHoliday  RegularLectureHoliday[]
 }
 
 model DanceCategory {
@@ -387,6 +389,20 @@ model LectureToDanceGenre {
 }
 
 model LectureHoliday {
+  id        Int      @id @default(autoincrement())
+  lectureId Int
+  holiday   DateTime
+  lecture   Lecture  @relation(fields: [lectureId], references: [id])
+}
+
+model RegularLectureSchedule {
+  id            Int      @id @default(autoincrement())
+  lectureId     Int
+  startDateTime DateTime
+  lecture       Lecture  @relation(fields: [lectureId], references: [id])
+}
+
+model RegularLectureHoliday {
   id        Int      @id @default(autoincrement())
   lectureId Int
   holiday   DateTime

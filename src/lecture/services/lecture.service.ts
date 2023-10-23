@@ -104,7 +104,14 @@ export class LectureService {
             lectureHolidayInputData,
           );
 
-        return newLecture;
+        return {
+          newLecture,
+          newLectureImage,
+          newLectureSchedule,
+          newLectureGenre,
+          newLectureNotification,
+          newLectureHoliday,
+        };
       },
     );
   }
