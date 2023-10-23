@@ -16,6 +16,7 @@ import {
   Region,
 } from '@src/common/interface/common-interface';
 import { Lecturer } from '@prisma/client';
+import { PrismaClientValidationError } from '@prisma/client/runtime';
 
 @Injectable()
 export class LecturerRepository {
@@ -230,6 +231,8 @@ export class LecturerRepository {
         where: { id: lecturerId },
         data: lecturerUpdateData,
       });
+
+      throw new PrismaClientValidationError();
     } catch (error) {
       throw new InternalServerErrorException(
         `강사정보 업데이트 실패: ${error}`,
