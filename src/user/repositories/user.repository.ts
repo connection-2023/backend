@@ -2,7 +2,7 @@ import { CreateUserDto } from '@src/user/dtos/create-user.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { Users } from '@prisma/client';
+import { UserProfileImage, Users } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -18,7 +18,7 @@ export class UserRepository {
       phoneNumber,
       gender,
     }: CreateUserDto,
-  ): Promise<any> {
+  ): Promise<Users> {
     return await transaction.users.create({
       data: {
         name,
@@ -35,9 +35,19 @@ export class UserRepository {
     transaction: PrismaTransaction,
     userId: number,
     imageUrl: string,
-  ): Promise<any> {
+  ): Promise<UserProfileImage> {
     return await transaction.userProfileImage.create({
       data: { userId, imageUrl },
+    });
+  }
+
+  async getMyProfile(userId: number): Promise<Users> {
+    return await this.prismaService.users.findUnique({
+      where: { id: userId },
+      include: {
+        auth: { select: { email: true, signUpType: true } },
+        userProfileImage: { select: { imageUrl: true } },
+      },
     });
   }
 }

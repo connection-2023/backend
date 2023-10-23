@@ -17,12 +17,11 @@ export function ApiCreateLecturer() {
       description: '강사 생성 후 강사로 전환 가능',
     }),
     ApiBearerAuth(),
-    ApiConsumes('multipart/form-data'),
     ApiCreatedResponse(
       SwaggerApiResponse.success(
         '강사 생성 완료, 강사 전환 요청 시 전환 가능',
         {
-          message: '강사 생성 완료',
+          statusCode: 201,
         },
       ),
     ),

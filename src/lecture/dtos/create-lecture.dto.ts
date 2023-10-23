@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DanceCategory } from '@src/common/enum/enum';
+import { DanceCategory, DanceMethod } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateLectureDto {
@@ -27,6 +28,16 @@ export class CreateLectureDto {
   @IsNumber()
   @Type(() => Number)
   lectureTypeId: number;
+
+  //원데이,다회차
+  @ApiProperty({
+    example: '원데이',
+    description: '강의 방식 (원데이,정기)',
+    required: true,
+  })
+  @IsEnum(DanceMethod, { each: true })
+  @IsNotEmpty()
+  lectureMethodId: DanceMethod;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',
@@ -56,16 +67,15 @@ export class CreateLectureDto {
   @IsOptional()
   etcGenres: string[];
 
-  //원데이,다회차
   @ApiProperty({
-    example: 1,
-    description: '강의 방식 id(원데이,다회차)',
+    example: ['이미지url1', '이미지url2'],
+    description: 's3업로드 이미지 url,index 0 이미지가 대표 이미지',
     required: true,
   })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  lectureMethodId: number;
+  @IsArray()
+  @MaxLength(5)
+  images: string[];
 
   @ApiProperty({
     example: '가비쌤과 함께하는 왁킹 클래스',
@@ -118,8 +128,8 @@ export class CreateLectureDto {
   @IsString()
   difficultyLevel: string;
 
-  @ApiProperty({ example: 1, description: '최소 정원', required: true })
-  @IsNotEmpty()
+  @ApiProperty({ example: 1, description: '최소 정원', required: false })
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
   minCapacity: number;
@@ -192,13 +202,4 @@ export class CreateLectureDto {
   @IsNotEmpty()
   @Type(() => Array)
   holidays: string[];
-
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: '강의 이미지 파일 업로드',
-    required: true,
-  })
-  @IsOptional()
-  files: string;
 }

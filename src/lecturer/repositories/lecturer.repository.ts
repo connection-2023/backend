@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerRegionInputData,
   LecturerWebsiteInputData,
-  LecturerInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
+  LecturerCoupon,
+  LecturerProfile,
+  LecturerInputData,
+  LecturerUpdateData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -42,17 +45,24 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerWebsiteInputData: LecturerWebsiteInputData[],
   ): Promise<void> {
-    await transaction.lecturerWebsiteUrl.createMany({
-      data: lecturerWebsiteInputData,
-    });
+    try {
+      await transaction.lecturerWebsiteUrl.createMany({
+        data: lecturerWebsiteInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 웹사이트 생성 실패: ${error}`,
+        'LecturerWebsiteUrlsCreateFailed',
+      );
+    }
   }
 
   async trxCreateLecturerDanceGenres(
     transaction: PrismaTransaction,
-    lecturerWebsiteInputData: LecturerDanceGenreInputData[],
+    lecturerDanceGenresInputData: LecturerDanceGenreInputData[],
   ): Promise<void> {
     await transaction.lecturerDanceGenre.createMany({
-      data: lecturerWebsiteInputData,
+      data: lecturerDanceGenresInputData,
     });
   }
 
@@ -75,8 +85,156 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerProfileImageInputData: LecturerProfileImageInputData[],
   ): Promise<void> {
-    await transaction.lecturerProfileImageUrl.createMany({
-      data: lecturerProfileImageInputData,
+    try {
+      await transaction.lecturerProfileImageUrl.createMany({
+        data: lecturerProfileImageInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 프로필 이미지 생성 실패: ${error}`,
+        'LecturerProfileImageUpdateFailed',
+      );
+    }
+  }
+
+  async getLecturerCouponsByLecturerId(
+    lecturerId: number,
+  ): Promise<LecturerCoupon[]> {
+    return await this.prismaService.lectureCoupon.findMany({
+      where: { lecturerId, isDisabled: false },
+      select: {
+        id: true,
+        title: true,
+        percentage: true,
+        discountPrice: true,
+        isStackable: true,
+        maxDiscountPrice: true,
+        startAt: true,
+        endAt: true,
+      },
     });
+  }
+
+  async updateLecturerNickname(lectureId, nickname) {
+    await this.prismaService.lecturer.update({
+      where: { id: lectureId },
+      data: { nickname },
+    });
+  }
+
+  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
+    return await this.prismaService.lecturer.findUnique({
+      where: { id: lectureId },
+      select: {
+        nickname: true,
+        email: true,
+        phoneNumber: true,
+        youtubeUrl: true,
+        instagramUrl: true,
+        homepageUrl: true,
+        affiliation: true,
+        introduction: true,
+        experience: true,
+        lecturerRegion: {
+          select: {
+            region: {
+              select: { administrativeDistrict: true, district: true },
+            },
+          },
+        },
+        lecturerDanceGenre: {
+          select: {
+            name: true,
+            danceCategory: { select: { genre: true } },
+          },
+        },
+        lecturerWebsiteUrl: true,
+        lecturerProfileImageUrl: {
+          orderBy: { id: 'asc' },
+        },
+      },
+    });
+  }
+
+  async trxDeleteLecturerProfileImages(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturerProfileImageUrl.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 프로필 이미지 삭제 실패: ${error}`,
+        'LecturerProfileImageDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerDanceGenres(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturerDanceGenre.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 장르 삭제 실패: ${error}`,
+        'LecturerDanceGenresDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerRegions(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ) {
+    try {
+      await transaction.lecturerRegion.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 지역 삭제 실패: ${error}`,
+        'LecturerRegionsDeleteFailed',
+      );
+    }
+  }
+
+  async trxDeleteLecturerWebsiteUrls(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ) {
+    try {
+      await transaction.lecturerWebsiteUrl.deleteMany({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사 웹사이트 삭제 실패: ${error}`,
+        'LecturerWebsiteUrlsDeleteFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturer(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    lecturerUpdateData: LecturerUpdateData,
+  ) {
+    try {
+      await transaction.lecturer.update({
+        where: { id: lecturerId },
+        data: lecturerUpdateData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `강사정보 업데이트 실패: ${error}`,
+        'LecturerUpdateFailed',
+      );
+    }
   }
 }

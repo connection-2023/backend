@@ -34,9 +34,10 @@ export class UploadsService {
           ContentType: file.mimetype,
         })
         .promise();
+
       return `https://${this.S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
     } catch (error) {
-      throw new BadRequestException(`File upload failed : ${error}`);
+      throw new BadRequestException(`${error}`, 'FileUploadFailed');
     }
   }
 
