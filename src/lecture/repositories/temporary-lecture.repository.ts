@@ -11,6 +11,7 @@ import {
   LectureToRegionInputData,
 } from '@src/lecture/interface/lecture.interface';
 import {
+  TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureScheduleInputData,
   TemporaryLectureToDanceGenreInputData,
@@ -127,12 +128,22 @@ export class LectureRepository {
       create: { lectureId, notification },
     });
   }
-  async trxCreateLectureHoliday(
+
+  async trxCreateTemporaryLectureHoliday(
     transaction: PrismaTransaction,
-    lectureHoliday: LectureHolidayInputData[],
+    temporaryLectureHoliday: TemporaryLectureHolidayInputData[],
   ): Promise<void> {
-    await transaction.lectureHoliday.createMany({
-      data: lectureHoliday,
+    await transaction.temporaryLectureHoliday.createMany({
+      data: temporaryLectureHoliday,
+    });
+  }
+
+  async trxDeleteTemporaryLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureHoliday.deleteMany({
+      where: { lectureId },
     });
   }
 }
