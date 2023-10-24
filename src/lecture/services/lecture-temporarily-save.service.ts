@@ -4,6 +4,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { TemporaryLectureRepository } from '@src/lecture/repositories/temporary-lecture.repository';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import {
+  RegularTemporaryLectureScheduleInputData,
   RegularTemporaryLectureSchedules,
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
@@ -62,6 +63,7 @@ export class LectureTemporarilySaveService {
         if (lecture) {
           await this.temporaryLectureRepository.trxUpdateLecture(lecture);
         }
+
         if (regions) {
           const regionIds: Id[] = await this.getValidRegionIds(regions);
           const temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[] =
@@ -74,6 +76,35 @@ export class LectureTemporarilySaveService {
             transaction,
             temporaryLectureToRegionInputData,
           );
+        }
+
+        if (schedules || regularSchedules) {
+          if (lectureMethod === '원데이') {
+            const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
+              this.createLectureScheduleInputData(lecture.lectureId, schedules);
+            await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
+              transaction,
+              lecture.lectureId,
+            );
+            await this.temporaryLectureRepository.trxCreateLectureSchedule(
+              transaction,
+              temporaryLectureScheduleInputData,
+            );
+          } else if (lectureMethod === '정기') {
+            const regularTemporaryLectureScheduleInputData: RegularTemporaryLectureScheduleInputData[] =
+              this.createRegularLectureScheduleInputData(
+                lecture.lectureId,
+                regularSchedules,
+              );
+            await this.temporaryLectureRepository.trxDeleteLectureSchedule(
+              transaction,
+              lecture.lectureId,
+            );
+            await this.temporaryLectureRepository.trxCreateLectureSchedule(
+              transaction,
+              regularTemporaryLectureScheduleInputData,
+            );
+          }
         }
       },
     );
