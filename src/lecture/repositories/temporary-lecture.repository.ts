@@ -48,12 +48,21 @@ export class LectureRepository {
     });
   }
 
-  async trxCreateLectureImg(
+  async trxCreateLectureImage(
     transaction: PrismaTransaction,
-    lectureImg: LectureImageInputData[],
+    temporaryLectureImage: LectureImageInputData[],
   ): Promise<void> {
-    await transaction.lectureImage.createMany({
-      data: lectureImg,
+    await transaction.temporaryLectureImage.createMany({
+      data: temporaryLectureImage,
+    });
+  }
+
+  async trxDeleteTemporaryImage(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureImage.deleteMany({
+      where: { lectureId },
     });
   }
 
