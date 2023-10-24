@@ -17,15 +17,11 @@ export class LectureRepository {
 
   async trxUpdateTemporaryLecture(
     transaction: PrismaTransaction,
-    lecturerId: number,
-    lectureId: number,
-    lectureMethodId: number,
-    lectureTypeId: number,
     lecture: TemporaryLectureInputData,
   ): Promise<Lecture> {
     return await transaction.lecture.update({
-      where: { id: lectureId },
-      data: { lecturerId, lectureMethodId, lectureTypeId, ...lecture },
+      where: { id: lecture.lectureId },
+      data: { ...lecture },
     });
   }
 

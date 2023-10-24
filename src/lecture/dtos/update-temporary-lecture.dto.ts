@@ -16,6 +16,12 @@ import {
 import { RegularLectureSchedules } from '../interface/lecture.interface';
 
 export class UpsertTemporaryLectureDto {
+  @ApiProperty({ example: 1, description: '임시 강의 id', required: true })
+  @IsNumber()
+  @IsNotEmpty()
+  @Type(() => Number)
+  lectureId: number;
+
   @ApiProperty({
     example: ['서울특별시 도봉구', '서울특별시 중구'],
     description: '강사 강의 지역',

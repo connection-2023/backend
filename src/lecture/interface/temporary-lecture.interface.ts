@@ -1,4 +1,8 @@
 interface TemporaryLectureInputData {
+  lecturerId?: number;
+  lectureId?: number;
+  lectureMethodId?: number;
+  lectureTypeId?: number;
   title?: string;
   introduction?: string;
   curriculum?: string;

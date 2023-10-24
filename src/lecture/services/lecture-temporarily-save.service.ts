@@ -48,10 +48,34 @@ export class LectureTemporarilySaveService {
       ...lecture
     } = upsertTemporaryLectureDto;
 
-    const regionIds: Id[] = await this.getValidRegionIds(regions);
-
     return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {},
+      async (transaction: PrismaTransaction) => {
+        if (lectureMethod) {
+          lecture['lectureMethodId'] = await this.getLectureMethodId(
+            lectureMethod,
+          );
+        }
+        if (lectureType) {
+          lecture['lectureTypeId'] = await this.getLectureTypeId(lectureType);
+        }
+
+        if (lecture) {
+          await this.temporaryLectureRepository.trxUpdateLecture(lecture);
+        }
+        if (regions) {
+          const regionIds: Id[] = await this.getValidRegionIds(regions);
+          const temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[] =
+            this.createLectureToRegionInputData(lecture.lectureId, regionIds);
+          await this.temporaryLectureRepository.trxDeleteLectureToRegions(
+            transaction,
+            lecture.lectureId,
+          );
+          await this.temporaryLectureRepository.trxCreateLectureToRegions(
+            transaction,
+            temporaryLectureToRegionInputData,
+          );
+        }
+      },
     );
   }
 
