@@ -1,15 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DanceCategory } from '@src/common/enum/enum';
+import { DanceCategory, DanceMethod, LectureType } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
+  MaxLength,
 } from 'class-validator';
+import { RegularLectureSchedules } from '../interface/lecture.interface';
 
 export class CreateLectureDto {
   @ApiProperty({
@@ -23,10 +27,20 @@ export class CreateLectureDto {
   regions: string[];
 
   @ApiProperty({ example: 'dance', description: '강의 종류', required: true })
+  @IsEnum(LectureType, { each: true })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  lectureTypeId: number;
+  @IsString()
+  lectureType: LectureType;
+
+  //원데이,다회차
+  @ApiProperty({
+    example: '원데이',
+    description: '강의 방식 (원데이,정기)',
+    required: true,
+  })
+  @IsEnum(DanceMethod, { each: true })
+  @IsNotEmpty()
+  lectureMethod: DanceMethod;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',
@@ -56,16 +70,14 @@ export class CreateLectureDto {
   @IsOptional()
   etcGenres: string[];
 
-  //원데이,다회차
   @ApiProperty({
-    example: 1,
-    description: '강의 방식 id(원데이,다회차)',
+    example: ['이미지url1', '이미지url2'],
+    description: 's3업로드 이미지 url,index 0 이미지가 대표 이미지',
     required: true,
   })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  lectureMethodId: number;
+  @IsArray()
+  images: string[];
 
   @ApiProperty({
     example: '가비쌤과 함께하는 왁킹 클래스',
@@ -118,8 +130,8 @@ export class CreateLectureDto {
   @IsString()
   difficultyLevel: string;
 
-  @ApiProperty({ example: 1, description: '최소 정원', required: true })
-  @IsNotEmpty()
+  @ApiProperty({ example: 1, description: '최소 정원', required: false })
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
   minCapacity: number;
@@ -131,7 +143,7 @@ export class CreateLectureDto {
   maxCapacity: number | null;
 
   @ApiProperty({
-    example: '2023 - 09 - 14',
+    example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     description: '강의 예약 마감일',
     required: true,
   })
@@ -172,12 +184,32 @@ export class CreateLectureDto {
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
     description: '클래스 일정',
-    required: true,
+    required: false,
   })
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Array)
   schedules: string[];
+
+  @ApiProperty({
+    example: {
+      A: [
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      ],
+      B: [
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      ],
+    },
+    description: '정기 클래스일 때 일정',
+    required: false,
+  })
+  @IsObject()
+  @IsOptional()
+  regularSchedules: RegularLectureSchedules;
 
   @ApiProperty({
     example: [
@@ -185,20 +217,11 @@ export class CreateLectureDto {
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
-    description: '클래스 일정',
+    description: '클래스 휴무일',
     required: true,
   })
   @IsArray()
   @IsNotEmpty()
   @Type(() => Array)
   holidays: string[];
-
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    description: '강의 이미지 파일 업로드',
-    required: true,
-  })
-  @IsOptional()
-  files: string;
 }
