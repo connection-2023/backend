@@ -12,7 +12,7 @@ import {
 } from '../interface/temporary-lecture.interface';
 
 @Injectable()
-export class LectureRepository {
+export class TemporaryLectureRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async trxUpdateTemporaryLecture(
@@ -43,7 +43,7 @@ export class LectureRepository {
     });
   }
 
-  async trxCreateLectureImage(
+  async trxCreateTemporaryLectureImage(
     transaction: PrismaTransaction,
     temporaryLectureImage: TemporaryLectureImageInputData[],
   ): Promise<void> {
@@ -52,7 +52,7 @@ export class LectureRepository {
     });
   }
 
-  async trxDeleteTemporaryImage(
+  async trxDeleteTemporaryLectureImage(
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {
@@ -61,7 +61,7 @@ export class LectureRepository {
     });
   }
 
-  async trxCreateLectureToRegions(
+  async trxCreateTemporaryLectureToRegions(
     transaction: PrismaTransaction,
     temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[],
   ): Promise<void> {
@@ -70,7 +70,7 @@ export class LectureRepository {
     });
   }
 
-  async trxDeleteLectureToREgions(
+  async trxDeleteTemporaryLectureToRegions(
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {

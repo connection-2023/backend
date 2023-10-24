@@ -61,18 +61,21 @@ export class LectureTemporarilySaveService {
         }
 
         if (lecture) {
-          await this.temporaryLectureRepository.trxUpdateLecture(lecture);
+          await this.temporaryLectureRepository.trxUpdateTemporaryLecture(
+            transaction,
+            lecture,
+          );
         }
 
         if (regions) {
           const regionIds: Id[] = await this.getValidRegionIds(regions);
           const temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[] =
             this.createLectureToRegionInputData(lecture.lectureId, regionIds);
-          await this.temporaryLectureRepository.trxDeleteLectureToRegions(
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureToRegions(
             transaction,
             lecture.lectureId,
           );
-          await this.temporaryLectureRepository.trxCreateLectureToRegions(
+          await this.temporaryLectureRepository.trxCreateTemporaryLectureToRegions(
             transaction,
             temporaryLectureToRegionInputData,
           );
@@ -86,7 +89,7 @@ export class LectureTemporarilySaveService {
               transaction,
               lecture.lectureId,
             );
-            await this.temporaryLectureRepository.trxCreateLectureSchedule(
+            await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
               transaction,
               temporaryLectureScheduleInputData,
             );
@@ -96,15 +99,29 @@ export class LectureTemporarilySaveService {
                 lecture.lectureId,
                 regularSchedules,
               );
-            await this.temporaryLectureRepository.trxDeleteLectureSchedule(
+            await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
               transaction,
               lecture.lectureId,
             );
-            await this.temporaryLectureRepository.trxCreateLectureSchedule(
+            await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
               transaction,
               regularTemporaryLectureScheduleInputData,
             );
           }
+        }
+
+        if (genres) {
+          const temporaryLectureToDanceGenreInputData: TemporaryLectureToDanceGenreInputData[] =
+            await this.createLecturerDanceGenreInputData(
+              lecture.lectureId,
+              genres,
+              etcGenres,
+            );
+
+          await this.temporaryLectureRepository.trxCreateTemporaryLectureToDanceGenres(
+            transaction,
+            temporaryLectureToDanceGenreInputData,
+          );
         }
       },
     );
