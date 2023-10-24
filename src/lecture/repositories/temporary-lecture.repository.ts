@@ -12,15 +12,16 @@ import {
 } from '../interface/temporary-lecture.interface';
 
 @Injectable()
-export class TemporaryLectureRepository {
+export class LectureTemporarilySaveRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async trxUpdateTemporaryLecture(
     transaction: PrismaTransaction,
+    lectureId: number,
     lecture: TemporaryLectureInputData,
   ): Promise<Lecture> {
-    return await transaction.lecture.update({
-      where: { id: lecture.lectureId },
+    return await transaction.temporaryLecture.update({
+      where: { id: lectureId },
       data: { ...lecture },
     });
   }

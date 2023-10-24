@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Region, TemporaryLecture } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { TemporaryLectureRepository } from '@src/lecture/repositories/temporary-lecture.repository';
+import { LectureTemporarilySaveRepository } from '@src/lecture/repositories/temporary-lecture.repository';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import {
   RegularTemporaryLectureScheduleInputData,
@@ -22,7 +22,7 @@ export class LectureTemporarilySaveService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
-    private readonly temporaryLectureRepository: TemporaryLectureRepository,
+    private readonly temporaryLectureRepository: LectureTemporarilySaveRepository,
   ) {}
 
   async createTemporaryLecture(lecturerId: number): Promise<TemporaryLecture> {
@@ -35,6 +35,7 @@ export class LectureTemporarilySaveService {
     upsertTemporaryLectureDto: UpsertTemporaryLectureDto,
   ) {
     const {
+      lectureId,
       regions,
       schedules,
       regularSchedules,
@@ -62,6 +63,7 @@ export class LectureTemporarilySaveService {
         if (lecture) {
           await this.temporaryLectureRepository.trxUpdateTemporaryLecture(
             transaction,
+            lectureId,
             lecture,
           );
         }
@@ -69,10 +71,10 @@ export class LectureTemporarilySaveService {
         if (regions) {
           const regionIds: Id[] = await this.getValidRegionIds(regions);
           const temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[] =
-            this.createLectureToRegionInputData(lecture.lectureId, regionIds);
+            this.createLectureToRegionInputData(lectureId, regionIds);
           await this.temporaryLectureRepository.trxDeleteTemporaryLectureToRegions(
             transaction,
-            lecture.lectureId,
+            lectureId,
           );
           await this.temporaryLectureRepository.trxCreateTemporaryLectureToRegions(
             transaction,
@@ -83,10 +85,10 @@ export class LectureTemporarilySaveService {
         if (schedules || regularSchedules) {
           if (lectureMethod === '원데이') {
             const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
-              this.createLectureScheduleInputData(lecture.lectureId, schedules);
+              this.createLectureScheduleInputData(lectureId, schedules);
             await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
               transaction,
-              lecture.lectureId,
+              lectureId,
             );
             await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
               transaction,
@@ -95,12 +97,12 @@ export class LectureTemporarilySaveService {
           } else if (lectureMethod === '정기') {
             const regularTemporaryLectureScheduleInputData: RegularTemporaryLectureScheduleInputData[] =
               this.createRegularLectureScheduleInputData(
-                lecture.lectureId,
+                lectureId,
                 regularSchedules,
               );
             await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
               transaction,
-              lecture.lectureId,
+              lectureId,
             );
             await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
               transaction,
@@ -112,14 +114,14 @@ export class LectureTemporarilySaveService {
         if (genres) {
           const temporaryLectureToDanceGenreInputData: TemporaryLectureToDanceGenreInputData[] =
             await this.createLecturerDanceGenreInputData(
-              lecture.lectureId,
+              lectureId,
               genres,
               etcGenres,
             );
 
           await this.temporaryLectureRepository.trxDeleteTemporaryLectureToDanceGenres(
             transaction,
-            lecture.lectureId,
+            lectureId,
           );
           await this.temporaryLectureRepository.trxCreateTemporaryLectureToDanceGenres(
             transaction,
@@ -130,18 +132,18 @@ export class LectureTemporarilySaveService {
         if (notification) {
           await this.temporaryLectureRepository.trxUpsertTemporaryLectureNotification(
             transaction,
-            lecture.lectureId,
+            lectureId,
             notification,
           );
         }
 
         if (holidays) {
           const temporaryLectureHolidayInputData: TemporaryLectureHolidayInputData[] =
-            this.createLectureHolidayInputData(lecture.lectureId, holidays);
+            this.createLectureHolidayInputData(lectureId, holidays);
 
           await this.temporaryLectureRepository.trxDeleteTemporaryLectureHoliday(
             transaction,
-            lecture.lectureId,
+            lectureId,
           );
           await this.temporaryLectureRepository.trxCreateTemporaryLectureHoliday(
             transaction,
@@ -151,11 +153,11 @@ export class LectureTemporarilySaveService {
 
         if (images) {
           const temporaryLectureImageInputData: TemporaryLectureImageInputData[] =
-            this.createLectureImageInputData(lecture.lectureId, images);
+            this.createLectureImageInputData(lectureId, images);
 
           await this.temporaryLectureRepository.trxDeleteTemporaryLectureImage(
             transaction,
-            lecture.lectureId,
+            lectureId,
           );
           await this.temporaryLectureRepository.trxCreateTemporaryLectureImage(
             transaction,

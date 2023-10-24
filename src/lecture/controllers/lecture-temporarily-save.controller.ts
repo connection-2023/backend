@@ -4,6 +4,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { LectureTemporarilySaveService } from '@src/lecture/services/lecture-temporarily-save.service';
+import { UpsertTemporaryLectureDto } from '../dtos/update-temporary-lecture.dto';
 
 @ApiTags('강의')
 @Controller('lecture-temporarily-save')
@@ -19,7 +20,7 @@ export class LectureTemporarilySaveController {
   async createTemporaryLecture(
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
-    return this.lectureTemporarilySaveService.createTemporaryLecture(
+    return await this.lectureTemporarilySaveService.createTemporaryLecture(
       authorizedData.lecturer.id,
     );
   }
@@ -28,13 +29,11 @@ export class LectureTemporarilySaveController {
   @ApiBearerAuth()
   @Patch()
   @UseGuards(LecturerAccessTokenGuard)
-  async updateTemporaryLecture(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body() temporaryLecture,
+  async upsertTemporaryLecture(
+    @Body() upsertTemporaryLectureDto: UpsertTemporaryLectureDto,
   ) {
-    return this.lectureTemporarilySaveService.updateTemporaryLecture(
-      authorizedData.lecturer.id,
-      temporaryLecture,
+    return await this.lectureTemporarilySaveService.upsertTemporaryLecture(
+      upsertTemporaryLectureDto,
     );
   }
 }

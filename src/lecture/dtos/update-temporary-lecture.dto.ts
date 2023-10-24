@@ -4,23 +4,27 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
-  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
-  MaxLength,
 } from 'class-validator';
 import { RegularLectureSchedules } from '../interface/lecture.interface';
 
 export class UpsertTemporaryLectureDto {
-  @ApiProperty({ example: 1, description: '임시 강의 id', required: true })
+  @ApiProperty({ example: 2, description: '임시 강의 id', required: true })
   @IsNumber()
   @IsNotEmpty()
   @Type(() => Number)
   lectureId: number;
+
+  @ApiProperty({ example: 2, description: '작성하고있는 단계', required: true })
+  @IsNumber()
+  @IsNotEmpty()
+  @Type(() => Number)
+  step: number;
 
   @ApiProperty({
     example: ['서울특별시 도봉구', '서울특별시 중구'],
