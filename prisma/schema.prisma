@@ -397,7 +397,7 @@ model TemporaryLecture {
   //강사 id
   lecturerId                   Int
   //작성 진행 단계
-  step  Int?
+  step                         Int?
   //강의 종류 id
   lectureTypeId                Int?
   //강의 형식 id
@@ -514,4 +514,3 @@ model TemporaryLectureImage {
   imageUrl         String?
   temporaryLecutre TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
-
