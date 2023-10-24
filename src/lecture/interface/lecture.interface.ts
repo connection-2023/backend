@@ -1,14 +1,12 @@
 interface LectureInputData {
-  lectureTypeId: number;
-  lectureMethodId: number;
   title: string;
-  introduction: string;
+  introduction?: string;
   curriculum: string;
-  detailAddress: string;
+  detailAddress?: string;
   duration: number;
   difficultyLevel: string;
   minCapacity: number;
-  maxCapacity: number | null;
+  maxCapacity: number;
   reservationComment: string | null;
   reservationDeadline: Date;
   price: number;
@@ -22,6 +20,13 @@ interface LectureToRegionInputData {
 
 interface LectureScheduleInputData {
   lectureId: number;
+  startDateTime: Date;
+  numberOfParticipants: number;
+}
+
+interface RegularLectureScheduleInputData {
+  lectureId: number;
+  team: string;
   startDateTime: Date;
   numberOfParticipants: number;
 }
@@ -46,6 +51,10 @@ interface LectureHolidayInputData {
   holiday: Date;
 }
 
+interface RegularLectureSchedules {
+  regularSchedules: { [key: string]: string[] };
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -54,4 +63,6 @@ export {
   LectureToDanceGenreInputData,
   LectureNotificationResponse,
   LectureHolidayInputData,
+  RegularLectureSchedules,
+  RegularLectureScheduleInputData,
 };

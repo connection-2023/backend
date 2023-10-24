@@ -8,12 +8,9 @@ export class AuthRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getUserAuth(userEmail: string, signUpType: SignUpType): Promise<Auth> {
-    console.log(userEmail);
-
     const userAuth: Auth = await this.prismaService.auth.findFirst({
       where: { email: userEmail, deletedAt: null },
     });
-    console.log(userAuth);
 
     return userAuth;
   }

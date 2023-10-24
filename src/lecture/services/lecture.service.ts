@@ -1,7 +1,7 @@
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, PrismaPromise, Region } from '@prisma/client';
+import { Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -14,6 +14,8 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
+  RegularLectureScheduleInputData,
+  RegularLectureSchedules,
 } from '../interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
@@ -27,18 +29,18 @@ export class LectureService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async createLecture(
-    createLectureDto: CreateLectureDto,
-    lecturerId: number,
-    imageUrls: string[],
-  ) {
+  async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
     const {
       regions,
       schedules,
+      regularSchedules,
       genres,
       etcGenres,
       notification,
       holidays,
+      images,
+      lectureMethod,
+      lectureType,
       ...lecture
     } = createLectureDto;
 
@@ -46,9 +48,14 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        const lectureMethodId = await this.getLectureMethodId(lectureMethod);
+        const lectureTypeId = await this.getLectureTypeId(lectureType);
+
         const newLecture = await this.lectureRepository.trxCreateLecture(
           transaction,
           lecturerId,
+          lectureMethodId,
+          lectureTypeId,
           lecture,
         );
 
@@ -60,20 +67,37 @@ export class LectureService {
         );
 
         const lectureImageInputData: LectureImageInputData[] =
-          this.createLectureImageInputData(newLecture.id, imageUrls);
-        const newLectureImage =
-          await this.lectureRepository.trxCreateLectureImg(
-            transaction,
-            lectureImageInputData,
-          );
+          this.createLectureImageInputData(newLecture.id, images);
+        await this.lectureRepository.trxCreateLectureImg(
+          transaction,
+          lectureImageInputData,
+        );
 
-        const lectureScheduleInputData: LectureScheduleInputData[] =
-          this.createLectureScheduleInputData(newLecture.id, schedules);
-        const newLectureSchedule =
+        if (lectureMethod === '원데이') {
+          const lectureScheduleInputData: LectureScheduleInputData[] =
+            this.createLectureScheduleInputData(newLecture.id, schedules);
           await this.lectureRepository.trxCreateLectureSchedule(
             transaction,
             lectureScheduleInputData,
           );
+        } else if (lectureMethod === '정기') {
+          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
+            this.createRegularLectureScheduleInputData(
+              newLecture.id,
+              regularSchedules,
+            );
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            regularLectureScheduleInputData,
+          );
+        }
+
+        const lectureHolidayInputData: LectureHolidayInputData[] =
+          this.createLectureHolidayInputData(newLecture.id, holidays);
+        await this.lectureRepository.trxCreateLectureHoliday(
+          transaction,
+          lectureHolidayInputData,
+        );
 
         const lectureToDanceGenreInputData: LectureToDanceGenreInputData[] =
           await this.createLecturerDanceGenreInputData(
@@ -82,31 +106,24 @@ export class LectureService {
             etcGenres,
           );
 
-        const newLectureGenre =
-          await this.lectureRepository.trxCreateLectureToDanceGenres(
-            transaction,
-            lectureToDanceGenreInputData,
-          );
+        await this.lectureRepository.trxCreateLectureToDanceGenres(
+          transaction,
+          lectureToDanceGenreInputData,
+        );
 
-        const newLectureNotification =
-          await this.lectureRepository.trxCreateLectureNotification(
-            transaction,
-            newLecture.id,
-            notification,
-          );
+        await this.lectureRepository.trxCreateLectureNotification(
+          transaction,
+          newLecture.id,
+          notification,
+        );
 
-        const lectureHolidayInputData: LectureHolidayInputData[] =
-          this.createLectureHolidayInputData(newLecture.id, holidays);
-        const newLectureHoliday =
-          await this.lectureRepository.trxCreateLectureHoliday(
-            transaction,
-            lectureHolidayInputData,
-          );
-
-        return newLecture;
+        return {
+          newLecture,
+        };
       },
     );
   }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
@@ -247,68 +264,49 @@ export class LectureService {
     return danceCategoryIds;
   }
 
-  // async readManyLecture(query: ReadManyLectureQueryDto): Promise<Lecture> {
-  //   const { ...filter } = query;
-  //   const where = this.queryFilter.buildWherePropForFind(filter);
+  private async getLectureMethodId(method: string): Promise<number> {
+    const lectureMethodId = await this.prismaService.lectureMethod.findFirst({
+      where: { name: method },
+      select: { id: true },
+    });
 
-  //   const readManyLectureQuery: PrismaPromise<any> =
-  //     this.prismaService.lecture.findMany({
-  //       where: {
-  //         ...where,
-  //         deletedAt: null,
-  //       },
-  //       select: {
-  //         id: true,
-  //         title: true,
-  //         price: true,
-  //         stars: true,
-  //         reviewCount: true,
-  //         duration: true,
-  //         lecturer: {
-  //           select: {
-  //             id: true,
-  //             nickname: true,
-  //           },
-  //         },
-  //         region: true,
-  //         danceCategory: true,
-  //         lectureMethod: true,
-  //       },
-  //     });
-  //   return readManyLectureQuery;
-  // }
+    if (!lectureMethodId) {
+      throw new BadRequestException('잘못된 강의 메소드입니다.');
+    }
 
-  // async readOneLecture(lectureId: number): Promise<any> {
-  //   return await this.prismaService.lecture.findFirst({
-  //     where: { id: lectureId },
-  //     include: {
-  //       region: true,
-  //       lectureMethod: true,
-  //       lecturer: {
-  //         select: { id: true, nickname: true },
-  //       },
-  //       lectureReview: {
-  //         select: {
-  //           users: { select: { id: true, nickname: true } },
-  //           stars: true,
-  //           description: true,
-  //         },
-  //       },
-  //     },
-  //   });
-  // }
+    return lectureMethodId.id;
+  }
 
-  // async updateLecture(
-  //   lecture: UpdateLectureDto,
-  //   lectureId: number,
-  // ): Promise<any> {
-  //   return await this.prismaService.lecture.update({
-  //     where: { id: lectureId },
-  //     data: { ...lecture },
-  //   });
-  // }
+  private async getLectureTypeId(type: string): Promise<number> {
+    const lectureTypeId = await this.prismaService.lectureType.findFirst({
+      where: { name: type },
+      select: { id: true },
+    });
 
-  // async deleteLecture(lectureId: number): Promise<any> {
-  //   return this.prismaService.lecture.delete({ where: { id: lectureId } });
-  // }
+    if (!lectureTypeId) {
+      throw new BadRequestException('잘못된 강의 타입입니다.');
+    }
+
+    return lectureTypeId.id;
+  }
+
+  private createRegularLectureScheduleInputData(
+    lectureId: number,
+    regularSchedules: RegularLectureSchedules,
+  ) {
+    const regularScheduleInputData = [];
+    for (const team in regularSchedules) {
+      regularSchedules[team].map((date) => {
+        const regularSchedule = {
+          lectureId,
+          team,
+          startDateTime: new Date(date),
+          numberOfParticipants: 0,
+        };
+        regularScheduleInputData.push(regularSchedule);
+      });
+    }
+
+    return regularScheduleInputData;
+  }
 }

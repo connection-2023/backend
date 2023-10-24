@@ -9,13 +9,19 @@ import {
   Post,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { UploadsService } from '@src/uploads/services/uploads.service';
+import { Lecture, Lecturer, Users } from '@prisma/client';
+import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
+import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { ValidateResult } from '@src/common/interface/common-interface';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -25,61 +31,25 @@ export class LectureController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  @ApiOperation({
-    summary: '강의 생성',
-  })
-  @ApiConsumes('multipart/form-data')
+  @ApiCreateLecture()
   @Post()
-  @UseInterceptors(FilesInterceptor('files', 5))
+  @UseGuards(LecturerAccessTokenGuard)
   async createLecture(
-    @UploadedFiles() files: Express.Multer.File[],
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() lecture: CreateLectureDto,
   ) {
-    const danceLecturerId = 1;
-    const imgurl: string[] = [];
-
-    await Promise.all(
-      files.map(async (file: Express.Multer.File) => {
-        const url = await this.uploadsService.uploadFileToS3('lectures', file);
-        imgurl.push(url);
-      }),
-    );
-
     return await this.lectureService.createLecture(
       lecture,
-      danceLecturerId,
-      imgurl,
+      authorizedData.lecturer.id,
     );
   }
 
-  // @ApiOperation({
-  //   summary: '강의 전부 조회',
-  // })
-  // @Get()
-  // readManyLecture(@Query() query: ReadManyLectureQueryDto) {
-  //   return this.lectureService.readManyLecture(query);
-  // }
-
-  // @ApiOperation({
-  //   summary: '강의 단일 조회',
-  // })
-  // @Get('/:id')
-  // readOneLecture(@Param('id', ParseIntPipe) lectureId: number) {
-  //   return this.lectureService.readOneLecture(lectureId);
-  // }
-
-  // @ApiOperation({ summary: '강의 수정' })
-  // @Patch('/:id')
-  // updateLecture(
-  //   @Param('id', ParseIntPipe) lectureId: number,
+  // @Patch(':lectureId')
+  // @UseInterceptors(FilesInterceptor('files', 5))
+  // @UseGuards(UserAccessTokenGuard)
+  // async updateLecture(
+  //   @GetAuthorizedUser() user: Users,
+  //   @UploadedFiles() files: Express.Multer.File[],
   //   @Body() lecture: UpdateLectureDto,
-  // ) {
-  //   return this.lectureService.updateLecture(lecture, lectureId);
-  // }
-
-  // @ApiOperation({ summary: '강의 삭제' })
-  // @Delete('/:id')
-  // deleteLecture(@Param('id', ParseIntPipe) lectureId: number) {
-  //   return this.lectureService.deleteLecture(lectureId);
-  // }
+  // ) {}
 }

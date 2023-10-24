@@ -12,3 +12,12 @@ export enum DanceCategory {
   '키즈댄스' = '키즈댄스',
   '기타' = '기타',
 }
+
+export enum DanceMethod {
+  '원데이' = '원데이',
+  '정기' = '정기',
+}
+
+export enum LectureType {
+  'dance' = 'dance',
+}
