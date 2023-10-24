@@ -395,7 +395,9 @@ model TemporaryLecture {
   //고유 id
   id                           Int                            @id @default(autoincrement())
   //강사 id
-  lecturerId                   Int?
+  lecturerId                   Int
+  //작성 진행 단계
+  step  Int?
   //강의 종류 id
   lectureTypeId                Int?
   //강의 형식 id
@@ -436,7 +438,7 @@ model TemporaryLecture {
   updatedAt                    DateTime                       @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
   deletedAt                    DateTime?                      @db.Timestamp(6)
-  lecturer                     Lecturer?                      @relation(fields: [lecturerId], references: [id])
+  lecturer                     Lecturer                       @relation(fields: [lecturerId], references: [id])
   lectureType                  LectureType?                   @relation(fields: [lectureTypeId], references: [id])
   lectureMethod                LectureMethod?                 @relation(fields: [lectureMethodId], references: [id])
   temporaryLecturenotification TemporaryLectureNotification[]
@@ -449,66 +451,67 @@ model TemporaryLecture {
 }
 
 model TemporaryLectureSchedule {
-  id                   Int               @id @default(autoincrement())
-  lectureId            Int?
+  id                   Int              @id @default(autoincrement())
+  lectureId            Int
   startDateTime        DateTime?
   numberOfParticipants Int?
   team                 String?
-  temporaryLecture     TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
 
 model TemporaryLectureToRegion {
-  id               Int               @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   regionId         Int?
-  lectureId        Int?
-  region           Region?           @relation(fields: [regionId], references: [id])
-  temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  lectureId        Int
+  region           Region?          @relation(fields: [regionId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
 
 model TemporaryLectureToDanceGenre {
   id               Int               @id @default(autoincrement())
   danceCategoryId  Int?
-  lectureId        Int?
+  lectureId        Int
   name             String?
   danceCategory    DanceCategory?    @relation(fields: [danceCategoryId], references: [id])
   temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id])
 }
 
 model TemporaryLectureHoliday {
-  id               Int               @id @default(autoincrement())
-  lectureId        Int?
+  id               Int              @id @default(autoincrement())
+  lectureId        Int
   holiday          DateTime?
-  temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
 
 model TemporaryLectureCouponTarget {
-  id               Int               @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   lectureCouponId  Int?
-  lectureId        Int?
-  lectureCoupon    LectureCoupon?    @relation(fields: [lectureCouponId], references: [id])
-  temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  lectureId        Int
+  lectureCoupon    LectureCoupon?   @relation(fields: [lectureCouponId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
 
 model TemporaryLectureNotification {
   //고유 id
-  id               Int               @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   //강의 id
-  lectureId        Int?              @unique
+  lectureId        Int              @unique
   //공지사항
-  notification     String?           @db.VarChar(200)
+  notification     String?          @db.VarChar(200)
   //수정일자
-  updatedAt        DateTime          @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt        DateTime         @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt        DateTime?         @db.Timestamp(6)
-  temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  deletedAt        DateTime?        @db.Timestamp(6)
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
 
 model TemporaryLectureImage {
   //고유 id
-  id               Int               @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   //강의 id
-  lectureId        Int?
+  lectureId        Int
   //이미지 url
   imageUrl         String?
-  temporaryLecutre TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  temporaryLecutre TemporaryLecture @relation(fields: [lectureId], references: [id])
 }
+
