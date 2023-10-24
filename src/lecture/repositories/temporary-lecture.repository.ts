@@ -13,6 +13,7 @@ import {
 import {
   TemporaryLectureImageInputData,
   TemporaryLectureScheduleInputData,
+  TemporaryLectureToDanceGenreInputData,
   TemporaryLectureToRegionInputData,
 } from '../interface/temporary-lecture.interface';
 
@@ -97,12 +98,21 @@ export class LectureRepository {
     return regionsId;
   }
 
-  async trxCreateLectureToDanceGenres(
+  async trxCreateTemporaryLectureToDanceGenres(
     transaction: PrismaTransaction,
-    lectureToDanceGenreInputData: LectureToDanceGenreInputData[],
+    temporaryLectureToDanceGenreInputData: TemporaryLectureToDanceGenreInputData[],
   ): Promise<void> {
-    await transaction.lectureToDanceGenre.createMany({
-      data: lectureToDanceGenreInputData,
+    await transaction.temporaryLectureToDanceGenre.createMany({
+      data: temporaryLectureToDanceGenreInputData,
+    });
+  }
+
+  async trxDeleteTemporaryLectureToDanceGenres(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureToDanceGenre.deleteMany({
+      where: { lectureId },
     });
   }
 
