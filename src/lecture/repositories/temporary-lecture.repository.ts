@@ -1,18 +1,11 @@
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, Region, TemporaryLectureSchedule } from '@prisma/client';
+import { Lecture, Region } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
-  LectureHolidayInputData,
-  LectureImageInputData,
-  LectureInputData,
-  LectureScheduleInputData,
-  LectureToDanceGenreInputData,
-  LectureToRegionInputData,
-} from '@src/lecture/interface/lecture.interface';
-import {
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
+  TemporaryLectureInputData,
   TemporaryLectureScheduleInputData,
   TemporaryLectureToDanceGenreInputData,
   TemporaryLectureToRegionInputData,
@@ -28,7 +21,7 @@ export class LectureRepository {
     lectureId: number,
     lectureMethodId: number,
     lectureTypeId: number,
-    lecture: LectureInputData,
+    lecture: TemporaryLectureInputData,
   ): Promise<Lecture> {
     return await transaction.lecture.update({
       where: { id: lectureId },

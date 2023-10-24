@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Region, TemporaryLecture } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { TemporaryLectureRepository } from '@src/lecture/repositories/temporary-lecture.repository';
-import { Id } from '@src/common/interface/common-interface';
+import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import {
   RegularTemporaryLectureSchedules,
   TemporaryLectureHolidayInputData,
@@ -14,6 +14,7 @@ import {
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
+import { UpsertTemporaryLectureDto } from '../dtos/update-temporary-lecture.dto';
 
 @Injectable()
 export class LectureTemporarilySaveService {
@@ -27,6 +28,31 @@ export class LectureTemporarilySaveService {
     return await this.prismaService.temporaryLecture.create({
       data: { lecturerId },
     });
+  }
+
+  async upsertTemporaryLecture(
+    lecturerId: number,
+    upsertTemporaryLectureDto: UpsertTemporaryLectureDto,
+  ) {
+    const {
+      regions,
+      schedules,
+      regularSchedules,
+      genres,
+      etcGenres,
+      notification,
+      holidays,
+      images,
+      lectureMethod,
+      lectureType,
+      ...lecture
+    } = upsertTemporaryLectureDto;
+
+    const regionIds: Id[] = await this.getValidRegionIds(regions);
+
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {},
+    );
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
