@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
@@ -12,7 +12,7 @@ export class LectureTemporarilySaveController {
     private readonly lectureTemporarilySaveService: LectureTemporarilySaveService,
   ) {}
 
-  @ApiOperation({ summary: '임시저장 데이터 생성' })
+  @ApiOperation({ summary: '임시저장 디폴트 데이터 생성' })
   @ApiBearerAuth()
   @Post()
   @UseGuards(LecturerAccessTokenGuard)
@@ -21,6 +21,20 @@ export class LectureTemporarilySaveController {
   ) {
     return this.lectureTemporarilySaveService.createTemporaryLecture(
       authorizedData.lecturer.id,
+    );
+  }
+
+  @ApiOperation({ summary: '임시저장' })
+  @ApiBearerAuth()
+  @Patch()
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateTemporaryLecture(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() temporaryLecture,
+  ) {
+    return this.lectureTemporarilySaveService.updateTemporaryLecture(
+      authorizedData.lecturer.id,
+      temporaryLecture,
     );
   }
 }

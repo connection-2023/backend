@@ -7,10 +7,10 @@ interface LectureInputData {
   difficultyLevel: string;
   minCapacity: number;
   maxCapacity: number;
-  reservationComment: string | null;
+  reservationComment?: string;
   reservationDeadline: Date;
   price: number;
-  noShowDeposit: number | null;
+  noShowDeposit?: number;
 }
 
 interface LectureToRegionInputData {
