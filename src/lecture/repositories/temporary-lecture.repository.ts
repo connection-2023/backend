@@ -10,7 +10,11 @@ import {
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
 } from '@src/lecture/interface/lecture.interface';
-import { TemporaryLectureScheduleInputData } from '../interface/temporary-lecture.interface';
+import {
+  TemporaryLectureImageInputData,
+  TemporaryLectureScheduleInputData,
+  TemporaryLectureToRegionInputData,
+} from '../interface/temporary-lecture.interface';
 
 @Injectable()
 export class LectureRepository {
@@ -50,7 +54,7 @@ export class LectureRepository {
 
   async trxCreateLectureImage(
     transaction: PrismaTransaction,
-    temporaryLectureImage: LectureImageInputData[],
+    temporaryLectureImage: TemporaryLectureImageInputData[],
   ): Promise<void> {
     await transaction.temporaryLectureImage.createMany({
       data: temporaryLectureImage,
@@ -68,10 +72,19 @@ export class LectureRepository {
 
   async trxCreateLectureToRegions(
     transaction: PrismaTransaction,
-    lectureToRegionInputData: LectureToRegionInputData[],
+    temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[],
   ): Promise<void> {
-    await transaction.lectureToRegion.createMany({
-      data: lectureToRegionInputData,
+    await transaction.temporaryLectureToRegion.createMany({
+      data: temporaryLectureToRegionInputData,
+    });
+  }
+
+  async trxDeleteLectureToREgions(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureToRegion.deleteMany({
+      where: { lectureId },
     });
   }
 
