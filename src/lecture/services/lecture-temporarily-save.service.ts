@@ -32,7 +32,6 @@ export class LectureTemporarilySaveService {
   }
 
   async upsertTemporaryLecture(
-    lecturerId: number,
     upsertTemporaryLectureDto: UpsertTemporaryLectureDto,
   ) {
     const {
@@ -118,9 +117,49 @@ export class LectureTemporarilySaveService {
               etcGenres,
             );
 
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureToDanceGenres(
+            transaction,
+            lecture.lectureId,
+          );
           await this.temporaryLectureRepository.trxCreateTemporaryLectureToDanceGenres(
             transaction,
             temporaryLectureToDanceGenreInputData,
+          );
+        }
+
+        if (notification) {
+          await this.temporaryLectureRepository.trxUpsertTemporaryLectureNotification(
+            transaction,
+            lecture.lectureId,
+            notification,
+          );
+        }
+
+        if (holidays) {
+          const temporaryLectureHolidayInputData: TemporaryLectureHolidayInputData[] =
+            this.createLectureHolidayInputData(lecture.lectureId, holidays);
+
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureHoliday(
+            transaction,
+            lecture.lectureId,
+          );
+          await this.temporaryLectureRepository.trxCreateTemporaryLectureHoliday(
+            transaction,
+            temporaryLectureHolidayInputData,
+          );
+        }
+
+        if (images) {
+          const temporaryLectureImageInputData: TemporaryLectureImageInputData[] =
+            this.createLectureImageInputData(lecture.lectureId, images);
+
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureImage(
+            transaction,
+            lecture.lectureId,
+          );
+          await this.temporaryLectureRepository.trxCreateTemporaryLectureImage(
+            transaction,
+            temporaryLectureImageInputData,
           );
         }
       },
