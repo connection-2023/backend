@@ -116,13 +116,15 @@ export class LectureRepository {
     });
   }
 
-  async trxCreateLectureNotification(
+  async trxUpsertTemporaryLectureNotification(
     transaction: PrismaTransaction,
     lectureId: number,
     notification: string,
   ): Promise<void> {
-    await transaction.lectureNotification.create({
-      data: { lectureId, notification },
+    await transaction.temporaryLectureNotification.upsert({
+      where: { lectureId },
+      update: { lectureId, notification },
+      create: { lectureId, notification },
     });
   }
   async trxCreateLectureHoliday(
