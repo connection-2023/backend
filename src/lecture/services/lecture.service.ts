@@ -9,6 +9,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
+  LectureCouponTargetInputData,
   LectureHolidayInputData,
   LectureImageInputData,
   LectureScheduleInputData,
@@ -41,6 +42,7 @@ export class LectureService {
       images,
       lectureMethod,
       lectureType,
+      coupons,
       ...lecture
     } = createLectureDto;
 
@@ -92,12 +94,14 @@ export class LectureService {
           );
         }
 
-        const lectureHolidayInputData: LectureHolidayInputData[] =
-          this.createLectureHolidayInputData(newLecture.id, holidays);
-        await this.lectureRepository.trxCreateLectureHoliday(
-          transaction,
-          lectureHolidayInputData,
-        );
+        if (holidays) {
+          const lectureHolidayInputData: LectureHolidayInputData[] =
+            this.createLectureHolidayInputData(newLecture.id, holidays);
+          await this.lectureRepository.trxCreateLectureHoliday(
+            transaction,
+            lectureHolidayInputData,
+          );
+        }
 
         const lectureToDanceGenreInputData: LectureToDanceGenreInputData[] =
           await this.createLecturerDanceGenreInputData(
@@ -111,12 +115,25 @@ export class LectureService {
           lectureToDanceGenreInputData,
         );
 
-        await this.lectureRepository.trxCreateLectureNotification(
-          transaction,
-          newLecture.id,
-          notification,
-        );
+        if (notification) {
+          await this.lectureRepository.trxCreateLectureNotification(
+            transaction,
+            newLecture.id,
+            notification,
+          );
+        }
 
+        if (coupons) {
+          const lectureCouponTargetInputData: LectureCouponTargetInputData[] =
+            this.createLectureCouponTargetInputData(newLecture.id, coupons);
+
+          console.log(lectureCouponTargetInputData);
+
+          await this.lectureRepository.trxCreateLectureCouponTarget(
+            transaction,
+            lectureCouponTargetInputData,
+          );
+        }
         return {
           newLecture,
         };
@@ -145,9 +162,13 @@ export class LectureService {
       let administrativeDistrict = null;
       let district = null;
 
-      if (addressParts[0] === '세종특별자치시') {
-        administrativeDistrict = addressParts.shift();
+      if (
+        addressParts[0] === '세종특별자치시' ||
+        addressParts[0] === '온라인'
+      ) {
+        return { administrativeDistrict: addressParts[0] };
       }
+
       if (addressParts[0].endsWith('시') || addressParts[0].endsWith('도')) {
         administrativeDistrict = addressParts.shift();
       } else {
@@ -163,9 +184,11 @@ export class LectureService {
         addressParts[0].endsWith('구')
       ) {
         district = addressParts.shift();
+      } else if (addressParts[0] === '전' && addressParts[1] === '지역') {
+        district = addressParts.join(' ');
       } else {
         throw new BadRequestException(
-          `잘못된 주소형식입니다`,
+          '잘못된 주소형식입니다',
           'InvalidAddressFormat',
         );
       }
@@ -308,5 +331,17 @@ export class LectureService {
     }
 
     return regularScheduleInputData;
+  }
+
+  private createLectureCouponTargetInputData(
+    lectureId: number,
+    coupons: number[],
+  ) {
+    const lectureCouponTargetInputData: LectureCouponTargetInputData[] =
+      coupons.map((coupon) => ({
+        lectureCouponId: coupon,
+        lectureId: lectureId,
+      }));
+    return lectureCouponTargetInputData;
   }
 }
