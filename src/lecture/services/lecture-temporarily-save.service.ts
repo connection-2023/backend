@@ -6,6 +6,7 @@ import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import {
   RegularTemporaryLectureScheduleInputData,
   RegularTemporaryLectureSchedules,
+  TemporaryLectureCouponTargetInputData,
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureScheduleInputData,
@@ -46,6 +47,7 @@ export class LectureTemporarilySaveService {
       images,
       lectureMethod,
       lectureType,
+      coupons,
       ...lecture
     } = upsertTemporaryLectureDto;
 
@@ -164,8 +166,44 @@ export class LectureTemporarilySaveService {
             temporaryLectureImageInputData,
           );
         }
+
+        if (coupons) {
+          const lectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[] =
+            this.createLectureCouponTargetInputData(lectureId, coupons);
+
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureCouponTarget(
+            transaction,
+            lectureId,
+          );
+          await this.temporaryLectureRepository.trxCreateTemporaryLectureCouponTarget(
+            transaction,
+            lectureCouponTargetInputData,
+          );
+        }
       },
     );
+  }
+
+  async readOneTemporaryLecture(lecturerId: number, lectureId: number) {
+    const getTemporaryLectureByLecturerId =
+      await this.prismaService.temporaryLecture.findFirst({
+        where: { lecturerId, id: lectureId },
+      });
+
+    if (!getTemporaryLectureByLecturerId) {
+      throw new BadRequestException('접근 권한이 없습니다.');
+    }
+
+    return await this.temporaryLectureRepository.readOneTemporaryLecture(
+      lectureId,
+    );
+  }
+
+  async readManyTemporaryLecture(lecturerId: number): Promise<Id[]> {
+    return this.prismaService.temporaryLecture.findMany({
+      where: { lecturerId },
+      select: { id: true },
+    });
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -359,5 +397,17 @@ export class LectureTemporarilySaveService {
     }
 
     return regularScheduleInputData;
+  }
+
+  private createLectureCouponTargetInputData(
+    lectureId: number,
+    coupons: number[],
+  ) {
+    const lectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[] =
+      coupons.map((coupon) => ({
+        lectureCouponId: coupon,
+        lectureId: lectureId,
+      }));
+    return lectureCouponTargetInputData;
   }
 }
