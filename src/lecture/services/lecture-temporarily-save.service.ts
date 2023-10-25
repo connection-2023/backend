@@ -184,6 +184,21 @@ export class LectureTemporarilySaveService {
     );
   }
 
+  async readOneTemporaryLecture(lecturerId: number, lectureId: number) {
+    const getTemporaryLectureByLecturerId =
+      await this.prismaService.temporaryLecture.findFirst({
+        where: { lecturerId, id: lectureId },
+      });
+
+    if (!getTemporaryLectureByLecturerId) {
+      throw new BadRequestException('접근 권한이 없습니다.');
+    }
+
+    return await this.temporaryLectureRepository.readOneTemporaryLecture(
+      lectureId,
+    );
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.temporaryLectureRepository.getRegionsId(

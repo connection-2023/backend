@@ -442,12 +442,12 @@ model TemporaryLecture {
   lectureType                  LectureType?                   @relation(fields: [lectureTypeId], references: [id])
   lectureMethod                LectureMethod?                 @relation(fields: [lectureMethodId], references: [id])
   temporaryLecturenotification TemporaryLectureNotification[]
-  temporarylectureImage        TemporaryLectureImage[]
-  temporarylectureCouponTarget TemporaryLectureCouponTarget[]
-  temporarylectureSchedule     TemporaryLectureSchedule[]
-  temporarylectureToRegion     TemporaryLectureToRegion[]
-  temporarylectureToDanceGenre TemporaryLectureToDanceGenre[]
-  temporarylectureHoliday      TemporaryLectureHoliday[]
+  temporaryLectureImage        TemporaryLectureImage[]
+  temporaryLectureCouponTarget TemporaryLectureCouponTarget[]
+  temporaryLectureSchedule     TemporaryLectureSchedule[]
+  temporaryLectureToRegion     TemporaryLectureToRegion[]
+  temporaryLectureToDanceGenre TemporaryLectureToDanceGenre[]
+  temporaryLectureHoliday      TemporaryLectureHoliday[]
 }
 
 model TemporaryLectureSchedule {

@@ -1,5 +1,5 @@
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, Region } from '@prisma/client';
+import { Lecture, Region, TemporaryLecture } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
@@ -153,6 +153,35 @@ export class LectureTemporarilySaveRepository {
   ): Promise<void> {
     await transaction.temporaryLectureCouponTarget.deleteMany({
       where: { lectureId },
+    });
+  }
+
+  async readOneTemporaryLecture(lectureId: number): Promise<TemporaryLecture> {
+    return await this.prismaService.temporaryLecture.findFirst({
+      where: { id: lectureId },
+      include: {
+        temporaryLecturenotification: { select: { notification: true } },
+        temporaryLectureImage: { select: { imageUrl: true } },
+        temporaryLectureCouponTarget: { select: { lectureCouponId: true } },
+        temporaryLectureSchedule: {
+          select: {
+            startDateTime: true,
+            team: true,
+            numberOfParticipants: true,
+          },
+        },
+        temporaryLectureToRegion: {
+          select: {
+            region: {
+              select: { administrativeDistrict: true, district: true },
+            },
+          },
+        },
+        temporaryLectureToDanceGenre: {
+          select: { name: true, danceCategory: { select: { genre: true } } },
+        },
+        temporaryLectureHoliday: { select: { holiday: true } },
+      },
     });
   }
 }

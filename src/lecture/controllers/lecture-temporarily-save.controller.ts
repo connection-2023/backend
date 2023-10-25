@@ -1,10 +1,19 @@
-import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { LectureTemporarilySaveService } from '@src/lecture/services/lecture-temporarily-save.service';
 import { UpsertTemporaryLectureDto } from '../dtos/update-temporary-lecture.dto';
+import { ApiReadOneTemporaryLecture } from '../swagger-decorators/read-one-temporary-lecture-decorator';
 
 @ApiTags('강의')
 @Controller('lecture-temporarily-save')
@@ -35,5 +44,20 @@ export class LectureTemporarilySaveController {
     return await this.lectureTemporarilySaveService.upsertTemporaryLecture(
       upsertTemporaryLectureDto,
     );
+  }
+
+  @ApiReadOneTemporaryLecture()
+  @Get(':lectureId')
+  @UseGuards(LecturerAccessTokenGuard)
+  async readOneTemporaryLecture(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId') lectureId: number,
+  ) {
+    const temporaryLecture =
+      await this.lectureTemporarilySaveService.readOneTemporaryLecture(
+        authorizedData.lecturer.id,
+        lectureId,
+      );
+    return { temporaryLecture };
   }
 }
