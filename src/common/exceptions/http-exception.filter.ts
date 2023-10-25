@@ -20,8 +20,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (status === 401 && ctx.getResponse().req.authInfo) {
       const errorMessageObject = ctx.getResponse().req.authInfo;
-      console.log(errorMessageObject);
-
       const errorMessage = errorMessageObject.message;
 
       let errorType: string;
