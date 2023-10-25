@@ -558,7 +558,6 @@ model PaymentStatus {
 model PaymentCouponUsage {
   id               Int @id @default(autoincrement())
   lecturePaymentId Int @unique
-
   couponId                        Int?
   couponPercentage                Int?
   couponDiscountPrice             Int?

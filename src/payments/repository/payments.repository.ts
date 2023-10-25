@@ -2,20 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LectureCoupon,
+  LectureCouponUseage,
   LecturePaymentInputData,
   LectureSchedule,
   ReservationInputData,
-} from '../interface/payments.interface';
+} from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class PaymentsRepository {
   constructor(private readonly prismaService: PrismaService) {}
-  /**
-   * 1.  유저 쿠폰 리스트에서 쿠폰들고옴 이떄 조건 해당 랙처 id일떄 또한 사용 안한 쿠폰
-   * 2. 가져와야할것 강의 가격, 퍼센트, 할인가격 최대 가격
-   * 3.
-   */
+
   async getUserCoupon(
     userId,
     lectureCouponId,
@@ -49,12 +46,23 @@ export class PaymentsRepository {
     });
   }
 
-  async getLectureCouponTarget(lectureId: number, couponIds: number[]) {
+  async getLectureCouponTarget(
+    lectureId: number,
+    couponIds: number[],
+  ): Promise<LectureCouponUseage[]> {
     return await this.prismaService.lectureCouponTarget.findMany({
       where: {
         lectureId,
         lectureCouponId: {
           in: couponIds,
+        },
+      },
+      select: {
+        lectureCoupon: {
+          select: {
+            maxUsageCount: true,
+            usageCount: true,
+          },
         },
       },
     });
@@ -119,5 +127,39 @@ export class PaymentsRepository {
     reservationInputData: ReservationInputData,
   ) {
     await transaction.reservation.create({ data: reservationInputData });
+  }
+
+  async trxUpdateLectureCouponUseage(
+    transaction: PrismaTransaction,
+    couponIds: number[],
+  ) {
+    await transaction.lectureCoupon.updateMany({
+      where: { id: { in: couponIds } },
+      data: {
+        usageCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async trxCreatePaymentCouponUsage(
+    transaction: PrismaTransaction,
+    paymentCouponUsageInputData,
+  ) {
+    await transaction.paymentCouponUsage.create({
+      data: paymentCouponUsageInputData,
+    });
+  }
+
+  async trxUpdateUserCouponUsage(
+    transaction: PrismaTransaction,
+    userId: number,
+    couponIds: number[],
+  ) {
+    await transaction.userCoupon.updateMany({
+      where: { userId, lectureCouponId: { in: couponIds } },
+      data: { isUsed: true },
+    });
   }
 }

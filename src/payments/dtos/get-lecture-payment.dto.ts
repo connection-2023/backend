@@ -6,8 +6,8 @@ import {
   IsOptional,
   Matches,
 } from 'class-validator';
-import { LectureSchedule } from '../interface/payments.interface';
-import { PaymentMethods } from '../enum/payment.enum';
+import { LectureSchedule } from '@src/payments/interface/payments.interface';
+import { PaymentMethods } from '@src/payments/enum/payment.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetLecturePaymentDto {

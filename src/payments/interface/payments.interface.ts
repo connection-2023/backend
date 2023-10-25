@@ -1,3 +1,5 @@
+import { PaymentMethods } from '@src/payments/enum/payment.enum';
+
 interface LectureSchedule {
   lectureScheduleId: number;
   participants: number;
@@ -38,6 +40,19 @@ interface ReservationInputData {
   requests?: string | null;
 }
 
+interface LecturePaymentInfo {
+  orderId: string;
+  orderName: string;
+  value: number;
+  method: PaymentMethods;
+}
+interface LectureCouponUseage {
+  lectureCoupon: {
+    maxUsageCount: number;
+    usageCount: number;
+  };
+}
+
 export {
   LectureSchedule,
   LectureCoupon,
@@ -45,4 +60,6 @@ export {
   Coupons,
   LecturePaymentInputData,
   ReservationInputData,
+  LecturePaymentInfo,
+  LectureCouponUseage,
 };

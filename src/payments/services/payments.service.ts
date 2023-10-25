@@ -13,14 +13,18 @@ import {
   Coupon,
   Coupons,
   LectureCoupon,
+  LectureCouponUseage,
   LectureSchedule,
   ReservationInputData,
 } from '../interface/payments.interface';
-import { v4 as uuidV4 } from 'uuid';
 import { PrismaService } from '@src/prisma/prisma.service';
+import {
+  Lecture,
+  LecturePayment,
+  PaymentMethod,
+  PaymentStatus,
+} from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import methods from 'cache-manager-redis-store';
-import { LecturePayment, PaymentMethod, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -48,49 +52,74 @@ export class PaymentsService implements OnModuleInit {
     this.logger.log('PaymentsService Init');
   }
 
-  async verifyBankAccount() {
-    const accessToken = this.getKFTAccessToken();
-  }
+  // async verifyBankAccount() {
+  //   const accessToken = this.getKFTAccessToken();
+  // }
 
-  private async getKFTAccessToken() {
-    const data = {
-      client_id: this.kftClientId,
-      client_secret: this.kftClientSecret,
-      scope: this.kftScope,
-      grant_type: this.kftGrantType,
+  // private async getKFTAccessToken() {
+  //   const data = {
+  //     client_id: this.kftClientId,
+  //     client_secret: this.kftClientSecret,
+  //     scope: this.kftScope,
+  //     grant_type: this.kftGrantType,
+  //   };
+  //   const response = await axios.post(this.kftGetTokenUri, data);
+  // }
+
+  async createLecturePaymentInfo(
+    userId: number,
+    getLecturePaymentDto: GetLecturePaymentDto,
+  ) {
+    const lecture: Lecture = await this.checkLectureValidity(
+      getLecturePaymentDto,
+    );
+    await this.checkUserPaymentValidity(userId, getLecturePaymentDto.orderId);
+
+    // 강의 자리수 확인 및 쿠폰 비교
+    const coupons = await this.comparePrice(
+      userId,
+      lecture.price,
+      getLecturePaymentDto,
+    );
+
+    await this.createPaymentTransaction(userId, getLecturePaymentDto, coupons);
+    const lecturePaymentInfo = {
+      orderId: getLecturePaymentDto.orderId,
+      orderName: getLecturePaymentDto.orderName,
+      value: getLecturePaymentDto.price,
+      method: getLecturePaymentDto.method,
     };
-    const response = await axios.post(this.kftGetTokenUri, data);
+    return lecturePaymentInfo;
   }
-  //만들어야할것 1. 렉처 페이먼트 굳
-  //2.스케쥴 +
-  //3.쿠폰 사용됨
-  //4. reservation 생성
-  //5. paymentCouponUsage
-  async createLecturePaymentInfo(getLecturePaymentDto: GetLecturePaymentDto) {
-    const { couponId, stackableCouponId } = getLecturePaymentDto;
-    const lecture = await this.checkLectureValidity(getLecturePaymentDto);
-    await this.checkUserPaymentValidity(1, getLecturePaymentDto.orderId);
 
-    //강의 자리수 확인
-    await this.comparePrice(1, lecture.price, getLecturePaymentDto);
-
+  private async createPaymentTransaction(
+    userId: number,
+    getLecturePaymentDto: GetLecturePaymentDto,
+    coupons: Coupons,
+  ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const createdLecturePayment = await this.createLecturePayment(
-          transaction,
-          1,
-          getLecturePaymentDto,
-        );
-        await this.updateUserCouponUsage(transaction, 1, {
-          couponId,
-          stackableCouponId,
-        });
-        await this.createUserReservation(
-          transaction,
-          createdLecturePayment.id,
-          1,
-          getLecturePaymentDto,
-        );
+        const createdLecturePayment: LecturePayment =
+          await this.createLecturePayment(
+            transaction,
+            userId,
+            getLecturePaymentDto,
+          );
+
+        await Promise.all([
+          this.updateCouponUsage(
+            transaction,
+            userId,
+            createdLecturePayment.id,
+            coupons,
+          ),
+          this.createUserReservation(
+            transaction,
+            userId,
+            createdLecturePayment.id,
+            getLecturePaymentDto,
+          ),
+        ]);
       },
     );
   }
@@ -100,23 +129,28 @@ export class PaymentsService implements OnModuleInit {
     couponId,
     stackableCouponId,
     lectureSchedules,
-  }: GetLecturePaymentDto) {
-    const lecture = await this.paymentsRepository.getLecture(lectureId);
+  }: GetLecturePaymentDto): Promise<Lecture> {
+    const lecture: Lecture = await this.paymentsRepository.getLecture(
+      lectureId,
+    );
     if (!lecture) {
       throw new NotFoundException(`강의정보가 존재하지 않습니다.`);
     }
     if (!lecture.isActive) {
       throw new BadRequestException(`활성화되지 않은 강의입니다.`);
     }
-    //적용가능한 쿠폰인지 확인
-    await this.checkApplicableCoupon(lectureId, couponId, stackableCouponId);
-    //강의 인원수 확인
-    await this.checkLectureSchedules(lecture.maxCapacity, lectureSchedules);
+
+    Promise.all([
+      //적용가능한 쿠폰인지 확인
+      (await this.checkApplicableCoupon(lectureId, couponId, stackableCouponId),
+      //강의 인원수 확인
+      await this.checkLectureSchedules(lecture.maxCapacity, lectureSchedules)),
+    ]);
 
     return lecture;
   }
 
-  private async checkUserPaymentValidity(userId, orderId) {
+  private async checkUserPaymentValidity(userId, orderId): Promise<void> {
     const payment: LecturePayment =
       await this.paymentsRepository.getUserLecturePayment(userId, orderId);
     if (payment) {
@@ -129,6 +163,7 @@ export class PaymentsService implements OnModuleInit {
     lectureSchedules: LectureSchedule[],
   ) {
     const selectedLectureSchedules = [];
+
     for (const lectureSchedule of lectureSchedules) {
       const selectedSchedule = await this.paymentsRepository.getLectureSchedule(
         lectureSchedule.lectureScheduleId,
@@ -141,7 +176,6 @@ export class PaymentsService implements OnModuleInit {
 
       const remainingCapacity =
         lectureMaxCapacity - lectureSchedule.participants;
-
       if (remainingCapacity >= selectedSchedule.numberOfParticipants) {
         selectedLectureSchedules.push(selectedSchedule);
       } else {
@@ -156,13 +190,21 @@ export class PaymentsService implements OnModuleInit {
       (id) => id !== null,
     );
 
-    const couponTarget = await this.paymentsRepository.getLectureCouponTarget(
-      lectureId,
-      couponIds,
-    );
+    const couponTarget: LectureCouponUseage[] =
+      await this.paymentsRepository.getLectureCouponTarget(
+        lectureId,
+        couponIds,
+      );
 
     if (couponTarget.length !== couponIds.length) {
       throw new BadRequestException(`쿠폰 적용 대상이 아닙니다.`);
+    }
+    for (const coupon of couponTarget) {
+      if (
+        coupon.lectureCoupon.maxUsageCount === coupon.lectureCoupon.usageCount
+      ) {
+        throw new BadRequestException(`쿠폰 사용 제한 횟수를 초과했습니다.`);
+      }
     }
   }
 
@@ -175,7 +217,7 @@ export class PaymentsService implements OnModuleInit {
       price: clientPrice,
       lectureSchedules,
     }: GetLecturePaymentDto,
-  ) {
+  ): Promise<Coupons> {
     let numberOfApplicants: number = 0;
     lectureSchedules.map((lectureSchedule) => {
       numberOfApplicants += lectureSchedule.participants;
@@ -194,53 +236,54 @@ export class PaymentsService implements OnModuleInit {
         coupons,
         numberOfApplicants,
       );
+
+      return coupons;
     }
   }
 
   private calculateTotalPrice(
-    clientPrice,
-    lecturePrice,
+    clientPrice: number,
+    lecturePrice: number,
     { coupon, stackableCoupon }: Coupons,
-    numberOfApplicants,
-  ) {
+    numberOfApplicants: number,
+  ): void {
+    // 기본 가격
     let totalPrice: number = lecturePrice * numberOfApplicants;
 
-    const applyDiscount = (price, discountInfo) => {
-      if (
-        discountInfo &&
-        (discountInfo.percentage || discountInfo.discountPrice)
-      ) {
-        let discountAmount;
-        if (discountInfo.percentage) {
-          discountAmount = (price * discountInfo.percentage) / 100;
-          if (discountInfo.maxDiscountPrice) {
-            discountAmount = Math.min(
-              discountAmount,
-              discountInfo.maxDiscountPrice,
-            );
-          }
-        } else if (discountInfo.discountPrice) {
-          discountAmount = discountInfo.discountPrice;
-        }
-        price -= discountAmount;
-        if (price <= 0) {
-          return 0;
-        }
+    // 할인 적용 함수
+    const applyDiscount = (price: number, discountInfo: Coupon): number => {
+      if (!discountInfo) {
+        return price;
       }
+
+      const { percentage, discountPrice, maxDiscountPrice } = discountInfo;
+
+      if (percentage !== null) {
+        const discountAmount = (price * percentage) / 100;
+        if (maxDiscountPrice !== null) {
+          price -= Math.min(discountAmount, maxDiscountPrice);
+        } else {
+          price -= discountAmount;
+        }
+      } else if (discountPrice !== null) {
+        price -= discountPrice;
+      }
+
+      if (price <= 0) {
+        return 0;
+      }
+
       return price;
     };
 
-    if (coupon) {
-      totalPrice = applyDiscount(totalPrice, coupon);
-    }
-    if (stackableCoupon) {
-      totalPrice = applyDiscount(totalPrice, stackableCoupon);
-    }
+    // 각 쿠폰 적용
+    totalPrice = applyDiscount(totalPrice, coupon);
+    totalPrice = applyDiscount(totalPrice, stackableCoupon);
+
+    // 최종 가격과 클라이언트 가격 비교
     if (clientPrice !== totalPrice) {
       throw new BadRequestException(`상품 가격이 일치하지 않습니다.`);
     }
-
-    return totalPrice;
   }
 
   private async getUserCoupons(
@@ -265,10 +308,15 @@ export class PaymentsService implements OnModuleInit {
         throw new BadRequestException(`할인율은 중복적용이 불가능합니다.`);
       }
     }
+
     return coupons;
   }
 
-  private async getCoupon(userId, couponId, stackable): Promise<Coupon> {
+  private async getCoupon(
+    userId: number,
+    couponId: number,
+    stackable: boolean,
+  ): Promise<Coupon> {
     const coupon: LectureCoupon = await this.paymentsRepository.getUserCoupon(
       userId,
       couponId,
@@ -276,23 +324,23 @@ export class PaymentsService implements OnModuleInit {
     );
     if (!coupon) {
       throw new NotFoundException(
-        `${stackable ? '중복 쿠폰' : '쿠폰'}이 존재하지 않습니다.`,
+        `사용가능한 ${stackable ? '중복 쿠폰' : '쿠폰'}이 존재하지 않습니다.`,
       );
     }
     return { ...coupon.lectureCoupon };
   }
 
   private async createLecturePayment(
-    transaction,
-    userId,
+    transaction: PrismaTransaction,
+    userId: number,
     getLecturePaymentDto: GetLecturePaymentDto,
   ): Promise<LecturePayment> {
     const { method, orderName, price, orderId } = getLecturePaymentDto;
 
-    const paymentMethod: PaymentMethod =
-      await this.paymentsRepository.getPaymentMethod(method);
-    const paymentStatus: PaymentStatus =
-      await this.paymentsRepository.getPaymentStatus('결제대기');
+    const [paymentMethod, paymentStatus] = await Promise.all([
+      this.paymentsRepository.getPaymentMethod(method),
+      this.paymentsRepository.getPaymentStatus('결제대기'),
+    ]);
 
     const lecturePaymentData = {
       userId,
@@ -310,18 +358,20 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async createUserReservation(
-    transaction,
-    lecturePaymentId,
-    userId,
+    transaction: PrismaTransaction,
+    userId: number,
+    lecturePaymentId: number,
     getLecturePaymentDto: GetLecturePaymentDto,
-  ) {
+  ): Promise<void> {
     const { lectureSchedules, representative, phoneNumber, requests } =
       getLecturePaymentDto;
+
     for (const lectureSchedule of lectureSchedules) {
       await this.paymentsRepository.trxUpdateLectureScheduleParticipants(
         transaction,
         lectureSchedule,
       );
+
       const reservationInputData: ReservationInputData = {
         userId,
         lecturePaymentId,
@@ -337,9 +387,54 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  private async updateUserCouponUsage(
+  private async updateCouponUsage(
     transaction: PrismaTransaction,
     userId: number,
-    coupons,
-  ) {}
+    lecturePaymentId: number,
+    coupons: Coupons,
+  ): Promise<void> {
+    const couponIds: number[] = Object.values(coupons)
+      .map((coupon) => coupon?.id)
+      .filter((id: number) => id !== null);
+
+    const paymentCouponUsageInputData = { lecturePaymentId };
+
+    if (coupons.coupon) {
+      const couponData = coupons.coupon;
+      Object.assign(paymentCouponUsageInputData, {
+        couponId: couponData.id,
+        couponPercentage: couponData.percentage,
+        couponDiscountPrice: couponData.discountPrice,
+        couponMaxDiscountPrice: couponData.maxDiscountPrice,
+      });
+    }
+
+    if (coupons.stackableCoupon) {
+      const stackableCouponData = coupons.stackableCoupon;
+      Object.assign(paymentCouponUsageInputData, {
+        stackableCouponId: stackableCouponData.id,
+        stackableCouponPercentage: stackableCouponData.percentage,
+        stackableCouponDiscountPrice: stackableCouponData.discountPrice,
+        stackableCouponMaxDiscountPrice: stackableCouponData.maxDiscountPrice,
+      });
+    }
+
+    if (couponIds.length > 0) {
+      await Promise.all([
+        this.paymentsRepository.trxUpdateLectureCouponUseage(
+          transaction,
+          couponIds,
+        ),
+        this.paymentsRepository.trxCreatePaymentCouponUsage(
+          transaction,
+          paymentCouponUsageInputData,
+        ),
+        this.paymentsRepository.trxUpdateUserCouponUsage(
+          transaction,
+          userId,
+          couponIds,
+        ),
+      ]);
+    }
+  }
 }
