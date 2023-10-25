@@ -189,9 +189,13 @@ export class LectureTemporarilySaveService {
       let administrativeDistrict = null;
       let district = null;
 
-      if (addressParts[0] === '세종특별자치시') {
-        administrativeDistrict = addressParts.shift();
+      if (
+        addressParts[0] === '세종특별자치시' ||
+        addressParts[0] === '온라인'
+      ) {
+        return { administrativeDistrict: addressParts[0] };
       }
+
       if (addressParts[0].endsWith('시') || addressParts[0].endsWith('도')) {
         administrativeDistrict = addressParts.shift();
       } else {
@@ -207,9 +211,11 @@ export class LectureTemporarilySaveService {
         addressParts[0].endsWith('구')
       ) {
         district = addressParts.shift();
+      } else if (addressParts[0] === '전' && addressParts[1] === '지역') {
+        district = addressParts.join(' ');
       } else {
         throw new BadRequestException(
-          `잘못된 주소형식입니다`,
+          '잘못된 주소형식입니다',
           'InvalidAddressFormat',
         );
       }
