@@ -37,6 +37,8 @@ model Users {
   likedLecture     LikedLecture[]
   dailySmsUsage    DailySmsUsage?
   userCoupon       UserCoupon[]
+  lecturePayment   LecturePayment[]
+  reservation      Reservation[]
 }
 
 model UserProfileImage {
@@ -294,6 +296,8 @@ model LectureCoupon {
   lectureCouponTarget          LectureCouponTarget[]
   temporaryLectureCouponTarget TemporaryLectureCouponTarget[]
   userCoupon                   UserCoupon[]
+  paymentCouponUsages          PaymentCouponUsage[]           @relation("Coupon")
+  stackableCouponUsages        PaymentCouponUsage[]           @relation("StackableCoupon")
 }
 
 model LectureCouponTarget {
@@ -359,12 +363,13 @@ model LecturerProfileImageUrl {
 }
 
 model LectureSchedule {
-  id                   Int      @id @default(autoincrement())
+  id                   Int           @id @default(autoincrement())
   lectureId            Int
   startDateTime        DateTime
   numberOfParticipants Int
   team                 String?
-  lecture              Lecture  @relation(fields: [lectureId], references: [id])
+  lecture              Lecture       @relation(fields: [lectureId], references: [id])
+  reservation          Reservation[]
 }
 
 model LectureToRegion {
@@ -513,4 +518,74 @@ model TemporaryLectureImage {
   //이미지 url
   imageUrl         String?
   temporaryLecutre TemporaryLecture @relation(fields: [lectureId], references: [id])
+}
+
+//강의 결제내역
+model LecturePayment {
+  id                 Int                 @id @default(autoincrement())
+  paymentKey         String?
+  orderId            String              @unique
+  orderName          String
+  //가격
+  price              Int                 @db.Integer
+  userId             Int
+  paymentMethodId    Int
+  statusId           Int
+  createdAt          DateTime            @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+  user               Users               @relation(fields: [userId], references: [id])
+  paymentStatus      PaymentStatus       @relation(fields: [statusId], references: [id])
+  paymentMethod      PaymentMethod       @relation(fields: [paymentMethodId], references: [id])
+  reservation        Reservation[]
+  paymentCouponUsage PaymentCouponUsage?
+}
+
+//결제 방식
+model PaymentMethod {
+  id             Int              @id @default(autoincrement())
+  name           String
+  lecturePayment LecturePayment[]
+}
+
+//결제 상태
+model PaymentStatus {
+  id             Int              @id @default(autoincrement())
+  name           String
+  lecturePayment LecturePayment[]
+}
+
+//쿠폰 사용 내역 쿠폰 수정 대비
+model PaymentCouponUsage {
+  id               Int @id @default(autoincrement())
+  lecturePaymentId Int @unique
+
+  couponId                        Int?
+  couponPercentage                Int?
+  couponDiscountPrice             Int?
+  couponMaxDiscountPrice          Int?
+  stackableCouponId               Int?
+  stackableCouponPercentage       Int?
+  stackableCouponDiscountPrice    Int?
+  stackableCouponMaxDiscountPrice Int?
+  lecturePayment                  LecturePayment @relation(fields: [lecturePaymentId], references: [id])
+  coupon                          LectureCoupon? @relation("Coupon", fields: [couponId], references: [id])
+  stackableCoupon                 LectureCoupon? @relation("StackableCoupon", fields: [stackableCouponId], references: [id])
+}
+
+//예약 정보
+model Reservation {
+  id                Int             @id @default(autoincrement())
+  userId            Int
+  lecturePaymentId  Int
+  lectureScheduleId Int
+  //대표자
+  representative    String
+  phoneNumber       String
+  //예약 인원
+  participants      Int
+  //예약 요청사항
+  requests          String?
+  user              Users           @relation(fields: [userId], references: [id])
+  lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
+  lecturePayment    LecturePayment  @relation(fields: [lecturePaymentId], references: [id])
 }
