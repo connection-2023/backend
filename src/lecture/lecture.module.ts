@@ -8,6 +8,7 @@ import { UploadsModule } from '@src/uploads/uploads.module';
 import { LectureRepository } from './repositories/lecture.repository';
 import { LectureTemporarilySaveController } from './controllers/lecture-temporarily-save.controller';
 import { LectureTemporarilySaveService } from './services/lecture-temporarily-save.service';
+import { LectureTemporarilySaveRepository } from './repositories/temporary-lecture.repository';
 
 @Module({
   imports: [UploadsModule],
@@ -22,6 +23,7 @@ import { LectureTemporarilySaveService } from './services/lecture-temporarily-sa
     LectureLikeService,
     LectureRepository,
     LectureTemporarilySaveService,
+    LectureTemporarilySaveRepository,
   ],
 })
 export class LectureModule {}
