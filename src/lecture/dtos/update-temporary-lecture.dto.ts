@@ -234,4 +234,14 @@ export class UpsertTemporaryLectureDto {
   @IsOptional()
   @Type(() => Array)
   holidays?: string[];
+
+  @ApiProperty({
+    example: [1, 2],
+    description: '강의 생성시 적용할 쿠폰 id',
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  @Type(() => Array)
+  coupons?: number[];
 }

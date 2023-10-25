@@ -127,13 +127,12 @@ export class LectureService {
           const lectureCouponTargetInputData: LectureCouponTargetInputData[] =
             this.createLectureCouponTargetInputData(newLecture.id, coupons);
 
-          console.log(lectureCouponTargetInputData);
-
           await this.lectureRepository.trxCreateLectureCouponTarget(
             transaction,
             lectureCouponTargetInputData,
           );
         }
+
         return {
           newLecture,
         };

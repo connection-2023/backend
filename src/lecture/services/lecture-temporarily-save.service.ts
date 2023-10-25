@@ -6,6 +6,7 @@ import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import {
   RegularTemporaryLectureScheduleInputData,
   RegularTemporaryLectureSchedules,
+  TemporaryLectureCouponTargetInputData,
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureScheduleInputData,
@@ -46,6 +47,7 @@ export class LectureTemporarilySaveService {
       images,
       lectureMethod,
       lectureType,
+      coupons,
       ...lecture
     } = upsertTemporaryLectureDto;
 
@@ -162,6 +164,20 @@ export class LectureTemporarilySaveService {
           await this.temporaryLectureRepository.trxCreateTemporaryLectureImage(
             transaction,
             temporaryLectureImageInputData,
+          );
+        }
+
+        if (coupons) {
+          const lectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[] =
+            this.createLectureCouponTargetInputData(lectureId, coupons);
+
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureCouponTarget(
+            transaction,
+            lectureId,
+          );
+          await this.temporaryLectureRepository.trxCreateTemporaryLectureCouponTarget(
+            transaction,
+            lectureCouponTargetInputData,
           );
         }
       },
@@ -359,5 +375,17 @@ export class LectureTemporarilySaveService {
     }
 
     return regularScheduleInputData;
+  }
+
+  private createLectureCouponTargetInputData(
+    lectureId: number,
+    coupons: number[],
+  ) {
+    const lectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[] =
+      coupons.map((coupon) => ({
+        lectureCouponId: coupon,
+        lectureId: lectureId,
+      }));
+    return lectureCouponTargetInputData;
   }
 }

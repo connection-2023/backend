@@ -3,6 +3,7 @@ import { Lecture, Region } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
+  TemporaryLectureCouponTargetInputData,
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureInputData,
@@ -133,6 +134,24 @@ export class LectureTemporarilySaveRepository {
     lectureId: number,
   ): Promise<void> {
     await transaction.temporaryLectureHoliday.deleteMany({
+      where: { lectureId },
+    });
+  }
+
+  async trxCreateTemporaryLectureCouponTarget(
+    transaction: PrismaTransaction,
+    temporaryLectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[],
+  ): Promise<void> {
+    await transaction.temporaryLectureCouponTarget.createMany({
+      data: temporaryLectureCouponTargetInputData,
+    });
+  }
+
+  async trxDeleteTemporaryLectureCouponTarget(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureCouponTarget.deleteMany({
       where: { lectureId },
     });
   }
