@@ -14,6 +14,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { LectureTemporarilySaveService } from '@src/lecture/services/lecture-temporarily-save.service';
 import { UpsertTemporaryLectureDto } from '../dtos/update-temporary-lecture.dto';
 import { ApiReadOneTemporaryLecture } from '../swagger-decorators/read-one-temporary-lecture-decorator';
+import { ApiReadManyTemporaryLecture } from '../swagger-decorators/read-many-temporary-lecture=decorator';
 
 @ApiTags('강의')
 @Controller('lecture-temporarily-save')
@@ -59,5 +60,19 @@ export class LectureTemporarilySaveController {
         lectureId,
       );
     return { temporaryLecture };
+  }
+
+  @ApiReadManyTemporaryLecture()
+  @Get()
+  @UseGuards(LecturerAccessTokenGuard)
+  async readManyTemporaryLecture(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const temporaryLectures =
+      await this.lectureTemporarilySaveService.readManyTemporaryLecture(
+        authorizedData.lecturer.id,
+      );
+
+    return { temporaryLectures };
   }
 }

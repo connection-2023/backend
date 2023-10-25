@@ -199,6 +199,13 @@ export class LectureTemporarilySaveService {
     );
   }
 
+  async readManyTemporaryLecture(lecturerId: number): Promise<Id[]> {
+    return this.prismaService.temporaryLecture.findMany({
+      where: { lecturerId },
+      select: { id: true },
+    });
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.temporaryLectureRepository.getRegionsId(
