@@ -19,7 +19,7 @@ interface CouponInputData {
 
 interface LectureData {
   id: number;
-  danceLecturerId: number;
+  lecturerId: number;
 }
 
 interface CouponTargetInputData {
