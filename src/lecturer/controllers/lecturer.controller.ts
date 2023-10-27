@@ -24,7 +24,7 @@ import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons
 import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
 import { ApiGetMyLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
-import { UpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
+import { ApiUpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -44,7 +44,7 @@ export class LecturerController {
     );
   }
 
-  @UpdateLecturerProfile()
+  @ApiUpdateLecturerProfile()
   @Patch('/profile')
   @UseGuards(LecturerAccessTokenGuard)
   async updateMyLecturerProfile(

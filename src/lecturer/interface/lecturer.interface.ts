@@ -5,14 +5,17 @@ interface LecturerInputData {
   nickname: string;
   email: string;
   phoneNumber: string;
+  introduction: string;
+  profileCardImageUrl?: string;
   youtubeUrl?: string;
   instagramUrl?: string;
   homepageUrl?: string;
   affiliation?: string;
-  introduction: string;
   experience?: string;
 }
+
 interface LecturerUpdateData {
+  profileImageCardUrl?: string;
   youtubeUrl?: string;
   instagramUrl?: string;
   homepageUrl?: string;
@@ -26,7 +29,7 @@ interface LecturerRegionInputData {
   regionId: number;
 }
 
-interface LecturerWebsiteInputData {
+interface LecturerInstagramPostInputData {
   lecturerId: number;
   url: string;
 }
@@ -66,15 +69,7 @@ interface LecturerDanceGenre {
   };
 }
 
-interface WebsiteUrl {
-  id: number;
-  lecturerId: number;
-  url: string;
-}
-
-interface ProfileImageUrl {
-  id: number;
-  lecturerId: number;
+interface Url {
   url: string;
 }
 
@@ -90,8 +85,8 @@ interface LecturerProfile {
   experience: string;
   lecturerRegion: LecturerRegion[];
   lecturerDanceGenre: LecturerDanceGenre[];
-  lecturerWebsiteUrl: WebsiteUrl[];
-  lecturerProfileImageUrl: ProfileImageUrl[];
+  lecturerInstagramPostUrl: Url[];
+  lecturerProfileImageUrl: Url[];
 }
 interface LecturerProfileImageUpdateData {
   lecturerId: number;
@@ -101,7 +96,7 @@ interface LecturerProfileImageUpdateData {
 export {
   LecturerInputData,
   LecturerRegionInputData,
-  LecturerWebsiteInputData,
+  LecturerInstagramPostInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerCoupon,
