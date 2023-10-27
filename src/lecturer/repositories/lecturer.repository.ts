@@ -9,6 +9,7 @@ import {
   LecturerInputData,
   LecturerUpdateData,
   LecturerInstagramPostInputData,
+  LecturerProfileCard,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -26,8 +27,6 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerCreateInput: LecturerInputData,
   ): Promise<Lecturer> {
-    console.log(lecturerCreateInput);
-
     return await transaction.lecturer.create({
       data: lecturerCreateInput,
     });
@@ -125,9 +124,9 @@ export class LecturerRepository {
     });
   }
 
-  async getLecturerProfile(lectureId: number): Promise<LecturerProfile> {
-    return await this.prismaService.lecturer.findUnique({
-      where: { id: lectureId },
+  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
+    return await this.prismaService.lecturer.findFirst({
+      where: { id: lecturerId, deletedAt: null },
       select: {
         profileCardImageUrl: true,
         nickname: true,
@@ -160,6 +159,17 @@ export class LecturerRepository {
           select: { url: true },
           orderBy: { id: 'asc' },
         },
+      },
+    });
+  }
+
+  async getLecturerProfileCard(lecturerId): Promise<LecturerProfileCard> {
+    return await this.prismaService.lecturer.findFirst({
+      where: { id: lecturerId, deletedAt: null },
+      select: {
+        id: true,
+        profileCardImageUrl: true,
+        nickname: true,
       },
     });
   }

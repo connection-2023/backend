@@ -20,6 +20,7 @@ import {
   LecturerDanceGenreInputData,
   LecturerInstagramPostInputData,
   LecturerProfile,
+  LecturerProfileCard,
   LecturerProfileImageInputData,
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
@@ -266,10 +267,16 @@ export class LecturerService implements OnModuleInit {
     return await this.lecturerRepository.getLecturerProfile(lecturerId);
   }
 
+  async getLecturerProfileCard(
+    lecturerId: number,
+  ): Promise<LecturerProfileCard> {
+    return await this.lecturerRepository.getLecturerProfileCard(lecturerId);
+  }
+
   async updateMyLecturerProfile(
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
-  ) {
+  ): Promise<void> {
     const {
       newProfileImageUrls,
       genres,
