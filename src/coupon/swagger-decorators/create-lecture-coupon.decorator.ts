@@ -29,7 +29,7 @@ export function ApiCreateLectureCoupon() {
         },
         {
           name: 'InvalidLecturerInformation',
-          example: { message: '유효하지 않는 강사 정보 요청입니다.' },
+          example: { message: '유효하지 않은 강사 정보 요청입니다.' },
         },
       ]),
     ),

@@ -2,13 +2,13 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerRegionInputData,
-  LecturerWebsiteInputData,
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerCoupon,
   LecturerProfile,
   LecturerInputData,
   LecturerUpdateData,
+  LecturerInstagramPostInputData,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -26,6 +26,8 @@ export class LecturerRepository {
     transaction: PrismaTransaction,
     lecturerCreateInput: LecturerInputData,
   ): Promise<Lecturer> {
+    console.log(lecturerCreateInput);
+
     return await transaction.lecturer.create({
       data: lecturerCreateInput,
     });
@@ -42,18 +44,18 @@ export class LecturerRepository {
     await transaction.lecturerRegion.createMany({ data: lecturerInputData });
   }
 
-  async trxCreateLecturerWebsiteUrls(
+  async trxCreateLecturerInstagramPost(
     transaction: PrismaTransaction,
-    lecturerWebsiteInputData: LecturerWebsiteInputData[],
+    lecturerInstagramPostInputData: LecturerInstagramPostInputData[],
   ): Promise<void> {
     try {
-      await transaction.lecturerWebsiteUrl.createMany({
-        data: lecturerWebsiteInputData,
+      await transaction.lecturerInstagramPostUrl.createMany({
+        data: lecturerInstagramPostInputData,
       });
     } catch (error) {
       throw new InternalServerErrorException(
         `강사 웹사이트 생성 실패: ${error}`,
-        'LecturerWebsiteUrlsCreateFailed',
+        'LecturerInstagramPostUrlsCreateFailed',
       );
     }
   }
@@ -127,6 +129,7 @@ export class LecturerRepository {
     return await this.prismaService.lecturer.findUnique({
       where: { id: lectureId },
       select: {
+        profileCardImageUrl: true,
         nickname: true,
         email: true,
         phoneNumber: true,
@@ -149,8 +152,12 @@ export class LecturerRepository {
             danceCategory: { select: { genre: true } },
           },
         },
-        lecturerWebsiteUrl: true,
+        lecturerInstagramPostUrl: {
+          select: { url: true },
+          orderBy: { id: 'asc' },
+        },
         lecturerProfileImageUrl: {
+          select: { url: true },
           orderBy: { id: 'asc' },
         },
       },
@@ -205,18 +212,18 @@ export class LecturerRepository {
     }
   }
 
-  async trxDeleteLecturerWebsiteUrls(
+  async trxDeleteLecturerInstagramPostUrls(
     transaction: PrismaTransaction,
     lecturerId: number,
   ) {
     try {
-      await transaction.lecturerWebsiteUrl.deleteMany({
+      await transaction.lecturerInstagramPostUrl.deleteMany({
         where: { lecturerId },
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        `강사 웹사이트 삭제 실패: ${error}`,
-        'LecturerWebsiteUrlsDeleteFailed',
+        `강사 인스타 포스트 삭제 실패: ${error}`,
+        'LecturerInstagramUrlsDeleteFailed',
       );
     }
   }
@@ -231,8 +238,6 @@ export class LecturerRepository {
         where: { id: lecturerId },
         data: lecturerUpdateData,
       });
-
-      throw new PrismaClientValidationError();
     } catch (error) {
       throw new InternalServerErrorException(
         `강사정보 업데이트 실패: ${error}`,
