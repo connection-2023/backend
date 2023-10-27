@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { UploadsService } from '@src/uploads/services/uploads.service';
@@ -26,10 +26,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 @ApiTags('강의')
 @Controller('lectures')
 export class LectureController {
-  constructor(
-    private readonly lectureService: LectureService,
-    private readonly uploadsService: UploadsService,
-  ) {}
+  constructor(private readonly lectureService: LectureService) {}
 
   @ApiCreateLecture()
   @Post()
@@ -42,6 +39,14 @@ export class LectureController {
       lecture,
       authorizedData.lecturer.id,
     );
+  }
+
+  @ApiOperation({ summary: '강의 상세 조회' })
+  @Get(':lectureId')
+  async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
+    const lecture = await this.lectureService.readLecture(lectureId);
+
+    return { lecture };
   }
 
   // @Patch(':lectureId')
