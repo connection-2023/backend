@@ -88,9 +88,16 @@ interface LecturerProfile {
   lecturerInstagramPostUrl: Url[];
   lecturerProfileImageUrl: Url[];
 }
+
 interface LecturerProfileImageUpdateData {
   lecturerId: number;
   url: string;
+}
+
+interface LecturerProfileCard {
+  id: number;
+  profileCardImageUrl: string;
+  nickname: string;
 }
 
 export {
@@ -103,4 +110,5 @@ export {
   LecturerProfile,
   LecturerProfileImageUpdateData,
   LecturerUpdateData,
+  LecturerProfileCard,
 };

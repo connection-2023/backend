@@ -1,19 +1,18 @@
-import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiGetMyLecturerProfile() {
+export function ApiGetLecturerProfile() {
   return applyDecorators(
     ApiOperation({
-      summary: '나의 강사 프로필 조회',
+      summary: '강사 프로필 조회',
       description: '프로필 조회',
     }),
-    ApiBearerAuth(),
     ApiOkResponse(
       SwaggerApiResponse.success('강사 프로필 반환', {
         statusCode: 200,
         data: {
-          myLecturerProfile: {
+          lecturerProfile: {
             profileCardImageUrl: 'url',
             nickname: '올리버쌤2',
             email: 'illppang@naver.com',
