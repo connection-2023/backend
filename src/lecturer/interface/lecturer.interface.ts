@@ -94,7 +94,7 @@ interface LecturerProfileImageUpdateData {
   url: string;
 }
 
-interface LecturerProfileCard {
+interface LecturerBasicProfile {
   id: number;
   profileCardImageUrl: string;
   nickname: string;
@@ -110,5 +110,5 @@ export {
   LecturerProfile,
   LecturerProfileImageUpdateData,
   LecturerUpdateData,
-  LecturerProfileCard,
+  LecturerBasicProfile,
 };
