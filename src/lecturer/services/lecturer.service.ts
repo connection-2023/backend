@@ -16,12 +16,11 @@ import {
 import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  LecturerBasicProfile,
   LecturerCoupon,
   LecturerDanceGenreInputData,
   LecturerInstagramPostInputData,
   LecturerProfile,
-  LecturerProfileCard,
-  LecturerProfileImageInputData,
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
 } from '@src/lecturer/interface/lecturer.interface';
@@ -267,10 +266,10 @@ export class LecturerService implements OnModuleInit {
     return await this.lecturerRepository.getLecturerProfile(lecturerId);
   }
 
-  async getLecturerProfileCard(
+  async getLecturerBasicProfile(
     lecturerId: number,
-  ): Promise<LecturerProfileCard> {
-    return await this.lecturerRepository.getLecturerProfileCard(lecturerId);
+  ): Promise<LecturerBasicProfile> {
+    return await this.lecturerRepository.getLecturerBasicProfile(lecturerId);
   }
 
   async updateMyLecturerProfile(

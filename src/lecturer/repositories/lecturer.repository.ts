@@ -9,7 +9,7 @@ import {
   LecturerInputData,
   LecturerUpdateData,
   LecturerInstagramPostInputData,
-  LecturerProfileCard,
+  LecturerBasicProfile,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
   Id,
@@ -163,7 +163,7 @@ export class LecturerRepository {
     });
   }
 
-  async getLecturerProfileCard(lecturerId): Promise<LecturerProfileCard> {
+  async getLecturerBasicProfile(lecturerId): Promise<LecturerBasicProfile> {
     return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId, deletedAt: null },
       select: {
