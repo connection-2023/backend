@@ -18,11 +18,12 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerCoupon,
   LecturerDanceGenreInputData,
+  LecturerInstagramPostInputData,
   LecturerProfile,
+  LecturerProfileCard,
   LecturerProfileImageInputData,
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
-  LecturerWebsiteInputData,
 } from '@src/lecturer/interface/lecturer.interface';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -54,7 +55,7 @@ export class LecturerService implements OnModuleInit {
     const {
       regions,
       genres,
-      websiteUrls,
+      instagramPostUrls,
       etcGenres,
       profileImageUrls,
       ...lecturerData
@@ -67,28 +68,26 @@ export class LecturerService implements OnModuleInit {
             userId,
             ...lecturerData,
           });
-        await this.createLecturerRegions(transaction, lecturer.id, regions);
 
-        if (websiteUrls) {
-          await this.createLecturerWebsiteUrls(
+        Promise.all([
+          await this.createLecturerRegions(transaction, lecturer.id, regions),
+          await this.createLecturerInstagramPostUrls(
             transaction,
             lecturer.id,
-            websiteUrls,
-          );
-        }
-
-        await this.createLecturerDanceGenres(
-          transaction,
-          lecturer.id,
-          genres,
-          etcGenres,
-        );
-
-        await this.createLecturerProfileImageUrls(
-          transaction,
-          lecturer.id,
-          profileImageUrls,
-        );
+            instagramPostUrls,
+          ),
+          await this.createLecturerDanceGenres(
+            transaction,
+            lecturer.id,
+            genres,
+            etcGenres,
+          ),
+          await this.createLecturerProfileImageUrls(
+            transaction,
+            lecturer.id,
+            profileImageUrls,
+          ),
+        ]);
       },
     );
   }
@@ -176,17 +175,17 @@ export class LecturerService implements OnModuleInit {
     return lecturerInputData;
   }
 
-  private createLecturerWebsiteInputData(
+  private createLecturerInstagramPostInputData(
     lecturerId: number,
-    websiteUrls: string[],
-  ): LecturerWebsiteInputData[] {
-    const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
-      websiteUrls.map((url) => ({
+    instagramPostUrls: string[],
+  ): LecturerInstagramPostInputData[] {
+    const lecturerInstagramPostUrlsInputData: LecturerInstagramPostInputData[] =
+      instagramPostUrls.map((url) => ({
         lecturerId,
         url,
       }));
 
-    return lecturerWebsiteInputData;
+    return lecturerInstagramPostUrlsInputData;
   }
 
   private async createLecturerDanceGenreInputData(
@@ -268,16 +267,22 @@ export class LecturerService implements OnModuleInit {
     return await this.lecturerRepository.getLecturerProfile(lecturerId);
   }
 
+  async getLecturerProfileCard(
+    lecturerId: number,
+  ): Promise<LecturerProfileCard> {
+    return await this.lecturerRepository.getLecturerProfileCard(lecturerId);
+  }
+
   async updateMyLecturerProfile(
     lecturerId: number,
     updateMyLecturerProfileDto: UpdateMyLecturerProfileDto,
-  ) {
+  ): Promise<void> {
     const {
       newProfileImageUrls,
       genres,
       etcGenres,
       regions,
-      websiteUrls,
+      instagramPostUrls,
       ...lecturerUpdateData
     } = updateMyLecturerProfileDto;
 
@@ -289,23 +294,25 @@ export class LecturerService implements OnModuleInit {
           { ...lecturerUpdateData },
         );
 
-        await this.updateLecturerProfileImageUrls(
-          transaction,
-          lecturerId,
-          newProfileImageUrls,
-        );
-        await this.updateLecturerDanceGenres(
-          transaction,
-          lecturerId,
-          genres,
-          etcGenres,
-        );
-        await this.updateLecturerRegions(transaction, lecturerId, regions);
-        await this.updateLecturerWebsiteUrls(
-          transaction,
-          lecturerId,
-          websiteUrls,
-        );
+        Promise.all([
+          await this.updateLecturerProfileImageUrls(
+            transaction,
+            lecturerId,
+            newProfileImageUrls,
+          ),
+          await this.updateLecturerDanceGenres(
+            transaction,
+            lecturerId,
+            genres,
+            etcGenres,
+          ),
+          await this.updateLecturerRegions(transaction, lecturerId, regions),
+          await this.updateLecturerInstagramPostUrls(
+            transaction,
+            lecturerId,
+            instagramPostUrls,
+          ),
+        ]);
       },
     );
   }
@@ -316,12 +323,14 @@ export class LecturerService implements OnModuleInit {
     regions: string[],
   ): Promise<void> {
     try {
-      await this.lecturerRepository.trxDeleteLecturerRegions(
-        transaction,
-        lecturerId,
-      );
+      if (regions) {
+        await this.lecturerRepository.trxDeleteLecturerRegions(
+          transaction,
+          lecturerId,
+        );
 
-      await this.createLecturerRegions(transaction, lecturerId, regions);
+        await this.createLecturerRegions(transaction, lecturerId, regions);
+      }
     } catch (error) {
       throw error;
     }
@@ -449,21 +458,21 @@ export class LecturerService implements OnModuleInit {
     }
   }
 
-  private async updateLecturerWebsiteUrls(
+  private async updateLecturerInstagramPostUrls(
     transaction: PrismaTransaction,
     lecturerId: number,
-    websiteUrls: string[],
+    instagramPostUrls: string[],
   ): Promise<void> {
     try {
-      if (websiteUrls) {
-        await this.lecturerRepository.trxDeleteLecturerWebsiteUrls(
+      if (instagramPostUrls) {
+        await this.lecturerRepository.trxDeleteLecturerInstagramPostUrls(
           transaction,
           lecturerId,
         );
-        await this.createLecturerWebsiteUrls(
+        await this.createLecturerInstagramPostUrls(
           transaction,
           lecturerId,
-          websiteUrls,
+          instagramPostUrls,
         );
       }
     } catch (error) {
@@ -471,18 +480,23 @@ export class LecturerService implements OnModuleInit {
     }
   }
 
-  private async createLecturerWebsiteUrls(
+  private async createLecturerInstagramPostUrls(
     transaction: PrismaTransaction,
     lecturerId: number,
-    websiteUrls: string[],
+    instagramPostUrls: string[],
   ): Promise<void> {
     try {
-      const lecturerWebsiteInputData: LecturerWebsiteInputData[] =
-        this.createLecturerWebsiteInputData(lecturerId, websiteUrls);
-      await this.lecturerRepository.trxCreateLecturerWebsiteUrls(
-        transaction,
-        lecturerWebsiteInputData,
-      );
+      if (instagramPostUrls) {
+        const lecturerInstagramPostInputData: LecturerInstagramPostInputData[] =
+          this.createLecturerInstagramPostInputData(
+            lecturerId,
+            instagramPostUrls,
+          );
+        await this.lecturerRepository.trxCreateLecturerInstagramPost(
+          transaction,
+          lecturerInstagramPostInputData,
+        );
+      }
     } catch (error) {
       throw error;
     }

@@ -68,7 +68,7 @@ export class AuthService implements OnModuleInit {
       }
       if (selectedUser.deletedAt) {
         throw new BadRequestException(
-          '유효하지 않는 유저 정보 요청입니다.',
+          '유효하지 않은 유저 정보 요청입니다.',
           'invalidUserInformation',
         );
       }
@@ -107,7 +107,7 @@ export class AuthService implements OnModuleInit {
       }
       if (selectedUser.deletedAt) {
         throw new BadRequestException(
-          '유효하지 않는 유저 정보 요청입니다.',
+          '유효하지 않은 유저 정보 요청입니다.',
           'invalidUserInformation',
         );
       }

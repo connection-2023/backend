@@ -1,28 +1,28 @@
-import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiGetMyLecturerProfile() {
+export function ApiGetLecturerProfile() {
   return applyDecorators(
     ApiOperation({
-      summary: '나의 강사 프로필 조회',
+      summary: '강사 프로필 조회',
       description: '프로필 조회',
     }),
-    ApiBearerAuth(),
     ApiOkResponse(
       SwaggerApiResponse.success('강사 프로필 반환', {
         statusCode: 200,
         data: {
-          myLecturerProfile: {
-            nickname: '닉네임입니다',
-            email: '이메일입니다@naver.com',
-            phoneNumber: '01011112222',
-            youtubeUrl: '유튜브입니다.',
-            instagramUrl: '인스타입니다',
-            homepageUrl: '홈페이지입니다',
-            affiliation: '소속입니다',
-            introduction: '경력입니다',
-            experience: '경험입니다',
+          lecturerProfile: {
+            profileCardImageUrl: 'url',
+            nickname: '올리버쌤2',
+            email: 'illppang@naver.com',
+            phoneNumber: '01012345678',
+            youtubeUrl: 'https://www.youtube.com/',
+            instagramUrl: '인스타 주소',
+            homepageUrl: '홈페이지 주소',
+            affiliation: 'CJ ent',
+            introduction: '강사 소개글',
+            experience: '강사 경력',
             lecturerRegion: [
               {
                 region: {
@@ -32,8 +32,14 @@ export function ApiGetMyLecturerProfile() {
               },
               {
                 region: {
-                  administrativeDistrict: '경기도',
-                  district: '광명시',
+                  administrativeDistrict: '서울특별시',
+                  district: '전 지역',
+                },
+              },
+              {
+                region: {
+                  administrativeDistrict: '온라인',
+                  district: null,
                 },
               },
             ],
@@ -41,44 +47,42 @@ export function ApiGetMyLecturerProfile() {
               {
                 name: null,
                 danceCategory: {
-                  genre: '힙합',
+                  genre: 'K-pop',
                 },
               },
               {
-                name: '순정',
+                name: null,
+                danceCategory: {
+                  genre: '보깅',
+                },
+              },
+              {
+                name: '기타일때 직접입력한 것들',
                 danceCategory: {
                   genre: '기타',
                 },
               },
               {
-                name: '기교',
+                name: '기타일때 직접입력한 것들',
                 danceCategory: {
                   genre: '기타',
                 },
               },
             ],
-            lecturerWebsiteUrl: [
+            lecturerInstagramPostUrl: [
               {
-                id: 3,
-                lecturerId: 3,
-                url: 'ㅁㅇㅁㅇㅁㅇ',
+                url: '인스타 글 url',
+              },
+              {
+                url: '인스타 글 url',
               },
             ],
             lecturerProfileImageUrl: [
               {
-                id: 7,
-                lecturerId: 3,
-                url: 'https://s3.ap-northeast-2.amazonaws.com/connection-bucket/lecturer/3/1697291458203_1.png',
+                url: 'url',
               },
               {
-                id: 8,
-                lecturerId: 3,
-                url: 'https://s3.ap-northeast-2.amazonaws.com/connection-bucket/lecturer/3/1697291458299_2.jpg',
-              },
-              {
-                id: 9,
-                lecturerId: 3,
-                url: 'https://s3.ap-northeast-2.amazonaws.com/connection-bucket/lecturer/3/1697291458382_3.png',
+                url: 'url',
               },
             ],
           },

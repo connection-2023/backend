@@ -30,7 +30,7 @@ export function ApiRefreshUserJwtToken() {
       SwaggerApiResponse.exception([
         {
           name: 'InvalidUserInformation',
-          example: { message: '유효하지 않는 유저 정보 요청입니다.' },
+          example: { message: '유효하지 않은 유저 정보 요청입니다.' },
         },
       ]),
     ),

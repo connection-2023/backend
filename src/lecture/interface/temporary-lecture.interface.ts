@@ -59,6 +59,11 @@ interface RegularTemporaryLectureSchedules {
   regularSchedules?: { [key: string]: string[] };
 }
 
+interface TemporaryLectureCouponTargetInputData {
+  lectureCouponId: number;
+  lectureId: number;
+}
+
 export {
   TemporaryLectureInputData,
   TemporaryLectureToRegionInputData,
@@ -69,4 +74,5 @@ export {
   TemporaryLectureHolidayInputData,
   RegularTemporaryLectureSchedules,
   RegularTemporaryLectureScheduleInputData,
+  TemporaryLectureCouponTargetInputData,
 };

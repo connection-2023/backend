@@ -19,12 +19,14 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import {
   LecturerCoupon,
   LecturerProfile,
+  LecturerProfileCard,
 } from '@src/lecturer/interface/lecturer.interface';
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
 import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
-import { ApiGetMyLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
+import { ApiGetLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
-import { UpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
+import { ApiUpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
+import { ApiGetLecturerProfileCard } from '@src/lecturer/swagger-decorators/get-lecturer-profile-card-decorater';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -44,7 +46,7 @@ export class LecturerController {
     );
   }
 
-  @UpdateLecturerProfile()
+  @ApiUpdateLecturerProfile()
   @Patch('/profile')
   @UseGuards(LecturerAccessTokenGuard)
   async updateMyLecturerProfile(
@@ -57,16 +59,27 @@ export class LecturerController {
     );
   }
 
-  @ApiGetMyLecturerProfile()
-  @Get('/profile')
+  @ApiGetLecturerProfile()
+  @Get('/profile/:lecturerId')
+  async getLecturerProfile(@Param('lecturerId') lecturerId: number) {
+    const lecturerProfile: LecturerProfile =
+      await this.lecturerService.getLecturerProfile(lecturerId);
+
+    return { lecturerProfile };
+  }
+
+  @ApiGetLecturerProfileCard()
+  @Get('/profile-card')
   @UseGuards(LecturerAccessTokenGuard)
-  async getMyLecturerProfile(
+  async getMyLecturerProfileCard(
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
-    const myLecturerProfile: LecturerProfile =
-      await this.lecturerService.getLecturerProfile(authorizedData.lecturer.id);
+    const myLecturerProfileCard: LecturerProfileCard =
+      await this.lecturerService.getLecturerProfileCard(
+        authorizedData.lecturer.id,
+      );
 
-    return { myLecturerProfile };
+    return { myLecturerProfileCard };
   }
 
   @ApiGetMyCoupons()
