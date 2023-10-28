@@ -17,16 +17,16 @@ import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/chec
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import {
+  LecturerBasicProfile,
   LecturerCoupon,
   LecturerProfile,
-  LecturerProfileCard,
 } from '@src/lecturer/interface/lecturer.interface';
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
 import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
 import { ApiGetLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 import { ApiUpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
-import { ApiGetLecturerProfileCard } from '@src/lecturer/swagger-decorators/get-lecturer-profile-card-decorater';
+import { ApiGetLecturerBasicProfile } from '@src/lecturer/swagger-decorators/get-lecturer-profile-card-decorater';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -68,18 +68,18 @@ export class LecturerController {
     return { lecturerProfile };
   }
 
-  @ApiGetLecturerProfileCard()
-  @Get('/profile-card')
+  @ApiGetLecturerBasicProfile()
+  @Get('/my-basic-profile')
   @UseGuards(LecturerAccessTokenGuard)
-  async getMyLecturerProfileCard(
+  async getMyLecturerBasicProfile(
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
-    const myLecturerProfileCard: LecturerProfileCard =
-      await this.lecturerService.getLecturerProfileCard(
+    const lecturerBasicProfile: LecturerBasicProfile =
+      await this.lecturerService.getLecturerBasicProfile(
         authorizedData.lecturer.id,
       );
 
-    return { myLecturerProfileCard };
+    return { lecturerBasicProfile };
   }
 
   @ApiGetMyCoupons()
