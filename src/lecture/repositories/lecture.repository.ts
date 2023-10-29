@@ -116,13 +116,27 @@ export class LectureRepository {
       include: {
         lecturer: {
           select: {
+            id: true,
             nickname: true,
             lecturerProfileImageUrl: { select: { url: true } },
           },
         },
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
-        lectureReview: true,
+        lectureReview: {
+          select: {
+            id: true,
+            userId: true,
+            users: {
+              select: {
+                nickname: true,
+                userProfileImage: { select: { imageUrl: true } },
+              },
+            },
+            stars: true,
+            description: true,
+          },
+        },
         lectureNotification: { select: { notification: true } },
         lectureImage: { select: { imageUrl: true } },
         lectureCouponTarget: {

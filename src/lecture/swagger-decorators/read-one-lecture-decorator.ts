@@ -17,10 +17,9 @@ export function ApiReadOneTemporaryLecture() {
       SwaggerApiResponse.success('임시저장 불러오기 완료', {
         statusCode: 200,
         data: {
-          temporaryLecture: {
-            id: 2,
+          lecture: {
+            id: 1,
             lecturerId: 3,
-            step: 2,
             lectureTypeId: 1,
             lectureMethodId: 1,
             title: '가비쌤과 함께하는 왁킹 클래스',
@@ -38,15 +37,33 @@ export function ApiReadOneTemporaryLecture() {
             reviewCount: 0,
             stars: 0,
             isActive: true,
-            createdAt: '2023-10-24T10:17:24.486Z',
-            updatedAt: '2023-10-24T10:28:09.303Z',
+            createdAt: '2023-10-23T10:45:36.112Z',
+            updatedAt: '2023-10-23T10:45:36.112Z',
             deletedAt: null,
-            temporaryLecturenotification: [
+            lecturer: {
+              nickname: '올리버쌤',
+              lecturerProfileImageUrl: [
+                {
+                  url: 'url',
+                },
+                {
+                  url: 'url',
+                },
+              ],
+            },
+            lectureType: {
+              name: 'dance',
+            },
+            lectureMethod: {
+              name: '원데이',
+            },
+            lectureReview: [],
+            lectureNotification: [
               {
                 notification: '15일 영업 안합니다요',
               },
             ],
-            temporaryLectureImage: [
+            lectureImage: [
               {
                 imageUrl: '이미지url1',
               },
@@ -54,25 +71,36 @@ export function ApiReadOneTemporaryLecture() {
                 imageUrl: '이미지url2',
               },
             ],
-            temporaryLectureCouponTarget: [],
-            temporaryLectureSchedule: [
+            lectureCouponTarget: [],
+            lectureSchedule: [
               {
                 startDateTime: '2023-10-03T11:00:00.000Z',
-                team: null,
                 numberOfParticipants: 0,
+                team: null,
               },
               {
                 startDateTime: '2023-10-03T11:00:00.000Z',
-                team: null,
                 numberOfParticipants: 0,
+                team: null,
               },
               {
                 startDateTime: '2023-10-03T11:00:00.000Z',
-                team: null,
                 numberOfParticipants: 0,
+                team: null,
               },
             ],
-            temporaryLectureToRegion: [
+            lectureHoliday: [
+              {
+                holiday: '2023-10-03T11:00:00.000Z',
+              },
+              {
+                holiday: '2023-10-03T11:00:00.000Z',
+              },
+              {
+                holiday: '2023-10-03T11:00:00.000Z',
+              },
+            ],
+            lectureToRegion: [
               {
                 region: {
                   administrativeDistrict: '서울특별시',
@@ -86,7 +114,7 @@ export function ApiReadOneTemporaryLecture() {
                 },
               },
             ],
-            temporaryLectureToDanceGenre: [
+            lectureToDanceGenre: [
               {
                 name: null,
                 danceCategory: {
@@ -112,28 +140,9 @@ export function ApiReadOneTemporaryLecture() {
                 },
               },
             ],
-            temporaryLectureHoliday: [
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-            ],
           },
         },
       }),
-    ),
-    ApiBadRequestResponse(
-      SwaggerApiResponse.exception([
-        {
-          name: 'UnAuthorizedLecturer',
-          example: { message: '접근 권한이 없습니다.' },
-        },
-      ]),
     ),
   );
 }
