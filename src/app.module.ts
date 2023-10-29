@@ -30,6 +30,7 @@ import { TestModule } from '@src/apiTest/test.module';
     CustomConfigModule,
     UploadsModule,
     TestModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
