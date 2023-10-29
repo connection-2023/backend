@@ -112,9 +112,9 @@ model Lecture {
   id                  Int                   @id @default(autoincrement())
   //강사 id
   lecturerId          Int
-  //강의 종류 id
+  //강의 종류 id ex)dance
   lectureTypeId       Int
-  //강의 형식 id
+  //강의 형식 id ex)원데이,정기
   lectureMethodId     Int
   //강의명
   title               String                @db.VarChar(30)
@@ -157,7 +157,7 @@ model Lecture {
   lectureMethod       LectureMethod         @relation(fields: [lectureMethodId], references: [id])
   lectureReview       LectureReview[]
   likedLecture        LikedLecture[]
-  lecturenotification LectureNotification[]
+  lectureNotification LectureNotification[]
   lectureImage        LectureImage[]
   lectureCouponTarget LectureCouponTarget[]
   lectureSchedule     LectureSchedule[]

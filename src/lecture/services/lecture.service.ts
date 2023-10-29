@@ -140,6 +140,71 @@ export class LectureService {
     );
   }
 
+  async readLecture(lectureId: number) {
+    return await this.lectureRepository.readLecture(lectureId);
+  }
+
+  async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
+    const {
+      page,
+      pageSize,
+      lectureMethod,
+      star,
+      regions,
+      genres,
+      priceRange,
+      ...filter
+    } = query;
+    const where = this.queryFilter.buildWherePropForFind(filter);
+
+    where['skip'] = page * pageSize;
+    where['take'] = pageSize;
+
+    if (regions) {
+      const regionIds: Id[] = await this.getValidRegionIds(regions);
+      const lectureToRegionFindData =
+        this.createLectureToRegionFindData(regionIds);
+      console.log(lectureToRegionFindData);
+
+      where['lectureToRegion'] = {
+        some: {
+          id: {
+            in: lectureToRegionFindData,
+          },
+        },
+      };
+    }
+
+    if (genres) {
+      const lectureToGenreFindData = await this.getDanceCategoryIds(genres);
+
+      console.log(lectureToGenreFindData);
+
+      console.log({
+        some: {
+          id: {
+            in: lectureToGenreFindData,
+          },
+        },
+      });
+
+      where['lectureToGenre'] = {
+        some: {
+          id: {
+            in: lectureToGenreFindData,
+          },
+        },
+      };
+    }
+
+    if (priceRange) {
+      const price = this.createPriceFindData(priceRange);
+      where['price'] = { price: { price } };
+    }
+
+    return await this.lectureRepository.readManyLecture(where);
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
@@ -212,6 +277,12 @@ export class LectureService {
     return lectureInputData;
   }
 
+  private createLectureToRegionFindData(regionIds: Id[]) {
+    const regionFindData = regionIds.map((regionId) => regionId.id);
+
+    return regionFindData;
+  }
+
   private createLectureImageInputData(lectureId: number, imageUrls: string[]) {
     const imageInputData: LectureImageInputData[] = imageUrls.map((url) => ({
       lectureId: lectureId,
@@ -268,6 +339,18 @@ export class LectureService {
     }
 
     return lectureInputData;
+  }
+
+  private createPriceFindData(priceRange: number[]) {
+    const price = {};
+    if (priceRange[0]) {
+      price['gte'] = priceRange[0];
+    }
+    if (priceRange[1]) {
+      price['lte'] = priceRange[1];
+    }
+
+    return price;
   }
 
   private async getDanceCategoryIds(

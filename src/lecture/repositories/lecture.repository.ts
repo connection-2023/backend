@@ -1,5 +1,10 @@
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, LectureSchedule, Region } from '@prisma/client';
+import {
+  Lecture,
+  LectureSchedule,
+  Region,
+  LectureCoupon,
+} from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
@@ -105,6 +110,83 @@ export class LectureRepository {
     });
   }
 
+  async readLecture(lectureId: number): Promise<Lecture> {
+    return await this.prismaService.lecture.findFirst({
+      where: { id: lectureId },
+      include: {
+        lecturer: {
+          select: {
+            nickname: true,
+            lecturerProfileImageUrl: { select: { url: true } },
+          },
+        },
+        lectureType: { select: { name: true } },
+        lectureMethod: { select: { name: true } },
+        lectureReview: {
+          select: {
+            id: true,
+            userId: true,
+            users: {
+              select: {
+                nickname: true,
+                userProfileImage: { select: { imageUrl: true } },
+              },
+            },
+            stars: true,
+            description: true,
+          },
+        },
+        lectureNotification: { select: { notification: true } },
+        lectureImage: { select: { imageUrl: true } },
+        lectureCouponTarget: {
+          select: {
+            lectureCoupon: {
+              select: {
+                id: true,
+                lecturerId: true,
+                title: true,
+                percentage: true,
+                discountPrice: true,
+                maxDiscountPrice: true,
+                maxUsageCount: true,
+                usageCount: true,
+                isStackable: true,
+                startAt: true,
+                endAt: true,
+              },
+            },
+          },
+          where: { lectureCoupon: { isDisabled: false } },
+        },
+        lectureSchedule: {
+          select: {
+            startDateTime: true,
+            numberOfParticipants: true,
+            team: true,
+          },
+        },
+        lectureHoliday: { select: { holiday: true } },
+        lectureToRegion: {
+          select: {
+            region: {
+              select: { administrativeDistrict: true, district: true },
+            },
+          },
+        },
+        lectureToDanceGenre: {
+          select: { name: true, danceCategory: { select: { genre: true } } },
+        },
+      },
+    });
+  }
+
+  async readManyLecture(where): Promise<Lecture[]> {
+    console.log(where);
+
+    return await this.prismaService.lecture.findMany({
+      where: { ...where },
+    });
+  }
   // async trxUpdateLecture(
   //   transaction: PrismaTransaction,
   //   lectureId: number,
