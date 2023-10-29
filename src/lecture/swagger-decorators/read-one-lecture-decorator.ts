@@ -1,5 +1,4 @@
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOperation,
@@ -7,14 +6,14 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiReadOneTemporaryLecture() {
+export function ApiReadOneLecture() {
   return applyDecorators(
     ApiOperation({
-      summary: '임시저장 불러오기',
+      summary: '강의 상세조회',
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(
-      SwaggerApiResponse.success('임시저장 불러오기 완료', {
+      SwaggerApiResponse.success('강의 상세조회 완료', {
         statusCode: 200,
         data: {
           lecture: {
@@ -35,7 +34,7 @@ export function ApiReadOneTemporaryLecture() {
             price: 40000,
             noShowDeposit: 30000,
             reviewCount: 0,
-            stars: 0,
+            stars: 5,
             isActive: true,
             createdAt: '2023-10-23T10:45:36.112Z',
             updatedAt: '2023-10-23T10:45:36.112Z',
@@ -57,7 +56,18 @@ export function ApiReadOneTemporaryLecture() {
             lectureMethod: {
               name: '원데이',
             },
-            lectureReview: [],
+            lectureReview: [
+              {
+                id: 1,
+                userId: 1,
+                users: {
+                  nickname: 'hyun',
+                  userProfileImage: null,
+                },
+                stars: 5,
+                description: '굿굿',
+              },
+            ],
             lectureNotification: [
               {
                 notification: '15일 영업 안합니다요',
@@ -71,7 +81,23 @@ export function ApiReadOneTemporaryLecture() {
                 imageUrl: '이미지url2',
               },
             ],
-            lectureCouponTarget: [],
+            lectureCouponTarget: [
+              {
+                lectureCoupon: {
+                  id: 1,
+                  lecturerId: 3,
+                  title: '쿠포옹',
+                  percentage: 10,
+                  discountPrice: null,
+                  maxDiscountPrice: 10000,
+                  maxUsageCount: 3,
+                  usageCount: 0,
+                  isStackable: true,
+                  startAt: '2023-10-31T11:00:00.000Z',
+                  endAt: '2023-11-01T11:00:00.000Z',
+                },
+              },
+            ],
             lectureSchedule: [
               {
                 startDateTime: '2023-10-03T11:00:00.000Z',

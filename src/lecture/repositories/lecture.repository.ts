@@ -116,7 +116,6 @@ export class LectureRepository {
       include: {
         lecturer: {
           select: {
-            id: true,
             nickname: true,
             lecturerProfileImageUrl: { select: { url: true } },
           },
@@ -140,7 +139,23 @@ export class LectureRepository {
         lectureNotification: { select: { notification: true } },
         lectureImage: { select: { imageUrl: true } },
         lectureCouponTarget: {
-          select: { lectureCoupon: true },
+          select: {
+            lectureCoupon: {
+              select: {
+                id: true,
+                lecturerId: true,
+                title: true,
+                percentage: true,
+                discountPrice: true,
+                maxDiscountPrice: true,
+                maxUsageCount: true,
+                usageCount: true,
+                isStackable: true,
+                startAt: true,
+                endAt: true,
+              },
+            },
+          },
           where: { lectureCoupon: { isDisabled: false } },
         },
         lectureSchedule: {

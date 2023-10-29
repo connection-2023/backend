@@ -22,6 +22,7 @@ import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
+import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -41,7 +42,7 @@ export class LectureController {
     );
   }
 
-  @ApiOperation({ summary: '강의 상세 조회' })
+  @ApiReadOneLecture()
   @Get(':lectureId')
   async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
     const lecture = await this.lectureService.readLecture(lectureId);
