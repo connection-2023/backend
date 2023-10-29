@@ -6,7 +6,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
 import { GetLecturePaymentDto } from '../dtos/get-lecture-payment.dto';
 import { PaymentsRepository } from '../repository/payments.repository';
 import {
@@ -18,12 +17,7 @@ import {
   ReservationInputData,
 } from '../interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
-import {
-  Lecture,
-  LecturePayment,
-  PaymentMethod,
-  PaymentStatus,
-} from '@prisma/client';
+import { Lecture, LecturePayment } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
@@ -223,67 +217,108 @@ export class PaymentsService implements OnModuleInit {
       numberOfApplicants += lectureSchedule.participants;
     });
 
-    const coupons: Coupons = await this.getUserCoupons(
-      userId,
-      couponId,
-      stackableCouponId,
-    );
-
-    if (coupons) {
-      this.calculateTotalPrice(
-        clientPrice,
-        lecturePrice,
-        coupons,
-        numberOfApplicants,
+    if (couponId || stackableCouponId) {
+      const coupons: Coupons = await this.getUserCoupons(
+        userId,
+        couponId,
+        stackableCouponId,
       );
 
-      return coupons;
+      if (coupons) {
+        this.calculateTotalPrice(
+          clientPrice,
+          lecturePrice,
+          coupons,
+          numberOfApplicants,
+        );
+
+        return coupons;
+      }
+    } else if (clientPrice !== lecturePrice * numberOfApplicants) {
+      throw new BadRequestException(`상품 가격이 일치하지 않습니다.`);
     }
   }
 
   private calculateTotalPrice(
     clientPrice: number,
     lecturePrice: number,
-    { coupon, stackableCoupon }: Coupons,
+    coupons: Coupons,
     numberOfApplicants: number,
   ): void {
     // 기본 가격
     let totalPrice: number = lecturePrice * numberOfApplicants;
 
-    // 할인 적용 함수
-    const applyDiscount = (price: number, discountInfo: Coupon): number => {
-      if (!discountInfo) {
-        return price;
-      }
-
-      const { percentage, discountPrice, maxDiscountPrice } = discountInfo;
-
-      if (percentage !== null) {
-        const discountAmount = (price * percentage) / 100;
-        if (maxDiscountPrice !== null) {
-          price -= Math.min(discountAmount, maxDiscountPrice);
-        } else {
-          price -= discountAmount;
-        }
-      } else if (discountPrice !== null) {
-        price -= discountPrice;
-      }
-
-      if (price <= 0) {
-        return 0;
-      }
-
-      return price;
-    };
-
-    // 각 쿠폰 적용
-    totalPrice = applyDiscount(totalPrice, coupon);
-    totalPrice = applyDiscount(totalPrice, stackableCoupon);
+    // 쿠폰 적용
+    totalPrice = this.applyDiscount(totalPrice, coupons);
 
     // 최종 가격과 클라이언트 가격 비교
     if (clientPrice !== totalPrice) {
       throw new BadRequestException(`상품 가격이 일치하지 않습니다.`);
     }
+  }
+
+  // 할인 적용 함수
+  private applyDiscount(price: number, coupons: Coupons): number {
+    const applyPercentageDiscount = (
+      price: number,
+      percentage: number,
+      maxDiscountPrice: number | null,
+    ): number => {
+      const discountAmount = (price * percentage) / 100;
+      if (maxDiscountPrice !== null) {
+        return price - Math.min(discountAmount, maxDiscountPrice);
+      } else {
+        return price - discountAmount;
+      }
+    };
+
+    if (coupons.coupon && coupons.stackableCoupon) {
+      if (coupons.coupon.percentage !== null) {
+        price = applyPercentageDiscount(
+          price,
+          coupons.coupon.percentage,
+          coupons.coupon.maxDiscountPrice,
+        );
+      } else if (coupons.stackableCoupon.percentage !== null) {
+        price = applyPercentageDiscount(
+          price,
+          coupons.stackableCoupon.percentage,
+          coupons.stackableCoupon.maxDiscountPrice,
+        );
+      }
+
+      if (coupons.coupon.discountPrice !== null) {
+        price -= coupons.coupon.discountPrice;
+      } else if (coupons.stackableCoupon.discountPrice !== null) {
+        price -= coupons.stackableCoupon.discountPrice;
+      }
+    } else if (coupons.coupon) {
+      if (coupons.coupon.percentage !== null) {
+        price = applyPercentageDiscount(
+          price,
+          coupons.coupon.percentage,
+          coupons.coupon.maxDiscountPrice,
+        );
+      } else if (coupons.coupon.discountPrice !== null) {
+        price -= coupons.coupon.discountPrice;
+      }
+    } else if (coupons.stackableCoupon) {
+      if (coupons.stackableCoupon.percentage !== null) {
+        price = applyPercentageDiscount(
+          price,
+          coupons.stackableCoupon.percentage,
+          coupons.stackableCoupon.maxDiscountPrice,
+        );
+      } else if (coupons.stackableCoupon.discountPrice !== null) {
+        price -= coupons.stackableCoupon.discountPrice;
+      }
+    }
+
+    if (price <= 0) {
+      return 0;
+    }
+
+    return price;
   }
 
   private async getUserCoupons(
@@ -393,6 +428,10 @@ export class PaymentsService implements OnModuleInit {
     lecturePaymentId: number,
     coupons: Coupons,
   ): Promise<void> {
+    if (!coupons) {
+      return;
+    }
+
     const couponIds: number[] = Object.values(coupons)
       .map((coupon) => coupon?.id)
       .filter((id: number) => id !== null);

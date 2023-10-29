@@ -5,6 +5,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
+import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/create-lecture-payment-info-decorater';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -16,6 +17,7 @@ export class PaymentsController {
   //   await this.paymentsService.verifyBankAccount();
   // }
 
+  @ApiCreateLecturePaymentInfo()
   @Post('/lecture')
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentInfo(
