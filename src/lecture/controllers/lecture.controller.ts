@@ -23,6 +23,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
+import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -48,6 +49,14 @@ export class LectureController {
     const lecture = await this.lectureService.readLecture(lectureId);
 
     return { lecture };
+  }
+
+  @ApiOperation({ summary: '강의 모두 보기' })
+  @Get()
+  async readManyLecture(@Query() query: ReadManyLectureQueryDto) {
+    const lectures = await this.lectureService.readManyLecture(query);
+
+    return { lectures };
   }
 
   // @Patch(':lectureId')
