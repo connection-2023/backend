@@ -218,12 +218,12 @@ export class CreateLectureDto {
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
     description: '클래스 휴무일',
-    required: true,
+    required: false,
   })
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Array)
-  holidays: string[];
+  holidays?: string[];
 
   @ApiProperty({
     example: [1, 2],

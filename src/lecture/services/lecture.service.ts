@@ -164,7 +164,6 @@ export class LectureService {
       const regionIds: Id[] = await this.getValidRegionIds(regions);
       const lectureToRegionFindData =
         this.createLectureToRegionFindData(regionIds);
-      console.log(lectureToRegionFindData);
 
       where['lectureToRegion'] = {
         some: {
@@ -177,16 +176,6 @@ export class LectureService {
 
     if (genres) {
       const lectureToGenreFindData = await this.getDanceCategoryIds(genres);
-
-      console.log(lectureToGenreFindData);
-
-      console.log({
-        some: {
-          id: {
-            in: lectureToGenreFindData,
-          },
-        },
-      });
 
       where['lectureToGenre'] = {
         some: {
@@ -201,6 +190,8 @@ export class LectureService {
       const price = this.createPriceFindData(priceRange);
       where['price'] = { price: { price } };
     }
+
+    console.log({ where });
 
     return await this.lectureRepository.readManyLecture(where);
   }

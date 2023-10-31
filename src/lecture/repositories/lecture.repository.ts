@@ -158,13 +158,7 @@ export class LectureRepository {
           },
           where: { lectureCoupon: { isDisabled: false } },
         },
-        lectureSchedule: {
-          select: {
-            startDateTime: true,
-            numberOfParticipants: true,
-            team: true,
-          },
-        },
+        lectureSchedule: true,
         lectureHoliday: { select: { holiday: true } },
         lectureToRegion: {
           select: {
@@ -181,8 +175,6 @@ export class LectureRepository {
   }
 
   async readManyLecture(where): Promise<Lecture[]> {
-    console.log(where);
-
     return await this.prismaService.lecture.findMany({
       where: { ...where },
     });
