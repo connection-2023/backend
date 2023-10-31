@@ -162,6 +162,7 @@ export class LectureService {
     const where = this.queryFilter.buildWherePropForFind(filter);
     const skip = page * pageSize;
     const take = pageSize;
+    const order = {};
 
     if (regions) {
       const regionIds: Id[] = await this.getValidRegionIds(regions);
@@ -232,9 +233,19 @@ export class LectureService {
       }
     }
 
+    if (orderBy) {
+      if (orderBy === '최신순') {
+        order['createdAt'] = 'desc';
+      } else if (orderBy === '별점순') {
+        order['stars'] = 'desc';
+      } else if (orderBy === '가격낮은순') {
+        order['price'] = 'asc';
+      }
+    }
+
     return await this.lectureRepository.readManyLecture(
       where,
-      orderBy,
+      order,
       skip,
       take,
     );

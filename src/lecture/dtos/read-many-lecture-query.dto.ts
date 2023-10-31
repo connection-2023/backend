@@ -90,7 +90,11 @@ export class ReadManyLectureQueryDto {
   @Type(() => Array)
   schedules?: string[];
 
-  @ApiProperty({ example: '최신순', description: '정렬', required: true })
+  @ApiProperty({
+    example: '최신순,별점순,가격낮은순',
+    description: '정렬',
+    required: true,
+  })
   @IsString()
   @IsNotEmpty()
   orderBy: string;

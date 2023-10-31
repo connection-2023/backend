@@ -176,12 +176,15 @@ export class LectureRepository {
 
   async readManyLecture(
     where,
-    orderBy: string,
+    order: { [orderBy: string]: string },
     skip: number,
     take: number,
   ): Promise<Lecture[]> {
+    console.log(where);
+
     return await this.prismaService.lecture.findMany({
       where: { ...where },
+      orderBy: order,
       skip,
       take,
     });

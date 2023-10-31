@@ -60,6 +60,12 @@ interface LectureCouponTargetInputData {
   lectureId: number;
 }
 
+interface LectureOrderBy {
+  createdAt?: string;
+  starts?: string;
+  price?: string;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -71,4 +77,5 @@ export {
   RegularLectureSchedules,
   RegularLectureScheduleInputData,
   LectureCouponTargetInputData,
+  LectureOrderBy,
 };
