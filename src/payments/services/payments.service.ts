@@ -20,10 +20,13 @@ import {
   TossPaymentsConfirmResponse,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, LecturePayment } from '@prisma/client';
+import { Lecture, Payment } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto copy';
-import { PaymentStatus } from '@src/payments/enum/payment.enum';
+import {
+  PaymentProductTypes,
+  PaymentStatus,
+} from '@src/payments/enum/payment.enum';
 import axios from 'axios';
 
 @Injectable()
@@ -88,7 +91,12 @@ export class PaymentsService implements OnModuleInit {
       getLecturePaymentDto,
     );
 
-    await this.createPaymentTransaction(userId, getLecturePaymentDto, coupons);
+    await this.createPaymentTransaction(
+      lecture.lecturerId,
+      userId,
+      getLecturePaymentDto,
+      coupons,
+    );
 
     const lecturePaymentInfo = {
       orderId: getLecturePaymentDto.orderId,
@@ -101,18 +109,27 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async createPaymentTransaction(
+    lecturerId: number,
     userId: number,
     getLecturePaymentDto: GetLecturePaymentDto,
     coupons: Coupons,
   ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const createdLecturePayment: LecturePayment =
-          await this.createLecturePayment(
-            transaction,
-            userId,
-            getLecturePaymentDto,
-          );
+        const paymentInfo = {
+          method: getLecturePaymentDto.method,
+          orderName: getLecturePaymentDto.orderName,
+          price: getLecturePaymentDto.price,
+          orderId: getLecturePaymentDto.orderId,
+        };
+
+        const createdLecturePayment: Payment = await this.createPayment(
+          transaction,
+          lecturerId,
+          userId,
+          paymentInfo,
+          PaymentProductTypes.강의,
+        );
 
         await Promise.all([
           this.updateCouponUsage(
@@ -159,7 +176,7 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async checkUserPaymentValidity(userId, orderId): Promise<void> {
-    const payment: LecturePayment =
+    const payment: Payment =
       await this.paymentsRepository.getUserLecturePayment(userId, orderId);
     if (payment) {
       throw new BadRequestException(`결제정보가 이미 존재합니다.`);
@@ -379,28 +396,33 @@ export class PaymentsService implements OnModuleInit {
     return { ...coupon.lectureCoupon };
   }
 
-  private async createLecturePayment(
+  private async createPayment(
     transaction: PrismaTransaction,
+    lecturerId: number,
     userId: number,
-    getLecturePaymentDto: GetLecturePaymentDto,
-  ): Promise<LecturePayment> {
-    const { method, orderName, price, orderId } = getLecturePaymentDto;
+    paymentInfo: PaymentInfo,
+    productType: PaymentProductTypes,
+  ): Promise<Payment> {
+    const { method, orderName, price, orderId } = paymentInfo;
 
-    const [paymentMethod, paymentStatus] = await Promise.all([
+    const [paymentMethod, paymentStatus, paymentType] = await Promise.all([
       this.paymentsRepository.getPaymentMethod(method),
       this.paymentsRepository.getPaymentStatus(PaymentStatus.READY),
+      this.paymentsRepository.getPaymentProductType(productType),
     ]);
 
     const lecturePaymentData = {
+      lecturerId,
       userId,
       orderId,
       orderName,
       paymentMethodId: paymentMethod.id,
       statusId: paymentStatus.id,
+      paymentProductTypeId: paymentType.id,
       price,
     };
 
-    return await this.paymentsRepository.createLecturePayment(
+    return await this.paymentsRepository.createPayment(
       transaction,
       lecturePaymentData,
     );
@@ -409,7 +431,7 @@ export class PaymentsService implements OnModuleInit {
   private async createUserReservation(
     transaction: PrismaTransaction,
     userId: number,
-    lecturePaymentId: number,
+    paymentId: number,
     getLecturePaymentDto: GetLecturePaymentDto,
   ): Promise<void> {
     const { lectureSchedules, representative, phoneNumber, requests } =
@@ -423,7 +445,7 @@ export class PaymentsService implements OnModuleInit {
 
       const reservationInputData: ReservationInputData = {
         userId,
-        lecturePaymentId,
+        paymentId,
         representative,
         phoneNumber,
         requests,
@@ -439,7 +461,7 @@ export class PaymentsService implements OnModuleInit {
   private async updateCouponUsage(
     transaction: PrismaTransaction,
     userId: number,
-    lecturePaymentId: number,
+    paymentId: number,
     coupons: Coupons,
   ): Promise<void> {
     if (!coupons) {
@@ -450,7 +472,7 @@ export class PaymentsService implements OnModuleInit {
       .map((coupon) => coupon?.id)
       .filter((id: number) => id !== null);
 
-    const paymentCouponUsageInputData = { lecturePaymentId };
+    const paymentCouponUsageInputData = { paymentId };
 
     if (coupons.coupon) {
       const couponData = coupons.coupon;

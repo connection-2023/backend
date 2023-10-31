@@ -3,13 +3,14 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LectureCoupon,
   LectureCouponUseage,
-  LecturePaymentInputData,
   LecturePaymentUpdateData,
   LectureSchedule,
+  PaymentInputData,
   ReservationInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { PaymentStatus } from '../enum/payment.enum';
+import { PaymentProductTypes, PaymentStatus } from '../enum/payment.enum';
+import { PaymentProductType } from '@prisma/client';
 
 @Injectable()
 export class PaymentsRepository {
@@ -76,7 +77,7 @@ export class PaymentsRepository {
     });
   }
   async getUserLecturePayment(userId: number, orderId: string) {
-    return await this.prismaService.lecturePayment.findFirst({
+    return await this.prismaService.payment.findFirst({
       where: { userId, orderId },
     });
   }
@@ -101,12 +102,12 @@ export class PaymentsRepository {
     });
   }
 
-  async createLecturePayment(
+  async createPayment(
     transaction: PrismaTransaction,
-    lecturePaymentInputData: LecturePaymentInputData,
+    paymentInputData: PaymentInputData,
   ) {
-    return await transaction.lecturePayment.create({
-      data: lecturePaymentInputData,
+    return await transaction.payment.create({
+      data: paymentInputData,
     });
   }
 
@@ -166,7 +167,7 @@ export class PaymentsRepository {
   }
 
   async getLecturePaymentInfo(orderId: string) {
-    return await this.prismaService.lecturePayment.findUnique({
+    return await this.prismaService.payment.findUnique({
       where: { orderId },
       select: {
         orderId: true,
@@ -184,9 +185,17 @@ export class PaymentsRepository {
     orderId: string,
     updateData: LecturePaymentUpdateData,
   ) {
-    await this.prismaService.lecturePayment.update({
+    await this.prismaService.payment.update({
       where: { orderId },
       data: updateData,
+    });
+  }
+
+  async getPaymentProductType(
+    productType: PaymentProductTypes,
+  ): Promise<PaymentProductType> {
+    return this.prismaService.paymentProductType.findFirst({
+      where: { name: productType },
     });
   }
 }

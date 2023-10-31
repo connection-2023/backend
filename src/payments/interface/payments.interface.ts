@@ -21,30 +21,25 @@ interface Coupons {
   stackableCoupon?: Coupon;
 }
 
-interface LecturePaymentInputData {
-  userId: number;
+interface PaymentInputData {
+  lecturerId?: number;
+  userId?: number;
   orderId: string;
   orderName: string;
   paymentMethodId: number;
   statusId: number;
   price: number;
+  paymentProductTypeId: number;
 }
 
 interface ReservationInputData {
   userId: number;
-  lecturePaymentId: number;
+  paymentId: number;
   lectureScheduleId: number;
   representative: string;
   phoneNumber: string;
   participants: number;
   requests?: string | null;
-}
-
-interface LecturePaymentInfo {
-  orderId: string;
-  orderName: string;
-  value: number;
-  method: PaymentMethods;
 }
 
 interface LectureCouponUseage {
@@ -55,15 +50,20 @@ interface LectureCouponUseage {
 }
 
 interface PaymentInfo {
-  orderId: string;
-  amount: number;
+  orderId?: string;
+  amount?: number;
   paymentKey?: string;
+  orderName?: string;
+  method?: PaymentMethods;
+  value?: number;
+  price?: number;
 }
 
 interface TossPaymentsConfirmResponse {
   card?: Card;
   virtualAccount?: VirtualAccount;
 }
+
 interface VirtualAccount {
   accountNumber: string;
   accountType: string;
@@ -75,13 +75,14 @@ interface VirtualAccount {
   refundStatus: RefundStatus;
   refundReceiveAccount: object | null;
 }
+
 interface Card {
   amount: number;
   issuerCode: string;
   acquirerCode: string | null;
   number: string;
   installmentPlanMonths: number;
-  isInterestFree: false;
+  isInterestFree: boolean;
   interestPayer: null;
   approveNo: string;
   useCardPoint: boolean;
@@ -100,9 +101,8 @@ export {
   LectureCoupon,
   Coupon,
   Coupons,
-  LecturePaymentInputData,
+  PaymentInputData,
   ReservationInputData,
-  LecturePaymentInfo,
   LectureCouponUseage,
   PaymentInfo,
   LecturePaymentUpdateData,

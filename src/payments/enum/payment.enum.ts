@@ -21,3 +21,8 @@ export enum RefundStatus {
   PARTIAL_FAILED = 'PARTIAL_FAILED',
   COMPLETED = 'COMPLETED',
 }
+
+export enum PaymentProductTypes {
+  강의 = '강의',
+  패스권 = '패스권',
+}
