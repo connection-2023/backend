@@ -211,7 +211,7 @@ model LecturerReview {
   stars       Int      @db.Integer
   //후기
   description String?  @db.VarChar(255)
-  lecturer    Lecturer @relation(fields: [lecturerId], references: [id])
+  lecturer    Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   users       Users    @relation(fields: [userId], references: [id])
 }
 
@@ -337,7 +337,7 @@ model LecturerRegion {
   regionId   Int
   lecturerId Int
   region     Region   @relation(fields: [regionId], references: [id])
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 }
 
 model LecturerDanceGenre {
@@ -346,21 +346,21 @@ model LecturerDanceGenre {
   lecturerId      Int
   name            String?
   danceCategory   DanceCategory @relation(fields: [danceCategoryId], references: [id])
-  lecturer        Lecturer      @relation(fields: [lecturerId], references: [id])
+  lecturer        Lecturer      @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 }
 
 model LecturerInstagramPostUrl {
   id         Int      @id @default(autoincrement())
   lecturerId Int
   url        String
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 }
 
 model LecturerProfileImageUrl {
   id         Int      @id @default(autoincrement())
   lecturerId Int
   url        String
-  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 }
 
 model LectureSchedule {
@@ -557,8 +557,8 @@ model PaymentStatus {
 
 //쿠폰 사용 내역 쿠폰 수정 대비
 model PaymentCouponUsage {
-  id               Int @id @default(autoincrement())
-  lecturePaymentId Int @unique
+  id                              Int            @id @default(autoincrement())
+  lecturePaymentId                Int            @unique
   couponId                        Int?
   couponPercentage                Int?
   couponDiscountPrice             Int?
