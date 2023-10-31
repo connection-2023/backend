@@ -13,9 +13,16 @@ export class UpdateMyLecturerProfileDto {
   newProfileImageUrls: string[];
 
   @ApiProperty({
+    example: 'url',
+    description: '프로필 카드 이미지',
+    required: false,
+  })
+  @IsOptional()
+  profileCardImageUrl: string;
+
+  @ApiProperty({
     example: ['K-pop', '힙합'],
     description: `장르 배열`,
-
     required: false,
   })
   @IsArray()
@@ -65,13 +72,13 @@ export class UpdateMyLecturerProfileDto {
   homepageUrl: string;
 
   @ApiProperty({
-    example: ['그 외 사이트 url', '그 외 사이트 url'],
+    example: ['인스타 글 url', '인스타 글 url'],
     description: '그외 사이트',
     required: false,
   })
   @IsArray()
   @IsOptional()
-  websiteUrls: string[];
+  instagramPostUrls: string[];
 
   @ApiProperty({
     example: 'CJ ent',

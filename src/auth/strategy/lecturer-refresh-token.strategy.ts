@@ -51,7 +51,7 @@ export class LecturerRefreshTokenStrategy extends PassportStrategy(
         );
       if (!authorizedLecturer) {
         throw new BadRequestException(
-          `유효하지 않는 강사 정보 요청입니다.`,
+          `유효하지 않은 강사 정보 요청입니다.`,
           'InvalidLecturerInformation',
         );
       }

@@ -67,7 +67,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
       await this.authTokenService.getUserByPayload(tokenPayload.userId);
     if (!authorizedUser) {
       throw new BadRequestException(
-        '유효하지 않는 유저 정보 요청입니다.',
+        '유효하지 않은 유저 정보 요청입니다.',
         'InvalidUserInformation',
       );
     }
@@ -89,7 +89,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
       await this.authTokenService.getLecturerByPayload(tokenPayload.lecturerId);
     if (!authorizedLecturer) {
       throw new BadRequestException(
-        '유효하지 않는 강사 정보 요청입니다.',
+        '유효하지 않은 강사 정보 요청입니다.',
         'InvalidLecturerInformation',
       );
     }

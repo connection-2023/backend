@@ -75,7 +75,7 @@ export class AuthTokenService implements OnModuleInit {
     });
     if (!user) {
       throw new BadRequestException(
-        `유효하지 않는 유저 정보 요청입니다.`,
+        `유효하지 않은 유저 정보 요청입니다.`,
         'InvalidUserInformation',
       );
     }
@@ -91,7 +91,7 @@ export class AuthTokenService implements OnModuleInit {
     });
     if (!lecturer) {
       throw new BadRequestException(
-        `유효하지 않는 강사 정보 요청입니다.`,
+        `유효하지 않은 강사 정보 요청입니다.`,
         'InvalidUserInformation',
       );
     }
@@ -143,7 +143,7 @@ export class AuthTokenService implements OnModuleInit {
       });
     if (!selectedLecturer) {
       throw new BadRequestException(
-        `유효하지 않는 강사 정보 요청입니다.`,
+        `유효하지 않은 강사 정보 요청입니다.`,
         'InvalidLecturerInformation',
       );
     }
@@ -166,7 +166,7 @@ export class AuthTokenService implements OnModuleInit {
 
     if (!selectedLecturerUserInfo) {
       throw new BadRequestException(
-        `유효하지 않는 강사 정보 요청입니다.`,
+        `유효하지 않은 강사 정보 요청입니다.`,
         'InvalidUserInformation',
       );
     }

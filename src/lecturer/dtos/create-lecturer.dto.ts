@@ -45,6 +45,14 @@ export class CreateLecturerDto {
   phoneNumber: string;
 
   @ApiProperty({
+    example: 'url',
+    description: '프로필 카드 이미지',
+    required: false,
+  })
+  @IsOptional()
+  profileCardImageUrl: string;
+
+  @ApiProperty({
     example: 'https://www.youtube.com/',
     description: '유튜브 url',
     required: false,
@@ -112,13 +120,13 @@ export class CreateLecturerDto {
   genres: DanceCategory[];
 
   @ApiProperty({
-    example: ['그 외 사이트 url', '그 외 사이트 url'],
+    example: ['인스타 글 url', '인스타 글 url'],
     description: '그외 사이트',
     required: false,
   })
   @IsArray()
   @IsOptional()
-  websiteUrls: string[];
+  instagramPostUrls: string[];
 
   @ApiProperty({
     example: ['기타일때 직접입력한 것들', '기타일때 직접입력한 것들'],

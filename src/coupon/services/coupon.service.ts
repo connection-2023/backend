@@ -66,7 +66,7 @@ export class CouponService {
   ): Promise<void> {
     const lectureData: LectureData[] = lectureIds.map((lectureId: number) => ({
       id: lectureId,
-      danceLecturerId: lecturerId,
+      lecturerId,
     }));
 
     const selectedLectureIds: Id[] =
