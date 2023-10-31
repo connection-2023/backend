@@ -174,11 +174,16 @@ export class LectureRepository {
     });
   }
 
-  async readManyLecture(where): Promise<Lecture[]> {
-    console.log(where);
-
+  async readManyLecture(
+    where,
+    orderBy: string,
+    skip: number,
+    take: number,
+  ): Promise<Lecture[]> {
     return await this.prismaService.lecture.findMany({
       where: { ...where },
+      skip,
+      take,
     });
   }
   // async trxUpdateLecture(

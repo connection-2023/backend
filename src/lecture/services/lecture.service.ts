@@ -152,21 +152,20 @@ export class LectureService {
       star,
       regions,
       genres,
+      orderBy,
       priceRange,
       schedules,
       ...filter
     } = query;
 
     const where = this.queryFilter.buildWherePropForFind(filter);
-
-    where['skip'] = page * pageSize;
-    where['take'] = pageSize;
+    const skip = page * pageSize;
+    const take = pageSize;
 
     if (regions) {
       const regionIds: Id[] = await this.getValidRegionIds(regions);
       const lectureToRegionFindData =
         this.createLectureToRegionFindData(regionIds);
-      console.log(lectureToRegionFindData);
 
       where['lectureToRegion'] = {
         some: {
@@ -196,15 +195,22 @@ export class LectureService {
     }
 
     if (schedules) {
+      const scheduleFindData = this.createSchedulesFindData(schedules);
+
       where['lectureSchedule'] = {
         some: {
           startDateTime: {
-            in: schedules,
+            in: scheduleFindData,
           },
         },
       };
     }
-    return await this.lectureRepository.readManyLecture(where);
+    return await this.lectureRepository.readManyLecture(
+      where,
+      orderBy,
+      skip,
+      take,
+    );
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -341,6 +347,12 @@ export class LectureService {
     }
 
     return lectureInputData;
+  }
+
+  private createSchedulesFindData(schedules: string[]) {
+    const scheduleFindData = schedules.map((date) => new Date(date));
+
+    return scheduleFindData;
   }
 
   private createPriceFindData(priceRange: number[]) {
