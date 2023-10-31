@@ -68,7 +68,7 @@ export class CreateLectureDto {
   })
   @IsArray()
   @IsOptional()
-  etcGenres: string[];
+  etcGenres?: string[];
 
   @ApiProperty({
     example: ['이미지url1', '이미지url2'],
@@ -95,7 +95,7 @@ export class CreateLectureDto {
   })
   @IsOptional()
   @IsString()
-  introduction: string;
+  introduction?: string;
 
   @ApiProperty({
     example: '첫날에 모하징',
@@ -134,13 +134,13 @@ export class CreateLectureDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  minCapacity: number;
+  minCapacity?: number;
 
   @ApiProperty({ example: 12, description: '최대 정원', required: false })
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  maxCapacity: number | null;
+  maxCapacity?: number;
 
   @ApiProperty({
     example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
@@ -159,7 +159,7 @@ export class CreateLectureDto {
   })
   @IsOptional()
   @IsString()
-  reservationComment: string | null;
+  reservationComment?: string;
 
   @ApiProperty({ example: 40000, description: '가격', required: true })
   @IsNotEmpty()
@@ -175,7 +175,7 @@ export class CreateLectureDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  noShowDeposit: number | null;
+  noShowDeposit?: number;
 
   @ApiProperty({
     example: [
@@ -189,7 +189,7 @@ export class CreateLectureDto {
   @IsArray()
   @IsOptional()
   @Type(() => Array)
-  schedules: string[];
+  schedules?: string[];
 
   @ApiProperty({
     example: {
@@ -209,7 +209,7 @@ export class CreateLectureDto {
   })
   @IsObject()
   @IsOptional()
-  regularSchedules: RegularLectureSchedules;
+  regularSchedules?: RegularLectureSchedules;
 
   @ApiProperty({
     example: [
@@ -218,12 +218,12 @@ export class CreateLectureDto {
       'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     ],
     description: '클래스 휴무일',
-    required: true,
+    required: false,
   })
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Array)
-  holidays: string[];
+  holidays?: string[];
 
   @ApiProperty({
     example: [1, 2],

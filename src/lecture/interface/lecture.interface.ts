@@ -5,8 +5,8 @@ interface LectureInputData {
   detailAddress?: string;
   duration: number;
   difficultyLevel: string;
-  minCapacity: number;
-  maxCapacity: number;
+  minCapacity?: number;
+  maxCapacity?: number;
   reservationComment?: string;
   reservationDeadline: Date;
   price: number;
