@@ -153,8 +153,10 @@ export class LectureService {
       regions,
       genres,
       priceRange,
+      schedules,
       ...filter
     } = query;
+
     const where = this.queryFilter.buildWherePropForFind(filter);
 
     where['skip'] = page * pageSize;
@@ -164,6 +166,7 @@ export class LectureService {
       const regionIds: Id[] = await this.getValidRegionIds(regions);
       const lectureToRegionFindData =
         this.createLectureToRegionFindData(regionIds);
+      console.log(lectureToRegionFindData);
 
       where['lectureToRegion'] = {
         some: {
@@ -177,7 +180,7 @@ export class LectureService {
     if (genres) {
       const lectureToGenreFindData = await this.getDanceCategoryIds(genres);
 
-      where['lectureToGenre'] = {
+      where['lectureToDanceGenre'] = {
         some: {
           id: {
             in: lectureToGenreFindData,
@@ -188,11 +191,19 @@ export class LectureService {
 
     if (priceRange) {
       const price = this.createPriceFindData(priceRange);
-      where['price'] = { price: { price } };
+
+      where['price'] = price;
     }
 
-    console.log({ where });
-
+    if (schedules) {
+      where['lectureSchedule'] = {
+        some: {
+          startDateTime: {
+            in: schedules,
+          },
+        },
+      };
+    }
     return await this.lectureRepository.readManyLecture(where);
   }
 
@@ -335,10 +346,10 @@ export class LectureService {
   private createPriceFindData(priceRange: number[]) {
     const price = {};
     if (priceRange[0]) {
-      price['gte'] = priceRange[0];
+      price['gte'] = priceRange[0] / 1;
     }
     if (priceRange[1]) {
-      price['lte'] = priceRange[1];
+      price['lte'] = priceRange[1] / 1;
     }
 
     return price;

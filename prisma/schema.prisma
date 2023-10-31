@@ -126,9 +126,9 @@ model Lecture {
   //난이도
   difficultyLevel     String                @db.VarChar(5)
   //최소 정원
-  minCapacity         Int                   @db.Integer
+  minCapacity         Int?                  @db.Integer
   //최대 정원
-  maxCapacity         Int                   @db.Integer
+  maxCapacity         Int?                  @db.Integer
   //강의 예약 마감일
   reservationDeadline DateTime              @db.Date
   //예약 설명
