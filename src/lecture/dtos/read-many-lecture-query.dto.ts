@@ -8,6 +8,8 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
 } from 'class-validator';
 
 export class ReadManyLectureQueryDto {
@@ -44,15 +46,18 @@ export class ReadManyLectureQueryDto {
   @ApiPropertyOptional({ example: '4', description: '평점', required: false })
   @IsNumber()
   @IsOptional()
+  @Max(5)
+  @Min(0)
   @Type(() => Number)
-  star?: number;
+  stars?: number;
 
   @ApiProperty({
+    type: Number,
+    isArray: true,
     example: [10000, 10000000],
     description: '가격',
     required: false,
   })
-  @IsArray()
   @IsOptional()
   @Type(() => Array)
   priceRange?: number[];
@@ -76,7 +81,7 @@ export class ReadManyLectureQueryDto {
   @IsNotEmpty()
   orderBy: string;
 
-  @ApiProperty({ example: 1, description: 'page', required: true })
+  @ApiProperty({ example: 0, description: 'page', required: true })
   @IsNumber()
   @IsNotEmpty()
   @Type(() => Number)

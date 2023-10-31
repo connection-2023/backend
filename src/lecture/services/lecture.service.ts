@@ -149,7 +149,7 @@ export class LectureService {
       page,
       pageSize,
       lectureMethod,
-      star,
+      stars,
       regions,
       genres,
       orderBy,
@@ -205,6 +205,13 @@ export class LectureService {
         },
       };
     }
+
+    if (stars) {
+      where['stars'] = {
+        gte: stars / 1,
+      };
+    }
+
     return await this.lectureRepository.readManyLecture(
       where,
       orderBy,
