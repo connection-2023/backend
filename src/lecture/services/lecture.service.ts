@@ -149,6 +149,7 @@ export class LectureService {
       page,
       pageSize,
       lectureMethod,
+      individualGroup,
       stars,
       regions,
       genres,
@@ -210,6 +211,25 @@ export class LectureService {
       where['stars'] = {
         gte: stars / 1,
       };
+    }
+
+    if (lectureMethod) {
+      const lectureMethodId = this.getLectureMethodId(lectureMethod);
+      where['lectureMethodId'] = lectureMethodId;
+    }
+
+    if (individualGroup) {
+      if (individualGroup === '개인') {
+        where['minCapacity'] = 1;
+        where['maxCapacity'] = 1;
+      } else if (individualGroup === '그룹') {
+        where['minCapacity'] = {
+          gte: 1,
+        };
+        where['NOT'] = {
+          maxCapacity: 1,
+        };
+      }
     }
 
     return await this.lectureRepository.readManyLecture(

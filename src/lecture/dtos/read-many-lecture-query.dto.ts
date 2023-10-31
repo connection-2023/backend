@@ -1,5 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DanceCategory, DanceMethod } from '@src/common/enum/enum';
+import {
+  DanceCapacity,
+  DanceCategory,
+  DanceMethod,
+} from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -42,6 +46,16 @@ export class ReadManyLectureQueryDto {
   @IsEnum(DanceMethod, { each: true })
   @IsOptional()
   lectureMethod?: DanceMethod;
+
+  @ApiPropertyOptional({
+    example: '개인',
+    description: '강의 인원 (개인,그룹)',
+    required: false,
+  })
+  @IsString()
+  @IsEnum(DanceCapacity, { each: true })
+  @IsOptional()
+  individualGroup?: string;
 
   @ApiPropertyOptional({ example: '4', description: '평점', required: false })
   @IsNumber()
