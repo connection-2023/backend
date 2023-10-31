@@ -1,24 +1,30 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GetLecturePaymentDto } from '../dtos/get-lecture-payment.dto';
-import { PaymentsRepository } from '../repository/payments.repository';
+import { GetLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto';
+import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import {
   Coupon,
   Coupons,
   LectureCoupon,
   LectureCouponUseage,
   LectureSchedule,
+  PaymentInfo,
   ReservationInputData,
-} from '../interface/payments.interface';
+  TossPaymentsConfirmResponse,
+} from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Lecture, LecturePayment } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { ConfirmLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto copy';
+import { PaymentStatus } from '@src/payments/enum/payment.enum';
+import axios from 'axios';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -29,6 +35,8 @@ export class PaymentsService implements OnModuleInit {
   private kftClientSecret: string;
   private kftScope: string;
   private kftGrantType: string;
+  private tossPaymentsSecretKey: string;
+  private tossPaymentsUrl: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -42,6 +50,10 @@ export class PaymentsService implements OnModuleInit {
     this.kftClientSecret = this.configService.get<string>('KFT_CLIENT_SECRET');
     this.kftScope = this.configService.get<string>('KFT_SCOPE');
     this.kftGrantType = this.configService.get<string>('KFT_GRANT_TYPE');
+    this.tossPaymentsSecretKey = this.configService.get<string>(
+      'TOSS_PAYMENTS_SECRET_KEY',
+    );
+    this.tossPaymentsUrl = this.configService.get<string>('TOSS_PAYMENTS_URL');
 
     this.logger.log('PaymentsService Init');
   }
@@ -77,12 +89,14 @@ export class PaymentsService implements OnModuleInit {
     );
 
     await this.createPaymentTransaction(userId, getLecturePaymentDto, coupons);
+
     const lecturePaymentInfo = {
       orderId: getLecturePaymentDto.orderId,
       orderName: getLecturePaymentDto.orderName,
       value: getLecturePaymentDto.price,
       method: getLecturePaymentDto.method,
     };
+
     return lecturePaymentInfo;
   }
 
@@ -374,7 +388,7 @@ export class PaymentsService implements OnModuleInit {
 
     const [paymentMethod, paymentStatus] = await Promise.all([
       this.paymentsRepository.getPaymentMethod(method),
-      this.paymentsRepository.getPaymentStatus('결제대기'),
+      this.paymentsRepository.getPaymentStatus(PaymentStatus.READY),
     ]);
 
     const lecturePaymentData = {
@@ -474,6 +488,105 @@ export class PaymentsService implements OnModuleInit {
           couponIds,
         ),
       ]);
+    }
+  }
+
+  async confirmLecturePayment(
+    confirmLecturePaymentDto: ConfirmLecturePaymentDto,
+  ) {
+    const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
+    await this.validateLecturePaymentInfo(
+      { orderId, amount },
+      PaymentStatus.READY,
+    );
+    const paymentStatus = await this.paymentsRepository.getPaymentStatus(
+      PaymentStatus.IN_PROGRESS,
+    );
+    //무통장정보, 카드정보, 카드번호, 카드회사 코드, 은행코드, 계좌번호..?
+    const updatedPayment = await this.paymentsRepository.updateLecturePayment(
+      orderId,
+      {
+        paymentKey,
+        statusId: paymentStatus.id,
+      },
+    );
+    const paymentInfo: TossPaymentsConfirmResponse =
+      await this.authorizeTossPaymentApiServer({
+        orderId,
+        amount,
+        paymentKey,
+      });
+    console.log(paymentInfo);
+    return {};
+  }
+
+  private async validateLecturePaymentInfo(
+    lecturePayment: PaymentInfo,
+    paymentStatus: PaymentStatus,
+  ) {
+    const paymentInfo = await this.paymentsRepository.getLecturePaymentInfo(
+      lecturePayment.orderId,
+    );
+    if (!paymentInfo) {
+      throw new NotFoundException(
+        `결제 정보가 존재하지 않습니다.`,
+        'PaymentInfoNotFound',
+      );
+    }
+
+    if (lecturePayment.amount !== paymentInfo.price) {
+      throw new BadRequestException(
+        `결제 금액이 일치하지 않습니다.`,
+        'PaymentAmountMismatch',
+      );
+    }
+
+    if (paymentInfo.paymentStatus.name !== paymentStatus) {
+      throw new BadRequestException(
+        `해당 결제 정보는 ${paymentInfo.paymentStatus.name}상태 입니다.`,
+        'PaymentStatusMismatch',
+      );
+    }
+  }
+
+  private async authorizeTossPaymentApiServer(
+    paymentInfo: PaymentInfo,
+  ): Promise<TossPaymentsConfirmResponse> {
+    try {
+      const tossSkKey = Buffer.from(`${this.tossPaymentsSecretKey}:`).toString(
+        'base64',
+      );
+      const response = await axios.post(
+        `${this.tossPaymentsUrl}/confirm`,
+        paymentInfo,
+        {
+          headers: {
+            Authorization: `Basic ${tossSkKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      if (response.data.status === PaymentStatus.DONE && response.data.card) {
+        return { card: response.data.card };
+      }
+      if (
+        response.data.status === PaymentStatus.WAITING_FOR_DEPOSIT &&
+        response.data.virtualAccount
+      ) {
+        return { virtualAccount: response.data.virtualAccount };
+      }
+      if (!response.data) {
+        throw new InternalServerErrorException(`${response.data}`, 'erer');
+      }
+    } catch (error) {
+      if (error.response.data) {
+        throw new InternalServerErrorException(
+          `${error.response.data.message}`,
+          error.response.data.code,
+        );
+      }
+
+      throw error;
     }
   }
 }

@@ -4,10 +4,12 @@ import {
   LectureCoupon,
   LectureCouponUseage,
   LecturePaymentInputData,
+  LecturePaymentUpdateData,
   LectureSchedule,
   ReservationInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { PaymentStatus } from '../enum/payment.enum';
 
 @Injectable()
 export class PaymentsRepository {
@@ -93,7 +95,7 @@ export class PaymentsRepository {
     });
   }
 
-  async getPaymentStatus(status) {
+  async getPaymentStatus(status: PaymentStatus) {
     return await this.prismaService.paymentStatus.findFirstOrThrow({
       where: { name: status },
     });
@@ -160,6 +162,31 @@ export class PaymentsRepository {
     await transaction.userCoupon.updateMany({
       where: { userId, lectureCouponId: { in: couponIds } },
       data: { isUsed: true },
+    });
+  }
+
+  async getLecturePaymentInfo(orderId: string) {
+    return await this.prismaService.lecturePayment.findUnique({
+      where: { orderId },
+      select: {
+        orderId: true,
+        price: true,
+        paymentStatus: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
+  async updateLecturePayment(
+    orderId: string,
+    updateData: LecturePaymentUpdateData,
+  ) {
+    await this.prismaService.lecturePayment.update({
+      where: { orderId },
+      data: updateData,
     });
   }
 }

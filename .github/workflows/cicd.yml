@@ -69,6 +69,9 @@ jobs:
           echo "KFT_SCOPE=${{ secrets.KFT_SCOPE }}" >> .env
           echo "KFT_GRANT_TYPE=${{ secrets.KFT_GRANT_TYPE }}" >> .env
 
+          echo "TOSS_PAYMENTS_SECRET_KEY=${{ secrets.TOSS_PAYMENTS_SECRET_KEY }}" >> .env
+          echo "TOSS_PAYMENTS_URL=${{ secrets.TOSS_PAYMENTS_URL }}" >> .env
+
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축

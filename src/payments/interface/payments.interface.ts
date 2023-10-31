@@ -1,4 +1,4 @@
-import { PaymentMethods } from '@src/payments/enum/payment.enum';
+import { PaymentMethods, RefundStatus } from '@src/payments/enum/payment.enum';
 
 interface LectureSchedule {
   lectureScheduleId: number;
@@ -46,11 +46,53 @@ interface LecturePaymentInfo {
   value: number;
   method: PaymentMethods;
 }
+
 interface LectureCouponUseage {
   lectureCoupon: {
     maxUsageCount: number;
     usageCount: number;
   };
+}
+
+interface PaymentInfo {
+  orderId: string;
+  amount: number;
+  paymentKey?: string;
+}
+
+interface TossPaymentsConfirmResponse {
+  card?: Card;
+  virtualAccount?: VirtualAccount;
+}
+interface VirtualAccount {
+  accountNumber: string;
+  accountType: string;
+  bankCode: number;
+  customerName: string;
+  dueDate: Date;
+  expired: boolean;
+  settlementStatus: string;
+  refundStatus: RefundStatus;
+  refundReceiveAccount: object | null;
+}
+interface Card {
+  amount: number;
+  issuerCode: string;
+  acquirerCode: string | null;
+  number: string;
+  installmentPlanMonths: number;
+  isInterestFree: false;
+  interestPayer: null;
+  approveNo: string;
+  useCardPoint: boolean;
+  cardType: string;
+  ownerType: string;
+  acquireStatus: string;
+}
+
+interface LecturePaymentUpdateData {
+  paymentKey: string;
+  statusId: number;
 }
 
 export {
@@ -62,4 +104,7 @@ export {
   ReservationInputData,
   LecturePaymentInfo,
   LectureCouponUseage,
+  PaymentInfo,
+  LecturePaymentUpdateData,
+  TossPaymentsConfirmResponse,
 };
