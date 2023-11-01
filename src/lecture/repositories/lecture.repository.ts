@@ -183,10 +183,15 @@ export class LectureRepository {
     console.log(where);
 
     return await this.prismaService.lecture.findMany({
-      where: { ...where },
+      where: { ...where, deletedAt: null },
       orderBy: order,
       skip,
       take,
+      include: {
+        lecturer: { include: { lecturerProfileImageUrl: true } },
+        lectureToRegion: { include: { region: true } },
+        lectureToDanceGenre: { include: { danceCategory: true } },
+      },
     });
   }
   // async trxUpdateLecture(
