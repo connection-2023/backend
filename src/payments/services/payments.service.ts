@@ -11,6 +11,7 @@ import { GetLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import {
   CardInfo,
+  CardPaymentInfoInputData,
   Coupon,
   Coupons,
   LectureCoupon,
@@ -18,6 +19,7 @@ import {
   LectureSchedule,
   PaymentInfo,
   ReservationInputData,
+  TossPaymentCardInfo,
   TossPaymentsConfirmResponse,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -566,28 +568,33 @@ export class PaymentsService implements OnModuleInit {
   }
   private async createCardPaymentInfo(
     paymentId: number,
-    cardPaymentInfo: CardInfo,
+    cardPaymentInfo: TossPaymentCardInfo,
   ) {
     const {
       issuerCode,
+      acquirerCode,
+      amount,
+      interestPayer,
+      useCardPoint,
       acquireStatus,
-      number,
-      installmentPlanMonths,
-      approveNo,
-      cardType,
-      ownerType,
-      isInterestFree,
+      ...cardData
     } = cardPaymentInfo;
 
     await this.validateCardCode(issuerCode);
-    if (acquireStatus) {
-      await this.validateCardCode(acquireStatus);
+    if (acquirerCode) {
+      await this.validateCardCode(acquirerCode);
     }
 
-    const cardPaymentInfoInputData = {
+    const cardPaymentInfoInputData: CardPaymentInfoInputData = {
       paymentId,
       issuerCode,
+      acquirerCode,
+      ...cardData,
     };
+
+    await this.paymentsRepository.createCardPaymentInfo(
+      cardPaymentInfoInputData,
+    );
   }
 
   private async validateCardCode(cardCode: string): Promise<void> {

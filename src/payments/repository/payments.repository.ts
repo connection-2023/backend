@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  CardInfo,
+  CardPaymentInfoInputData,
   LectureCoupon,
   LectureCouponUseage,
   LecturePaymentUpdateData,
@@ -198,7 +200,16 @@ export class PaymentsRepository {
       where: { name: productType },
     });
   }
+
   async getCard(code: string) {
     return this.prismaService.card.findUnique({ where: { code } });
+  }
+
+  async createCardPaymentInfo(
+    cardPaymentInfoInputData: CardPaymentInfoInputData,
+  ) {
+    await this.prismaService.cardPaymentInfo.create({
+      data: cardPaymentInfoInputData,
+    });
   }
 }

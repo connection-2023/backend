@@ -60,7 +60,7 @@ interface PaymentInfo {
 }
 
 interface TossPaymentsConfirmResponse {
-  card?: CardInfo;
+  card?: TossPaymentCardInfo;
   virtualAccount?: VirtualAccountInfo;
 }
 
@@ -77,18 +77,25 @@ interface VirtualAccountInfo {
 }
 
 interface CardInfo {
-  amount: number;
   issuerCode: string;
-  acquirerCode: string | null;
+  acquirerCode?: string | null;
   number: string;
   installmentPlanMonths: number;
-  isInterestFree: boolean;
-  interestPayer: null;
   approveNo: string;
-  useCardPoint: boolean;
   cardType: string;
   ownerType: string;
+  isInterestFree: boolean;
+}
+
+interface TossPaymentCardInfo extends CardInfo {
+  amount: number;
+  interestPayer: null;
+  useCardPoint: boolean;
   acquireStatus: string;
+}
+
+interface CardPaymentInfoInputData extends CardInfo {
+  paymentId: number;
 }
 
 interface LecturePaymentUpdateData {
@@ -107,6 +114,8 @@ export {
   PaymentInfo,
   LecturePaymentUpdateData,
   TossPaymentsConfirmResponse,
-  CardInfo,
+  TossPaymentCardInfo,
   VirtualAccountInfo,
+  CardInfo,
+  CardPaymentInfoInputData,
 };
