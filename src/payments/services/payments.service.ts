@@ -1,24 +1,40 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GetLecturePaymentDto } from '../dtos/get-lecture-payment.dto';
-import { PaymentsRepository } from '../repository/payments.repository';
+import { GetLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto';
+import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import {
+  CardPaymentInfoInputData,
   Coupon,
   Coupons,
+  IPaymentResult,
   LectureCoupon,
   LectureCouponUseage,
   LectureSchedule,
+  PaymentInfo,
   ReservationInputData,
-} from '../interface/payments.interface';
+  TossPaymentCardInfo,
+  TossPaymentVirtualAccountInfo,
+  TossPaymentsConfirmResponse,
+  VirtualAccountPaymentInfoInputData,
+} from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, LecturePayment } from '@prisma/client';
+import { Card, Lecture, Payment } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
+import {
+  PaymentMethods,
+  PaymentProductTypes,
+  PaymentOrderStatus,
+  VirtualAccountRefundStatus,
+} from '@src/payments/enum/payment.enum';
+import axios from 'axios';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -29,6 +45,8 @@ export class PaymentsService implements OnModuleInit {
   private kftClientSecret: string;
   private kftScope: string;
   private kftGrantType: string;
+  private tossPaymentsSecretKey: string;
+  private tossPaymentsUrl: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -42,6 +60,10 @@ export class PaymentsService implements OnModuleInit {
     this.kftClientSecret = this.configService.get<string>('KFT_CLIENT_SECRET');
     this.kftScope = this.configService.get<string>('KFT_SCOPE');
     this.kftGrantType = this.configService.get<string>('KFT_GRANT_TYPE');
+    this.tossPaymentsSecretKey = this.configService.get<string>(
+      'TOSS_PAYMENTS_SECRET_KEY',
+    );
+    this.tossPaymentsUrl = this.configService.get<string>('TOSS_PAYMENTS_URL');
 
     this.logger.log('PaymentsService Init');
   }
@@ -70,35 +92,51 @@ export class PaymentsService implements OnModuleInit {
     await this.checkUserPaymentValidity(userId, getLecturePaymentDto.orderId);
 
     // 강의 자리수 확인 및 쿠폰 비교
-    const coupons = await this.comparePrice(
+    const coupons: Coupons = await this.comparePrice(
       userId,
       lecture.price,
       getLecturePaymentDto,
     );
 
-    await this.createPaymentTransaction(userId, getLecturePaymentDto, coupons);
+    await this.createPaymentTransaction(
+      lecture.lecturerId,
+      userId,
+      getLecturePaymentDto,
+      coupons,
+    );
+
     const lecturePaymentInfo = {
       orderId: getLecturePaymentDto.orderId,
       orderName: getLecturePaymentDto.orderName,
       value: getLecturePaymentDto.price,
       method: getLecturePaymentDto.method,
     };
+
     return lecturePaymentInfo;
   }
 
   private async createPaymentTransaction(
+    lecturerId: number,
     userId: number,
     getLecturePaymentDto: GetLecturePaymentDto,
     coupons: Coupons,
   ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const createdLecturePayment: LecturePayment =
-          await this.createLecturePayment(
-            transaction,
-            userId,
-            getLecturePaymentDto,
-          );
+        const paymentInfo = {
+          method: getLecturePaymentDto.method,
+          orderName: getLecturePaymentDto.orderName,
+          price: getLecturePaymentDto.price,
+          orderId: getLecturePaymentDto.orderId,
+        };
+
+        const createdLecturePayment: Payment = await this.createPayment(
+          transaction,
+          lecturerId,
+          userId,
+          paymentInfo,
+          PaymentProductTypes.강의,
+        );
 
         await Promise.all([
           this.updateCouponUsage(
@@ -145,7 +183,7 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async checkUserPaymentValidity(userId, orderId): Promise<void> {
-    const payment: LecturePayment =
+    const payment: Payment =
       await this.paymentsRepository.getUserLecturePayment(userId, orderId);
     if (payment) {
       throw new BadRequestException(`결제정보가 이미 존재합니다.`);
@@ -271,46 +309,46 @@ export class PaymentsService implements OnModuleInit {
         return price - discountAmount;
       }
     };
-
-    if (coupons.coupon && coupons.stackableCoupon) {
-      if (coupons.coupon.percentage !== null) {
+    const { coupon, stackableCoupon } = coupons;
+    if (coupon && stackableCoupon) {
+      if (coupon.percentage !== null) {
         price = applyPercentageDiscount(
           price,
-          coupons.coupon.percentage,
-          coupons.coupon.maxDiscountPrice,
+          coupon.percentage,
+          coupon.maxDiscountPrice,
         );
-      } else if (coupons.stackableCoupon.percentage !== null) {
+      } else if (stackableCoupon.percentage !== null) {
         price = applyPercentageDiscount(
           price,
-          coupons.stackableCoupon.percentage,
-          coupons.stackableCoupon.maxDiscountPrice,
+          stackableCoupon.percentage,
+          stackableCoupon.maxDiscountPrice,
         );
       }
 
-      if (coupons.coupon.discountPrice !== null) {
-        price -= coupons.coupon.discountPrice;
-      } else if (coupons.stackableCoupon.discountPrice !== null) {
-        price -= coupons.stackableCoupon.discountPrice;
+      if (coupon.discountPrice !== null) {
+        price -= coupon.discountPrice;
+      } else if (stackableCoupon.discountPrice !== null) {
+        price -= stackableCoupon.discountPrice;
       }
-    } else if (coupons.coupon) {
-      if (coupons.coupon.percentage !== null) {
+    } else if (coupon) {
+      if (coupon.percentage !== null) {
         price = applyPercentageDiscount(
           price,
-          coupons.coupon.percentage,
-          coupons.coupon.maxDiscountPrice,
+          coupon.percentage,
+          coupon.maxDiscountPrice,
         );
-      } else if (coupons.coupon.discountPrice !== null) {
-        price -= coupons.coupon.discountPrice;
+      } else if (coupon.discountPrice !== null) {
+        price -= coupon.discountPrice;
       }
-    } else if (coupons.stackableCoupon) {
-      if (coupons.stackableCoupon.percentage !== null) {
+    } else if (stackableCoupon) {
+      if (stackableCoupon.percentage !== null) {
         price = applyPercentageDiscount(
           price,
-          coupons.stackableCoupon.percentage,
-          coupons.stackableCoupon.maxDiscountPrice,
+          stackableCoupon.percentage,
+          stackableCoupon.maxDiscountPrice,
         );
-      } else if (coupons.stackableCoupon.discountPrice !== null) {
-        price -= coupons.stackableCoupon.discountPrice;
+      } else if (stackableCoupon.discountPrice !== null) {
+        price -= stackableCoupon.discountPrice;
       }
     }
 
@@ -365,28 +403,34 @@ export class PaymentsService implements OnModuleInit {
     return { ...coupon.lectureCoupon };
   }
 
-  private async createLecturePayment(
+  private async createPayment(
     transaction: PrismaTransaction,
+    lecturerId: number,
     userId: number,
-    getLecturePaymentDto: GetLecturePaymentDto,
-  ): Promise<LecturePayment> {
-    const { method, orderName, price, orderId } = getLecturePaymentDto;
+    paymentInfo: PaymentInfo,
+    productType: PaymentProductTypes,
+  ): Promise<Payment> {
+    const { method, orderName, price, orderId } = paymentInfo;
+    const methodId: number =
+      PaymentMethods[method as unknown as keyof typeof PaymentMethods];
 
-    const [paymentMethod, paymentStatus] = await Promise.all([
-      this.paymentsRepository.getPaymentMethod(method),
-      this.paymentsRepository.getPaymentStatus('결제대기'),
+    const [paymentMethod, paymentType] = await Promise.all([
+      this.paymentsRepository.getPaymentMethod(methodId),
+      this.paymentsRepository.getPaymentProductType(productType),
     ]);
 
     const lecturePaymentData = {
+      lecturerId,
       userId,
       orderId,
       orderName,
       paymentMethodId: paymentMethod.id,
-      statusId: paymentStatus.id,
+      statusId: PaymentOrderStatus.READY,
+      paymentProductTypeId: paymentType.id,
       price,
     };
 
-    return await this.paymentsRepository.createLecturePayment(
+    return await this.paymentsRepository.createPayment(
       transaction,
       lecturePaymentData,
     );
@@ -395,7 +439,7 @@ export class PaymentsService implements OnModuleInit {
   private async createUserReservation(
     transaction: PrismaTransaction,
     userId: number,
-    lecturePaymentId: number,
+    paymentId: number,
     getLecturePaymentDto: GetLecturePaymentDto,
   ): Promise<void> {
     const { lectureSchedules, representative, phoneNumber, requests } =
@@ -409,7 +453,7 @@ export class PaymentsService implements OnModuleInit {
 
       const reservationInputData: ReservationInputData = {
         userId,
-        lecturePaymentId,
+        paymentId,
         representative,
         phoneNumber,
         requests,
@@ -425,7 +469,7 @@ export class PaymentsService implements OnModuleInit {
   private async updateCouponUsage(
     transaction: PrismaTransaction,
     userId: number,
-    lecturePaymentId: number,
+    paymentId: number,
     coupons: Coupons,
   ): Promise<void> {
     if (!coupons) {
@@ -436,7 +480,7 @@ export class PaymentsService implements OnModuleInit {
       .map((coupon) => coupon?.id)
       .filter((id: number) => id !== null);
 
-    const paymentCouponUsageInputData = { lecturePaymentId };
+    const paymentCouponUsageInputData = { paymentId };
 
     if (coupons.coupon) {
       const couponData = coupons.coupon;
@@ -475,5 +519,211 @@ export class PaymentsService implements OnModuleInit {
         ),
       ]);
     }
+  }
+
+  async confirmLecturePayment(
+    confirmLecturePaymentDto: ConfirmLecturePaymentDto,
+  ): Promise<IPaymentResult> {
+    const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
+    const paymentId = await this.validateLecturePaymentInfo(
+      { orderId, amount },
+      PaymentOrderStatus.READY,
+    );
+
+    const paymentInfo: TossPaymentsConfirmResponse =
+      await this.authorizeTossPaymentApiServer({
+        orderId,
+        amount,
+        paymentKey,
+      });
+
+    return await this.confirmPaymentTransaction(paymentId, paymentInfo);
+  }
+
+  private async confirmPaymentTransaction(
+    paymentId: number,
+    paymentInfo: TossPaymentsConfirmResponse,
+  ) {
+    const paymentResult = await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (paymentInfo.card) {
+          await this.createCardPaymentInfo(
+            transaction,
+            paymentId,
+            paymentInfo.card,
+          );
+          return await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+            transaction,
+            paymentId,
+            PaymentOrderStatus.DONE,
+          );
+        }
+        if (paymentInfo.virtualAccount) {
+          await this.createVirtualAccountPaymentInfo(
+            transaction,
+            paymentId,
+            paymentInfo.virtualAccount,
+          );
+          return await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+            transaction,
+            paymentId,
+            PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+          );
+        }
+      },
+    );
+    return paymentResult;
+  }
+
+  private async createCardPaymentInfo(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    cardPaymentInfo: TossPaymentCardInfo,
+  ) {
+    const {
+      issuerCode,
+      acquirerCode,
+      amount,
+      interestPayer,
+      useCardPoint,
+      acquireStatus,
+      ...cardData
+    } = cardPaymentInfo;
+
+    await this.validateCardCode(issuerCode);
+    if (acquirerCode) {
+      await this.validateCardCode(acquirerCode);
+    }
+
+    const cardPaymentInfoInputData: CardPaymentInfoInputData = {
+      paymentId,
+      issuerCode,
+      acquirerCode,
+      ...cardData,
+    };
+
+    return await this.paymentsRepository.trxCreateCardPaymentInfo(
+      transaction,
+      cardPaymentInfoInputData,
+    );
+  }
+
+  private async validateCardCode(cardCode: string): Promise<void> {
+    const selectedCard: Card = await this.paymentsRepository.getCard(cardCode);
+    if (!selectedCard) {
+      throw new BadRequestException(`잘못된 카드Code입니다`, 'InvalidCardCode');
+    }
+  }
+
+  private async validateLecturePaymentInfo(
+    lecturePayment: PaymentInfo,
+    paymentStatus: PaymentOrderStatus,
+  ) {
+    const paymentInfo = await this.paymentsRepository.getPaymentInfo(
+      lecturePayment.orderId,
+    );
+    if (!paymentInfo) {
+      throw new NotFoundException(
+        `결제 정보가 존재하지 않습니다.`,
+        'PaymentInfoNotFound',
+      );
+    }
+
+    if (lecturePayment.amount !== paymentInfo.price) {
+      throw new BadRequestException(
+        `결제 금액이 일치하지 않습니다.`,
+        'PaymentAmountMismatch',
+      );
+    }
+
+    if (paymentInfo.paymentStatus.id !== paymentStatus) {
+      throw new BadRequestException(
+        `해당 결제 정보는 ${paymentInfo.paymentStatus.name}상태 입니다.`,
+        'PaymentStatusMismatch',
+      );
+    }
+    return paymentInfo.id;
+  }
+
+  private async authorizeTossPaymentApiServer(
+    paymentInfo: PaymentInfo,
+  ): Promise<TossPaymentsConfirmResponse> {
+    try {
+      const tossSkKey = Buffer.from(`${this.tossPaymentsSecretKey}:`).toString(
+        'base64',
+      );
+      const response = await axios.post(
+        `${this.tossPaymentsUrl}/confirm`,
+        paymentInfo,
+        {
+          headers: {
+            Authorization: `Basic ${tossSkKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (response.data.status) {
+        const status =
+          PaymentOrderStatus[
+            response.data.status as unknown as keyof typeof PaymentOrderStatus
+          ];
+        if (status === PaymentOrderStatus.DONE && response.data.card) {
+          return { card: response.data.card };
+        }
+        if (
+          status === PaymentOrderStatus.WAITING_FOR_DEPOSIT &&
+          response.data.virtualAccount
+        ) {
+          return { virtualAccount: response.data.virtualAccount };
+        }
+      }
+    } catch (error) {
+      if (error.response.data) {
+        throw new InternalServerErrorException(
+          `${error.response.data.message}`,
+          error.response.data.code,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  private async createVirtualAccountPaymentInfo(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    virtualAccountInfo: TossPaymentVirtualAccountInfo,
+  ) {
+    const {
+      dueDate,
+      bankCode,
+      accountType,
+      settlementStatus,
+      refundStatus,
+      refundReceiveAccount,
+      ...virtualAccountData
+    } = virtualAccountInfo;
+    const convertedDueDate: Date = new Date(dueDate);
+    const bank = await this.paymentsRepository.getBankInfo(bankCode);
+    if (!bank) {
+      throw new BadRequestException(
+        `bankCode:${bankCode}인 은행 정보가 존재하지 않습니다.`,
+        'BankCodeNotFound',
+      );
+    }
+    const virtualAccountPaymentInfoInputData: VirtualAccountPaymentInfoInputData =
+      {
+        paymentId,
+        refundStatusId: VirtualAccountRefundStatus.NONE,
+        bankCode,
+        dueDate: convertedDueDate,
+        ...virtualAccountData,
+      };
+
+    return await this.paymentsRepository.trxCreateVirtualAccountPaymentInfo(
+      transaction,
+      virtualAccountPaymentInfoInputData,
+    );
   }
 }
