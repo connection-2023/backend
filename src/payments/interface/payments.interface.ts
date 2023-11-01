@@ -1,4 +1,7 @@
-import { PaymentMethods, RefundStatus } from '@src/payments/enum/payment.enum';
+import {
+  PaymentMethods,
+  VirtualAccountRefundStatus,
+} from '@src/payments/enum/payment.enum';
 
 interface LectureSchedule {
   lectureScheduleId: number;
@@ -61,18 +64,18 @@ interface PaymentInfo {
 
 interface TossPaymentsConfirmResponse {
   card?: TossPaymentCardInfo;
-  virtualAccount?: VirtualAccountInfo;
+  virtualAccount?: TossPaymentVirtualAccountInfo;
 }
 
-interface VirtualAccountInfo {
+interface TossPaymentVirtualAccountInfo {
   accountNumber: string;
   accountType: string;
-  bankCode: number;
+  bankCode: string;
   customerName: string;
-  dueDate: Date;
+  dueDate: string;
   expired: boolean;
   settlementStatus: string;
-  refundStatus: RefundStatus;
+  refundStatus: string;
   refundReceiveAccount: object | null;
 }
 
@@ -103,6 +106,56 @@ interface LecturePaymentUpdateData {
   statusId: number;
 }
 
+interface IPaymentResult {
+  orderId: string;
+  orderName: string;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+  paymentProductType: {
+    name: string;
+  };
+  paymentMethod: {
+    name: string;
+  };
+  cardPaymentInfo: ICardPaymentInfo | null;
+  virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
+}
+
+interface ICardPaymentInfo {
+  number: string;
+  installmentPlanMonths: number;
+  approveNo: string;
+  issuer: {
+    code: string;
+    name: string;
+  };
+  acquirer?: {
+    code: string;
+    name: string;
+  };
+}
+
+interface IVirtualAccountPaymentInfo {
+  accountNumber: string;
+  customerName: string;
+  dueDate: Date;
+  bank: {
+    code: string;
+    name: string;
+  };
+}
+
+interface VirtualAccountPaymentInfoInputData {
+  paymentId: number;
+  refundStatusId: number;
+  accountNumber: string;
+  bankCode: string;
+  customerName: string;
+  dueDate: Date;
+  expired: boolean;
+}
+
 export {
   LectureSchedule,
   LectureCoupon,
@@ -115,7 +168,9 @@ export {
   LecturePaymentUpdateData,
   TossPaymentsConfirmResponse,
   TossPaymentCardInfo,
-  VirtualAccountInfo,
+  TossPaymentVirtualAccountInfo,
   CardInfo,
   CardPaymentInfoInputData,
+  VirtualAccountPaymentInfoInputData,
+  IPaymentResult,
 };

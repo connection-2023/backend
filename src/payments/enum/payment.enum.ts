@@ -4,22 +4,22 @@ export enum PaymentMethods {
 }
 
 export enum PaymentOrderStatus {
-  READY = 'READY',
-  IN_PROGRESS = 'IN_PROGRESS',
-  WAITING_FOR_DEPOSIT = 'WAITING_FOR_DEPOSIT',
-  DONE = 'DONE',
-  CANCELED = 'CANCELED',
-  PARTIAL_CANCELED = 'PARTIAL_CANCELED',
-  ABORTED = 'ABORTED',
-  EXPIRED = 'EXPIRED',
+  READY = 1,
+  IN_PROGRESS,
+  CANCELED,
+  WAITING_FOR_DEPOSIT,
+  PARTIAL_CANCELED,
+  DONE,
+  ABORTED,
+  EXPIRED,
 }
 
-export enum RefundStatus {
-  NONE = 'NONE',
-  PENDING = 'PENDING',
-  FAILED = 'FAILED',
-  PARTIAL_FAILED = 'PARTIAL_FAILED',
-  COMPLETED = 'COMPLETED',
+export enum VirtualAccountRefundStatus {
+  NONE = 1,
+  PENDING,
+  FAILED,
+  PARTIAL_FAILED,
+  COMPLETED,
 }
 
 export enum PaymentProductTypes {
