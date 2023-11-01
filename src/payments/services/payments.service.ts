@@ -27,7 +27,7 @@ import { ConfirmLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment
 import {
   PaymentMethods,
   PaymentProductTypes,
-  PaymentStatus,
+  PaymentOrderStatus,
 } from '@src/payments/enum/payment.enum';
 import axios from 'axios';
 
@@ -406,13 +406,12 @@ export class PaymentsService implements OnModuleInit {
     productType: PaymentProductTypes,
   ): Promise<Payment> {
     const { method, orderName, price, orderId } = paymentInfo;
-    const statusId =
+    const statusId: number =
       PaymentMethods[method as unknown as keyof typeof PaymentMethods];
-    console.log(statusId);
 
     const [paymentMethod, paymentStatus, paymentType] = await Promise.all([
-      this.paymentsRepository.getPaymentMethod(PaymentMethods['카드']),
-      this.paymentsRepository.getPaymentStatus(PaymentStatus.READY),
+      this.paymentsRepository.getPaymentMethod(statusId),
+      this.paymentsRepository.getPaymentStatus(PaymentOrderStatus.READY),
       this.paymentsRepository.getPaymentProductType(productType),
     ]);
 
@@ -524,10 +523,10 @@ export class PaymentsService implements OnModuleInit {
     const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
     await this.validateLecturePaymentInfo(
       { orderId, amount },
-      PaymentStatus.READY,
+      PaymentOrderStatus.READY,
     );
     const paymentStatus = await this.paymentsRepository.getPaymentStatus(
-      PaymentStatus.IN_PROGRESS,
+      PaymentOrderStatus.IN_PROGRESS,
     );
     //무통장정보, 카드정보, 카드번호, 카드회사 코드, 은행코드, 계좌번호..?
     const updatedPayment = await this.paymentsRepository.updateLecturePayment(
@@ -600,7 +599,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async validateLecturePaymentInfo(
     lecturePayment: PaymentInfo,
-    paymentStatus: PaymentStatus,
+    paymentStatus: PaymentOrderStatus,
   ) {
     const paymentInfo = await this.paymentsRepository.getLecturePaymentInfo(
       lecturePayment.orderId,
@@ -644,11 +643,14 @@ export class PaymentsService implements OnModuleInit {
           },
         },
       );
-      if (response.data.status === PaymentStatus.DONE && response.data.card) {
+      if (
+        response.data.status === PaymentOrderStatus.DONE &&
+        response.data.card
+      ) {
         return { card: response.data.card };
       }
       if (
-        response.data.status === PaymentStatus.WAITING_FOR_DEPOSIT &&
+        response.data.status === PaymentOrderStatus.WAITING_FOR_DEPOSIT &&
         response.data.virtualAccount
       ) {
         return { virtualAccount: response.data.virtualAccount };

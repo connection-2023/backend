@@ -9,8 +9,8 @@ import {
   ReservationInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { PaymentProductTypes, PaymentStatus } from '../enum/payment.enum';
-import { PaymentProductType } from '@prisma/client';
+import { PaymentProductTypes, PaymentOrderStatus } from '../enum/payment.enum';
+import { Payment, PaymentProductType, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentsRepository {
@@ -91,14 +91,12 @@ export class PaymentsRepository {
   }
 
   async getPaymentMethod(id: number) {
-    console.log(id);
-
     return await this.prismaService.paymentMethod.findFirstOrThrow({
       where: { id },
     });
   }
 
-  async getPaymentStatus(status: PaymentStatus) {
+  async getPaymentStatus(status: PaymentOrderStatus): Promise<PaymentStatus> {
     return await this.prismaService.paymentStatus.findFirstOrThrow({
       where: { name: status },
     });
@@ -107,7 +105,7 @@ export class PaymentsRepository {
   async createPayment(
     transaction: PrismaTransaction,
     paymentInputData: PaymentInputData,
-  ) {
+  ): Promise<Payment> {
     return await transaction.payment.create({
       data: paymentInputData,
     });

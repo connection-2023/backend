@@ -3,7 +3,7 @@ export enum PaymentMethods {
   가상계좌 = 2,
 }
 
-export enum PaymentStatus {
+export enum PaymentOrderStatus {
   READY = 'READY',
   IN_PROGRESS = 'IN_PROGRESS',
   WAITING_FOR_DEPOSIT = 'WAITING_FOR_DEPOSIT',
