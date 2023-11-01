@@ -18,6 +18,11 @@ export enum DanceMethod {
   '정기' = '정기',
 }
 
+export enum DanceCapacity {
+  '개인' = '개인',
+  '그룹' = '그룹',
+}
+
 export enum LectureType {
   'dance' = 'dance',
 }
