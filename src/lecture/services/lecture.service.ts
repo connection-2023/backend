@@ -1,7 +1,7 @@
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Region } from '@prisma/client';
+import { Lecture, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -249,6 +249,15 @@ export class LectureService {
       skip,
       take,
     );
+  }
+
+  async deleteLecture(lectureId: number): Promise<Lecture> {
+    const deletedLecture = await this.prismaService.lecture.update({
+      where: { id: lectureId },
+      data: { deletedAt: new Date() },
+    });
+
+    return deletedLecture;
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {

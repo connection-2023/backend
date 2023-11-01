@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { UploadsService } from '@src/uploads/services/uploads.service';
@@ -57,6 +57,16 @@ export class LectureController {
     const lectures = await this.lectureService.readManyLecture(query);
 
     return { lectures };
+  }
+
+  @ApiOperation({ summary: '강의 삭제' })
+  @ApiBearerAuth()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Delete(':lectureId')
+  async deleteLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
+    const deletedLecture = await this.lectureService.deleteLecture(lectureId);
+
+    return { lecture: deletedLecture };
   }
 
   // @Patch(':lectureId')
