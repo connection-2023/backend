@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { GetLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import {
+  CardInfo,
   Coupon,
   Coupons,
   LectureCoupon,
@@ -20,10 +21,11 @@ import {
   TossPaymentsConfirmResponse,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, Payment } from '@prisma/client';
+import { Card, Lecture, Payment } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto copy';
 import {
+  PaymentMethods,
   PaymentProductTypes,
   PaymentStatus,
 } from '@src/payments/enum/payment.enum';
@@ -404,9 +406,12 @@ export class PaymentsService implements OnModuleInit {
     productType: PaymentProductTypes,
   ): Promise<Payment> {
     const { method, orderName, price, orderId } = paymentInfo;
+    const statusId =
+      PaymentMethods[method as unknown as keyof typeof PaymentMethods];
+    console.log(statusId);
 
     const [paymentMethod, paymentStatus, paymentType] = await Promise.all([
-      this.paymentsRepository.getPaymentMethod(method),
+      this.paymentsRepository.getPaymentMethod(PaymentMethods['카드']),
       this.paymentsRepository.getPaymentStatus(PaymentStatus.READY),
       this.paymentsRepository.getPaymentProductType(productType),
     ]);
@@ -532,14 +537,65 @@ export class PaymentsService implements OnModuleInit {
         statusId: paymentStatus.id,
       },
     );
-    const paymentInfo: TossPaymentsConfirmResponse =
-      await this.authorizeTossPaymentApiServer({
-        orderId,
-        amount,
-        paymentKey,
-      });
-    console.log(paymentInfo);
+    // const paymentInfo: TossPaymentsConfirmResponse =
+    //   await this.authorizeTossPaymentApiServer({
+    //     orderId,
+    //     amount,
+    //     paymentKey,
+    //   });
+    const paymentInfo = {
+      card: {
+        issuerCode: '24',
+        acquirerCode: '21',
+        number: '53275080****161*',
+        installmentPlanMonths: 0,
+        isInterestFree: false,
+        interestPayer: null,
+        approveNo: '00000000',
+        useCardPoint: false,
+        cardType: '신용',
+        ownerType: '개인',
+        acquireStatus: 'READY',
+        amount: 35000,
+      },
+    };
+
+    if (paymentInfo.card) {
+      await this.createCardPaymentInfo(updatedPayment.id, paymentInfo.card);
+    }
     return {};
+  }
+  private async createCardPaymentInfo(
+    paymentId: number,
+    cardPaymentInfo: CardInfo,
+  ) {
+    const {
+      issuerCode,
+      acquireStatus,
+      number,
+      installmentPlanMonths,
+      approveNo,
+      cardType,
+      ownerType,
+      isInterestFree,
+    } = cardPaymentInfo;
+
+    await this.validateCardCode(issuerCode);
+    if (acquireStatus) {
+      await this.validateCardCode(acquireStatus);
+    }
+
+    const cardPaymentInfoInputData = {
+      paymentId,
+      issuerCode,
+    };
+  }
+
+  private async validateCardCode(cardCode: string): Promise<void> {
+    const selectedCard: Card = await this.paymentsRepository.getCard(cardCode);
+    if (!selectedCard) {
+      throw new BadRequestException(`잘못된 카드Code입니다`, 'InvalidCardCode');
+    }
   }
 
   private async validateLecturePaymentInfo(

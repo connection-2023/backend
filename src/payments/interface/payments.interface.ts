@@ -60,11 +60,11 @@ interface PaymentInfo {
 }
 
 interface TossPaymentsConfirmResponse {
-  card?: Card;
-  virtualAccount?: VirtualAccount;
+  card?: CardInfo;
+  virtualAccount?: VirtualAccountInfo;
 }
 
-interface VirtualAccount {
+interface VirtualAccountInfo {
   accountNumber: string;
   accountType: string;
   bankCode: number;
@@ -76,7 +76,7 @@ interface VirtualAccount {
   refundReceiveAccount: object | null;
 }
 
-interface Card {
+interface CardInfo {
   amount: number;
   issuerCode: string;
   acquirerCode: string | null;
@@ -107,4 +107,6 @@ export {
   PaymentInfo,
   LecturePaymentUpdateData,
   TossPaymentsConfirmResponse,
+  CardInfo,
+  VirtualAccountInfo,
 };

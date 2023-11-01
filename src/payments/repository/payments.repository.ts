@@ -90,9 +90,11 @@ export class PaymentsRepository {
     });
   }
 
-  async getPaymentMethod(method: string) {
+  async getPaymentMethod(id: number) {
+    console.log(id);
+
     return await this.prismaService.paymentMethod.findFirstOrThrow({
-      where: { name: method },
+      where: { id },
     });
   }
 
@@ -185,7 +187,7 @@ export class PaymentsRepository {
     orderId: string,
     updateData: LecturePaymentUpdateData,
   ) {
-    await this.prismaService.payment.update({
+    return await this.prismaService.payment.update({
       where: { orderId },
       data: updateData,
     });
@@ -197,5 +199,8 @@ export class PaymentsRepository {
     return this.prismaService.paymentProductType.findFirst({
       where: { name: productType },
     });
+  }
+  async getCard(code: string) {
+    return this.prismaService.card.findUnique({ where: { code } });
   }
 }
