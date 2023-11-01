@@ -149,24 +149,25 @@ export class LectureService {
       page,
       pageSize,
       lectureMethod,
-      star,
+      individualGroup,
+      stars,
       regions,
       genres,
+      orderBy,
       priceRange,
       schedules,
       ...filter
     } = query;
 
     const where = this.queryFilter.buildWherePropForFind(filter);
-
-    where['skip'] = page * pageSize;
-    where['take'] = pageSize;
+    const skip = page * pageSize;
+    const take = pageSize;
+    const order = {};
 
     if (regions) {
       const regionIds: Id[] = await this.getValidRegionIds(regions);
       const lectureToRegionFindData =
         this.createLectureToRegionFindData(regionIds);
-      console.log(lectureToRegionFindData);
 
       where['lectureToRegion'] = {
         some: {
@@ -196,15 +197,58 @@ export class LectureService {
     }
 
     if (schedules) {
+      const scheduleFindData = this.createSchedulesFindData(schedules);
+
       where['lectureSchedule'] = {
         some: {
           startDateTime: {
-            in: schedules,
+            in: scheduleFindData,
           },
         },
       };
     }
-    return await this.lectureRepository.readManyLecture(where);
+
+    if (stars) {
+      where['stars'] = {
+        gte: stars / 1,
+      };
+    }
+
+    if (lectureMethod) {
+      const lectureMethodId = this.getLectureMethodId(lectureMethod);
+      where['lectureMethodId'] = lectureMethodId;
+    }
+
+    if (individualGroup) {
+      if (individualGroup === '개인') {
+        where['minCapacity'] = 1;
+        where['maxCapacity'] = 1;
+      } else if (individualGroup === '그룹') {
+        where['minCapacity'] = {
+          gte: 1,
+        };
+        where['NOT'] = {
+          maxCapacity: 1,
+        };
+      }
+    }
+
+    if (orderBy) {
+      if (orderBy === '최신순') {
+        order['createdAt'] = 'desc';
+      } else if (orderBy === '별점순') {
+        order['stars'] = 'desc';
+      } else if (orderBy === '가격낮은순') {
+        order['price'] = 'asc';
+      }
+    }
+
+    return await this.lectureRepository.readManyLecture(
+      where,
+      order,
+      skip,
+      take,
+    );
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -341,6 +385,12 @@ export class LectureService {
     }
 
     return lectureInputData;
+  }
+
+  private createSchedulesFindData(schedules: string[]) {
+    const scheduleFindData = schedules.map((date) => new Date(date));
+
+    return scheduleFindData;
   }
 
   private createPriceFindData(priceRange: number[]) {
