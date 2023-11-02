@@ -86,5 +86,7 @@ export class LectureTemporarilySaveController {
       await this.lectureTemporarilySaveService.deleteTemporaryLecture(
         temporaryLectureId,
       );
+
+    return { temporaryLecture: deletedTemporaryLecture };
   }
 }
