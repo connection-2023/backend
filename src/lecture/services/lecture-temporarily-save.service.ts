@@ -27,6 +27,14 @@ export class LectureTemporarilySaveService {
   ) {}
 
   async createTemporaryLecture(lecturerId: number): Promise<TemporaryLecture> {
+    const temporaryLectureCount =
+      await this.prismaService.temporaryLecture.count({
+        where: { lecturerId },
+      });
+
+    if (temporaryLectureCount >= 5) {
+      throw new BadRequestException('더 이상 임시저장을 생성할 수 없습니다.');
+    }
     return await this.prismaService.temporaryLecture.create({
       data: { lecturerId },
     });
