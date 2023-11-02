@@ -78,6 +78,7 @@ export class LectureTemporarilySaveController {
     return { temporaryLectures };
   }
 
+  @ApiOperation({ summary: '임시저장 삭제' })
   @Delete(':temporaryLectureId')
   async deleteTemporaryLecture(
     @Param('temporaryLectureId', ParseIntPipe) temporaryLectureId: number,
