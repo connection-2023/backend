@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  CardInfo,
+  CardPaymentInfoInputData,
   LectureCoupon,
   LectureCouponUseage,
-  LecturePaymentInputData,
+  LecturePaymentUpdateData,
   LectureSchedule,
+  PaymentInputData,
   ReservationInputData,
+  VirtualAccountPaymentInfoInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { PaymentProductTypes, PaymentOrderStatus } from '../enum/payment.enum';
+import { Payment, PaymentProductType, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentsRepository {
@@ -74,7 +80,7 @@ export class PaymentsRepository {
     });
   }
   async getUserLecturePayment(userId: number, orderId: string) {
-    return await this.prismaService.lecturePayment.findFirst({
+    return await this.prismaService.payment.findFirst({
       where: { userId, orderId },
     });
   }
@@ -87,24 +93,24 @@ export class PaymentsRepository {
     });
   }
 
-  async getPaymentMethod(method: string) {
+  async getPaymentMethod(id: number) {
     return await this.prismaService.paymentMethod.findFirstOrThrow({
-      where: { name: method },
+      where: { id },
     });
   }
 
-  async getPaymentStatus(status) {
+  async getPaymentStatus(id: number): Promise<PaymentStatus> {
     return await this.prismaService.paymentStatus.findFirstOrThrow({
-      where: { name: status },
+      where: { id },
     });
   }
 
-  async createLecturePayment(
+  async createPayment(
     transaction: PrismaTransaction,
-    lecturePaymentInputData: LecturePaymentInputData,
-  ) {
-    return await transaction.lecturePayment.create({
-      data: lecturePaymentInputData,
+    paymentInputData: PaymentInputData,
+  ): Promise<Payment> {
+    return await transaction.payment.create({
+      data: paymentInputData,
     });
   }
 
@@ -160,6 +166,127 @@ export class PaymentsRepository {
     await transaction.userCoupon.updateMany({
       where: { userId, lectureCouponId: { in: couponIds } },
       data: { isUsed: true },
+    });
+  }
+
+  async getPaymentInfo(orderId: string) {
+    return await this.prismaService.payment.findUnique({
+      where: { orderId },
+      select: {
+        id: true,
+        orderId: true,
+        price: true,
+        paymentStatus: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
+  async updateLecturePayment(
+    orderId: string,
+    updateData: LecturePaymentUpdateData,
+  ) {
+    return await this.prismaService.payment.update({
+      where: { orderId },
+      data: updateData,
+    });
+  }
+
+  async trxUpdateLecturePaymentStatus(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    statusId: number,
+  ) {
+    return await transaction.payment.update({
+      where: { id: paymentId },
+      data: { statusId },
+      select: {
+        orderId: true,
+        orderName: true,
+        price: true,
+        paymentProductType: {
+          select: {
+            name: true,
+          },
+        },
+        paymentMethod: {
+          select: {
+            name: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+        cardPaymentInfo: {
+          select: {
+            number: true,
+            installmentPlanMonths: true,
+            approveNo: true,
+            issuer: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+            acquirer: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
+        virtualAccountPaymentInfo: {
+          select: {
+            accountNumber: true,
+            customerName: true,
+            dueDate: true,
+            bank: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getPaymentProductType(
+    productType: PaymentProductTypes,
+  ): Promise<PaymentProductType> {
+    return this.prismaService.paymentProductType.findFirst({
+      where: { name: productType },
+    });
+  }
+
+  async getCard(code: string) {
+    return this.prismaService.card.findUnique({ where: { code } });
+  }
+
+  async trxCreateCardPaymentInfo(
+    transaction: PrismaTransaction,
+    cardPaymentInfoInputData: CardPaymentInfoInputData,
+  ) {
+    return await transaction.cardPaymentInfo.create({
+      data: cardPaymentInfoInputData,
+    });
+  }
+
+  async getBankInfo(code: string) {
+    return await this.prismaService.bank.findUnique({ where: { code } });
+  }
+
+  async trxCreateVirtualAccountPaymentInfo(
+    transaction: PrismaTransaction,
+    virtualAccountPaymentInfoInputData: VirtualAccountPaymentInfoInputData,
+  ) {
+    return await transaction.virtualAccountPaymentInfo.create({
+      data: virtualAccountPaymentInfoInputData,
     });
   }
 }

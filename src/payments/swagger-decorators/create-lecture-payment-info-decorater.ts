@@ -10,13 +10,13 @@ export function ApiCreateLecturePaymentInfo() {
     }),
     ApiBearerAuth(),
     ApiOkResponse(
-      SwaggerApiResponse.success('결제 정보 반환', {
+      SwaggerApiResponse.success('결제에 필요한 정보 반환', {
         statusCode: 201,
         data: {
           lecturePaymentInfo: {
-            orderId: '2-d822654-43233444122223e4-a0b33d-1 b5',
+            orderId: 'adkqmg12222dd1',
             orderName: '단스강의',
-            value: 35000,
+            value: 40000,
             method: '카드',
           },
         },

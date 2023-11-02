@@ -12,4 +12,14 @@ export class TestService {
   async deleteUser(userId: number) {
     return await this.prismaService.users.delete({ where: { id: userId } });
   }
+
+  async getAllLecturer() {
+    return await this.prismaService.lecturer.findMany();
+  }
+
+  async deleteLecturer(lecturerId: number) {
+    return await this.prismaService.lecturer.delete({
+      where: { id: lecturerId },
+    });
+  }
 }

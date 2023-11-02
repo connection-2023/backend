@@ -1,4 +1,7 @@
-import { PaymentMethods } from '@src/payments/enum/payment.enum';
+import {
+  PaymentMethods,
+  VirtualAccountRefundStatus,
+} from '@src/payments/enum/payment.enum';
 
 interface LectureSchedule {
   lectureScheduleId: number;
@@ -21,18 +24,20 @@ interface Coupons {
   stackableCoupon?: Coupon;
 }
 
-interface LecturePaymentInputData {
-  userId: number;
+interface PaymentInputData {
+  lecturerId?: number;
+  userId?: number;
   orderId: string;
   orderName: string;
   paymentMethodId: number;
   statusId: number;
   price: number;
+  paymentProductTypeId: number;
 }
 
 interface ReservationInputData {
   userId: number;
-  lecturePaymentId: number;
+  paymentId: number;
   lectureScheduleId: number;
   representative: string;
   phoneNumber: string;
@@ -40,12 +45,6 @@ interface ReservationInputData {
   requests?: string | null;
 }
 
-interface LecturePaymentInfo {
-  orderId: string;
-  orderName: string;
-  value: number;
-  method: PaymentMethods;
-}
 interface LectureCouponUseage {
   lectureCoupon: {
     maxUsageCount: number;
@@ -53,13 +52,125 @@ interface LectureCouponUseage {
   };
 }
 
+interface PaymentInfo {
+  orderId?: string;
+  amount?: number;
+  paymentKey?: string;
+  orderName?: string;
+  method?: PaymentMethods;
+  value?: number;
+  price?: number;
+}
+
+interface TossPaymentsConfirmResponse {
+  card?: TossPaymentCardInfo;
+  virtualAccount?: TossPaymentVirtualAccountInfo;
+}
+
+interface TossPaymentVirtualAccountInfo {
+  accountNumber: string;
+  accountType: string;
+  bankCode: string;
+  customerName: string;
+  dueDate: string;
+  expired: boolean;
+  settlementStatus: string;
+  refundStatus: string;
+  refundReceiveAccount: object | null;
+}
+
+interface CardInfo {
+  issuerCode: string;
+  acquirerCode?: string | null;
+  number: string;
+  installmentPlanMonths: number;
+  approveNo: string;
+  cardType: string;
+  ownerType: string;
+  isInterestFree: boolean;
+}
+
+interface TossPaymentCardInfo extends CardInfo {
+  amount: number;
+  interestPayer: null;
+  useCardPoint: boolean;
+  acquireStatus: string;
+}
+
+interface CardPaymentInfoInputData extends CardInfo {
+  paymentId: number;
+}
+
+interface LecturePaymentUpdateData {
+  paymentKey: string;
+  statusId: number;
+}
+
+interface IPaymentResult {
+  orderId: string;
+  orderName: string;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+  paymentProductType: {
+    name: string;
+  };
+  paymentMethod: {
+    name: string;
+  };
+  cardPaymentInfo: ICardPaymentInfo | null;
+  virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
+}
+
+interface ICardPaymentInfo {
+  number: string;
+  installmentPlanMonths: number;
+  approveNo: string;
+  issuer: {
+    code: string;
+    name: string;
+  };
+  acquirer?: {
+    code: string;
+    name: string;
+  };
+}
+
+interface IVirtualAccountPaymentInfo {
+  accountNumber: string;
+  customerName: string;
+  dueDate: Date;
+  bank: {
+    code: string;
+    name: string;
+  };
+}
+
+interface VirtualAccountPaymentInfoInputData {
+  paymentId: number;
+  refundStatusId: number;
+  accountNumber: string;
+  bankCode: string;
+  customerName: string;
+  dueDate: Date;
+  expired: boolean;
+}
+
 export {
   LectureSchedule,
   LectureCoupon,
   Coupon,
   Coupons,
-  LecturePaymentInputData,
+  PaymentInputData,
   ReservationInputData,
-  LecturePaymentInfo,
   LectureCouponUseage,
+  PaymentInfo,
+  LecturePaymentUpdateData,
+  TossPaymentsConfirmResponse,
+  TossPaymentCardInfo,
+  TossPaymentVirtualAccountInfo,
+  CardInfo,
+  CardPaymentInfoInputData,
+  VirtualAccountPaymentInfoInputData,
+  IPaymentResult,
 };
