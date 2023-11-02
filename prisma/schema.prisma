@@ -445,7 +445,7 @@ model TemporaryLecture {
   updatedAt                    DateTime                       @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
   deletedAt                    DateTime?                      @db.Timestamp(6)
-  lecturer                     Lecturer                       @relation(fields: [lecturerId], references: [id])
+  lecturer                     Lecturer                       @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   lectureType                  LectureType?                   @relation(fields: [lectureTypeId], references: [id])
   lectureMethod                LectureMethod?                 @relation(fields: [lectureMethodId], references: [id])
   temporaryLecturenotification TemporaryLectureNotification[]
@@ -471,7 +471,7 @@ model TemporaryLectureToRegion {
   regionId         Int?
   lectureId        Int
   region           Region?          @relation(fields: [regionId], references: [id])
-  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureToDanceGenre {
@@ -480,14 +480,14 @@ model TemporaryLectureToDanceGenre {
   lectureId        Int
   name             String?
   danceCategory    DanceCategory?    @relation(fields: [danceCategoryId], references: [id])
-  temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture? @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureHoliday {
   id               Int              @id @default(autoincrement())
   lectureId        Int
   holiday          DateTime?
-  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureCouponTarget {
@@ -495,7 +495,7 @@ model TemporaryLectureCouponTarget {
   lectureCouponId  Int?
   lectureId        Int
   lectureCoupon    LectureCoupon?   @relation(fields: [lectureCouponId], references: [id])
-  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureNotification {
@@ -509,7 +509,7 @@ model TemporaryLectureNotification {
   updatedAt        DateTime         @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
   deletedAt        DateTime?        @db.Timestamp(6)
-  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureImage {
@@ -519,7 +519,7 @@ model TemporaryLectureImage {
   lectureId        Int
   //이미지 url
   imageUrl         String?
-  temporaryLecutre TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecutre TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 //강의 결제내역

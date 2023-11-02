@@ -9,7 +9,9 @@ describe('LectureTemporarilySaveController', () => {
       controllers: [LectureTemporarilySaveController],
     }).compile();
 
-    controller = module.get<LectureTemporarilySaveController>(LectureTemporarilySaveController);
+    controller = module.get<LectureTemporarilySaveController>(
+      LectureTemporarilySaveController,
+    );
   });
 
   it('should be defined', () => {
