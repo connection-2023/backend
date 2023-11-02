@@ -69,12 +69,12 @@ export class LectureController {
     return { lecture: deletedLecture };
   }
 
+  // @ApiOperation({ summary: '강의 수정' })
+  // @ApiBearerAuth()
+  // @UseGuards(LecturerAccessTokenGuard)
   // @Patch(':lectureId')
-  // @UseInterceptors(FilesInterceptor('files', 5))
-  // @UseGuards(UserAccessTokenGuard)
   // async updateLecture(
-  //   @GetAuthorizedUser() user: Users,
-  //   @UploadedFiles() files: Express.Multer.File[],
+  //   @GetAuthorizedUser() authroizedData: ValidateResult,
   //   @Body() lecture: UpdateLectureDto,
   // ) {}
 }

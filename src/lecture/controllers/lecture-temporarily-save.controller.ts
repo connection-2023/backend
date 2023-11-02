@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -74,5 +76,15 @@ export class LectureTemporarilySaveController {
       );
 
     return { temporaryLectures };
+  }
+
+  @Delete(':temporaryLectureId')
+  async deleteTemporaryLecture(
+    @Param('temporaryLectureId', ParseIntPipe) temporaryLectureId: number,
+  ) {
+    const deletedTemporaryLecture =
+      await this.lectureTemporarilySaveService.deleteTemporaryLecture(
+        temporaryLectureId,
+      );
   }
 }
