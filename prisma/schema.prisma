@@ -412,7 +412,7 @@ model TemporaryLecture {
   //강의 형식 id
   lectureMethodId              Int?
   //강의 인원
-  isGroup                      Boolean
+  isGroup                      Boolean?
   //강의명
   title                        String?                        @db.VarChar(30)
   //강의 소개
