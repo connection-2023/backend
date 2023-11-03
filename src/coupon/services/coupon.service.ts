@@ -17,6 +17,7 @@ import { CouponRepository } from '../repository/coupon.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import { LectureCoupon } from '@prisma/client';
+import { UpdateCouponTargetDto } from '../dtos/update-coupon-target.dto';
 
 @Injectable()
 export class CouponService {
@@ -64,13 +65,9 @@ export class CouponService {
     lecturerId: number,
     lectureIds: number[],
   ): Promise<void> {
-    const lectureData: LectureData[] = lectureIds.map((lectureId: number) => ({
-      id: lectureId,
-      lecturerId,
-    }));
-
     const selectedLectureIds: Id[] =
-      await this.couponRepository.getLecturerLecture(lectureData);
+      await this.couponRepository.getLecturerLecture(lecturerId, lectureIds);
+
     if (lectureIds.length !== selectedLectureIds.length) {
       throw new BadRequestException(
         `유효하지 않은 클래스가 포함되었습니다.`,
@@ -91,5 +88,63 @@ export class CouponService {
     );
 
     return couponTargetInputData;
+  }
+
+  async applyLectureCoupon(
+    lecturerId,
+    couponId,
+    { lectureIds }: UpdateCouponTargetDto,
+  ): Promise<void> {
+    await this.validateLectureIds(lecturerId, lectureIds);
+    const validatedLectureIds: number[] = await this.validateLectureCoupon(
+      lecturerId,
+      couponId,
+      lectureIds,
+    );
+    if (!validatedLectureIds) {
+      return;
+    }
+
+    await this.createCouponTarget(couponId, validatedLectureIds);
+  }
+
+  private async createCouponTarget(lectureCouponId, lectureIds) {
+    const couponTargetInputData: CouponTargetInputData = lectureIds.map(
+      (lectureId) => ({
+        lectureCouponId,
+        lectureId,
+      }),
+    );
+    await this.couponRepository.createCouponTarget(couponTargetInputData);
+  }
+
+  private async validateLectureCoupon(
+    lecturerId: number,
+    couponId: number,
+    lectureIds: number[],
+  ): Promise<number[]> {
+    const coupon = await this.couponRepository.getLectureCoupon(
+      lecturerId,
+      couponId,
+    );
+    if (!coupon) {
+      throw new BadRequestException(
+        `존재하지 않거나 유효하지 않은 쿠폰이 포함되었습니다.`,
+        'InvalidCouponIncluded',
+      );
+    }
+
+    const couponTarget = await this.couponRepository.getCouponTargets(
+      couponId,
+      lectureIds,
+    );
+    if (couponTarget) {
+      const couponTargetLectureIds = couponTarget.map(
+        (couponTarget) => couponTarget.lectureId,
+      );
+      return lectureIds.filter((id) => !couponTargetLectureIds.includes(id));
+    }
+
+    return lectureIds;
   }
 }

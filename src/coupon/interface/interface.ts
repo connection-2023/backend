@@ -9,7 +9,7 @@ interface CouponInputData {
   maxUsageCount?: number | null;
   usageCount?: number;
   isDisabled?: boolean;
-
+  isPrivate: boolean;
   startAt: Date | string;
   endAt: Date | string;
   createdAt?: Date | string;
