@@ -288,6 +288,7 @@ model LectureCoupon {
   //쿠폰 비활성화
   isDisabled                   Boolean                        @default(false)
   isStackable                  Boolean
+  isPrivate                    Boolean
   //진행 기간
   startAt                      DateTime                       @db.Timestamp(6)
   endAt                        DateTime                       @db.Timestamp(6)
@@ -308,6 +309,8 @@ model LectureCouponTarget {
   lectureId       Int
   lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
   lecture         Lecture       @relation(fields: [lectureId], references: [id])
+
+  @@unique([lectureId, lectureCouponId])
 }
 
 model UserCoupon {
@@ -321,6 +324,8 @@ model UserCoupon {
   deletedAt       DateTime?     @db.Timestamp(6)
   lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
   users           Users         @relation(fields: [userId], references: [id])
+
+  @@unique([userId, lectureCouponId])
 }
 
 model Auth {

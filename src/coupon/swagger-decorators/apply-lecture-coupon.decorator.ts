@@ -8,12 +8,11 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiCreateLectureCoupon() {
+export function ApiApplyLectureCoupon() {
   return applyDecorators(
     ApiOperation({
-      summary: '강의 쿠폰 생성',
-      description:
-        '쿠폰 생성할 때 클래스 Id를 넘겨 생성 또는 생성 후 클래스 Id 적용 가능',
+      summary: '쿠폰 적용대상 설정',
+      description: '쿠폰 대상 적용',
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(
@@ -28,8 +27,8 @@ export function ApiCreateLectureCoupon() {
           example: { message: '유효하지 않은 클래스가 포함되었습니다.' },
         },
         {
-          name: 'InvalidLecturerInformation',
-          example: { message: '유효하지 않은 강사 정보 요청입니다.' },
+          name: 'InvalidCouponIncluded',
+          example: { message: '존재하지 않거나 유효하지 않은 쿠폰입니다.' },
         },
       ]),
     ),
