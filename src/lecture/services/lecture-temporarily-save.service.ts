@@ -207,7 +207,9 @@ export class LectureTemporarilySaveService {
     );
   }
 
-  async readManyTemporaryLecture(lecturerId: number): Promise<Id[]> {
+  async readManyTemporaryLecture(
+    lecturerId: number,
+  ): Promise<TemporaryLecture[]> {
     return await this.prismaService.temporaryLecture.findMany({
       where: { lecturerId },
     });

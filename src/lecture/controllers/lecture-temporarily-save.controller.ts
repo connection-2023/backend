@@ -18,7 +18,7 @@ import { UpsertTemporaryLectureDto } from '../dtos/update-temporary-lecture.dto'
 import { ApiReadOneTemporaryLecture } from '../swagger-decorators/read-one-temporary-lecture-decorator';
 import { ApiReadManyTemporaryLecture } from '../swagger-decorators/read-many-temporary-lecture=decorator';
 
-@ApiTags('강의')
+@ApiTags('강의 임시저장')
 @Controller('lecture-temporarily-save')
 export class LectureTemporarilySaveController {
   constructor(
