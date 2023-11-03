@@ -56,7 +56,7 @@ export class UpsertTemporaryLectureDto {
   @ApiProperty({
     example: true,
     description: '강의 인원 형식',
-    required: true,
+    required: false,
   })
   @IsOptional()
   @IsBoolean()
