@@ -20,10 +20,10 @@ export class LectureTemporarilySaveRepository {
     transaction: PrismaTransaction,
     lectureId: number,
     lecture: TemporaryLectureInputData,
-  ): Promise<Lecture> {
+  ): Promise<TemporaryLecture> {
     return await transaction.temporaryLecture.update({
       where: { id: lectureId },
-      data: { ...lecture },
+      data: { ...lecture, updatedAt: new Date() },
     });
   }
 

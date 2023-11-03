@@ -8,7 +8,7 @@ interface LectureInputData {
   minCapacity?: number;
   maxCapacity?: number;
   reservationComment?: string;
-  reservationDeadline: Date;
+  reservationDeadline: number;
   price: number;
   noShowDeposit?: number;
 }

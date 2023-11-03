@@ -148,9 +148,9 @@ export class CreateLectureDto {
     required: true,
   })
   @IsNotEmpty()
-  @IsDate()
-  @Type(() => Date)
-  reservationDeadline: Date;
+  @IsNumber()
+  @Type(() => Number)
+  reservationDeadline: number;
 
   @ApiProperty({
     example: '누구나 가능한!',

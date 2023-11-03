@@ -134,7 +134,7 @@ model Lecture {
   //최대 정원
   maxCapacity         Int?                  @db.Integer
   //강의 예약 마감일
-  reservationDeadline DateTime              @db.Date
+  reservationDeadline Int
   //예약 설명
   reservationComment  String?               @db.VarChar(255)
   //가격
@@ -158,7 +158,7 @@ model Lecture {
   lectureMethod       LectureMethod         @relation(fields: [lectureMethodId], references: [id])
   lectureReview       LectureReview[]
   likedLecture        LikedLecture[]
-  lectureNotification LectureNotification[]
+  lectureNotification LectureNotification?
   lectureImage        LectureImage[]
   lectureCouponTarget LectureCouponTarget[]
   lectureSchedule     LectureSchedule[]
@@ -426,19 +426,13 @@ model TemporaryLecture {
   //최대 정원
   maxCapacity                  Int?                           @db.Integer
   //강의 예약 마감일
-  reservationDeadline          DateTime?                      @db.Date
+  reservationDeadline          Int?
   //예약 설명
   reservationComment           String?                        @db.VarChar(255)
   //가격
   price                        Int?                           @db.Integer
   //선금
   noShowDeposit                Int?                           @db.Integer
-  //리뷰 수
-  reviewCount                  Int                            @default(0) @db.Integer
-  //평점
-  stars                        Int                            @default(0) @db.Integer
-  //활성여부
-  isActive                     Boolean                        @default(true) @db.Boolean
   //생성일자
   createdAt                    DateTime                       @default(now()) @db.Timestamp(6)
   //수정일자
@@ -448,7 +442,7 @@ model TemporaryLecture {
   lecturer                     Lecturer                       @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
   lectureType                  LectureType?                   @relation(fields: [lectureTypeId], references: [id])
   lectureMethod                LectureMethod?                 @relation(fields: [lectureMethodId], references: [id])
-  temporaryLecturenotification TemporaryLectureNotification[]
+  temporaryLecturenotification TemporaryLectureNotification?
   temporaryLectureImage        TemporaryLectureImage[]
   temporaryLectureCouponTarget TemporaryLectureCouponTarget[]
   temporaryLectureSchedule     TemporaryLectureSchedule[]
@@ -463,7 +457,7 @@ model TemporaryLectureSchedule {
   startDateTime        DateTime?
   numberOfParticipants Int?
   team                 String?
-  temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureToRegion {
