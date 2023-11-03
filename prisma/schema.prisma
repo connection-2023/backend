@@ -288,6 +288,7 @@ model LectureCoupon {
   //쿠폰 비활성화
   isDisabled                   Boolean                        @default(false)
   isStackable                  Boolean
+  isPrivate                    Boolean                             
   //진행 기간
   startAt                      DateTime                       @db.Timestamp(6)
   endAt                        DateTime                       @db.Timestamp(6)
