@@ -194,27 +194,27 @@ export class LectureRepository {
       },
     });
   }
-  // async trxUpdateLecture(
-  //   transaction: PrismaTransaction,
-  //   lectureId: number,
-  //   lecture: LectureInputData,
-  // ): Promise<Lecture> {
-  //   return await transaction.lecture.update({
-  //     where: { id: lectureId },
-  //     data: lecture,
-  //   });
-  // }
+  async trxUpdateLecture(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    lecture: LectureInputData,
+  ): Promise<Lecture> {
+    return await transaction.lecture.update({
+      where: { id: lectureId },
+      data: lecture,
+    });
+  }
 
-  // async trxUpdateLectureImg(
-  //   transaction: PrismaTransaction,
-  //   lectureId: number,
-  //   lectureImg: LectureImageInputData[],
-  // ): Promise<void> {
-  //   await transaction.lectureImage.updateMany({
-  //     where: { lectureId },
-  //     data: lectureImg,
-  //   });
-  // }
+  async trxUpdateLectureImage(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    lectureImg: LectureImageInputData[],
+  ): Promise<void> {
+    await transaction.lectureImage.updateMany({
+      where: { lectureId },
+      data: lectureImg,
+    });
+  }
 
   // async trxUpdateLectureToRegions(
   //   transaction: PrismaTransaction,

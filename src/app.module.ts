@@ -14,6 +14,10 @@ import { UploadsModule } from './uploads/uploads.module';
 import { CouponModule } from './coupon/coupon.module';
 import { PaymentsModule } from './payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
+import { LectureCommentController } from './lecture-comment/lecture-comment.controller';
+import { LectureCommentService } from './lecture-comment/lecture-comment.service';
+import { LectureReviewController } from './lecture-review/lecture-review.controller';
+import { LectureReviewService } from './lecture-review/lecture-review.service';
 
 @Module({
   imports: [
@@ -32,7 +36,7 @@ import { TestModule } from '@src/apiTest/test.module';
     TestModule,
     PaymentsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, ConfigService],
+  controllers: [AppController, LectureCommentController, LectureReviewController],
+  providers: [AppService, ConfigService, LectureCommentService, LectureReviewService],
 })
 export class AppModule {}
