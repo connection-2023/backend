@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { LectureReviewService } from '../lecture-review.service';
+import { LectureReviewService } from '@src/lecture/services/lecture-review.service';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -19,9 +19,9 @@ export class LectureReviewController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLectureReviewDto: CreateLectureReviewDto,
   ) {
-    return this.lectureReviewService.createLectureReview(
-      authorizedData.user.id,
-      createLectureReviewDto,
-    );
+    // return this.lectureReviewService.createLectureReview(
+    //   authorizedData.user.id,
+    //   createLectureReviewDto,
+    // );
   }
 }

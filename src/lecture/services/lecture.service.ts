@@ -308,16 +308,6 @@ export class LectureService {
             lectureImageInputData,
           );
         }
-
-        if (coupons) {
-          const lectureCouponTargetInputData: LectureCouponTargetInputData[] =
-            this.createLectureCouponTargetInputData(newLecture.id, coupons);
-
-          await this.lectureRepository.trxCreateLectureCouponTarget(
-            transaction,
-            lectureCouponTargetInputData,
-          );
-        }
       },
     );
   }
