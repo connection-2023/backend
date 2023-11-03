@@ -24,6 +24,7 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
+import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -31,8 +32,8 @@ export class LectureController {
   constructor(private readonly lectureService: LectureService) {}
 
   @ApiCreateLecture()
-  @Post()
   @UseGuards(LecturerAccessTokenGuard)
+  @Post()
   async createLecture(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() lecture: CreateLectureDto,
@@ -69,12 +70,18 @@ export class LectureController {
     return { lecture: deletedLecture };
   }
 
-  // @ApiOperation({ summary: '강의 수정' })
-  // @ApiBearerAuth()
-  // @UseGuards(LecturerAccessTokenGuard)
-  // @Patch(':lectureId')
-  // async updateLecture(
-  //   @GetAuthorizedUser() authroizedData: ValidateResult,
-  //   @Body() lecture: UpdateLectureDto,
-  // ) {}
+  @ApiOperation({ summary: '강의 수정' })
+  @ApiBearerAuth()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Patch(':lectureId')
+  async updateLecture(
+    @GetAuthorizedUser() authroizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+    @Body() updateLectureDto: UpdateLectureDto,
+  ) {
+    const updatedLecture = await this.lectureService.updateLecture(
+      lectureId,
+      updateLectureDto,
+    );
+  }
 }

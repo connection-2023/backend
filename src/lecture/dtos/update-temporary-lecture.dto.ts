@@ -3,6 +3,7 @@ import { DanceCategory, DanceMethod, LectureType } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsEnum,
   IsNotEmpty,
@@ -51,6 +52,15 @@ export class UpsertTemporaryLectureDto {
   @IsEnum(DanceMethod, { each: true })
   @IsOptional()
   lectureMethod?: DanceMethod;
+
+  @ApiProperty({
+    example: true,
+    description: '강의 인원 형식',
+    required: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isGroup?: boolean;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',

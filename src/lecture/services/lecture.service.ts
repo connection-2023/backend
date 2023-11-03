@@ -260,6 +260,58 @@ export class LectureService {
     return deletedLecture;
   }
 
+  async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
+    const {
+      regions,
+      schedules,
+      regularSchedules,
+      genres,
+      etcGenres,
+      notification,
+      holidays,
+      images,
+      lectureMethod,
+      lectureType,
+      coupons,
+      ...lecture
+    } = updateLectureDto;
+
+    const regionIds: Id[] = await this.getValidRegionIds(regions);
+
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const lectureMethodId = await this.getLectureMethodId(lectureMethod);
+        const lectureTypeId = await this.getLectureTypeId(lectureType);
+
+        const updatedlecture = await this.lectureRepository.trxUpdateLecture(
+          transaction,
+          lectureId,
+          lecture,
+        );
+
+        if (regions) {
+          const lectureToRegionInputData: LectureToRegionInputData[] =
+            this.createLectureToRegionInputData(lectureId, regionIds);
+          await this.lectureRepository.trxUpdateLectureToRegions(
+            transaction,
+            lectureId,
+            lectureToRegionInputData,
+          );
+        }
+
+        if (images) {
+          const lectureImageInputData: LectureImageInputData[] =
+            this.createLectureImageInputData(lectureId, images);
+          await this.lectureRepository.trxUpdateLectureImage(
+            transaction,
+            lectureId,
+            lectureImageInputData,
+          );
+        }
+      },
+    );
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(

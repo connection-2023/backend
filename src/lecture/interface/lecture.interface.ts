@@ -1,4 +1,5 @@
 interface LectureInputData {
+  isGroup: boolean;
   title: string;
   introduction?: string;
   curriculum: string;

@@ -160,6 +160,8 @@ export class LectureTemporarilySaveRepository {
     return await this.prismaService.temporaryLecture.findFirst({
       where: { id: lectureId },
       include: {
+        lectureType: { select: { name: true } },
+        lectureMethod: { select: { name: true } },
         temporaryLecturenotification: { select: { notification: true } },
         temporaryLectureImage: { select: { imageUrl: true } },
         temporaryLectureCouponTarget: { select: { lectureCouponId: true } },
