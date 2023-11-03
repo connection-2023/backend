@@ -12,7 +12,7 @@ import { number } from 'joi';
 
 export class UpdateCouponTargetDto {
   @ApiProperty({
-    example: '적용할 강의Id',
+    example: [1],
     description: '1개일 때도 배열',
     required: true,
   })
