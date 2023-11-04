@@ -17,10 +17,11 @@ export function ApiReadOneLecture() {
         statusCode: 200,
         data: {
           lecture: {
-            id: 1,
+            id: 17,
             lecturerId: 3,
             lectureTypeId: 1,
             lectureMethodId: 1,
+            isGroup: true,
             title: '가비쌤과 함께하는 왁킹 클래스',
             introduction: '안녕하세용',
             curriculum: '첫날에 모하징',
@@ -29,50 +30,26 @@ export function ApiReadOneLecture() {
             difficultyLevel: '상',
             minCapacity: 1,
             maxCapacity: 12,
-            reservationDeadline: '2023-10-03T00:00:00.000Z',
+            reservationDeadline: 2,
             reservationComment: '누구나 가능한!',
             price: 40000,
             noShowDeposit: 30000,
             reviewCount: 0,
-            stars: 5,
+            stars: 0,
             isActive: true,
-            createdAt: '2023-10-23T10:45:36.112Z',
-            updatedAt: '2023-10-23T10:45:36.112Z',
+            createdAt: '2023-11-04T00:26:55.070Z',
+            updatedAt: '2023-11-04T00:26:55.070Z',
             deletedAt: null,
-            lecturer: {
-              nickname: '올리버쌤',
-              lecturerProfileImageUrl: [
-                {
-                  url: 'url',
-                },
-                {
-                  url: 'url',
-                },
-              ],
-            },
             lectureType: {
               name: 'dance',
             },
             lectureMethod: {
               name: '원데이',
             },
-            lectureReview: [
-              {
-                id: 1,
-                userId: 1,
-                users: {
-                  nickname: 'hyun',
-                  userProfileImage: null,
-                },
-                stars: 5,
-                description: '굿굿',
-              },
-            ],
-            lectureNotification: [
-              {
-                notification: '15일 영업 안합니다요',
-              },
-            ],
+            lectureReview: [],
+            lectureNotification: {
+              notification: '15일 영업 안합니다요',
+            },
             lectureImage: [
               {
                 imageUrl: '이미지url1',
@@ -81,35 +58,25 @@ export function ApiReadOneLecture() {
                 imageUrl: '이미지url2',
               },
             ],
-            lectureCouponTarget: [
-              {
-                lectureCoupon: {
-                  id: 1,
-                  lecturerId: 3,
-                  title: '쿠포옹',
-                  percentage: 10,
-                  discountPrice: null,
-                  maxDiscountPrice: 10000,
-                  maxUsageCount: 3,
-                  usageCount: 0,
-                  isStackable: true,
-                  startAt: '2023-10-31T11:00:00.000Z',
-                  endAt: '2023-11-01T11:00:00.000Z',
-                },
-              },
-            ],
+            lectureCouponTarget: [],
             lectureSchedule: [
               {
+                id: 42,
+                lectureId: 17,
                 startDateTime: '2023-10-03T11:00:00.000Z',
                 numberOfParticipants: 0,
                 team: null,
               },
               {
+                id: 43,
+                lectureId: 17,
                 startDateTime: '2023-10-03T11:00:00.000Z',
                 numberOfParticipants: 0,
                 team: null,
               },
               {
+                id: 44,
+                lectureId: 17,
                 startDateTime: '2023-10-03T11:00:00.000Z',
                 numberOfParticipants: 0,
                 team: null,
@@ -166,6 +133,11 @@ export function ApiReadOneLecture() {
                 },
               },
             ],
+            lecturer: {
+              id: 3,
+              profileCardImageUrl: null,
+              nickname: '올리버쌤',
+            },
           },
         },
       }),

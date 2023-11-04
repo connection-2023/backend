@@ -34,7 +34,7 @@ import { LectureReviewService } from '@src/lecture/services/lecture-review.servi
     TestModule,
     PaymentsModule,
   ],
-  controllers: [AppController, LectureReviewController],
-  providers: [AppService, ConfigService, LectureReviewService],
+  controllers: [AppController],
+  providers: [AppService, ConfigService],
 })
 export class AppModule {}
