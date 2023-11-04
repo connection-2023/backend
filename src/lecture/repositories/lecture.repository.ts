@@ -114,12 +114,6 @@ export class LectureRepository {
     return await this.prismaService.lecture.findFirst({
       where: { id: lectureId },
       include: {
-        lecturer: {
-          select: {
-            nickname: true,
-            lecturerProfileImageUrl: { select: { url: true } },
-          },
-        },
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
         lectureReview: {

@@ -1,3 +1,4 @@
+import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
@@ -26,6 +27,7 @@ export class LectureService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly lectureRepository: LectureRepository,
+    private readonly lecturerRepository: LecturerRepository,
     private readonly queryFilter: QueryFilter,
     private readonly prismaService: PrismaService,
   ) {}
@@ -141,7 +143,12 @@ export class LectureService {
   }
 
   async readLecture(lectureId: number) {
-    return await this.lectureRepository.readLecture(lectureId);
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    lecture['lecturer'] = lecturer;
+    return lecture;
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
