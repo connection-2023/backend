@@ -11,8 +11,8 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiApplyLectureCoupon() {
   return applyDecorators(
     ApiOperation({
-      summary: '쿠폰 적용대상 설정',
-      description: '쿠폰 대상 적용',
+      summary: '쿠폰 적용',
+      description: '쿠폰 할인 대상 클래스 적용',
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(

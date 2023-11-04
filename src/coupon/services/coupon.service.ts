@@ -2,22 +2,20 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  Logger,
+  NotFoundException,
 } from '@nestjs/common';
-import { CreateLectureCouponDto } from '../dtos/create-lecture-coupon.dto';
+import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ConfigService } from '@nestjs/config';
 import {
   CouponInputData,
   CouponTargetInputData,
-  LectureData,
-} from '../interface/interface';
-import { CouponRepository } from '../repository/coupon.repository';
+} from '@src/coupon/interface/interface';
+import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
-import { LectureCoupon } from '@prisma/client';
-import { UpdateCouponTargetDto } from '../dtos/update-coupon-target.dto';
+import { LectureCoupon, UserCoupon } from '@prisma/client';
+import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 
 @Injectable()
 export class CouponService {
@@ -108,7 +106,7 @@ export class CouponService {
     await this.createCouponTarget(couponId, validatedLectureIds);
   }
 
-  private async createCouponTarget(lectureCouponId, lectureIds) {
+  private async createCouponTarget(lectureCouponId, lectureIds): Promise<void> {
     const couponTargetInputData: CouponTargetInputData = lectureIds.map(
       (lectureId) => ({
         lectureCouponId,
@@ -123,7 +121,7 @@ export class CouponService {
     couponId: number,
     lectureIds: number[],
   ): Promise<number[]> {
-    const coupon = await this.couponRepository.getLectureCoupon(
+    const coupon = await this.couponRepository.getLectureCouponByLecturerId(
       lecturerId,
       couponId,
     );
@@ -146,5 +144,67 @@ export class CouponService {
     }
 
     return lectureIds;
+  }
+
+  async getLectureCoupon(userId, couponId): Promise<void> {
+    const isOwn = false;
+    const isPrivate = false;
+    await this.checkUserCoupon(userId, couponId, isOwn, isPrivate);
+
+    await this.couponRepository.createUserCoupon(userId, couponId);
+  }
+
+  private async checkUserCoupon(
+    userId: number,
+    couponId: number,
+    isOwn: boolean,
+    isPrivate: boolean,
+  ): Promise<void> {
+    const userCoupon: UserCoupon = await this.couponRepository.getUserCoupon(
+      userId,
+      couponId,
+    );
+
+    if (!userCoupon && isOwn) {
+      throw new BadRequestException(
+        `쿠폰을 보유하고있지 않습니다.`,
+        'CouponNotOwned',
+      );
+    }
+    if (userCoupon && !isOwn) {
+      throw new BadRequestException(
+        `이미 쿠폰을 보유하고있습니다.`,
+        'CouponAlreadyOwned',
+      );
+    }
+
+    if (!isOwn) {
+      const coupon = await this.couponRepository.getLectureCoupon(couponId);
+
+      if (!coupon) {
+        throw new NotFoundException(
+          `쿠폰이 존재하지 않습니다.`,
+          'CouponNotFound',
+        );
+      }
+      if (coupon.isDisabled) {
+        throw new BadRequestException(
+          `비활성화 된 쿠폰입니다.`,
+          'DisabledCoupon',
+        );
+      }
+      if (coupon.maxUsageCount === coupon.usageCount) {
+        throw new BadRequestException(
+          `모든 쿠폰 할당량이 소진되었습니다.`,
+          'CouponAllocationExhausted',
+        );
+      }
+      if (coupon.isPrivate !== isPrivate) {
+        throw new BadRequestException(
+          `해당 쿠폰은 ${coupon.isPrivate ? '비공개' : '공개'}쿠폰 입니다.`,
+          'InvalidCouponType',
+        );
+      }
+    }
   }
 }
