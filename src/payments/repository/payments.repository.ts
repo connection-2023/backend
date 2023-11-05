@@ -12,7 +12,11 @@ import {
   VirtualAccountPaymentInfoInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { PaymentProductTypes, PaymentOrderStatus } from '../enum/payment.enum';
+import {
+  PaymentProductTypes,
+  PaymentOrderStatus,
+  PaymentMethods,
+} from '../enum/payment.enum';
 import { Payment, PaymentProductType, PaymentStatus } from '@prisma/client';
 
 @Injectable()
@@ -200,10 +204,11 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     paymentId: number,
     statusId: number,
+    paymentMethodId: number,
   ) {
     return await transaction.payment.update({
       where: { id: paymentId },
-      data: { statusId },
+      data: { statusId, paymentMethodId },
       select: {
         orderId: true,
         orderName: true,
