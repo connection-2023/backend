@@ -159,4 +159,14 @@ export class CouponRepository {
       );
     }
   }
+
+  async getUserCouponList(userId) {
+    try {
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
 }

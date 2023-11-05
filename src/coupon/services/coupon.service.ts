@@ -273,4 +273,8 @@ export class CouponService {
       );
     }
   }
+
+  async getMyCouponList(userId: number) {
+    return await this.couponRepository.getUserCouponList(userId);
+  }
 }
