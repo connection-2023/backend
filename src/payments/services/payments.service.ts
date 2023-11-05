@@ -217,7 +217,7 @@ export class PaymentsService implements OnModuleInit {
   //적용할 쿠폰이 올바른지 확인
   private async checkApplicableCoupon(lectureId, couponId, stackableCouponId) {
     const couponIds: number[] = [couponId, stackableCouponId].filter(
-      (id) => id !== null,
+      (id) => id != null && id !== undefined,
     );
 
     const couponTarget: LectureCouponUseage[] =
