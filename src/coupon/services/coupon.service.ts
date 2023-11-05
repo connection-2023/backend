@@ -14,13 +14,20 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import { LectureCoupon, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
-import { createCipheriv, randomBytes, scrypt, createDecipheriv } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  createHash,
+} from 'crypto';
 import { promisify } from 'util';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CouponService {
   private couponSecretKey: string;
+  private readonly iv = randomBytes(16);
+  private key;
 
   constructor(
     private readonly configService: ConfigService,
@@ -30,6 +37,10 @@ export class CouponService {
 
   onModuleInit() {
     this.couponSecretKey = this.configService.get<string>('COUPON_SECRET_KEY');
+    this.key = createHash('sha256')
+      .update(String(this.couponSecretKey))
+      .digest('base64')
+      .substr(0, 16);
   }
 
   async createLectureCoupon(
@@ -218,27 +229,13 @@ export class CouponService {
     const isPrivate = true;
     await this.checkLecturerCoupon(lecturerId, couponId, isPrivate);
 
-    const iv = randomBytes(16);
+    const cipher = createCipheriv('aes-128-cbc', this.key, this.iv);
+    let encrypted = cipher.update(couponId.toString(), 'utf8', 'hex');
+    encrypted += cipher.final('hex');
 
-    const key = (await promisify(scrypt)(
-      this.couponSecretKey,
-      'salt',
-      32,
-    )) as Buffer;
-    const cipher = createCipheriv('aes-256-ctr', key, iv);
-
-    const encryptedText = Buffer.concat([
-      cipher.update(couponId.toString()),
-      cipher.final(),
-    ]);
-    console.log(encryptedText);
-
-    const decipher = createDecipheriv('aes-256-ctr', key, iv);
-    const decryptedText = Buffer.concat([
-      decipher.update(encryptedText),
-      decipher.final(),
-    ]);
-    console.log(decryptedText);
+    const decipher = createDecipheriv('aes-128-cbc', this.key, this.iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
   }
 
   private async checkLecturerCoupon(
