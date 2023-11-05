@@ -35,6 +35,7 @@ export function ApiGetMyCouponList() {
                 startAt: '2023-01-19T00:00:00.000Z',
                 endAt: '2024-01-19T00:00:00.000Z',
                 isDisabled: false,
+                isStackable: true,
                 lectureCouponTarget: [
                   {
                     lecture: {
@@ -58,6 +59,7 @@ export function ApiGetMyCouponList() {
                 startAt: '2023-01-19T00:00:00.000Z',
                 endAt: '2024-01-19T00:00:00.000Z',
                 isDisabled: false,
+                isStackable: false,
                 lectureCouponTarget: [
                   {
                     lecture: {

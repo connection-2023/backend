@@ -277,4 +277,8 @@ export class CouponService {
   async getMyCouponList(userId: number) {
     return await this.couponRepository.getUserCouponList(userId);
   }
+
+  async getMyIssuedCouponList(lecturerId: number) {
+    return await this.couponRepository.getLecturerIssuedCouponList(lecturerId);
+  }
 }

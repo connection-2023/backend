@@ -178,6 +178,7 @@ export class CouponRepository {
               startAt: true,
               endAt: true,
               isDisabled: true,
+              isStackable: true,
               lectureCouponTarget: {
                 select: {
                   lecture: { select: { id: true, title: true } },
@@ -193,5 +194,32 @@ export class CouponRepository {
         'PrismaFindFailed',
       );
     }
+  }
+
+  async getLecturerIssuedCouponList(lecturerId: number) {
+    return await this.prismaService.lectureCoupon.findMany({
+      where: { lecturerId },
+      select: {
+        title: true,
+        isPrivate: true,
+        maxUsageCount: true,
+        usageCount: true,
+        percentage: true,
+        discountPrice: true,
+        maxDiscountPrice: true,
+        startAt: true,
+        endAt: true,
+        isDisabled: true,
+        isStackable: true,
+        lectureCouponTarget: {
+          select: {
+            lecture: { select: { id: true, title: true } },
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+      },
+    });
   }
 }
