@@ -5,7 +5,7 @@ import {
   CouponTargetInputData,
   LectureData,
 } from '../interface/interface';
-import { LectureCoupon } from '@prisma/client';
+import { LectureCoupon, UserCoupon } from '@prisma/client';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
@@ -61,7 +61,7 @@ export class CouponRepository {
     }
   }
 
-  async getLectureCoupon(lecturerId: number, couponId: number) {
+  async getLectureCouponByLecturerId(lecturerId: number, couponId: number) {
     try {
       return await this.prismaService.lectureCoupon.findFirst({
         where: { id: couponId, lecturerId },
@@ -96,6 +96,53 @@ export class CouponRepository {
       throw new InternalServerErrorException(
         `Prisma 쿠폰 대상 조회 실패: ${error}`,
         'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getLectureCoupon(couponId: number) {
+    try {
+      return await this.prismaService.lectureCoupon.findFirst({
+        where: { id: couponId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getUserCoupon(
+    userId: number,
+    lectureCouponId: number,
+  ): Promise<UserCoupon> {
+    try {
+      return await this.prismaService.userCoupon.findUnique({
+        where: {
+          userId_lectureCouponId: { userId, lectureCouponId },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async createUserCoupon(
+    userId: number,
+    lectureCouponId: number,
+  ): Promise<void> {
+    try {
+      await this.prismaService.userCoupon.create({
+        data: { userId, lectureCouponId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 쿠폰 생성 실패: ${error}`,
+        'PrismaCreateFailed',
       );
     }
   }
