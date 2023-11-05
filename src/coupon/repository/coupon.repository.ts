@@ -160,8 +160,33 @@ export class CouponRepository {
     }
   }
 
-  async getUserCouponList(userId) {
+  async getUserCouponList(userId: number) {
     try {
+      return await this.prismaService.userCoupon.findMany({
+        where: { userId },
+        select: {
+          isUsed: true,
+          lectureCoupon: {
+            select: {
+              title: true,
+              isPrivate: true,
+              maxUsageCount: true,
+              usageCount: true,
+              percentage: true,
+              discountPrice: true,
+              maxDiscountPrice: true,
+              startAt: true,
+              endAt: true,
+              isDisabled: true,
+              lectureCouponTarget: {
+                select: {
+                  lecture: { select: { id: true, title: true } },
+                },
+              },
+            },
+          },
+        },
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 유저 쿠폰 조회 실패: ${error}`,

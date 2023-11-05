@@ -19,9 +19,9 @@ import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lect
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiGetLectureCoupon } from '@src/coupon/swagger-decorators/get-lecture-coupon.decorator';
 
-@ApiTags('쿠폰')
-@Controller('/coupons/lectures')
-export class CouponController {
+@ApiTags('강의 쿠폰')
+@Controller('coupons/lectures')
+export class CouponLectureController {
   constructor(private couponService: CouponService) {}
 
   @ApiCreateLectureCoupon()
