@@ -28,7 +28,7 @@ export class CouponRepository {
     }
   }
 
-  async getLecturerLecture(
+  async getLecturerLectures(
     lecturerId: number,
     lectureIds: number[],
   ): Promise<Id[]> {
@@ -197,29 +197,68 @@ export class CouponRepository {
   }
 
   async getLecturerIssuedCouponList(lecturerId: number) {
-    return await this.prismaService.lectureCoupon.findMany({
-      where: { lecturerId },
-      select: {
-        title: true,
-        isPrivate: true,
-        maxUsageCount: true,
-        usageCount: true,
-        percentage: true,
-        discountPrice: true,
-        maxDiscountPrice: true,
-        startAt: true,
-        endAt: true,
-        isDisabled: true,
-        isStackable: true,
-        lectureCouponTarget: {
-          select: {
-            lecture: { select: { id: true, title: true } },
+    try {
+      return await this.prismaService.lectureCoupon.findMany({
+        where: { lecturerId },
+        select: {
+          title: true,
+          isPrivate: true,
+          maxUsageCount: true,
+          usageCount: true,
+          percentage: true,
+          discountPrice: true,
+          maxDiscountPrice: true,
+          startAt: true,
+          endAt: true,
+          isDisabled: true,
+          isStackable: true,
+          lectureCouponTarget: {
+            select: {
+              lecture: { select: { id: true, title: true } },
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getApplicableCouponsForLecture(lectureId: number) {
+    try {
+      return await this.prismaService.lectureCouponTarget.findMany({
+        where: {
+          lectureId,
+          lectureCoupon: { isPrivate: false, isDisabled: false },
+        },
+        select: {
+          lectureCoupon: {
+            select: {
+              id: true,
+              title: true,
+              maxUsageCount: true,
+              usageCount: true,
+              percentage: true,
+              discountPrice: true,
+              maxDiscountPrice: true,
+              isStackable: true,
+              startAt: true,
+              endAt: true,
+            },
           },
         },
-        createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
-      },
-    });
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
   }
 }

@@ -10,77 +10,47 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiGetMyCouponList() {
+export function ApiGetApplicableCouponsForLecture() {
   return applyDecorators(
     ApiOperation({
-      summary: '보유 쿠폰 목록 조회',
-      description: '보유 쿠폰 목록 조회',
+      summary: '강의에 적용 가능한 공개 쿠폰 조회',
     }),
     ApiBearerAuth(),
     ApiOkResponse(
-      SwaggerApiResponse.success('쿠폰 목록 반환', {
+      SwaggerApiResponse.success('클래스에 적용 가능한 쿠폰 목록 반환', {
         statusCode: 200,
         data: {
-          coupons: [
+          applicableCoupons: [
             {
-              isUsed: true,
               lectureCoupon: {
+                id: 1,
                 title: '지금까지 이런 쿠폰은 없었다.',
-                isPrivate: false,
-                maxUsageCount: 100,
-                usageCount: 8,
+                maxUsageCount: null,
                 percentage: null,
                 discountPrice: 5000,
                 maxDiscountPrice: null,
+                isStackable: false,
                 startAt: '2023-01-19T00:00:00.000Z',
                 endAt: '2024-01-19T00:00:00.000Z',
-                isDisabled: false,
-                isStackable: true,
-                lectureCouponTarget: [
-                  {
-                    lecture: {
-                      id: 2,
-                      title: '가비쌤과 함께하는 왁킹 클래스',
-                    },
-                  },
-                ],
               },
             },
             {
-              isUsed: false,
               lectureCoupon: {
+                id: 2,
                 title: '지금까지 이런 쿠폰은 없었다.',
-                isPrivate: false,
                 maxUsageCount: 100,
-                usageCount: 7,
                 percentage: 10,
                 discountPrice: null,
                 maxDiscountPrice: null,
+                isStackable: true,
                 startAt: '2023-01-19T00:00:00.000Z',
                 endAt: '2024-01-19T00:00:00.000Z',
-                isDisabled: false,
-                isStackable: false,
-                lectureCouponTarget: [
-                  {
-                    lecture: {
-                      id: 2,
-                      title: '가비쌤과 함께하는 왁킹 클래스',
-                    },
-                  },
-                  {
-                    lecture: {
-                      id: 4,
-                      title: '가비쌤과 함께하는 왁킹 클래스',
-                    },
-                  },
-                ],
               },
             },
           ],
         },
       }),
     ),
-
     ApiUnauthorizedResponse(
       SwaggerApiResponse.exception([
         {

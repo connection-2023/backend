@@ -82,7 +82,7 @@ export class CouponService {
     lectureIds: number[],
   ): Promise<void> {
     const selectedLectureIds: Id[] =
-      await this.couponRepository.getLecturerLecture(lecturerId, lectureIds);
+      await this.couponRepository.getLecturerLectures(lecturerId, lectureIds);
 
     if (lectureIds.length !== selectedLectureIds.length) {
       throw new BadRequestException(
@@ -280,5 +280,23 @@ export class CouponService {
 
   async getMyIssuedCouponList(lecturerId: number) {
     return await this.couponRepository.getLecturerIssuedCouponList(lecturerId);
+  }
+
+  async getApplicableCouponsForLecture(lectureId: number) {
+    const coupons = await this.couponRepository.getApplicableCouponsForLecture(
+      lectureId,
+    );
+
+    const applicableCoupons = coupons.map((coupon) => {
+      if (
+        coupon.lectureCoupon.maxUsageCount !== coupon.lectureCoupon.usageCount
+      ) {
+        delete coupon.lectureCoupon.usageCount;
+      }
+
+      return coupon;
+    });
+
+    return applicableCoupons;
   }
 }

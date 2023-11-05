@@ -17,7 +17,8 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lecture-coupon.decorator';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
-import { ApiGetLectureCoupon } from '@src/coupon/swagger-decorators/get-lecture-coupon.decorator';
+import { ApiIssueCouponToUser } from '@src/coupon/swagger-decorators/get-lecture-coupon.decorator';
+import { ApiGetApplicableCouponsForLecture } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
 
 @ApiTags('강의 쿠폰')
 @Controller('coupons/lectures')
@@ -37,12 +38,23 @@ export class CouponLectureController {
     );
   }
 
-  @Get('/:couponId')
-  async getPrivateLectureCouponCode(
-    @Param('couponId', ParseIntPipe) couponId: number,
+  @ApiGetApplicableCouponsForLecture()
+  @Get('/:lectureId')
+  async getApplicableCouponsForLecture(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    await this.couponService.getPrivateLectureCouponCode(1, couponId);
+    const applicableCoupons =
+      await this.couponService.getApplicableCouponsForLecture(lectureId);
+
+    return { applicableCoupons };
   }
+
+  // @Get('/:couponId')
+  // async getPrivateLectureCouponCode(
+  //   @Param('couponId', ParseIntPipe) couponId: number,
+  // ) {
+  //   await this.couponService.getPrivateLectureCouponCode(1, couponId);
+  // }
 
   @ApiApplyLectureCoupon()
   @Post('/:couponId')
@@ -59,7 +71,7 @@ export class CouponLectureController {
     );
   }
 
-  @ApiGetLectureCoupon()
+  @ApiIssueCouponToUser()
   @Post('/:couponId/user')
   @UseGuards(UserAccessTokenGuard)
   async getLectureCoupon(
