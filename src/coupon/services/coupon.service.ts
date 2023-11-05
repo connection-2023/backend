@@ -5,8 +5,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import {
   CouponInputData,
   CouponTargetInputData,
@@ -16,14 +14,23 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import { LectureCoupon, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
+import { createCipheriv, randomBytes, scrypt, createDecipheriv } from 'crypto';
+import { promisify } from 'util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CouponService {
+  private couponSecretKey: string;
+
   constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly configService: ConfigService,
     private readonly prismaService: PrismaService,
     private readonly couponRepository: CouponRepository,
   ) {}
+
+  onModuleInit() {
+    this.couponSecretKey = this.configService.get<string>('COUPON_SECRET_KEY');
+  }
 
   async createLectureCoupon(
     lecturerId: number,
@@ -205,6 +212,68 @@ export class CouponService {
           'InvalidCouponType',
         );
       }
+    }
+  }
+  async getPrivateLectureCouponCode(lecturerId: number, couponId: number) {
+    const isPrivate = true;
+    await this.checkLecturerCoupon(lecturerId, couponId, isPrivate);
+
+    const iv = randomBytes(16);
+
+    const key = (await promisify(scrypt)(
+      this.couponSecretKey,
+      'salt',
+      32,
+    )) as Buffer;
+    const cipher = createCipheriv('aes-256-ctr', key, iv);
+
+    const encryptedText = Buffer.concat([
+      cipher.update(couponId.toString()),
+      cipher.final(),
+    ]);
+    console.log(encryptedText);
+
+    const decipher = createDecipheriv('aes-256-ctr', key, iv);
+    const decryptedText = Buffer.concat([
+      decipher.update(encryptedText),
+      decipher.final(),
+    ]);
+    console.log(decryptedText);
+  }
+
+  private async checkLecturerCoupon(
+    lecturerId: number,
+    couponId: number,
+    isPrivate: boolean,
+  ) {
+    const coupon: LectureCoupon = await this.couponRepository.getLecturerCoupon(
+      lecturerId,
+      couponId,
+    );
+
+    if (!coupon) {
+      throw new NotFoundException(
+        `쿠폰이 존재하지 않습니다.`,
+        'CouponNotFound',
+      );
+    }
+    if (coupon.isDisabled) {
+      throw new BadRequestException(
+        `비활성화 된 쿠폰입니다.`,
+        'DisabledCoupon',
+      );
+    }
+    if (coupon.maxUsageCount === coupon.usageCount) {
+      throw new BadRequestException(
+        `모든 쿠폰 할당량이 소진되었습니다.`,
+        'CouponAllocationExhausted',
+      );
+    }
+    if (coupon.isPrivate !== isPrivate) {
+      throw new BadRequestException(
+        `해당 쿠폰은 ${coupon.isPrivate ? '비공개' : '공개'}쿠폰 입니다.`,
+        'InvalidCouponType',
+      );
     }
   }
 }

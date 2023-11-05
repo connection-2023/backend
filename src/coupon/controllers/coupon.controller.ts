@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Post,
@@ -19,7 +20,7 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { ApiGetLectureCoupon } from '@src/coupon/swagger-decorators/get-lecture-coupon.decorator';
 
 @ApiTags('쿠폰')
-@Controller('/coupons')
+@Controller('/coupons/lectures')
 export class CouponController {
   constructor(private couponService: CouponService) {}
 
@@ -36,8 +37,15 @@ export class CouponController {
     );
   }
 
+  @Get('/:couponId')
+  async getPrivateLectureCouponCode(
+    @Param('couponId', ParseIntPipe) couponId: number,
+  ) {
+    await this.couponService.getPrivateLectureCouponCode(1, couponId);
+  }
+
   @ApiApplyLectureCoupon()
-  @Post('/lectures/:couponId')
+  @Post('/:couponId')
   @UseGuards(LecturerAccessTokenGuard)
   async applyLectureCoupon(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
@@ -52,7 +60,7 @@ export class CouponController {
   }
 
   @ApiGetLectureCoupon()
-  @Post('/lectures/:couponId/user')
+  @Post('/:couponId/user')
   @UseGuards(UserAccessTokenGuard)
   async getLectureCoupon(
     @Param('couponId', ParseIntPipe) couponId: number,

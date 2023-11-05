@@ -146,4 +146,17 @@ export class CouponRepository {
       );
     }
   }
+
+  async getLecturerCoupon(lecturerId, couponId): Promise<LectureCoupon> {
+    try {
+      return await this.prismaService.lectureCoupon.findFirst({
+        where: { id: couponId, lecturerId, deletedAt: null },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
 }
