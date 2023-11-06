@@ -9,36 +9,37 @@ datasource db {
 
 model Users {
   //고유 id
-  id               Int               @id @default(autoincrement())
-  uuid             String            @default(uuid())
+  id                 Int                  @id @default(autoincrement())
+  uuid               String               @default(uuid())
   //이름
-  name             String            @db.VarChar(10)
+  name               String               @db.VarChar(10)
   //사용자 닉네임
-  nickname         String            @unique @db.VarChar(30)
+  nickname           String               @unique @db.VarChar(30)
   //사용 이메일
-  email            String            @unique
+  email              String               @unique
   //프로필 공개 여부(open: true, close: false)
-  isProfileOpen    Boolean           @default(false) @db.Boolean
+  isProfileOpen      Boolean              @default(false) @db.Boolean
   //핸드폰 번호
-  phoneNumber      String?           @unique @db.VarChar(11)
+  phoneNumber        String?              @unique @db.VarChar(11)
   //성별
-  gender           Int?              @db.SmallInt
+  gender             Int?                 @db.SmallInt
   //생성일자
-  createdAt        DateTime          @default(now()) @db.Timestamp(6)
+  createdAt          DateTime             @default(now()) @db.Timestamp(6)
   //수정일자
-  updatedAt        DateTime          @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt        DateTime?         @db.Timestamp(6)
-  auth             Auth?
-  userProfileImage UserProfileImage?
-  lecturer         Lecturer?
-  lectureReview    LectureReview[]
-  lecturerReview   LecturerReview[]
-  likedLecture     LikedLecture[]
-  dailySmsUsage    DailySmsUsage?
-  userCoupon       UserCoupon[]
-  payment          Payment[]
-  reservation      Reservation[]
+  deletedAt          DateTime?            @db.Timestamp(6)
+  auth               Auth?
+  userProfileImage   UserProfileImage?
+  lecturer           Lecturer?
+  lectureReview      LectureReview[]
+  lecturerReview     LecturerReview[]
+  likedLecture       LikedLecture[]
+  dailySmsUsage      DailySmsUsage?
+  userCoupon         UserCoupon[]
+  payment            Payment[]
+  reservation        Reservation[]
+  likedLectureReview LikedLectureReview[]
 }
 
 model UserProfileImage {
@@ -190,17 +191,34 @@ model LectureType {
 
 model LectureReview {
   //고유 id
-  id          Int     @id @default(autoincrement())
+  id                 Int                  @id @default(autoincrement())
   //강의 id
-  lectureId   Int
+  lectureId          Int
   //유저 id
-  userId      Int
+  userId             Int
+  //예약 id
+  reservationId      Int                  @unique
   //별점
-  stars       Int     @db.Integer
+  stars              Int                  @db.Integer
   //후기
-  description String? @db.VarChar(255)
-  lecture     Lecture @relation(fields: [lectureId], references: [id])
-  users       Users   @relation(fields: [userId], references: [id])
+  description        String?              @db.VarChar(255)
+  lecture            Lecture              @relation(fields: [lectureId], references: [id])
+  users              Users                @relation(fields: [userId], references: [id])
+  reservation        Reservation          @relation(fields: [reservationId], references: [id])
+  likedLectureReview LikedLectureReview[]
+}
+
+model LikedLectureReview {
+  //고유 id
+  id              Int           @id @default(autoincrement())
+  //강의 id
+  lectureReviewId Int
+  //유저 id
+  userId          Int
+  lectureReview   LectureReview @relation(fields: [lectureReviewId], references: [id])
+  user            Users         @relation(fields: [userId], references: [id])
+
+  @@unique([lectureReviewId, userId])
 }
 
 model LecturerReview {
@@ -599,6 +617,7 @@ model Reservation {
   user              Users           @relation(fields: [userId], references: [id])
   lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
   payment           Payment         @relation(fields: [paymentId], references: [id])
+  lectureReview     LectureReview?
 }
 
 //카드 결제 시 저장되는 정보

@@ -130,7 +130,7 @@ export class LectureRepository {
             description: true,
           },
         },
-        lectureNotification: { select: { notification: true } },
+        lectureNotification: true,
         lectureImage: { select: { imageUrl: true } },
         lectureCouponTarget: {
           select: {
