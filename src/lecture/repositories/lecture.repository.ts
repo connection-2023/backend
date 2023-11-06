@@ -116,44 +116,30 @@ export class LectureRepository {
       include: {
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
-        lectureReview: {
-          select: {
-            id: true,
-            userId: true,
-            users: {
-              select: {
-                nickname: true,
-                userProfileImage: { select: { imageUrl: true } },
-              },
-            },
-            stars: true,
-            description: true,
-          },
-        },
         lectureNotification: true,
         lectureImage: { select: { imageUrl: true } },
-        lectureCouponTarget: {
-          select: {
-            lectureCoupon: {
-              select: {
-                id: true,
-                lecturerId: true,
-                title: true,
-                percentage: true,
-                discountPrice: true,
-                maxDiscountPrice: true,
-                maxUsageCount: true,
-                usageCount: true,
-                isStackable: true,
-                startAt: true,
-                endAt: true,
-              },
-            },
-          },
-          where: { lectureCoupon: { isDisabled: false } },
-        },
-        lectureSchedule: true,
-        lectureHoliday: { select: { holiday: true } },
+        // lectureCouponTarget: {
+        //   select: {
+        //     lectureCoupon: {
+        //       select: {
+        //         id: true,
+        //         lecturerId: true,
+        //         title: true,
+        //         percentage: true,
+        //         discountPrice: true,
+        //         maxDiscountPrice: true,
+        //         maxUsageCount: true,
+        //         usageCount: true,
+        //         isStackable: true,
+        //         startAt: true,
+        //         endAt: true,
+        //       },
+        //     },
+        //   },
+        //   where: { lectureCoupon: { isDisabled: false } },
+        // },
+        // lectureSchedule: true,
+        // lectureHoliday: { select: { holiday: true } },
         lectureToRegion: {
           select: {
             region: {
@@ -218,6 +204,14 @@ export class LectureRepository {
     await transaction.lectureToRegion.updateMany({
       where: { lectureId },
       data: lectureToRegion,
+    });
+  }
+
+  async readManyLectureSchedules(
+    lectureId: number,
+  ): Promise<LectureSchedule[]> {
+    return await this.prismaService.lectureSchedule.findMany({
+      where: { lectureId },
     });
   }
 }

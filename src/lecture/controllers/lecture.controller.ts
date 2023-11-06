@@ -83,5 +83,18 @@ export class LectureController {
       lectureId,
       updateLectureDto,
     );
+
+    return { updatedLecture };
+  }
+
+  @Get('schedules/:lectureId')
+  async readLectureSchedule(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const schedules = await this.lectureService.readManyLectureSchedule(
+      lectureId,
+    );
+
+    return { schedules };
   }
 }
