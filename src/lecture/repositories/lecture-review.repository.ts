@@ -8,6 +8,7 @@ export class LectureReviewRepository {
 
   async readManyLectureReviewByLecture(
     lectureId: number,
+    order,
   ): Promise<LectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
       where: { lectureId },
@@ -20,6 +21,7 @@ export class LectureReviewRepository {
         },
         lecture: true,
       },
+      orderBy: order,
     });
   }
 }

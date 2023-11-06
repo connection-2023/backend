@@ -2,6 +2,7 @@ import { PrismaService } from './../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { LectureReviewRepository } from '../repositories/lecture-review.repository';
 import { LectureReview } from '@prisma/client';
+import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -10,10 +11,28 @@ export class LectureReviewService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async readManyLectureReview(lectureId: number): Promise<LectureReview[]> {
-    return await this.prismaService.lectureReview.findMany({
-      where: { lectureId },
-      include: { users: { include: { userProfileImage: true } } },
-    });
+  async readManyLectureReview(lectureId: number, orderBy: string) {
+    const order = {};
+
+    if (orderBy === '최신순') {
+      order['reservation'] = {
+        lectureSchedule: {
+          startDateTime: 'desc',
+        },
+      };
+    } else if (orderBy === '좋아요순') {
+      order['likedLectureReview'] = {
+        _count: 'desc',
+      };
+    } else if (orderBy === '평점 높은순') {
+      order['stars'] = 'desc';
+    } else if (orderBy === '평점 낮은순') {
+      order['stars'] = 'asc';
+    }
+
+    return this.lectureReviewRespository.readManyLectureReviewByLecture(
+      lectureId,
+      order,
+    );
   }
 }

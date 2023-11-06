@@ -202,6 +202,12 @@ model LectureReview {
   stars              Int                  @db.Integer
   //후기
   description        String?              @db.VarChar(255)
+  //생성일자
+  createdAt          DateTime             @default(now()) @db.Timestamp(6)
+  //수정일자
+  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamp(6)
+  //삭제일자
+  deletedAt          DateTime?            @db.Timestamp(6)
   lecture            Lecture              @relation(fields: [lectureId], references: [id])
   users              Users                @relation(fields: [userId], references: [id])
   reservation        Reservation          @relation(fields: [reservationId], references: [id])
