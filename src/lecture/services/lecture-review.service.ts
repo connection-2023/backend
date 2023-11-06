@@ -30,9 +30,13 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    return this.lectureReviewRespository.readManyLectureReviewByLecture(
-      lectureId,
-      order,
-    );
+    try {
+      return this.lectureReviewRespository.readManyLectureReviewByLecture(
+        lectureId,
+        order,
+      );
+    } catch (error) {
+      throw new error();
+    }
   }
 }

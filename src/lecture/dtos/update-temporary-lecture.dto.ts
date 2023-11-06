@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DanceCategory, DanceMethod, LectureType } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import {
@@ -163,7 +163,7 @@ export class UpsertTemporaryLectureDto {
   maxCapacity?: number;
 
   @ApiProperty({
-    example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+    example: 1,
     description: '강의 예약 마감일',
     required: false,
   })
@@ -254,4 +254,13 @@ export class UpsertTemporaryLectureDto {
   @IsOptional()
   @Type(() => Array)
   coupons?: number[];
+
+  @ApiPropertyOptional({
+    example: '버스타고 한번에',
+    description: '위치설명',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  locationDescription?: string;
 }

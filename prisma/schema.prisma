@@ -462,6 +462,7 @@ model TemporaryLecture {
   price                        Int?                           @db.Integer
   //선금
   noShowDeposit                Int?                           @db.Integer
+  locationDescription          String?                        @db.VarChar(300)
   //생성일자
   createdAt                    DateTime                       @default(now()) @db.Timestamp(6)
   //수정일자
