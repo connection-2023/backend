@@ -15,6 +15,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
+import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -35,7 +36,7 @@ export class LectureReviewController {
     // );
   }
 
-  @ApiOperation({ summary: '리뷰 조회' })
+  @ApiReadManyLectureReview()
   @Get(':lectureId')
   async readManyLectureReview(
     @Query() query: ReadManyLectureReviewQueryDto,

@@ -150,6 +150,7 @@ model Lecture {
   stars               Int                   @default(0) @db.Integer
   //활성여부
   isActive            Boolean               @default(true) @db.Boolean
+  locationDescription String?               @db.VarChar(300)
   //생성일자
   createdAt           DateTime              @default(now()) @db.Timestamp(6)
   //수정일자
