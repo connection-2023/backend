@@ -120,6 +120,8 @@ model Lecture {
   lectureMethodId     Int
   //강의 인원
   isGroup             Boolean
+  startDate           DateTime
+  endDate             DateTime
   //강의명
   title               String                @db.VarChar(30)
   //강의 소개
@@ -444,6 +446,8 @@ model TemporaryLecture {
   lectureMethodId              Int?
   //강의 인원
   isGroup                      Boolean?
+  startDate                    DateTime?
+  endDate                      DateTime?
   //강의명
   title                        String?                        @db.VarChar(30)
   //강의 소개

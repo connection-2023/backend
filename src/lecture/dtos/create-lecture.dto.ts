@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -45,6 +46,26 @@ export class CreateLectureDto {
   @IsBoolean()
   @Type(() => Boolean)
   isGroup: boolean;
+
+  @ApiProperty({
+    example: 'Tue Oct 03 2023',
+    description: '강의 시작일',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsDate()
+  @Type(() => Date)
+  startDate: Date;
+
+  @ApiProperty({
+    example: 'Tue Oct 03 2023',
+    description: '강의 종료일',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsDate()
+  @Type(() => Date)
+  endDate: Date;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',
