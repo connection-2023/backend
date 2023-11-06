@@ -62,6 +62,26 @@ export class UpsertTemporaryLectureDto {
   @IsBoolean()
   isGroup?: boolean;
 
+  @ApiPropertyOptional({
+    example: 'Tue Oct 03 2023',
+    description: '강의 시작일',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  startDate?: Date;
+
+  @ApiPropertyOptional({
+    example: 'Tue Oct 03 2023',
+    description: '강의 종료일',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  endDate?: Date;
+
   @ApiProperty({
     example: '15일 영업 안합니다요',
     description: '강의 공지사항',

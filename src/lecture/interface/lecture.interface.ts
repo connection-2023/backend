@@ -1,5 +1,7 @@
 interface LectureInputData {
   isGroup: boolean;
+  startDate: Date;
+  endDate: Date;
   title: string;
   introduction?: string;
   curriculum: string;
