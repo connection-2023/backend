@@ -28,7 +28,7 @@ export class CouponRepository {
     }
   }
 
-  async getLecturerLecture(
+  async getLecturerLectures(
     lecturerId: number,
     lectureIds: number[],
   ): Promise<Id[]> {
@@ -143,6 +143,121 @@ export class CouponRepository {
       throw new InternalServerErrorException(
         `Prisma 유저 쿠폰 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+
+  async getLecturerCoupon(lecturerId, couponId): Promise<LectureCoupon> {
+    try {
+      return await this.prismaService.lectureCoupon.findFirst({
+        where: { id: couponId, lecturerId, deletedAt: null },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getUserCouponList(userId: number) {
+    try {
+      return await this.prismaService.userCoupon.findMany({
+        where: { userId },
+        select: {
+          isUsed: true,
+          lectureCoupon: {
+            select: {
+              title: true,
+              isPrivate: true,
+              maxUsageCount: true,
+              usageCount: true,
+              percentage: true,
+              discountPrice: true,
+              maxDiscountPrice: true,
+              startAt: true,
+              endAt: true,
+              isDisabled: true,
+              isStackable: true,
+              lectureCouponTarget: {
+                select: {
+                  lecture: { select: { id: true, title: true } },
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getLecturerIssuedCouponList(lecturerId: number) {
+    try {
+      return await this.prismaService.lectureCoupon.findMany({
+        where: { lecturerId },
+        select: {
+          title: true,
+          isPrivate: true,
+          maxUsageCount: true,
+          usageCount: true,
+          percentage: true,
+          discountPrice: true,
+          maxDiscountPrice: true,
+          startAt: true,
+          endAt: true,
+          isDisabled: true,
+          isStackable: true,
+          lectureCouponTarget: {
+            select: {
+              lecture: { select: { id: true, title: true } },
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getApplicableCouponsForLecture(lectureId: number) {
+    try {
+      return await this.prismaService.lectureCouponTarget.findMany({
+        where: {
+          lectureId,
+          lectureCoupon: { isPrivate: false, isDisabled: false },
+        },
+        select: {
+          lectureCoupon: {
+            select: {
+              id: true,
+              title: true,
+              maxUsageCount: true,
+              usageCount: true,
+              percentage: true,
+              discountPrice: true,
+              maxDiscountPrice: true,
+              isStackable: true,
+              startAt: true,
+              endAt: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
       );
     }
   }

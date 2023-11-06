@@ -9,7 +9,7 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiGetLectureCoupon() {
+export function ApiIssueCouponToUser() {
   return applyDecorators(
     ApiOperation({
       summary: '클래스 공개(public)쿠폰 받기',
