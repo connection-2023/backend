@@ -1,10 +1,21 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureReviewService } from '@src/lecture/services/lecture-review.service';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
+import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
+import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -23,5 +34,20 @@ export class LectureReviewController {
     //   authorizedData.user.id,
     //   createLectureReviewDto,
     // );
+  }
+
+  @ApiReadManyLectureReview()
+  @Get(':lectureId')
+  async readManyLectureReview(
+    @Query() query: ReadManyLectureReviewQueryDto,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const { orderBy } = query;
+    const review = await this.lectureReviewService.readManyLectureReview(
+      lectureId,
+      orderBy,
+    );
+
+    return { review };
   }
 }

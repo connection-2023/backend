@@ -79,7 +79,11 @@ export class LectureService {
 
         if (lectureMethod === '원데이') {
           const lectureScheduleInputData: LectureScheduleInputData[] =
-            this.createLectureScheduleInputData(newLecture.id, schedules);
+            this.createLectureScheduleInputData(
+              newLecture.id,
+              schedules,
+              lecture.duration,
+            );
           await this.lectureRepository.trxCreateLectureSchedule(
             transaction,
             lectureScheduleInputData,
@@ -89,6 +93,7 @@ export class LectureService {
             this.createRegularLectureScheduleInputData(
               newLecture.id,
               regularSchedules,
+              lecture.duration,
             );
           await this.lectureRepository.trxCreateLectureSchedule(
             transaction,
@@ -268,43 +273,15 @@ export class LectureService {
   }
 
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
-    const {
-      regions,
-      schedules,
-      regularSchedules,
-      genres,
-      etcGenres,
-      notification,
-      holidays,
-      images,
-      lectureMethod,
-      lectureType,
-      coupons,
-      ...lecture
-    } = updateLectureDto;
-
-    const regionIds: Id[] = await this.getValidRegionIds(regions);
+    const { images, coupons, ...lecture } = updateLectureDto;
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const lectureMethodId = await this.getLectureMethodId(lectureMethod);
-        const lectureTypeId = await this.getLectureTypeId(lectureType);
-
-        const updatedlecture = await this.lectureRepository.trxUpdateLecture(
+        const updatedLecture = await this.lectureRepository.trxUpdateLecture(
           transaction,
           lectureId,
           lecture,
         );
-
-        if (regions) {
-          const lectureToRegionInputData: LectureToRegionInputData[] =
-            this.createLectureToRegionInputData(lectureId, regionIds);
-          await this.lectureRepository.trxUpdateLectureToRegions(
-            transaction,
-            lectureId,
-            lectureToRegionInputData,
-          );
-        }
 
         if (images) {
           const lectureImageInputData: LectureImageInputData[] =
@@ -315,8 +292,14 @@ export class LectureService {
             lectureImageInputData,
           );
         }
+
+        return updatedLecture;
       },
     );
+  }
+
+  async readManyLectureSchedule(lectureId: number) {
+    return await this.lectureRepository.readManyLectureSchedules(lectureId);
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -408,13 +391,22 @@ export class LectureService {
   private createLectureScheduleInputData(
     lectureId: number,
     schedules: string[],
+    duration: number,
   ) {
     const scheduleInputData: LectureScheduleInputData[] = schedules.map(
-      (date) => ({
-        lectureId: lectureId,
-        startDateTime: new Date(date),
-        numberOfParticipants: 0,
-      }),
+      (date) => {
+        const startDateTime = new Date(date);
+        const endDateTime = new Date(
+          startDateTime.getTime() + duration * 60 * 60 * 1000,
+        );
+
+        return {
+          lectureId: lectureId,
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
+          numberOfParticipants: 0,
+        };
+      },
     );
     return scheduleInputData;
   }
@@ -518,14 +510,20 @@ export class LectureService {
   private createRegularLectureScheduleInputData(
     lectureId: number,
     regularSchedules: RegularLectureSchedules,
+    duration: number,
   ) {
     const regularScheduleInputData = [];
     for (const team in regularSchedules) {
       regularSchedules[team].map((date) => {
+        const startDateTime = new Date(date);
+        const endDateTime = new Date(
+          startDateTime.getTime() + duration * 60 * 60 * 1000,
+        );
         const regularSchedule = {
           lectureId,
           team,
-          startDateTime: new Date(date),
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
           numberOfParticipants: 0,
         };
         regularScheduleInputData.push(regularSchedule);

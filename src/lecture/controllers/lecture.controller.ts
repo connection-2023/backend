@@ -75,7 +75,6 @@ export class LectureController {
   @UseGuards(LecturerAccessTokenGuard)
   @Patch(':lectureId')
   async updateLecture(
-    @GetAuthorizedUser() authroizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
     @Body() updateLectureDto: UpdateLectureDto,
   ) {
@@ -83,5 +82,18 @@ export class LectureController {
       lectureId,
       updateLectureDto,
     );
+
+    return { updatedLecture };
+  }
+
+  @Get('schedules/:lectureId')
+  async readLectureSchedule(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const schedules = await this.lectureService.readManyLectureSchedule(
+      lectureId,
+    );
+
+    return { schedules };
   }
 }

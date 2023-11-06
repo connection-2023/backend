@@ -4,6 +4,7 @@ import {
   LectureSchedule,
   Region,
   LectureCoupon,
+  LectureCouponTarget,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
@@ -16,6 +17,7 @@ import {
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
 } from '@src/lecture/interface/lecture.interface';
+import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 
 @Injectable()
 export class LectureRepository {
@@ -116,44 +118,8 @@ export class LectureRepository {
       include: {
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
-        lectureReview: {
-          select: {
-            id: true,
-            userId: true,
-            users: {
-              select: {
-                nickname: true,
-                userProfileImage: { select: { imageUrl: true } },
-              },
-            },
-            stars: true,
-            description: true,
-          },
-        },
-        lectureNotification: { select: { notification: true } },
+        lectureNotification: true,
         lectureImage: { select: { imageUrl: true } },
-        lectureCouponTarget: {
-          select: {
-            lectureCoupon: {
-              select: {
-                id: true,
-                lecturerId: true,
-                title: true,
-                percentage: true,
-                discountPrice: true,
-                maxDiscountPrice: true,
-                maxUsageCount: true,
-                usageCount: true,
-                isStackable: true,
-                startAt: true,
-                endAt: true,
-              },
-            },
-          },
-          where: { lectureCoupon: { isDisabled: false } },
-        },
-        lectureSchedule: true,
-        lectureHoliday: { select: { holiday: true } },
         lectureToRegion: {
           select: {
             region: {
@@ -191,7 +157,7 @@ export class LectureRepository {
   async trxUpdateLecture(
     transaction: PrismaTransaction,
     lectureId: number,
-    lecture: LectureInputData,
+    lecture: UpdateLectureDto,
   ): Promise<Lecture> {
     return await transaction.lecture.update({
       where: { id: lectureId },
@@ -210,14 +176,11 @@ export class LectureRepository {
     });
   }
 
-  async trxUpdateLectureToRegions(
-    transaction: PrismaTransaction,
+  async readManyLectureSchedules(
     lectureId: number,
-    lectureToRegion: LectureToRegionInputData[],
-  ): Promise<void> {
-    await transaction.lectureToRegion.updateMany({
+  ): Promise<LectureSchedule[]> {
+    return await this.prismaService.lectureSchedule.findMany({
       where: { lectureId },
-      data: lectureToRegion,
     });
   }
 }
