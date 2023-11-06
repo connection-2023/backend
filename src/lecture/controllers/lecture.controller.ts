@@ -25,6 +25,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
+import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -86,6 +87,7 @@ export class LectureController {
     return { updatedLecture };
   }
 
+  @ApiReadManyLectureSchedule()
   @Get('schedules/:lectureId')
   async readLectureSchedule(
     @Param('lectureId', ParseIntPipe) lectureId: number,
