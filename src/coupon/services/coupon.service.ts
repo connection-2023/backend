@@ -11,16 +11,16 @@ import {
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
-import { LectureCoupon, UserCoupon } from '@prisma/client';
+import { LectureCoupon, LectureCouponTarget, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
-import { createCipheriv, Cipher } from 'crypto';
+import { createCipheriv, Cipher, createDecipheriv } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CouponService {
   private hexString: string;
   private iv: Buffer;
-  private key;
+  private key: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -141,10 +141,8 @@ export class CouponService {
       );
     }
 
-    const couponTarget = await this.couponRepository.getCouponTargets(
-      couponId,
-      lectureIds,
-    );
+    const couponTarget: LectureCouponTarget[] =
+      await this.couponRepository.getCouponTargets(couponId, lectureIds);
     if (couponTarget) {
       const couponTargetLectureIds = couponTarget.map(
         (couponTarget) => couponTarget.lectureId,
@@ -155,7 +153,10 @@ export class CouponService {
     return lectureIds;
   }
 
-  async issueCouponToUser(userId, couponId): Promise<void> {
+  async issuePublicCouponToUser(
+    userId: number,
+    couponId: number,
+  ): Promise<void> {
     const isOwn = false;
     const isPrivate = false;
     await this.checkUserCoupon(userId, couponId, isOwn, isPrivate);
@@ -294,5 +295,26 @@ export class CouponService {
     });
 
     return applicableCoupons;
+  }
+
+  async issuePrivateCouponToUser(
+    userId: number,
+    couponCode: string,
+  ): Promise<void> {
+    const couponId: number = this.decodeCouponCode(couponCode);
+    const isOwn = false;
+    const isPrivate = true;
+
+    await this.checkUserCoupon(userId, couponId, isOwn, isPrivate);
+
+    await this.couponRepository.createUserCoupon(userId, couponId);
+  }
+
+  private decodeCouponCode(couponCode): number {
+    const decipher = createDecipheriv('aes-128-cbc', this.key, this.iv);
+    let decodedCouponCode = decipher.update(couponCode, 'hex', 'utf8');
+    decodedCouponCode += decipher.final('utf8');
+
+    return parseInt(decodedCouponCode);
   }
 }

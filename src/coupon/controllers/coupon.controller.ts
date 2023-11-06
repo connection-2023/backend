@@ -13,15 +13,16 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiGetMyCouponList } from '@src/coupon/swagger-decorators/get-my-coupon-list.decorator';
 import { ApiGetMyIssuedCouponList } from '@src/coupon/swagger-decorators/get-my-issued-coupon-list.decorator';
-import { ApiIssueCouponToUser } from '@src/coupon/swagger-decorators/get-lecture-coupon.decorator';
+import { ApiIssuePublicCouponToUser } from '@src/coupon/swagger-decorators/issue-public-coupon-to-user.decorator';
 import { ApiCreateLectureCoupon } from '@src/coupon/swagger-decorators/create-lecture-coupon.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lecture-coupon.decorator';
 import { ApiGetApplicableCouponsForLecture } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
-import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/get-private-lectuer-coupon-code.decorator';
+import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/get-private-lecture-coupon-code.decorator';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
+import { ApiIssuePrivateCouponToUser } from '../swagger-decorators/issue-private-coupon-to-user.decorator';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
@@ -107,14 +108,27 @@ export class CouponController {
     return { privateCouponCode };
   }
 
-  @ApiIssueCouponToUser()
+  @ApiIssuePrivateCouponToUser()
+  @UseGuards(UserAccessTokenGuard)
+  @Post('/private/:couponCode/user')
+  async issuePrivateCouponToUser(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Param('couponCode') couponCode: string,
+  ) {
+    await this.couponService.issuePrivateCouponToUser(
+      AuthorizedData.user.id,
+      couponCode,
+    );
+  }
+
+  @ApiIssuePublicCouponToUser()
   @Post('/public/:couponId/user')
   @UseGuards(UserAccessTokenGuard)
-  async issueCouponToUser(
+  async issuePublicCouponToUser(
     @Param('couponId', ParseIntPipe) couponId: number,
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
   ) {
-    await this.couponService.issueCouponToUser(
+    await this.couponService.issuePublicCouponToUser(
       AuthorizedData.user.id,
       couponId,
     );
