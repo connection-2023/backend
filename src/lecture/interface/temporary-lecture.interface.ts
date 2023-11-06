@@ -25,6 +25,7 @@ interface TemporaryLectureToRegionInputData {
 interface TemporaryLectureScheduleInputData {
   lectureId: number;
   startDateTime?: Date;
+  endDateTime?: Date;
   numberOfParticipants?: number;
 }
 
@@ -32,6 +33,7 @@ interface RegularTemporaryLectureScheduleInputData {
   lectureId: number;
   team?: string;
   startDateTime?: Date;
+  endDateTime?: Date;
   numberOfParticipants?: number;
 }
 

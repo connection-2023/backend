@@ -4,15 +4,12 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
-  IsDate,
-  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
-  MaxLength,
 } from 'class-validator';
 import { RegularLectureSchedules } from '../interface/lecture.interface';
 

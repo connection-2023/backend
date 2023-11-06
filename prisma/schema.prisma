@@ -395,6 +395,7 @@ model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
   startDateTime        DateTime
+  endDateTime          DateTime
   numberOfParticipants Int
   team                 String?
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
@@ -485,6 +486,7 @@ model TemporaryLectureSchedule {
   id                   Int              @id @default(autoincrement())
   lectureId            Int
   startDateTime        DateTime?
+  endDateTime          DateTime?
   numberOfParticipants Int?
   team                 String?
   temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)

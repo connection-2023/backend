@@ -75,7 +75,6 @@ export class LectureController {
   @UseGuards(LecturerAccessTokenGuard)
   @Patch(':lectureId')
   async updateLecture(
-    @GetAuthorizedUser() authroizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
     @Body() updateLectureDto: UpdateLectureDto,
   ) {
