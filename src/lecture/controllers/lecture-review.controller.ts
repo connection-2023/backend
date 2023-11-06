@@ -30,10 +30,13 @@ export class LectureReviewController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLectureReviewDto: CreateLectureReviewDto,
   ) {
-    // return this.lectureReviewService.createLectureReview(
-    //   authorizedData.user.id,
-    //   createLectureReviewDto,
-    // );
+    const createdLectureReview =
+      await this.lectureReviewService.createLectureReview(
+        authorizedData.user.id,
+        createLectureReviewDto,
+      );
+
+    return { createdLectureReview };
   }
 
   @ApiReadManyLectureReview()

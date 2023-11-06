@@ -1,8 +1,9 @@
 import { PrismaService } from './../../prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { LectureReviewRepository } from '../repositories/lecture-review.repository';
 import { LectureReview } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
+import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -10,6 +11,28 @@ export class LectureReviewService {
     private readonly lectureReviewRespository: LectureReviewRepository,
     private readonly prismaService: PrismaService,
   ) {}
+
+  async createLectureReview(
+    userId: number,
+    createLectureReviewDto: CreateLectureReviewDto,
+  ) {
+    const existLectureReview =
+      await this.prismaService.lectureReview.findUnique({
+        where: { reservationId: createLectureReviewDto.reservationId },
+      });
+
+    if (existLectureReview) {
+      throw new BadRequestException('Exist Lecture Review');
+    }
+
+    const createdLectureReview =
+      await this.lectureReviewRespository.createLectureReview(
+        userId,
+        createLectureReviewDto,
+      );
+
+    return createdLectureReview;
+  }
 
   async readManyLectureReview(lectureId: number, orderBy: string) {
     const order = {};
@@ -30,13 +53,9 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    try {
-      return this.lectureReviewRespository.readManyLectureReviewByLecture(
-        lectureId,
-        order,
-      );
-    } catch (error) {
-      throw new error();
-    }
+    return this.lectureReviewRespository.readManyLectureReviewByLecture(
+      lectureId,
+      order,
+    );
   }
 }

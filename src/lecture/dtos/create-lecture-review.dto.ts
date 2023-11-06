@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateLectureReviewDto {
   @ApiProperty({ example: 1, description: '강의 id', required: true })
@@ -18,6 +25,8 @@ export class CreateLectureReviewDto {
   @ApiProperty({ example: 5, description: '평점', required: true })
   @IsNotEmpty()
   @IsNumber()
+  @Max(5)
+  @Min(0)
   @Type(() => Number)
   stars: number;
 
