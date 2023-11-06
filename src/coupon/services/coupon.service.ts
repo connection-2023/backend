@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,19 +13,13 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import { LectureCoupon, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-  createHash,
-} from 'crypto';
-import { promisify } from 'util';
+import { createCipheriv, Cipher } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CouponService {
-  private couponSecretKey: string;
-  private readonly iv = randomBytes(16);
+  private hexString: string;
+  private iv: Buffer;
   private key;
 
   constructor(
@@ -36,11 +29,9 @@ export class CouponService {
   ) {}
 
   onModuleInit() {
-    this.couponSecretKey = this.configService.get<string>('COUPON_SECRET_KEY');
-    this.key = createHash('sha256')
-      .update(String(this.couponSecretKey))
-      .digest('base64')
-      .substr(0, 16);
+    this.key = this.configService.get<string>('COUPON_SECRET_KEY');
+    this.hexString = this.configService.get<string>('HEX_STRING');
+    this.iv = Buffer.from(this.hexString, 'hex');
   }
 
   async createLectureCoupon(
@@ -164,7 +155,7 @@ export class CouponService {
     return lectureIds;
   }
 
-  async getLectureCoupon(userId, couponId): Promise<void> {
+  async issueCouponToUser(userId, couponId): Promise<void> {
     const isOwn = false;
     const isPrivate = false;
     await this.checkUserCoupon(userId, couponId, isOwn, isPrivate);
@@ -225,17 +216,22 @@ export class CouponService {
       }
     }
   }
-  async getPrivateLectureCouponCode(lecturerId: number, couponId: number) {
+  async getPrivateLectureCouponCode(
+    lecturerId: number,
+    couponId: number,
+  ): Promise<string> {
     const isPrivate = true;
     await this.checkLecturerCoupon(lecturerId, couponId, isPrivate);
 
-    const cipher = createCipheriv('aes-128-cbc', this.key, this.iv);
-    let encrypted = cipher.update(couponId.toString(), 'utf8', 'hex');
-    encrypted += cipher.final('hex');
+    const cipher: Cipher = createCipheriv('aes-128-cbc', this.key, this.iv);
+    let encryptedCode: string = cipher.update(
+      couponId.toString(),
+      'utf8',
+      'hex',
+    );
+    encryptedCode += cipher.final('hex');
 
-    const decipher = createDecipheriv('aes-128-cbc', this.key, this.iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+    return encryptedCode;
   }
 
   private async checkLecturerCoupon(

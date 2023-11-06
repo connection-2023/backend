@@ -15,7 +15,7 @@ export function ApiGetMyIssuedCouponList() {
     }),
     ApiBearerAuth(),
     ApiOkResponse(
-      SwaggerApiResponse.success('반환값 없음', {
+      SwaggerApiResponse.success('쿠폰 목록 반환', {
         statusCode: 200,
         data: {
           coupons: [
