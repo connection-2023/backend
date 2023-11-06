@@ -18,11 +18,12 @@ export function ApiReadOneTemporaryLecture() {
         statusCode: 200,
         data: {
           temporaryLecture: {
-            id: 2,
+            id: 111,
             lecturerId: 3,
             step: 2,
             lectureTypeId: 1,
             lectureMethodId: 1,
+            isGroup: true,
             title: '가비쌤과 함께하는 왁킹 클래스',
             introduction: '안녕하세용',
             curriculum: '첫날에 모하징',
@@ -31,21 +32,23 @@ export function ApiReadOneTemporaryLecture() {
             difficultyLevel: '상',
             minCapacity: 1,
             maxCapacity: 12,
-            reservationDeadline: '2023-10-03T00:00:00.000Z',
+            reservationDeadline: 1,
             reservationComment: '누구나 가능한!',
             price: 40000,
             noShowDeposit: 30000,
-            reviewCount: 0,
-            stars: 0,
-            isActive: true,
-            createdAt: '2023-10-24T10:17:24.486Z',
-            updatedAt: '2023-10-24T10:28:09.303Z',
+            locationDescription: '버스타고 한번에',
+            createdAt: '2023-11-05T21:52:06.078Z',
+            updatedAt: '2023-11-06T13:53:22.769Z',
             deletedAt: null,
-            temporaryLecturenotification: [
-              {
-                notification: '15일 영업 안합니다요',
-              },
-            ],
+            lectureType: {
+              name: 'dance',
+            },
+            lectureMethod: {
+              name: '원데이',
+            },
+            temporaryLecturenotification: {
+              notification: '15일 영업 안합니다요',
+            },
             temporaryLectureImage: [
               {
                 imageUrl: '이미지url1',
@@ -57,19 +60,28 @@ export function ApiReadOneTemporaryLecture() {
             temporaryLectureCouponTarget: [],
             temporaryLectureSchedule: [
               {
+                id: 43,
+                lectureId: 111,
                 startDateTime: '2023-10-03T11:00:00.000Z',
-                team: null,
+                endDateTime: '2023-10-03T13:00:00.000Z',
                 numberOfParticipants: 0,
+                team: null,
               },
               {
+                id: 44,
+                lectureId: 111,
                 startDateTime: '2023-10-03T11:00:00.000Z',
-                team: null,
+                endDateTime: '2023-10-03T13:00:00.000Z',
                 numberOfParticipants: 0,
+                team: null,
               },
               {
+                id: 45,
+                lectureId: 111,
                 startDateTime: '2023-10-03T11:00:00.000Z',
-                team: null,
+                endDateTime: '2023-10-03T13:00:00.000Z',
                 numberOfParticipants: 0,
+                team: null,
               },
             ],
             temporaryLectureToRegion: [

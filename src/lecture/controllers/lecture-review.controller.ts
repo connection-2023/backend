@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -39,6 +40,8 @@ export class LectureReviewController {
     return { createdLectureReview };
   }
 
+  @ApiOperation({ summary: '강의 리뷰 수정' })
+  @Patch(':lectureId')
   @ApiReadManyLectureReview()
   @Get(':lectureId')
   async readManyLectureReview(

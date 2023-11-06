@@ -165,13 +165,7 @@ export class LectureTemporarilySaveRepository {
         temporaryLecturenotification: { select: { notification: true } },
         temporaryLectureImage: { select: { imageUrl: true } },
         temporaryLectureCouponTarget: { select: { lectureCouponId: true } },
-        temporaryLectureSchedule: {
-          select: {
-            startDateTime: true,
-            team: true,
-            numberOfParticipants: true,
-          },
-        },
+        temporaryLectureSchedule: true,
         temporaryLectureToRegion: {
           select: {
             region: {

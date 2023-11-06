@@ -95,7 +95,11 @@ export class LectureTemporarilySaveService {
         if (schedules || regularSchedules) {
           if (lectureMethod === '원데이') {
             const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
-              this.createLectureScheduleInputData(lectureId, schedules);
+              this.createLectureScheduleInputData(
+                lectureId,
+                schedules,
+                lecture.duration,
+              );
             await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
               transaction,
               lectureId,
@@ -109,6 +113,7 @@ export class LectureTemporarilySaveService {
               this.createRegularLectureScheduleInputData(
                 lectureId,
                 regularSchedules,
+                lecture.duration,
               );
             await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
               transaction,
@@ -308,13 +313,22 @@ export class LectureTemporarilySaveService {
   private createLectureScheduleInputData(
     lectureId: number,
     schedules: string[],
+    duration: number,
   ) {
     const scheduleInputData: TemporaryLectureScheduleInputData[] =
-      schedules.map((date) => ({
-        lectureId: lectureId,
-        startDateTime: new Date(date),
-        numberOfParticipants: 0,
-      }));
+      schedules.map((date) => {
+        const startDateTime = new Date(date);
+        const endDateTime = new Date(
+          startDateTime.getTime() + duration * 60 * 60 * 1000,
+        );
+
+        return {
+          lectureId: lectureId,
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
+          numberOfParticipants: 0,
+        };
+      });
     return scheduleInputData;
   }
 
@@ -399,14 +413,20 @@ export class LectureTemporarilySaveService {
   private createRegularLectureScheduleInputData(
     lectureId: number,
     regularSchedules: RegularTemporaryLectureSchedules,
+    duration: number,
   ) {
     const regularScheduleInputData = [];
     for (const team in regularSchedules) {
       regularSchedules[team].map((date) => {
+        const startDateTime = new Date(date);
+        const endDateTime = new Date(
+          startDateTime.getTime() + duration * 60 * 60 * 1000,
+        );
         const regularSchedule = {
           lectureId,
           team,
-          startDateTime: new Date(date),
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
           numberOfParticipants: 0,
         };
         regularScheduleInputData.push(regularSchedule);
