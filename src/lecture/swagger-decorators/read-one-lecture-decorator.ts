@@ -37,6 +37,7 @@ export function ApiReadOneLecture() {
             reviewCount: 0,
             stars: 0,
             isActive: true,
+            locationDescription: null,
             createdAt: '2023-11-04T00:26:55.070Z',
             updatedAt: '2023-11-04T00:26:55.070Z',
             deletedAt: null,
@@ -46,9 +47,12 @@ export function ApiReadOneLecture() {
             lectureMethod: {
               name: '원데이',
             },
-            lectureReview: [],
             lectureNotification: {
+              id: 8,
+              lectureId: 17,
               notification: '15일 영업 안합니다요',
+              updatedAt: '2023-11-04T00:26:55.070Z',
+              deletedAt: null,
             },
             lectureImage: [
               {
@@ -56,41 +60,6 @@ export function ApiReadOneLecture() {
               },
               {
                 imageUrl: '이미지url2',
-              },
-            ],
-            lectureCouponTarget: [],
-            lectureSchedule: [
-              {
-                id: 42,
-                lectureId: 17,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-              {
-                id: 43,
-                lectureId: 17,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-              {
-                id: 44,
-                lectureId: 17,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-            ],
-            lectureHoliday: [
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
               },
             ],
             lectureToRegion: [
@@ -133,11 +102,6 @@ export function ApiReadOneLecture() {
                 },
               },
             ],
-            lecturer: {
-              id: 3,
-              profileCardImageUrl: null,
-              nickname: '올리버쌤',
-            },
           },
         },
       }),

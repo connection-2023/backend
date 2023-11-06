@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -30,12 +31,17 @@ export class LectureReviewController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLectureReviewDto: CreateLectureReviewDto,
   ) {
-    // return this.lectureReviewService.createLectureReview(
-    //   authorizedData.user.id,
-    //   createLectureReviewDto,
-    // );
+    const createdLectureReview =
+      await this.lectureReviewService.createLectureReview(
+        authorizedData.user.id,
+        createLectureReviewDto,
+      );
+
+    return { createdLectureReview };
   }
 
+  @ApiOperation({ summary: '강의 리뷰 수정' })
+  @Patch(':lectureId')
   @ApiReadManyLectureReview()
   @Get(':lectureId')
   async readManyLectureReview(
