@@ -50,7 +50,7 @@ export class LectureController {
   async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
     const lecture = await this.lectureService.readLecture(lectureId);
 
-    return { lecture };
+    return lecture;
   }
 
   @ApiOperation({ summary: '강의 모두 보기' })

@@ -484,6 +484,7 @@ model TemporaryLecture {
   temporaryLectureToRegion     TemporaryLectureToRegion[]
   temporaryLectureToDanceGenre TemporaryLectureToDanceGenre[]
   temporaryLectureHoliday      TemporaryLectureHoliday[]
+  temporaryLectureDay          TemporaryLectureDay[]
 }
 
 model TemporaryLectureSchedule {
@@ -703,4 +704,19 @@ model RefundStatus {
   id                        Int                         @id @default(autoincrement())
   name                      String
   virtualAccountPaymentInfo VirtualAccountPaymentInfo[]
+}
+
+model TemporaryLectureDay {
+  id                          Int                           @id @default(autoincrement())
+  lectureId                   Int
+  daysOfWeek                  String?
+  temporaryLecture            TemporaryLecture              @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  temporaryLectureDaySchedule TemporaryLectureDaySchedule[]
+}
+
+model TemporaryLectureDaySchedule {
+  id                  Int                 @id @default(autoincrement())
+  lectureDayId        Int
+  startDateTime       DateTime?
+  temporaryLectureDay TemporaryLectureDay @relation(fields: [lectureDayId], references: [id], onDelete: Cascade)
 }
