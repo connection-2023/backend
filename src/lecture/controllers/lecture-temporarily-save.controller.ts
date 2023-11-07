@@ -61,7 +61,7 @@ export class LectureTemporarilySaveController {
         authorizedData.lecturer.id,
         lectureId,
       );
-    return { temporaryLecture };
+    return temporaryLecture;
   }
 
   @ApiReadManyTemporaryLecture()
