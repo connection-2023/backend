@@ -11,7 +11,6 @@ export function ApiReadOneLecture() {
     ApiOperation({
       summary: '강의 상세조회',
     }),
-    ApiBearerAuth(),
     ApiCreatedResponse(
       SwaggerApiResponse.success('강의 상세조회 완료', {
         statusCode: 200,

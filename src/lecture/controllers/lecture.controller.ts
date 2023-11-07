@@ -62,8 +62,6 @@ export class LectureController {
   }
 
   @ApiOperation({ summary: '강의 삭제' })
-  @ApiBearerAuth()
-  @UseGuards(LecturerAccessTokenGuard)
   @Delete(':lectureId')
   async deleteLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
     const deletedLecture = await this.lectureService.deleteLecture(lectureId);
@@ -72,8 +70,6 @@ export class LectureController {
   }
 
   @ApiOperation({ summary: '강의 수정' })
-  @ApiBearerAuth()
-  @UseGuards(LecturerAccessTokenGuard)
   @Patch(':lectureId')
   async updateLecture(
     @Param('lectureId', ParseIntPipe) lectureId: number,

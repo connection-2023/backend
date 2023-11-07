@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -17,6 +18,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
 import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
+import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -41,7 +43,20 @@ export class LectureReviewController {
   }
 
   @ApiOperation({ summary: '강의 리뷰 수정' })
-  @Patch(':lectureId')
+  @Patch(':lectureReviewId')
+  async updateLectureReview(
+    @Param('lectureReviewId', ParseIntPipe) lectureReveiwId: number,
+    @Body() updateLectureReview: UpdateLectureReviewDto,
+  ) {
+    const updatedLectureReview =
+      await this.lectureReviewService.updateLectureReview(
+        lectureReveiwId,
+        updateLectureReview,
+      );
+
+    return { updatedLectureReview };
+  }
+
   @ApiReadManyLectureReview()
   @Get(':lectureId')
   async readManyLectureReview(
@@ -55,5 +70,16 @@ export class LectureReviewController {
     );
 
     return { review };
+  }
+
+  @ApiOperation({ summary: '강의 리뷰 삭제' })
+  @Delete(':lectureReviewId')
+  async deleteLectureReview(
+    @Param('lectureReviewId', ParseIntPipe) lectureReviewId: number,
+  ) {
+    const deletedLectureReview =
+      await this.lectureReviewService.deleteLectureReview(lectureReviewId);
+
+    return { deletedLectureReview };
   }
 }
