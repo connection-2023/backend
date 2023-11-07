@@ -11,31 +11,36 @@ export function ApiReadManyLectureSchedule() {
       SwaggerApiResponse.success('강의 리뷰 조회완료', {
         statusCode: 200,
         data: {
-          schedules: [
+          schedule: [
             {
-              id: 57,
-              lectureId: 21,
+              id: 69,
+              lectureId: 25,
               startDateTime: '2023-10-03T11:00:00.000Z',
               endDateTime: '2023-10-03T13:00:00.000Z',
               numberOfParticipants: 0,
               team: null,
             },
             {
-              id: 58,
-              lectureId: 21,
+              id: 70,
+              lectureId: 25,
               startDateTime: '2023-10-03T11:00:00.000Z',
               endDateTime: '2023-10-03T13:00:00.000Z',
               numberOfParticipants: 0,
               team: null,
             },
             {
-              id: 59,
-              lectureId: 21,
+              id: 71,
+              lectureId: 25,
               startDateTime: '2023-10-03T11:00:00.000Z',
               endDateTime: '2023-10-03T13:00:00.000Z',
               numberOfParticipants: 0,
               team: null,
             },
+          ],
+          holidayArr: [
+            '2023-10-03T11:00:00.000Z',
+            '2023-10-03T11:00:00.000Z',
+            '2023-10-03T11:00:00.000Z',
           ],
         },
       }),
