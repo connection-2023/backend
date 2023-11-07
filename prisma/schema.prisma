@@ -493,7 +493,6 @@ model TemporaryLectureSchedule {
   startDateTime        DateTime?
   endDateTime          DateTime?
   numberOfParticipants Int?
-  team                 String?
   temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
@@ -710,6 +709,7 @@ model TemporaryLectureDay {
   id                          Int                           @id @default(autoincrement())
   lectureId                   Int
   daysOfWeek                  String?
+  team                        String?
   temporaryLecture            TemporaryLecture              @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   temporaryLectureDaySchedule TemporaryLectureDaySchedule[]
 }
