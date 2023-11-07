@@ -2,7 +2,7 @@ import { LecturerRepository } from '@src/lecturer/repositories/lecturer.reposito
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, Region } from '@prisma/client';
+import { Lecture, LectureHoliday, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -294,7 +294,26 @@ export class LectureService {
   }
 
   async readManyLectureSchedule(lectureId: number) {
-    return await this.lectureRepository.readManyLectureSchedules(lectureId);
+    const calendar = await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const schedule =
+          await this.lectureRepository.trxReadManyLectureSchedule(
+            transaction,
+            lectureId,
+          );
+        const holiday = await this.lectureRepository.trxReadManyLectureHoliday(
+          transaction,
+          lectureId,
+        );
+
+        return { schedule, holiday };
+      },
+    );
+    const { schedule } = calendar;
+    const { holiday } = calendar;
+    const holidayArr = this.createLectureHolidayArr(holiday);
+
+    return { schedule, holidayArr };
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -538,5 +557,16 @@ export class LectureService {
         lectureId: lectureId,
       }));
     return lectureCouponTargetInputData;
+  }
+
+  private createLectureHolidayArr(holiday: LectureHoliday[]) {
+    const holidays = [];
+
+    holiday.map((holidayObj) => {
+      const { holiday } = holidayObj;
+      holidays.push(holiday);
+    });
+
+    return holidays;
   }
 }

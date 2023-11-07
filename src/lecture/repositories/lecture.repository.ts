@@ -6,6 +6,7 @@ import {
   LectureCoupon,
   LectureCouponTarget,
   LectureReview,
+  LectureHoliday,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
@@ -177,10 +178,20 @@ export class LectureRepository {
     });
   }
 
-  async readManyLectureSchedules(
+  async trxReadManyLectureSchedule(
+    transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<LectureSchedule[]> {
-    return await this.prismaService.lectureSchedule.findMany({
+    return await transaction.lectureSchedule.findMany({
+      where: { lectureId },
+    });
+  }
+
+  async trxReadManyLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<LectureHoliday[]> {
+    return await transaction.lectureHoliday.findMany({
       where: { lectureId },
     });
   }

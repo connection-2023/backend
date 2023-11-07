@@ -92,6 +92,6 @@ export class LectureController {
       lectureId,
     );
 
-    return { schedules };
+    return schedules;
   }
 }
