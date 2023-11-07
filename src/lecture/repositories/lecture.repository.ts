@@ -5,6 +5,7 @@ import {
   Region,
   LectureCoupon,
   LectureCouponTarget,
+  LectureReview,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';

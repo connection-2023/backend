@@ -17,6 +17,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
 import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
+import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -41,7 +42,20 @@ export class LectureReviewController {
   }
 
   @ApiOperation({ summary: '강의 리뷰 수정' })
-  @Patch(':lectureId')
+  @Patch(':lectureReviewId')
+  async updateLectureReview(
+    @Param('lectureReviewId', ParseIntPipe) lectureReveiwId: number,
+    @Body() updateLectureReviewDto: UpdateLectureReviewDto,
+  ) {
+    const updatedLectureReview =
+      await this.lectureReviewService.updateLectureReview(
+        lectureReveiwId,
+        updateLectureReviewDto,
+      );
+
+    return { updatedLectureReview };
+  }
+
   @ApiReadManyLectureReview()
   @Get(':lectureId')
   async readManyLectureReview(

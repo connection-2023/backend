@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LectureReview } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
+import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -32,6 +33,16 @@ export class LectureReviewRepository {
         lecture: true,
       },
       orderBy: order,
+    });
+  }
+
+  async updateLectureReview(
+    lectureReviewId: number,
+    review: UpdateLectureReviewDto,
+  ): Promise<LectureReview> {
+    return await this.prismaService.lectureReview.update({
+      where: { id: lectureReviewId },
+      data: { ...review },
     });
   }
 }

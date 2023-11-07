@@ -4,6 +4,7 @@ import { LectureReviewRepository } from '../repositories/lecture-review.reposito
 import { LectureReview } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
+import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -53,9 +54,19 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    return this.lectureReviewRespository.readManyLectureReviewByLecture(
+    return await this.lectureReviewRespository.readManyLectureReviewByLecture(
       lectureId,
       order,
+    );
+  }
+
+  async updateLectureReview(
+    lectureReviewId: number,
+    review: UpdateLectureReviewDto,
+  ) {
+    return await this.lectureReviewRespository.updateLectureReview(
+      lectureReviewId,
+      review,
     );
   }
 }
