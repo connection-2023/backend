@@ -22,7 +22,7 @@ export class LectureReviewRepository {
     order,
   ): Promise<LectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
-      where: { lectureId },
+      where: { lectureId, deletedAt: null },
       include: {
         reservation: {
           select: { lectureSchedule: { select: { startDateTime: true } } },
@@ -43,6 +43,13 @@ export class LectureReviewRepository {
     return await this.prismaService.lectureReview.update({
       where: { id: lectureReviewId },
       data: { ...review },
+    });
+  }
+
+  async deleteLectureReview(lectureReviewId: number): Promise<LectureReview> {
+    return await this.prismaService.lectureReview.update({
+      where: { id: lectureReviewId },
+      data: { deletedAt: new Date() },
     });
   }
 }

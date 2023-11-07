@@ -69,4 +69,10 @@ export class LectureReviewService {
       review,
     );
   }
+
+  async deleteLectureReview(lectureReviewId: number) {
+    return await this.lectureReviewRespository.deleteLectureReview(
+      lectureReviewId,
+    );
+  }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -45,12 +46,12 @@ export class LectureReviewController {
   @Patch(':lectureReviewId')
   async updateLectureReview(
     @Param('lectureReviewId', ParseIntPipe) lectureReveiwId: number,
-    @Body() updateLectureReviewDto: UpdateLectureReviewDto,
+    @Body() updateLectureReview: UpdateLectureReviewDto,
   ) {
     const updatedLectureReview =
       await this.lectureReviewService.updateLectureReview(
         lectureReveiwId,
-        updateLectureReviewDto,
+        updateLectureReview,
       );
 
     return { updatedLectureReview };
@@ -69,5 +70,16 @@ export class LectureReviewController {
     );
 
     return { review };
+  }
+
+  @ApiOperation({ summary: '강의 리뷰 삭제' })
+  @Delete(':lectureReviewId')
+  async deleteLectureReview(
+    @Param('lectureReviewId', ParseIntPipe) lectureReviewId: number,
+  ) {
+    const deletedLectureReview =
+      await this.lectureReviewService.deleteLectureReview(lectureReviewId);
+
+    return { deletedLectureReview };
   }
 }
