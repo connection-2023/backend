@@ -273,7 +273,8 @@ export class LectureService {
   }
 
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
-    const { images, coupons, ...lecture } = updateLectureDto;
+    const { images, coupons, holidays, notification, ...lecture } =
+      updateLectureDto;
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -290,6 +291,21 @@ export class LectureService {
             transaction,
             lectureId,
             lectureImageInputData,
+          );
+        }
+
+        if (coupons) {
+          await this.lectureRepository.trxDeleteLectureCouponTarget(
+            transaction,
+            lectureId,
+          );
+
+          const lectureCounponTargetInputData =
+            this.createLectureCouponTargetInputData(lectureId, coupons);
+
+          await this.lectureRepository.trxCreateLectureCouponTarget(
+            transaction,
+            lectureCounponTargetInputData,
           );
         }
 

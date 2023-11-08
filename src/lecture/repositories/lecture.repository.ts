@@ -96,6 +96,7 @@ export class LectureRepository {
       data: { lectureId, notification },
     });
   }
+
   async trxCreateLectureHoliday(
     transaction: PrismaTransaction,
     lectureHoliday: LectureHolidayInputData[],
@@ -194,5 +195,12 @@ export class LectureRepository {
     return await transaction.lectureHoliday.findMany({
       where: { lectureId },
     });
+  }
+
+  async trxDeleteLectureCouponTarget(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureCouponTarget.deleteMany({ where: { lectureId } });
   }
 }
