@@ -286,6 +286,14 @@ export class LectureService {
           lecture,
         );
 
+        if (notification) {
+          await transaction.lectureNotification.upsert({
+            where: { lectureId },
+            create: { lectureId, notification },
+            update: { notification },
+          });
+        }
+
         if (images) {
           const lectureImageInputData: LectureImageInputData[] =
             this.createLectureImageInputData(lectureId, images);
