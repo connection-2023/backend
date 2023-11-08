@@ -143,8 +143,6 @@ export class LectureRepository {
     skip: number,
     take: number,
   ): Promise<Lecture[]> {
-    console.log(where);
-
     return await this.prismaService.lecture.findMany({
       where: { ...where, deletedAt: null },
       orderBy: order,

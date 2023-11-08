@@ -21,6 +21,7 @@ import {
 } from '../interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
+import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 
 @Injectable()
 export class LectureService {
@@ -30,6 +31,7 @@ export class LectureService {
     private readonly lecturerRepository: LecturerRepository,
     private readonly queryFilter: QueryFilter,
     private readonly prismaService: PrismaService,
+    private readonly couponRepository: CouponRepository,
   ) {}
 
   async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
@@ -295,13 +297,23 @@ export class LectureService {
         }
 
         if (coupons) {
+          for (const couponId of coupons) {
+            const lectureCoupon = await this.couponRepository.getLectureCoupon(
+              couponId,
+            );
+
+            if (!lectureCoupon) {
+              throw new BadRequestException('해당 쿠폰은 존재하지 않습니다.');
+            }
+          }
+
+          const lectureCounponTargetInputData =
+            this.createLectureCouponTargetInputData(lectureId, coupons);
+
           await this.lectureRepository.trxDeleteLectureCouponTarget(
             transaction,
             lectureId,
           );
-
-          const lectureCounponTargetInputData =
-            this.createLectureCouponTargetInputData(lectureId, coupons);
 
           await this.lectureRepository.trxCreateLectureCouponTarget(
             transaction,
