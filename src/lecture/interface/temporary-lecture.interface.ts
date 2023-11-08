@@ -60,12 +60,27 @@ interface TemporaryLectureHolidayInputData {
 }
 
 interface RegularTemporaryLectureSchedules {
-  regularSchedules?: { [key: string]: string[] };
+  regularSchedules?: { [team: string]: { [day: string]: string[] } };
 }
 
 interface TemporaryLectureCouponTargetInputData {
   lectureCouponId: number;
   lectureId: number;
+}
+
+interface TemporaryLectureDaySchedules {
+  regularSchedules: { [key: string]: string[] };
+}
+
+interface TemporaryLectureDayInputData {
+  lectureId: number;
+  daysOfWeek: string;
+  team?: string;
+}
+
+interface TemporaryLectureDayScheduleInpuData {
+  lectureDayId: number;
+  startDateTime: Date;
 }
 
 export {
@@ -79,4 +94,7 @@ export {
   RegularTemporaryLectureSchedules,
   RegularTemporaryLectureScheduleInputData,
   TemporaryLectureCouponTargetInputData,
+  TemporaryLectureDaySchedules,
+  TemporaryLectureDayInputData,
+  TemporaryLectureDayScheduleInpuData,
 };

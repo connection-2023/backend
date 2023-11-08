@@ -148,7 +148,12 @@ export class LectureService {
   }
 
   async readLecture(lectureId: number) {
-    return await this.lectureRepository.readLecture(lectureId);
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+
+    return { lecture, lecturer };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {

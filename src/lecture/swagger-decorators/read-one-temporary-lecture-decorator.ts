@@ -18,12 +18,14 @@ export function ApiReadOneTemporaryLecture() {
         statusCode: 200,
         data: {
           temporaryLecture: {
-            id: 111,
+            id: 114,
             lecturerId: 3,
             step: 2,
             lectureTypeId: 1,
             lectureMethodId: 1,
             isGroup: true,
+            startDate: '2023-10-02T15:00:00.000Z',
+            endDate: '2023-10-02T15:00:00.000Z',
             title: '가비쌤과 함께하는 왁킹 클래스',
             introduction: '안녕하세용',
             curriculum: '첫날에 모하징',
@@ -37,8 +39,8 @@ export function ApiReadOneTemporaryLecture() {
             price: 40000,
             noShowDeposit: 30000,
             locationDescription: '버스타고 한번에',
-            createdAt: '2023-11-05T21:52:06.078Z',
-            updatedAt: '2023-11-06T13:53:22.769Z',
+            createdAt: '2023-11-06T15:43:28.452Z',
+            updatedAt: '2023-11-07T19:10:44.962Z',
             deletedAt: null,
             lectureType: {
               name: 'dance',
@@ -57,31 +59,12 @@ export function ApiReadOneTemporaryLecture() {
                 imageUrl: '이미지url2',
               },
             ],
-            temporaryLectureCouponTarget: [],
-            temporaryLectureSchedule: [
+            temporaryLectureCouponTarget: [
               {
-                id: 43,
-                lectureId: 111,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                endDateTime: '2023-10-03T13:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
+                lectureCouponId: 1,
               },
               {
-                id: 44,
-                lectureId: 111,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                endDateTime: '2023-10-03T13:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-              {
-                id: 45,
-                lectureId: 111,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                endDateTime: '2023-10-03T13:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
+                lectureCouponId: 2,
               },
             ],
             temporaryLectureToRegion: [
@@ -135,6 +118,64 @@ export function ApiReadOneTemporaryLecture() {
                 holiday: '2023-10-03T11:00:00.000Z',
               },
             ],
+          },
+          temporaryLectureDateSchedule: [
+            '2023-10-03T11:00:00.000Z',
+            '2023-10-03T11:00:00.000Z',
+            '2023-10-03T11:00:00.000Z',
+          ],
+          temporaryLectureDaySchedule: {
+            월: [
+              '2023-10-03T11:00:00.000Z',
+              '2023-10-03T11:00:00.000Z',
+              '2023-10-03T11:00:00.000Z',
+            ],
+            수: [
+              '2023-10-03T11:00:00.000Z',
+              '2023-10-03T11:00:00.000Z',
+              '2023-10-03T11:00:00.000Z',
+            ],
+            금: [
+              '2023-10-03T11:00:00.000Z',
+              '2023-10-03T11:00:00.000Z',
+              '2023-10-03T11:00:00.000Z',
+            ],
+          },
+          ifRegularTemporaryLectureDaySchedule: {
+            A: {
+              월: [
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+              ],
+              수: [
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+              ],
+              금: [
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+              ],
+            },
+            B: {
+              월: [
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+              ],
+              수: [
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+              ],
+              금: [
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+                '2023-10-03T11:00:00.000Z',
+              ],
+            },
           },
         },
       }),

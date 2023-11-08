@@ -12,7 +12,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { RegularLectureSchedules } from '../interface/lecture.interface';
+import {
+  RegularTemporaryLectureSchedules,
+  TemporaryLectureDaySchedules,
+} from '../interface/temporary-lecture.interface';
 
 export class UpsertTemporaryLectureDto {
   @ApiProperty({ example: 2, description: '임시 강의 id', required: true })
@@ -233,23 +236,72 @@ export class UpsertTemporaryLectureDto {
 
   @ApiProperty({
     example: {
-      A: [
+      월: [
         'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
         'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
         'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
       ],
-      B: [
+      수: [
         'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
         'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
         'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
       ],
+      금: [
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      ],
+    },
+    description: '클래스 일정',
+    required: false,
+  })
+  @IsObject()
+  @IsOptional()
+  daySchedules?: TemporaryLectureDaySchedules;
+
+  @ApiProperty({
+    example: {
+      A: {
+        월: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+        수: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+        금: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+      B: {
+        월: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+        수: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+        금: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
     },
     description: '정기 클래스일 때 일정',
     required: false,
   })
   @IsObject()
   @IsOptional()
-  regularSchedules?: RegularLectureSchedules;
+  regularSchedules?: RegularTemporaryLectureSchedules;
 
   @ApiProperty({
     example: [
