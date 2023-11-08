@@ -79,7 +79,7 @@ export class CreateLectureCouponDto {
 
   //진행 기간
   @ApiProperty({
-    example: '2023-01-19',
+    example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     description: '쿠폰 적용 시작 날짜',
     required: true,
   })
@@ -88,7 +88,7 @@ export class CreateLectureCouponDto {
   startAt: Date;
 
   @ApiProperty({
-    example: '2024-01-19',
+    example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
     description: '쿠폰 적용 종료 날짜',
     required: true,
   })
@@ -104,6 +104,15 @@ export class CreateLectureCouponDto {
   @IsBoolean()
   @IsNotEmpty()
   isStackable: boolean;
+
+  @ApiProperty({
+    example: true,
+    description: '쿠폰 비활성화 여부',
+    required: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  isPrivate: boolean;
 
   @ApiProperty({
     example: [1, 2],

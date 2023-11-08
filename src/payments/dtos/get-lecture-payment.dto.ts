@@ -78,15 +78,6 @@ export class GetLecturePaymentDto {
   stackableCouponId: number;
 
   @ApiProperty({
-    example: '카드 or 가상계좌',
-    description: '결제방식',
-    required: true,
-  })
-  @IsEnum(PaymentMethods)
-  @IsNotEmpty()
-  method: PaymentMethods;
-
-  @ApiProperty({
     example: '김현수',
     description: '대표자 이름',
     required: true,

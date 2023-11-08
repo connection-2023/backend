@@ -109,7 +109,6 @@ export class PaymentsService implements OnModuleInit {
       orderId: getLecturePaymentDto.orderId,
       orderName: getLecturePaymentDto.orderName,
       value: getLecturePaymentDto.price,
-      method: getLecturePaymentDto.method,
     };
 
     return lecturePaymentInfo;
@@ -124,7 +123,6 @@ export class PaymentsService implements OnModuleInit {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const paymentInfo = {
-          method: getLecturePaymentDto.method,
           orderName: getLecturePaymentDto.orderName,
           price: getLecturePaymentDto.price,
           orderId: getLecturePaymentDto.orderId,
@@ -219,7 +217,7 @@ export class PaymentsService implements OnModuleInit {
   //적용할 쿠폰이 올바른지 확인
   private async checkApplicableCoupon(lectureId, couponId, stackableCouponId) {
     const couponIds: number[] = [couponId, stackableCouponId].filter(
-      (id) => id !== null,
+      (id) => id != null && id !== undefined,
     );
 
     const couponTarget: LectureCouponUseage[] =
@@ -543,7 +541,7 @@ export class PaymentsService implements OnModuleInit {
   private async confirmPaymentTransaction(
     paymentId: number,
     paymentInfo: TossPaymentsConfirmResponse,
-  ) {
+  ): Promise<IPaymentResult> {
     const paymentResult = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         if (paymentInfo.card) {
@@ -556,6 +554,7 @@ export class PaymentsService implements OnModuleInit {
             transaction,
             paymentId,
             PaymentOrderStatus.DONE,
+            PaymentMethods.카드,
           );
         }
         if (paymentInfo.virtualAccount) {
@@ -568,6 +567,7 @@ export class PaymentsService implements OnModuleInit {
             transaction,
             paymentId,
             PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+            PaymentMethods.가상계좌,
           );
         }
       },
