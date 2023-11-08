@@ -74,7 +74,7 @@ export class LectureService {
 
         const lectureImageInputData: LectureImageInputData[] =
           this.createLectureImageInputData(newLecture.id, images);
-        await this.lectureRepository.trxCreateLectureImg(
+        await this.lectureRepository.trxCreateLectureImage(
           transaction,
           lectureImageInputData,
         );
@@ -289,9 +289,13 @@ export class LectureService {
         if (images) {
           const lectureImageInputData: LectureImageInputData[] =
             this.createLectureImageInputData(lectureId, images);
-          await this.lectureRepository.trxUpdateLectureImage(
+
+          await this.lectureRepository.trxDeleteLectureImage(
             transaction,
             lectureId,
+          );
+          await this.lectureRepository.trxCreateLectureImage(
+            transaction,
             lectureImageInputData,
           );
         }
