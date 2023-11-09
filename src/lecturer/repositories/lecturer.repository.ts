@@ -16,7 +16,7 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { Lecturer } from '@prisma/client';
+import { LectureLocation, Lecturer } from '@prisma/client';
 import { PrismaClientValidationError } from '@prisma/client/runtime';
 
 @Injectable()

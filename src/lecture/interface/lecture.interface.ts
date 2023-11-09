@@ -71,6 +71,19 @@ interface LectureOrderBy {
   price?: string;
 }
 
+interface LectureLocation {
+  address: string;
+  detailAddress: string;
+  buildingName: string;
+}
+
+interface LectureLocationInputData {
+  lectureId: number;
+  address: string;
+  detailAddress: string;
+  buildingName: string;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -83,4 +96,6 @@ export {
   RegularLectureScheduleInputData,
   LectureCouponTargetInputData,
   LectureOrderBy,
+  LectureLocation,
+  LectureLocationInputData,
 };

@@ -37,6 +37,7 @@ export class LectureService {
   async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
     const {
       regions,
+      location,
       schedules,
       regularSchedules,
       genres,
@@ -63,6 +64,16 @@ export class LectureService {
           lectureMethodId,
           lectureTypeId,
           lecture,
+        );
+
+        const lectureLocationInputData = {
+          lectureId: newLecture.id,
+          ...location,
+        };
+
+        await this.lectureRepository.trxCreateLectureLocation(
+          transaction,
+          lectureLocationInputData,
         );
 
         const lectureToRegionInputData: LectureToRegionInputData[] =
@@ -154,8 +165,11 @@ export class LectureService {
     const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
       lecture.lecturerId,
     );
+    const lectureLocation = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
 
-    return { lecture, lecturer };
+    return { lecture, lecturer, lectureLocation };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {

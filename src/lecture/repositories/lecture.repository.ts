@@ -15,6 +15,8 @@ import {
   LectureHolidayInputData,
   LectureImageInputData,
   LectureInputData,
+  LectureLocation,
+  LectureLocationInputData,
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
@@ -39,6 +41,15 @@ export class LectureRepository {
         lectureTypeId,
         ...lecture,
       },
+    });
+  }
+
+  async trxCreateLectureLocation(
+    transaction: PrismaTransaction,
+    lectureLocationInputData: LectureLocationInputData,
+  ): Promise<void> {
+    await transaction.lectureLocation.create({
+      data: lectureLocationInputData,
     });
   }
 
@@ -173,17 +184,6 @@ export class LectureRepository {
     });
   }
 
-  async trxUpdateLectureImage(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    lectureImg: LectureImageInputData[],
-  ): Promise<void> {
-    await transaction.lectureImage.updateMany({
-      where: { lectureId },
-      data: lectureImg,
-    });
-  }
-
   async trxReadManyLectureSchedule(
     transaction: PrismaTransaction,
     lectureId: number,
@@ -207,5 +207,11 @@ export class LectureRepository {
     lectureId: number,
   ): Promise<void> {
     await transaction.lectureCouponTarget.deleteMany({ where: { lectureId } });
+  }
+
+  async readLectureLocation(lectureId: number): Promise<LectureLocation> {
+    return await this.prismaService.lectureLocation.findUnique({
+      where: { lectureId },
+    });
   }
 }

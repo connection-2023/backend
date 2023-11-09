@@ -14,6 +14,7 @@ import {
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureInputData,
+  TemporaryLectureLocationInputData,
   TemporaryLectureScheduleInputData,
   TemporaryLectureToDanceGenreInputData,
   TemporaryLectureToRegionInputData,
@@ -187,14 +188,14 @@ export class LectureTemporarilySaveRepository {
     });
   }
 
-  async trxDeleteLectureDay(
+  async trxDeleteTemporaryLectureDay(
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {
     await transaction.temporaryLectureDay.deleteMany({ where: { lectureId } });
   }
 
-  async trxCreateLectureDay(
+  async trxCreateTemporaryLectureDay(
     transaction: PrismaTransaction,
     temporaryLectureDayInputData: TemporaryLectureDayInputData,
   ): Promise<TemporaryLectureDay> {
@@ -203,7 +204,7 @@ export class LectureTemporarilySaveRepository {
     });
   }
 
-  async trxDeleteLectureDaySchedule(
+  async trxDeleteTemporaryLectureDaySchedule(
     transaction: PrismaTransaction,
     lectureDayId: number,
   ): Promise<void> {
@@ -212,12 +213,23 @@ export class LectureTemporarilySaveRepository {
     });
   }
 
-  async trxCreateLectureDaySchedule(
+  async trxCreateTemporaryLectureDaySchedule(
     transaction: PrismaTransaction,
     temporaryLectureDayScheduleInputData: TemporaryLectureDayScheduleInpuData[],
   ): Promise<void> {
     await transaction.temporaryLectureDaySchedule.createMany({
       data: temporaryLectureDayScheduleInputData,
+    });
+  }
+
+  async trxUpsertTemporaryLectureLocation(
+    transaction: PrismaTransaction,
+    temporaryLectureLocationInputData: TemporaryLectureLocationInputData,
+  ): Promise<void> {
+    await transaction.temporaryLectureLocation.upsert({
+      where: { lectureId: temporaryLectureLocationInputData.lectureId },
+      update: temporaryLectureLocationInputData,
+      create: temporaryLectureLocationInputData,
     });
   }
 }

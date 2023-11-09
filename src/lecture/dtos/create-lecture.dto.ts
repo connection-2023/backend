@@ -12,7 +12,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { RegularLectureSchedules } from '../interface/lecture.interface';
+import {
+  LectureLocation,
+  RegularLectureSchedules,
+} from '../interface/lecture.interface';
 
 export class CreateLectureDto {
   @ApiProperty({
@@ -132,13 +135,17 @@ export class CreateLectureDto {
   curriculum: string;
 
   @ApiProperty({
-    example: '용마산로 616 18층',
-    description: '상세주소',
+    example: {
+      address: '서울특별시 중랑구 용마산로616',
+      detailAddress: '101동 1802호',
+      buildingName: '새한아파트',
+    },
+    description: '위치 주소',
     required: true,
   })
   @IsNotEmpty()
-  @IsString()
-  detailAddress: string;
+  @IsObject()
+  location: LectureLocation;
 
   @ApiProperty({ example: 2, description: '강의시간', required: true })
   @IsNotEmpty()

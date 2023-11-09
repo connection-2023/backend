@@ -128,8 +128,6 @@ model Lecture {
   introduction        String?               @db.VarChar(500)
   //커리큘럼
   curriculum          String                @db.Text
-  //상세 주소
-  detailAddress       String?               @db.VarChar(30)
   //강의 시간
   duration            Int                   @db.Integer
   //난이도
@@ -171,6 +169,7 @@ model Lecture {
   lectureToRegion     LectureToRegion[]
   lectureToDanceGenre LectureToDanceGenre[]
   lectureHoliday      LectureHoliday[]
+  lectureLocation     LectureLocation?
 }
 
 model DanceCategory {
@@ -454,8 +453,6 @@ model TemporaryLecture {
   introduction                 String?                        @db.VarChar(500)
   //커리큘럼
   curriculum                   String?                        @db.Text
-  //상세 주소
-  detailAddress                String?                        @db.VarChar(30)
   //강의 시간
   duration                     Int?                           @db.Integer
   //난이도
@@ -490,6 +487,7 @@ model TemporaryLecture {
   temporaryLectureToDanceGenre TemporaryLectureToDanceGenre[]
   temporaryLectureHoliday      TemporaryLectureHoliday[]
   temporaryLectureDay          TemporaryLectureDay[]
+  temporaryLectureLocation     TemporaryLectureLocation?
 }
 
 model TemporaryLectureSchedule {
@@ -724,4 +722,26 @@ model TemporaryLectureDaySchedule {
   lectureDayId        Int
   startDateTime       DateTime?
   temporaryLectureDay TemporaryLectureDay @relation(fields: [lectureDayId], references: [id], onDelete: Cascade)
+}
+
+model LectureLocation {
+  id            Int     @id @default(autoincrement())
+  lectureId     Int     @unique
+  address       String
+  //상세주소
+  detailAddress String
+  //건물명
+  buildingName  String
+  lecture       Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+}
+
+model TemporaryLectureLocation {
+  id               Int              @id @default(autoincrement())
+  lectureId        Int              @unique
+  address          String?
+  //상세주소
+  detailAddress    String?
+  //건물명
+  buildingName     String?
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
