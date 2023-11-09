@@ -12,14 +12,6 @@ export class ConfirmLecturePaymentDto {
   paymentKey: string;
 
   @ApiProperty({
-    example: '단스강의',
-    description: '주문명',
-    required: true,
-  })
-  @IsNotEmpty()
-  orderName: string;
-
-  @ApiProperty({
     example: 'cc10dc81-d865-43e4-a0bd-24db45b316b5',
     description: '주문Id UUID',
     required: true,
