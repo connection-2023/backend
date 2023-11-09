@@ -732,7 +732,7 @@ model LectureLocation {
   detailAddress String
   //건물명
   buildingName  String
-  lecture       Lecture @relation(fields: [lectureId], references: [id])
+  lecture       Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model TemporaryLectureLocation {
@@ -743,5 +743,5 @@ model TemporaryLectureLocation {
   detailAddress    String?
   //건물명
   buildingName     String?
-  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id])
+  temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }

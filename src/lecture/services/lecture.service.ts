@@ -165,8 +165,11 @@ export class LectureService {
     const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
       lecture.lecturerId,
     );
+    const lectureLocation = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
 
-    return { lecture, lecturer };
+    return { lecture, lecturer, lectureLocation };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {

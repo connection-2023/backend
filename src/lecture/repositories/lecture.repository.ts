@@ -15,6 +15,7 @@ import {
   LectureHolidayInputData,
   LectureImageInputData,
   LectureInputData,
+  LectureLocation,
   LectureLocationInputData,
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
@@ -206,5 +207,11 @@ export class LectureRepository {
     lectureId: number,
   ): Promise<void> {
     await transaction.lectureCouponTarget.deleteMany({ where: { lectureId } });
+  }
+
+  async readLectureLocation(lectureId: number): Promise<LectureLocation> {
+    return await this.prismaService.lectureLocation.findUnique({
+      where: { lectureId },
+    });
   }
 }
