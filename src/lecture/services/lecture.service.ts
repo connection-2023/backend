@@ -326,7 +326,7 @@ export class LectureService {
               createNewSchedule,
               duration,
             );
-          const updatedHolidaySchedule =
+          const createdHolidaySchedule =
             await this.lectureRepository.trxCreateLectureSchedule(
               transaction,
               createNewScheduleInputData,
@@ -680,8 +680,6 @@ export class LectureService {
             new Date(oldHoliday).toISOString(),
         ),
     );
-
-    console.log(deleteOldSchedule, createNewSchedule);
 
     return { createNewSchedule, deleteOldSchedule };
   }
