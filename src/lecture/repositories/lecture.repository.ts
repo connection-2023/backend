@@ -218,15 +218,29 @@ export class LectureRepository {
   async trxDeleteManyOldSchedule(
     transaction: PrismaTransaction,
     lectureId: number,
-    deleteOldSchedule: Date[],
+    OldSchedule: Date[],
   ): Promise<void> {
     await transaction.lectureSchedule.deleteMany({
       where: {
         lectureId: lectureId,
         startDateTime: {
-          in: deleteOldSchedule.map((date) => new Date(date)),
+          in: OldSchedule.map((date) => new Date(date)),
         },
       },
     });
+  }
+
+  async trxDeleteManyLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureHoliday.deleteMany({ where: { lectureId } });
+  }
+
+  async trxCreateManyLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureHoliday: LectureHolidayInputData,
+  ) {
+    await transaction.lectureHoliday.createMany({ data: lectureHoliday });
   }
 }

@@ -255,7 +255,7 @@ export class CreateLectureDto {
   @IsArray()
   @IsOptional()
   @Type(() => Array)
-  holidays?: string[];
+  holidays?: Date[];
 
   @ApiProperty({
     example: [1, 2],
