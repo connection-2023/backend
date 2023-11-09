@@ -144,6 +144,8 @@ export class LectureService {
         }
 
         if (coupons) {
+          await this.getValidCouponIds(coupons);
+
           const lectureCouponTargetInputData: LectureCouponTargetInputData[] =
             this.createLectureCouponTargetInputData(newLecture.id, coupons);
 
@@ -371,15 +373,7 @@ export class LectureService {
         }
 
         if (coupons) {
-          for (const couponId of coupons) {
-            const lectureCoupon = await this.couponRepository.getLectureCoupon(
-              couponId,
-            );
-
-            if (!lectureCoupon) {
-              throw new BadRequestException('해당 쿠폰은 존재하지 않습니다.');
-            }
-          }
+          await this.getValidCouponIds(coupons);
 
           const lectureCounponTargetInputData =
             this.createLectureCouponTargetInputData(lectureId, coupons);
@@ -697,5 +691,22 @@ export class LectureService {
     );
 
     return { createNewSchedule, deleteOldSchedule };
+  }
+
+  private async getValidCouponIds(coupons: number[]): Promise<void> {
+    const couponDoesNotExist = [];
+    for (const coupon of coupons) {
+      const existCoupon = await this.prismaService.lectureCoupon.findFirst({
+        where: { id: coupon },
+      });
+      if (!existCoupon) {
+        couponDoesNotExist.push(coupon);
+      }
+    }
+    if (couponDoesNotExist) {
+      throw new BadRequestException(
+        `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
+      );
+    }
   }
 }
