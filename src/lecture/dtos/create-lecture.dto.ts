@@ -221,7 +221,7 @@ export class CreateLectureDto {
   @IsArray()
   @IsOptional()
   @Type(() => Array)
-  schedules?: string[];
+  schedules?: Date[];
 
   @ApiProperty({
     example: {

@@ -57,7 +57,7 @@ interface LectureHolidayInputData {
 }
 
 interface RegularLectureSchedules {
-  regularSchedules: { [key: string]: string[] };
+  regularSchedules: { [key: string]: Date[] };
 }
 
 interface LectureCouponTargetInputData {

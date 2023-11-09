@@ -289,7 +289,7 @@ export class LectureTemporarilySaveService {
 
     const temporaryLecture =
       await this.temporaryLectureRepository.readOneTemporaryLecture(lectureId);
-    const temporaryLectureLocation =
+    const location =
       await this.prismaService.temporaryLectureLocation.findUnique({
         where: { lectureId },
       });
@@ -315,7 +315,7 @@ export class LectureTemporarilySaveService {
 
       return {
         temporaryLecture,
-        temporaryLectureLocation,
+        location,
         temporaryLectureDateSchedule,
       };
     } else if (dayLecture) {
@@ -363,11 +363,11 @@ export class LectureTemporarilySaveService {
 
       return {
         temporaryLecture,
-        temporaryLectureLocation,
+        location,
         temporaryLectureDaySchedule,
       };
     }
-    return { temporaryLecture, temporaryLectureLocation };
+    return { temporaryLecture, location };
   }
 
   async readManyTemporaryLecture(

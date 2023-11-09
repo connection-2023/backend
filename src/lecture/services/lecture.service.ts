@@ -300,6 +300,39 @@ export class LectureService {
           lecture,
         );
 
+        if (holidays) {
+          const oldHolidays =
+            await this.lectureRepository.trxReadManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+          const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
+          const schedule = this.compareHolidays(oldHolidaysArr, holidays);
+          const { createNewSchedule, deleteOldSchedule } = schedule;
+          const { duration } = await this.prismaService.lecture.findFirst({
+            where: { id: lectureId },
+            select: { duration: true },
+          });
+
+          const deletedOldSchedule =
+            await this.lectureRepository.trxDeleteManyOldSchedule(
+              transaction,
+              lectureId,
+              deleteOldSchedule,
+            );
+          const createNewScheduleInputData =
+            this.createLectureScheduleInputData(
+              lectureId,
+              createNewSchedule,
+              duration,
+            );
+          const updatedHolidaySchedule =
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              createNewScheduleInputData,
+            );
+        }
+
         if (notification) {
           await transaction.lectureNotification.upsert({
             where: { lectureId },
@@ -463,7 +496,7 @@ export class LectureService {
 
   private createLectureScheduleInputData(
     lectureId: number,
-    schedules: string[],
+    schedules: Date[],
     duration: number,
   ) {
     const scheduleInputData: LectureScheduleInputData[] = schedules.map(
@@ -627,5 +660,29 @@ export class LectureService {
     });
 
     return holidays;
+  }
+
+  private compareHolidays(oldHolidays: Date[], newHolidays: Date[]) {
+    const deleteOldSchedule = newHolidays.filter(
+      (newHoliday) =>
+        !oldHolidays.some(
+          (oldHoliday) =>
+            new Date(oldHoliday).toISOString() ===
+            new Date(newHoliday).toISOString(),
+        ),
+    );
+
+    const createNewSchedule = oldHolidays.filter(
+      (oldHoliday) =>
+        !newHolidays.some(
+          (newHoliday) =>
+            new Date(newHoliday).toISOString() ===
+            new Date(oldHoliday).toISOString(),
+        ),
+    );
+
+    console.log(deleteOldSchedule, createNewSchedule);
+
+    return { createNewSchedule, deleteOldSchedule };
   }
 }
