@@ -214,4 +214,19 @@ export class LectureRepository {
       where: { lectureId },
     });
   }
+
+  async trxDeleteManyOldSchedule(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    deleteOldSchedule: Date[],
+  ): Promise<void> {
+    await transaction.lectureSchedule.deleteMany({
+      where: {
+        lectureId: lectureId,
+        startDateTime: {
+          in: deleteOldSchedule.map((date) => new Date(date)),
+        },
+      },
+    });
+  }
 }
