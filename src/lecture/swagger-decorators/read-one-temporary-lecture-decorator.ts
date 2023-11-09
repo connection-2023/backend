@@ -18,18 +18,17 @@ export function ApiReadOneTemporaryLecture() {
         statusCode: 200,
         data: {
           temporaryLecture: {
-            id: 114,
+            id: 120,
             lecturerId: 3,
             step: 2,
             lectureTypeId: 1,
             lectureMethodId: 1,
             isGroup: true,
-            startDate: '2023-10-02T15:00:00.000Z',
-            endDate: '2023-10-02T15:00:00.000Z',
+            startDate: '2023-10-03T00:00:00.000Z',
+            endDate: '2023-10-03T00:00:00.000Z',
             title: '가비쌤과 함께하는 왁킹 클래스',
             introduction: '안녕하세용',
             curriculum: '첫날에 모하징',
-            detailAddress: '용마산로 616 18층',
             duration: 2,
             difficultyLevel: '상',
             minCapacity: 1,
@@ -39,8 +38,8 @@ export function ApiReadOneTemporaryLecture() {
             price: 40000,
             noShowDeposit: 30000,
             locationDescription: '버스타고 한번에',
-            createdAt: '2023-11-06T15:43:28.452Z',
-            updatedAt: '2023-11-07T19:10:44.962Z',
+            createdAt: '2023-11-09T05:33:36.656Z',
+            updatedAt: '2023-11-09T05:34:46.528Z',
             deletedAt: null,
             lectureType: {
               name: 'dance',
@@ -59,14 +58,7 @@ export function ApiReadOneTemporaryLecture() {
                 imageUrl: '이미지url2',
               },
             ],
-            temporaryLectureCouponTarget: [
-              {
-                lectureCouponId: 1,
-              },
-              {
-                lectureCouponId: 2,
-              },
-            ],
+            temporaryLectureCouponTarget: [],
             temporaryLectureToRegion: [
               {
                 region: {
@@ -119,6 +111,13 @@ export function ApiReadOneTemporaryLecture() {
               },
             ],
           },
+          location: {
+            id: 2,
+            lectureId: 120,
+            address: '서울특별시 중랑구 용마산로616',
+            detailAddress: '101동 1802호',
+            buildingName: '새한아파트',
+          },
           temporaryLectureDateSchedule: [
             '2023-10-03T11:00:00.000Z',
             '2023-10-03T11:00:00.000Z',
@@ -141,7 +140,7 @@ export function ApiReadOneTemporaryLecture() {
               '2023-10-03T11:00:00.000Z',
             ],
           },
-          ifRegularTemporaryLectureDaySchedule: {
+          RegularTemporaryLectureDaySchedule: {
             A: {
               월: [
                 '2023-10-03T11:00:00.000Z',

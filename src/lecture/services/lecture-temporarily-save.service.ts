@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Region,
   TemporaryLecture,
@@ -261,6 +266,8 @@ export class LectureTemporarilySaveService {
         }
 
         if (coupons) {
+          await this.getValidCouponIds(coupons);
+
           const lectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[] =
             this.createLectureCouponTargetInputData(lectureId, coupons);
 
@@ -399,6 +406,23 @@ export class LectureTemporarilySaveService {
     }
 
     return regionIds;
+  }
+
+  private async getValidCouponIds(coupons: number[]): Promise<void> {
+    const couponDoesNotExist = [];
+    for (const coupon of coupons) {
+      const existCoupon = await this.prismaService.lectureCoupon.findFirst({
+        where: { id: coupon },
+      });
+      if (!existCoupon) {
+        couponDoesNotExist.push(coupon);
+      }
+    }
+    if (couponDoesNotExist) {
+      throw new BadRequestException(
+        `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
+      );
+    }
   }
 
   private extractRegions(regions) {

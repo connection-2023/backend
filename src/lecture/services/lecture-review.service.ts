@@ -1,3 +1,4 @@
+import { CreateLectureCouponDto } from './../../coupon/dtos/create-lecture-coupon.dto';
 import { PrismaService } from './../../prisma/prisma.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LectureReviewRepository } from '../repositories/lecture-review.repository';
@@ -5,6 +6,7 @@ import { LectureReview } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class LectureReviewService {
@@ -17,22 +19,32 @@ export class LectureReviewService {
     userId: number,
     createLectureReviewDto: CreateLectureReviewDto,
   ) {
-    const existLectureReview =
-      await this.prismaService.lectureReview.findUnique({
-        where: { reservationId: createLectureReviewDto.reservationId },
-      });
+    const { lectureId } = createLectureReviewDto;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const existLectureReview =
+          await this.prismaService.lectureReview.findUnique({
+            where: { reservationId: createLectureReviewDto.reservationId },
+          });
 
-    if (existLectureReview) {
-      throw new BadRequestException('Exist Lecture Review');
-    }
+        if (existLectureReview) {
+          throw new BadRequestException('Exist Lecture Review');
+        }
 
-    const createdLectureReview =
-      await this.lectureReviewRespository.createLectureReview(
-        userId,
-        createLectureReviewDto,
-      );
+        const createdLectureReview =
+          await this.lectureReviewRespository.trxCreateLectureReview(
+            transaction,
+            userId,
+            createLectureReviewDto,
+          );
+        await this.lectureReviewRespository.trxIncreaseLectureReviewCount(
+          transaction,
+          lectureId,
+        );
 
-    return createdLectureReview;
+        return createdLectureReview;
+      },
+    );
   }
 
   async readManyLectureReview(lectureId: number, orderBy: string) {
@@ -71,8 +83,26 @@ export class LectureReviewService {
   }
 
   async deleteLectureReview(lectureReviewId: number) {
-    return await this.lectureReviewRespository.deleteLectureReview(
-      lectureReviewId,
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const lectureId =
+          await this.lectureReviewRespository.trxGetLectureIdByReview(
+            transaction,
+            lectureReviewId,
+          );
+        const deletedLectureReview =
+          await this.lectureReviewRespository.trxDeleteLectureReview(
+            transaction,
+            lectureReviewId,
+          );
+
+        await this.lectureReviewRespository.trxDecreaseLectureReviewCount(
+          transaction,
+          lectureId,
+        );
+
+        return deletedLectureReview;
+      },
     );
   }
 }

@@ -243,4 +243,10 @@ export class LectureRepository {
   ) {
     await transaction.lectureHoliday.createMany({ data: lectureHoliday });
   }
+
+  async getCouponId(coupons: number[]): Promise<Id[]> {
+    return await this.prismaService.lectureCoupon.findMany({
+      where: { id: { in: coupons } },
+    });
+  }
 }
