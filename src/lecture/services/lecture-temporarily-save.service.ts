@@ -287,16 +287,6 @@ export class LectureTemporarilySaveService {
       where: { lectureId },
     });
 
-    // if (temporaryLecture['temporaryLectureHoliday']) {
-    //   const temporaryLectureHoliday = [];
-    //   for (const lectureHoliday of temporaryLecture[
-    //     'temporaryLectureHoliday'
-    //   ]) {
-    //     temporaryLectureHoliday.push(lectureHoliday['holiday']);
-    //   }
-    //   temporaryLecture['temporaryLectureHoliday'] = temporaryLectureHoliday;
-    // }
-
     if (dateLecture) {
       const temporaryLectureDateScheduleArr =
         await this.prismaService.temporaryLectureSchedule.findMany({
@@ -355,6 +345,7 @@ export class LectureTemporarilySaveService {
 
       return { temporaryLecture, temporaryLectureDaySchedule };
     }
+    return { temporaryLecture };
   }
 
   async readManyTemporaryLecture(

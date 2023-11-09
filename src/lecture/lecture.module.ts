@@ -14,6 +14,7 @@ import { LecturerRepository } from '@src/lecturer/repositories/lecturer.reposito
 import { LectureReviewService } from './services/lecture-review.service';
 import { LectureReviewRepository } from './repositories/lecture-review.repository';
 import { LectureReviewController } from './controllers/lecture-review.controller';
+import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 
 @Module({
   imports: [],
@@ -33,6 +34,7 @@ import { LectureReviewController } from './controllers/lecture-review.controller
     LecturerRepository,
     LectureReviewService,
     LectureReviewRepository,
+    CouponRepository,
   ],
 })
 export class LectureModule {}

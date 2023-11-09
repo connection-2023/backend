@@ -21,6 +21,7 @@ import {
 } from '../interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
+import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 
 @Injectable()
 export class LectureService {
@@ -30,6 +31,7 @@ export class LectureService {
     private readonly lecturerRepository: LecturerRepository,
     private readonly queryFilter: QueryFilter,
     private readonly prismaService: PrismaService,
+    private readonly couponRepository: CouponRepository,
   ) {}
 
   async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
@@ -72,7 +74,7 @@ export class LectureService {
 
         const lectureImageInputData: LectureImageInputData[] =
           this.createLectureImageInputData(newLecture.id, images);
-        await this.lectureRepository.trxCreateLectureImg(
+        await this.lectureRepository.trxCreateLectureImage(
           transaction,
           lectureImageInputData,
         );
@@ -273,7 +275,8 @@ export class LectureService {
   }
 
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
-    const { images, coupons, ...lecture } = updateLectureDto;
+    const { images, coupons, holidays, notification, ...lecture } =
+      updateLectureDto;
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -283,13 +286,50 @@ export class LectureService {
           lecture,
         );
 
+        if (notification) {
+          await transaction.lectureNotification.upsert({
+            where: { lectureId },
+            create: { lectureId, notification },
+            update: { notification },
+          });
+        }
+
         if (images) {
           const lectureImageInputData: LectureImageInputData[] =
             this.createLectureImageInputData(lectureId, images);
-          await this.lectureRepository.trxUpdateLectureImage(
+
+          await this.lectureRepository.trxDeleteLectureImage(
             transaction,
             lectureId,
+          );
+          await this.lectureRepository.trxCreateLectureImage(
+            transaction,
             lectureImageInputData,
+          );
+        }
+
+        if (coupons) {
+          for (const couponId of coupons) {
+            const lectureCoupon = await this.couponRepository.getLectureCoupon(
+              couponId,
+            );
+
+            if (!lectureCoupon) {
+              throw new BadRequestException('해당 쿠폰은 존재하지 않습니다.');
+            }
+          }
+
+          const lectureCounponTargetInputData =
+            this.createLectureCouponTargetInputData(lectureId, coupons);
+
+          await this.lectureRepository.trxDeleteLectureCouponTarget(
+            transaction,
+            lectureId,
+          );
+
+          await this.lectureRepository.trxCreateLectureCouponTarget(
+            transaction,
+            lectureCounponTargetInputData,
           );
         }
 

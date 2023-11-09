@@ -51,13 +51,20 @@ export class LectureRepository {
     });
   }
 
-  async trxCreateLectureImg(
+  async trxCreateLectureImage(
     transaction: PrismaTransaction,
-    lectureImg: LectureImageInputData[],
+    lectureImage: LectureImageInputData[],
   ): Promise<void> {
     await transaction.lectureImage.createMany({
-      data: lectureImg,
+      data: lectureImage,
     });
+  }
+
+  async trxDeleteLectureImage(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureImage.deleteMany({ where: { lectureId } });
   }
 
   async trxCreateLectureToRegions(
@@ -96,6 +103,7 @@ export class LectureRepository {
       data: { lectureId, notification },
     });
   }
+
   async trxCreateLectureHoliday(
     transaction: PrismaTransaction,
     lectureHoliday: LectureHolidayInputData[],
@@ -142,8 +150,6 @@ export class LectureRepository {
     skip: number,
     take: number,
   ): Promise<Lecture[]> {
-    console.log(where);
-
     return await this.prismaService.lecture.findMany({
       where: { ...where, deletedAt: null },
       orderBy: order,
@@ -194,5 +200,12 @@ export class LectureRepository {
     return await transaction.lectureHoliday.findMany({
       where: { lectureId },
     });
+  }
+
+  async trxDeleteLectureCouponTarget(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureCouponTarget.deleteMany({ where: { lectureId } });
   }
 }
