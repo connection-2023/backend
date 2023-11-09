@@ -15,6 +15,7 @@ import {
 import {
   RegularTemporaryLectureSchedules,
   TemporaryLectureDaySchedules,
+  TemporaryLectureLocation,
 } from '../interface/temporary-lecture.interface';
 
 export class UpsertTemporaryLectureDto {
@@ -150,13 +151,17 @@ export class UpsertTemporaryLectureDto {
   curriculum?: string;
 
   @ApiProperty({
-    example: '용마산로 616 18층',
-    description: '상세주소',
+    example: {
+      address: '서울특별시 중랑구 용마산로616',
+      detailAddress: '101동 1802호',
+      buildingName: '새한아파트',
+    },
+    description: '위치 주소',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  detailAddress?: string;
+  @IsObject()
+  location?: TemporaryLectureLocation;
 
   @ApiProperty({ example: 2, description: '강의시간', required: false })
   @IsOptional()

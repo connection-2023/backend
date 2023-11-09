@@ -83,6 +83,19 @@ interface TemporaryLectureDayScheduleInpuData {
   startDateTime: Date;
 }
 
+interface TemporaryLectureLocation {
+  address?: string;
+  detailAddress?: string;
+  buildingName?: string;
+}
+
+interface TemporaryLectureLocationInputData {
+  lectureId: number;
+  address?: string;
+  detailAddress?: string;
+  buildingName?: string;
+}
+
 export {
   TemporaryLectureInputData,
   TemporaryLectureToRegionInputData,
@@ -97,4 +110,6 @@ export {
   TemporaryLectureDaySchedules,
   TemporaryLectureDayInputData,
   TemporaryLectureDayScheduleInpuData,
+  TemporaryLectureLocation,
+  TemporaryLectureLocationInputData,
 };
