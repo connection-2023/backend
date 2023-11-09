@@ -18,7 +18,7 @@ import {
   LectureToRegionInputData,
   RegularLectureScheduleInputData,
   RegularLectureSchedules,
-} from '../interface/lecture.interface';
+} from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
@@ -313,6 +313,16 @@ export class LectureService {
             where: { id: lectureId },
             select: { duration: true },
           });
+          const lectureHolidayInputData = this.createLectureHolidayInputData(
+            lectureId,
+            holidays,
+          );
+          const createNewScheduleInputData =
+            this.createLectureScheduleInputData(
+              lectureId,
+              createNewSchedule,
+              duration,
+            );
 
           const deletedOldSchedule =
             await this.lectureRepository.trxDeleteManyOldSchedule(
@@ -320,16 +330,21 @@ export class LectureService {
               lectureId,
               deleteOldSchedule,
             );
-          const createNewScheduleInputData =
-            this.createLectureScheduleInputData(
-              lectureId,
-              createNewSchedule,
-              duration,
-            );
-          const updatedHolidaySchedule =
+          const createdHolidaySchedule =
             await this.lectureRepository.trxCreateLectureSchedule(
               transaction,
               createNewScheduleInputData,
+            );
+
+          const deletedLectureHoliday =
+            await this.lectureRepository.trxDeleteManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+          const createdLectureHoliday =
+            await this.lectureRepository.trxCreateLectureHoliday(
+              transaction,
+              lectureHolidayInputData,
             );
         }
 
@@ -517,7 +532,7 @@ export class LectureService {
     return scheduleInputData;
   }
 
-  private createLectureHolidayInputData(lectureId: number, holidays: string[]) {
+  private createLectureHolidayInputData(lectureId: number, holidays: Date[]) {
     const holidayInputData: LectureHolidayInputData[] = holidays.map(
       (date) => ({
         lectureId: lectureId,
@@ -680,8 +695,6 @@ export class LectureService {
             new Date(oldHoliday).toISOString(),
         ),
     );
-
-    console.log(deleteOldSchedule, createNewSchedule);
 
     return { createNewSchedule, deleteOldSchedule };
   }
