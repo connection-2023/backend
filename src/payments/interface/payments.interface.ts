@@ -14,6 +14,7 @@ interface LectureCoupon {
 
 interface Coupon {
   id: number;
+  title: string;
   percentage: number | null;
   discountPrice: number | null;
   maxDiscountPrice: number | null;
@@ -29,7 +30,6 @@ interface PaymentInputData {
   userId?: number;
   orderId: string;
   orderName: string;
-  paymentMethodId: number;
   statusId: number;
   price: number;
   paymentProductTypeId: number;
@@ -120,20 +120,13 @@ interface IPaymentResult {
   };
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
+  reservation: IReservationInfo[];
 }
 
 interface ICardPaymentInfo {
   number: string;
   installmentPlanMonths: number;
   approveNo: string;
-  issuer: {
-    code: string;
-    name: string;
-  };
-  acquirer?: {
-    code: string;
-    name: string;
-  };
 }
 
 interface IVirtualAccountPaymentInfo {
@@ -154,6 +147,17 @@ interface VirtualAccountPaymentInfoInputData {
   customerName: string;
   dueDate: Date;
   expired: boolean;
+}
+
+interface IReservationInfo {
+  lectureSchedule: ILectureSchedule;
+  participants: number;
+  requests: string | null;
+}
+
+interface ILectureSchedule {
+  startDateTime: Date;
+  team: string | null;
 }
 
 export {
