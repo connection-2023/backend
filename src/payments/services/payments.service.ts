@@ -408,21 +408,17 @@ export class PaymentsService implements OnModuleInit {
     paymentInfo: PaymentInfo,
     productType: PaymentProductTypes,
   ): Promise<Payment> {
-    const { method, orderName, price, orderId } = paymentInfo;
-    const methodId: number =
-      PaymentMethods[method as unknown as keyof typeof PaymentMethods];
+    const { orderName, price, orderId } = paymentInfo;
 
-    const [paymentMethod, paymentType] = await Promise.all([
-      this.paymentsRepository.getPaymentMethod(methodId),
-      this.paymentsRepository.getPaymentProductType(productType),
-    ]);
+    const paymentType = await this.paymentsRepository.getPaymentProductType(
+      productType,
+    );
 
     const lecturePaymentData = {
       lecturerId,
       userId,
       orderId,
       orderName,
-      paymentMethodId: paymentMethod.id,
       statusId: PaymentOrderStatus.READY,
       paymentProductTypeId: paymentType.id,
       price,
@@ -484,6 +480,7 @@ export class PaymentsService implements OnModuleInit {
       const couponData = coupons.coupon;
       Object.assign(paymentCouponUsageInputData, {
         couponId: couponData.id,
+        couponTitle: couponData.title,
         couponPercentage: couponData.percentage,
         couponDiscountPrice: couponData.discountPrice,
         couponMaxDiscountPrice: couponData.maxDiscountPrice,
@@ -494,6 +491,7 @@ export class PaymentsService implements OnModuleInit {
       const stackableCouponData = coupons.stackableCoupon;
       Object.assign(paymentCouponUsageInputData, {
         stackableCouponId: stackableCouponData.id,
+        stackableCouponTitle: stackableCouponData.title,
         stackableCouponPercentage: stackableCouponData.percentage,
         stackableCouponDiscountPrice: stackableCouponData.discountPrice,
         stackableCouponMaxDiscountPrice: stackableCouponData.maxDiscountPrice,
@@ -535,11 +533,16 @@ export class PaymentsService implements OnModuleInit {
         paymentKey,
       });
 
-    return await this.confirmPaymentTransaction(paymentId, paymentInfo);
+    return await this.confirmPaymentTransaction(
+      paymentId,
+      paymentKey,
+      paymentInfo,
+    );
   }
 
   private async confirmPaymentTransaction(
     paymentId: number,
+    paymentKey: string,
     paymentInfo: TossPaymentsConfirmResponse,
   ): Promise<IPaymentResult> {
     const paymentResult = await this.prismaService.$transaction(
@@ -553,6 +556,7 @@ export class PaymentsService implements OnModuleInit {
           return await this.paymentsRepository.trxUpdateLecturePaymentStatus(
             transaction,
             paymentId,
+            paymentKey,
             PaymentOrderStatus.DONE,
             PaymentMethods.카드,
           );
@@ -566,6 +570,7 @@ export class PaymentsService implements OnModuleInit {
           return await this.paymentsRepository.trxUpdateLecturePaymentStatus(
             transaction,
             paymentId,
+            paymentKey,
             PaymentOrderStatus.WAITING_FOR_DEPOSIT,
             PaymentMethods.가상계좌,
           );
@@ -725,5 +730,20 @@ export class PaymentsService implements OnModuleInit {
       transaction,
       virtualAccountPaymentInfoInputData,
     );
+  }
+
+  async getUserReceipt(userId: number, orderId: string) {
+    const receipt = await this.paymentsRepository.getUserReceipt(
+      userId,
+      orderId,
+    );
+    if (!receipt) {
+      throw new NotFoundException(
+        `결제정보가 존재하지 않습니다.`,
+        `NotFoundPaymentInfo`,
+      );
+    }
+
+    return receipt;
   }
 }

@@ -19,6 +19,7 @@ import { ApiCreateLecturePaymentInfo } from '@src/payments/swagger-decorators/cr
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { ApiConfirmLecturePayment } from '@src/payments/swagger-decorators/confirm-lecture-payment-decorater';
 import { IPaymentResult } from '../interface/payments.interface';
+import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorater';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -58,5 +59,20 @@ export class PaymentsController {
       );
 
     return { paymentResult };
+  }
+
+  @ApiGetUserReceipt()
+  @Get('/user-receipt')
+  @UseGuards(UserAccessTokenGuard)
+  async getUserReceipt(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query('orderId') orderId: string,
+  ) {
+    const receipt = await this.paymentsService.getUserReceipt(
+      authorizedData.user.id,
+      orderId,
+    );
+
+    return { receipt };
   }
 }

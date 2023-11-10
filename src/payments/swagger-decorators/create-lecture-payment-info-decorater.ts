@@ -1,4 +1,9 @@
-import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
@@ -9,7 +14,7 @@ export function ApiCreateLecturePaymentInfo() {
       description: '반환받은 결제 정보를 통해 토스에게 요청',
     }),
     ApiBearerAuth(),
-    ApiOkResponse(
+    ApiCreatedResponse(
       SwaggerApiResponse.success('결제에 필요한 정보 반환', {
         statusCode: 201,
         data: {
