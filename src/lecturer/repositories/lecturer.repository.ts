@@ -170,6 +170,7 @@ export class LecturerRepository {
         id: true,
         profileCardImageUrl: true,
         nickname: true,
+        phoneNumber: true,
       },
     });
   }

@@ -98,6 +98,7 @@ interface LecturerBasicProfile {
   id: number;
   profileCardImageUrl: string;
   nickname: string;
+  phoneNumber: string;
 }
 
 export {
