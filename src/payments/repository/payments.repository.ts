@@ -505,4 +505,56 @@ export class PaymentsRepository {
       },
     });
   }
+
+  async getPaymentResult(paymentId) {
+    try {
+      return await this.prismaService.payment.findUnique({
+        where: { id: paymentId },
+        select: {
+          orderId: true,
+          orderName: true,
+          price: true,
+          paymentProductType: {
+            select: {
+              name: true,
+            },
+          },
+          paymentMethod: {
+            select: {
+              name: true,
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+          reservation: {
+            select: {
+              participants: true,
+              requests: true,
+              lectureSchedule: { select: { startDateTime: true, team: true } },
+            },
+          },
+          cardPaymentInfo: {
+            select: {
+              number: true,
+              installmentPlanMonths: true,
+              approveNo: true,
+            },
+          },
+          virtualAccountPaymentInfo: {
+            select: {
+              accountNumber: true,
+              customerName: true,
+              dueDate: true,
+              bank: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {}
+  }
 }
