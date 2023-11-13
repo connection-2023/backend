@@ -14,8 +14,6 @@ import { UploadsModule } from './uploads/uploads.module';
 import { CouponModule } from './coupon/coupon.module';
 import { PaymentsModule } from './payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
-import { LectureReviewController } from '@src/lecture/controllers/lecture-review.controller';
-import { LectureReviewService } from '@src/lecture/services/lecture-review.service';
 
 @Module({
   imports: [
