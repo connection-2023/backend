@@ -440,7 +440,7 @@ export class PaymentsService implements OnModuleInit {
       getLecturePaymentDto;
 
     for (const lectureSchedule of lectureSchedules) {
-      await this.paymentsRepository.trxUpdateLectureScheduleParticipants(
+      await this.paymentsRepository.trxIncrementLectureScheduleParticipants(
         transaction,
         lectureSchedule,
       );
@@ -521,10 +521,15 @@ export class PaymentsService implements OnModuleInit {
     confirmLecturePaymentDto: ConfirmLecturePaymentDto,
   ) {
     const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
-    const paymentInfo = await this.validateLecturePaymentInfo({
-      orderId,
-      amount,
-    });
+    const paymentInfo = await this.getPaymentInfo(orderId);
+
+    if (amount !== paymentInfo.price) {
+      throw new BadRequestException(
+        `결제 금액이 일치하지 않습니다.`,
+        'PaymentAmountMismatch',
+      );
+    }
+
     const paymentOrderStatus = [
       PaymentOrderStatus.WAITING_FOR_DEPOSIT,
       PaymentOrderStatus.DONE,
@@ -568,7 +573,7 @@ export class PaymentsService implements OnModuleInit {
             paymentId,
             paymentInfo.card,
           );
-          return await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+          return await this.paymentsRepository.trxUpdateLecturePayment(
             transaction,
             paymentId,
             paymentKey,
@@ -582,7 +587,7 @@ export class PaymentsService implements OnModuleInit {
             paymentId,
             paymentInfo.virtualAccount,
           );
-          return await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+          return await this.paymentsRepository.trxUpdateLecturePayment(
             transaction,
             paymentId,
             paymentKey,
@@ -635,21 +640,12 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  private async validateLecturePaymentInfo(lecturePayment: PaymentInfo) {
-    const paymentInfo = await this.paymentsRepository.getPaymentInfo(
-      lecturePayment.orderId,
-    );
+  private async getPaymentInfo(orderId: string) {
+    const paymentInfo = await this.paymentsRepository.getPaymentInfo(orderId);
     if (!paymentInfo) {
       throw new NotFoundException(
         `결제 정보가 존재하지 않습니다.`,
         'PaymentInfoNotFound',
-      );
-    }
-
-    if (lecturePayment.amount !== paymentInfo.price) {
-      throw new BadRequestException(
-        `결제 금액이 일치하지 않습니다.`,
-        'PaymentAmountMismatch',
       );
     }
 
@@ -751,5 +747,37 @@ export class PaymentsService implements OnModuleInit {
     }
 
     return receipt;
+  }
+
+  async cancelPayment(orderId: string): Promise<void> {
+    const paymentInfo = await this.getPaymentInfo(orderId);
+
+    if (paymentInfo.paymentStatus.id !== PaymentOrderStatus.READY) {
+      throw new BadRequestException(`취소가 불가능한 상태입니다`);
+    }
+
+    if (paymentInfo.paymentProductType.name === PaymentProductTypes.강의) {
+      await this.cancelReservationTransaction(paymentInfo);
+    }
+  }
+
+  private async cancelReservationTransaction(paymentInfo) {
+    const { id: paymentId, reservation: reservations } = paymentInfo;
+
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        for (const reservation of reservations) {
+          await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
+            transaction,
+            reservation,
+          );
+        }
+        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+          transaction,
+          paymentId,
+          PaymentOrderStatus.CANCELED,
+        );
+      },
+    );
   }
 }

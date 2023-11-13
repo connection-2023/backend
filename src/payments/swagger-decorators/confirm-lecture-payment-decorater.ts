@@ -8,7 +8,6 @@ export function ApiConfirmLecturePayment() {
       summary: '결제 승인',
       description: '유저 결제 성공시 반환되는 paymentKey를 사용하여 결제 승인',
     }),
-    ApiBearerAuth(),
     ApiOkResponse(
       SwaggerApiResponse.success(
         '결제 내역 반환 cardPaymentInfo가 있으면 가상계좌는 null 반대경우도 동일',

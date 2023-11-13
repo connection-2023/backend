@@ -175,7 +175,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLectureScheduleParticipants(
+  async trxIncrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
     lectureSchedule: LectureSchedule,
   ) {
@@ -273,10 +273,18 @@ export class PaymentsRepository {
           id: true,
           orderId: true,
           price: true,
+          paymentProductType: { select: { id: true, name: true } },
           paymentStatus: {
             select: {
               id: true,
               name: true,
+            },
+          },
+          reservation: {
+            select: {
+              id: true,
+              participants: true,
+              lectureScheduleId: true,
             },
           },
         },
@@ -306,7 +314,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePaymentStatus(
+  async trxUpdateLecturePayment(
     transaction: PrismaTransaction,
     paymentId: number,
     paymentKey: string,
@@ -555,6 +563,50 @@ export class PaymentsRepository {
           },
         },
       });
-    } catch (error) {}
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxDecrementLectureScheduleParticipants(
+    transaction: PrismaTransaction,
+    reservation: LectureSchedule,
+  ) {
+    try {
+      await transaction.lectureSchedule.update({
+        where: { id: reservation.lectureScheduleId },
+        data: {
+          numberOfParticipants: {
+            decrement: reservation.participants,
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 강의 일정 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturePaymentStatus(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    statusId: number,
+  ) {
+    try {
+      await transaction.payment.update({
+        where: { id: paymentId },
+        data: { statusId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
   }
 }
