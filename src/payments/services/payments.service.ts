@@ -519,24 +519,39 @@ export class PaymentsService implements OnModuleInit {
 
   async confirmLecturePayment(
     confirmLecturePaymentDto: ConfirmLecturePaymentDto,
-  ): Promise<IPaymentResult> {
+  ) {
     const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
-    const paymentId = await this.validateLecturePaymentInfo(
-      { orderId, amount },
-      PaymentOrderStatus.READY,
-    );
+    const paymentInfo = await this.validateLecturePaymentInfo({
+      orderId,
+      amount,
+    });
+    const paymentOrderStatus = [
+      PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+      PaymentOrderStatus.DONE,
+    ];
 
-    const paymentInfo: TossPaymentsConfirmResponse =
-      await this.authorizeTossPaymentApiServer({
-        orderId,
-        amount,
+    if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
+      return this.paymentsRepository.getPaymentResult(paymentInfo.id);
+    }
+
+    if (paymentInfo.paymentStatus.id === PaymentOrderStatus.READY) {
+      const authorizedPaymentInfo: TossPaymentsConfirmResponse =
+        await this.authorizeTossPaymentApiServer({
+          orderId,
+          amount,
+          paymentKey,
+        });
+
+      return await this.confirmPaymentTransaction(
+        paymentInfo.id,
         paymentKey,
-      });
+        authorizedPaymentInfo,
+      );
+    }
 
-    return await this.confirmPaymentTransaction(
-      paymentId,
-      paymentKey,
-      paymentInfo,
+    throw new BadRequestException(
+      `해당 결제 정보는 ${paymentInfo.paymentStatus.name}상태 입니다.`,
+      'PaymentStatusMismatch',
     );
   }
 
@@ -620,10 +635,7 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  private async validateLecturePaymentInfo(
-    lecturePayment: PaymentInfo,
-    paymentStatus: PaymentOrderStatus,
-  ) {
+  private async validateLecturePaymentInfo(lecturePayment: PaymentInfo) {
     const paymentInfo = await this.paymentsRepository.getPaymentInfo(
       lecturePayment.orderId,
     );
@@ -641,13 +653,7 @@ export class PaymentsService implements OnModuleInit {
       );
     }
 
-    if (paymentInfo.paymentStatus.id !== paymentStatus) {
-      throw new BadRequestException(
-        `해당 결제 정보는 ${paymentInfo.paymentStatus.name}상태 입니다.`,
-        'PaymentStatusMismatch',
-      );
-    }
-    return paymentInfo.id;
+    return paymentInfo;
   }
 
   private async authorizeTossPaymentApiServer(
