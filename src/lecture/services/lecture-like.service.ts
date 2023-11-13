@@ -9,7 +9,7 @@ export class LectureLikeService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async createLikeLecture(lectureId: number, userId: number): Promise<any> {
+  async createLikeLecture(lectureId: number, userId: number) {
     const lectureLikeInputData = {
       lectureId,
       userId,
@@ -20,7 +20,7 @@ export class LectureLikeService {
     return createdLectureLike;
   }
 
-  async deleteLikeLecture(lectureId: number, userId: number): Promise<any> {
+  async deleteLikeLecture(lectureId: number, userId: number) {
     return await this.prismaService.likedLecture.delete({
       where: { lectureId_userId: { lectureId, userId } },
     });

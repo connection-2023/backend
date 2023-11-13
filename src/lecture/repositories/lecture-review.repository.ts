@@ -53,6 +53,7 @@ export class LectureReviewRepository {
           include: { userProfileImage: { select: { imageUrl: true } } },
         },
         lecture: true,
+        _count: { select: { likedLectureReview: true } },
       },
       orderBy: order,
     });
