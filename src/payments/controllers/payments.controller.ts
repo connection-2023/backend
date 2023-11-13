@@ -2,11 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Query,
-  Req,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
@@ -18,8 +17,9 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiCreateLecturePaymentInfo } from '@src/payments/swagger-decorators/create-lecture-payment-info-decorater';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { ApiConfirmLecturePayment } from '@src/payments/swagger-decorators/confirm-lecture-payment-decorater';
-import { IPaymentResult } from '../interface/payments.interface';
-import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorater';
+import { IPaymentResult } from '@src/payments/interface/payments.interface';
+import { ApiGetUserReceipt } from '@src/payments/swagger-decorators/get-user-receipt-decorator';
+import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -49,7 +49,6 @@ export class PaymentsController {
 
   @ApiConfirmLecturePayment()
   @Patch('/lecture/confirm')
-  @UseGuards(UserAccessTokenGuard)
   async confirmLecturePayment(
     @Body() confirmLecturePaymentDto: ConfirmLecturePaymentDto,
   ) {
@@ -74,5 +73,11 @@ export class PaymentsController {
     );
 
     return { receipt };
+  }
+
+  @ApiCancelPayment()
+  @Post('/:orderId/cancel')
+  async cancelPayment(@Param('orderId') orderId: string) {
+    await this.paymentsService.cancelPayment(orderId);
   }
 }

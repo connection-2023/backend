@@ -4,6 +4,7 @@ import {
 } from '@src/payments/enum/payment.enum';
 
 interface LectureSchedule {
+  id?: number;
   lectureScheduleId: number;
   participants: number;
 }
