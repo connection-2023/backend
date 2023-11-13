@@ -251,7 +251,7 @@ export class LectureRepository {
     });
   }
 
-  async readLectureReservation(
+  async readLectureReservationWithUser(
     userId: number,
     lectureId: number,
   ): Promise<Reservation> {
