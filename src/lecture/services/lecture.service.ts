@@ -417,6 +417,13 @@ export class LectureService {
     return { schedule, holidayArr };
   }
 
+  async readLectureReservationByUser(userId: number, lectureId: number) {
+    return await this.lectureRepository.readLectureReservationByUser(
+      userId,
+      lectureId,
+    );
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
