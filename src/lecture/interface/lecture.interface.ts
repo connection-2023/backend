@@ -84,6 +84,11 @@ interface LectureLocationInputData {
   buildingName: string;
 }
 
+interface LectureLikeInputData {
+  lectureId: number;
+  userId: number;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -98,4 +103,5 @@ export {
   LectureOrderBy,
   LectureLocation,
   LectureLocationInputData,
+  LectureLikeInputData,
 };

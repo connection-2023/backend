@@ -7,6 +7,7 @@ import {
   LectureCouponTarget,
   LectureReview,
   LectureHoliday,
+  Reservation,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
@@ -247,6 +248,15 @@ export class LectureRepository {
   async getCouponId(coupons: number[]): Promise<Id[]> {
     return await this.prismaService.lectureCoupon.findMany({
       where: { id: { in: coupons } },
+    });
+  }
+
+  async readLectureReservationWithUser(
+    userId: number,
+    lectureId: number,
+  ): Promise<Reservation> {
+    return await this.prismaService.reservation.findFirst({
+      where: { userId, lectureSchedule: { lectureId } },
     });
   }
 }

@@ -1,6 +1,11 @@
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { Lecture, LectureHoliday, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
@@ -415,6 +420,20 @@ export class LectureService {
     const holidayArr = this.createLectureHolidayArr(holiday);
 
     return { schedule, holidayArr };
+  }
+
+  async readLectureReservationWithUser(userId: number, lectureId: number) {
+    const reservation =
+      await this.lectureRepository.readLectureReservationWithUser(
+        userId,
+        lectureId,
+      );
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation Not Found');
+    }
+
+    return reservation;
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
