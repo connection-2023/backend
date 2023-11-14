@@ -167,7 +167,7 @@ export class LectureService {
     );
   }
 
-  async readLecture(lectureId: number) {
+  async readLecture(userId: number, lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
     const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
       lecture.lecturerId,
@@ -175,7 +175,15 @@ export class LectureService {
     const location = await this.lectureRepository.readLectureLocation(
       lectureId,
     );
+    const isLike = await this.prismaService.likedLecture.findFirst({
+      where: { userId, lectureId },
+    });
 
+    if (isLike) {
+      lecture['isLike'] = true;
+    } else {
+      lecture['isLike'] = false;
+    }
     return { lecture, lecturer, location };
   }
 
