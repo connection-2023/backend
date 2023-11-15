@@ -241,27 +241,27 @@ export class UpsertTemporaryLectureDto {
 
   @ApiProperty({
     example: [
-      { day: ['월', '화'], timeSlots: ['13:00', '14:00'] },
-      { day: ['월', '화'], timeSlots: ['13:00', '14:00'] },
-      { day: ['월', '화'], timeSlots: ['13:00', '14:00'] },
+      { day: ['월', '화'], startDateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], startDateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], startDateTime: ['13:00', '14:00'] },
     ],
     description: '원데이 클래스 일정',
     required: false,
   })
-  @IsObject()
+  @IsArray()
   @IsOptional()
   daySchedules?: TemporaryLectureDaySchedules[];
 
   @ApiProperty({
     example: [
-      { team: 'A', day: ['월', '화'], timeSlots: ['13:00', '14:00'] },
-      { team: 'B', day: ['월', '화'], timeSlots: ['13:00', '14:00'] },
-      { team: 'C', day: ['월', '화'], timeSlots: ['13:00', '14:00'] },
+      { team: 'A', day: ['월', '화'], startDateTime: ['13:00', '14:00'] },
+      { team: 'B', day: ['월', '화'], startDateTime: ['13:00', '14:00'] },
+      { team: 'C', day: ['월', '화'], startDateTime: ['13:00', '14:00'] },
     ],
     description: '정기 클래스일 때 일정',
     required: false,
   })
-  @IsObject()
+  @IsArray()
   @IsOptional()
   regularSchedules?: RegularTemporaryLectureSchedules[];
 
