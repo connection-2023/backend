@@ -107,6 +107,7 @@ model Lecturer {
   lecturerInstagramPostUrl LecturerInstagramPostUrl[]
   lecturerProfileImageUrl  LecturerProfileImageUrl[]
   payment                  Payment[]
+  likedLecture             LikedLecture[]
 }
 
 model Lecture {
@@ -263,15 +264,15 @@ model LectureMethod {
 
 model LikedLecture {
   //고유 id
-  id        Int     @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   //강의 id
-  lectureId Int
+  lectureId  Int
   //유저 id
-  userId    Int
-  lecture   Lecture @relation(fields: [lectureId], references: [id])
-  user      Users   @relation(fields: [userId], references: [id])
-
-  @@unique([lectureId, userId])
+  userId     Int?
+  lecturerId Int?
+  lecture    Lecture   @relation(fields: [lectureId], references: [id])
+  user       Users?    @relation(fields: [userId], references: [id])
+  lecturer   Lecturer? @relation(fields: [lecturerId], references: [id])
 }
 
 model LectureNotification {
@@ -486,7 +487,7 @@ model TemporaryLecture {
   temporaryLectureToRegion     TemporaryLectureToRegion[]
   temporaryLectureToDanceGenre TemporaryLectureToDanceGenre[]
   temporaryLectureHoliday      TemporaryLectureHoliday[]
-  temporaryLectureDay          TemporaryLectureDay[]
+  temporaryLectureDay          TemporaryLectureDay?
   temporaryLectureLocation     TemporaryLectureLocation?
 }
 
@@ -710,8 +711,8 @@ model RefundStatus {
 
 model TemporaryLectureDay {
   id                          Int                           @id @default(autoincrement())
-  lectureId                   Int
-  daysOfWeek                  String?
+  lectureId                   Int                           @unique
+  day                         String[]                      @default([])
   team                        String?
   temporaryLecture            TemporaryLecture              @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   temporaryLectureDaySchedule TemporaryLectureDaySchedule[]
@@ -720,7 +721,7 @@ model TemporaryLectureDay {
 model TemporaryLectureDaySchedule {
   id                  Int                 @id @default(autoincrement())
   lectureDayId        Int
-  startDateTime       DateTime?
+  startDateTime       String?
   temporaryLectureDay TemporaryLectureDay @relation(fields: [lectureDayId], references: [id], onDelete: Cascade)
 }
 

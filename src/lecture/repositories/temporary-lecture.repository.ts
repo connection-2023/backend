@@ -192,7 +192,7 @@ export class LectureTemporarilySaveRepository {
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {
-    await transaction.temporaryLectureDay.deleteMany({ where: { lectureId } });
+    await transaction.temporaryLectureDay.delete({ where: { lectureId } });
   }
 
   async trxCreateTemporaryLectureDay(
@@ -206,10 +206,10 @@ export class LectureTemporarilySaveRepository {
 
   async trxDeleteTemporaryLectureDaySchedule(
     transaction: PrismaTransaction,
-    lectureDayId: number,
+    lectureId: number,
   ): Promise<void> {
     await transaction.temporaryLectureDaySchedule.deleteMany({
-      where: { lectureDayId },
+      where: { temporaryLectureDay: { lectureId } },
     });
   }
 

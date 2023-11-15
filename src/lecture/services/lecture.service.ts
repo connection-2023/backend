@@ -12,7 +12,11 @@ import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-que
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  Id,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   LectureCouponTargetInputData,
@@ -167,7 +171,7 @@ export class LectureService {
     );
   }
 
-  async readLecture(userId: number, lectureId: number) {
+  async readLecture(authorizedData: ValidateResult, lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
     const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
       lecture.lecturerId,
@@ -175,8 +179,17 @@ export class LectureService {
     const location = await this.lectureRepository.readLectureLocation(
       lectureId,
     );
+    const { tokenType } = authorizedData;
+    const where = { lectureId };
+
+    if (tokenType === 'User') {
+      where['userId'] = authorizedData.user.id;
+    } else {
+      where['lecturerId'] = authorizedData.lecturer.id;
+    }
+
     const isLike = await this.prismaService.likedLecture.findFirst({
-      where: { userId, lectureId },
+      where,
     });
 
     if (isLike) {
