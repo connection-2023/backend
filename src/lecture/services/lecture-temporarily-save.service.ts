@@ -294,6 +294,9 @@ export class LectureTemporarilySaveService {
       await this.prismaService.temporaryLectureSchedule.findFirst({
         where: { lectureId },
       });
+    const dayLecture = await this.prismaService.temporaryLectureDay.findFirst({
+      where: { lectureId },
+    });
 
     if (dateLecture) {
       const temporaryLectureDateScheduleArr =
@@ -312,6 +315,13 @@ export class LectureTemporarilySaveService {
         location,
         temporaryLectureDateSchedule,
       };
+    } else if (dayLecture) {
+      const temporaryLectureDaySchedule =
+        this.prismaService.temporaryLectureDay.findMany({
+          where: { lectureId },
+        });
+
+      return { temporaryLecture, location, temporaryLectureDaySchedule };
     }
 
     return { temporaryLecture, location };
