@@ -1,3 +1,4 @@
+import { ValidateResult } from './../../common/interface/common-interface';
 import { CreateLectureCouponDto } from './../../coupon/dtos/create-lecture-coupon.dto';
 import { PrismaService } from './../../prisma/prisma.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -47,8 +48,14 @@ export class LectureReviewService {
     );
   }
 
-  async readManyLectureReview(lectureId: number, orderBy: string) {
+  async readManyLectureReview(
+    authorizedData: ValidateResult,
+    lectureId: number,
+    orderBy: string,
+  ) {
     const order = {};
+    const { tokenType } = authorizedData;
+    const likedLectureReviewWhereData = {};
 
     if (orderBy === '최신순') {
       order['reservation'] = {
@@ -66,9 +73,23 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    return await this.lectureReviewRespository.readManyLectureReviewByLecture(
-      lectureId,
-      order,
+    if (tokenType === 'User') {
+      likedLectureReviewWhereData['userId'] = authorizedData.user.id;
+    } else {
+      likedLectureReviewWhereData['lecturerId'] = authorizedData.lecturer.id;
+    }
+
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const reviews =
+          await this.lectureReviewRespository.trxReadManyLectureReviewByLecture(
+            transaction,
+            lectureId,
+            likedLectureReviewWhereData,
+            order,
+          );
+        return reviews;
+      },
     );
   }
 

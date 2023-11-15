@@ -19,6 +19,7 @@ import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
 import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -58,13 +59,16 @@ export class LectureReviewController {
   }
 
   @ApiReadManyLectureReview()
+  @UseGuards(UserAccessTokenGuard, LecturerAccessTokenGuard)
   @Get(':lectureId')
   async readManyLectureReview(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureReviewQueryDto,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
     const { orderBy } = query;
     const review = await this.lectureReviewService.readManyLectureReview(
+      authorizedData,
       lectureId,
       orderBy,
     );

@@ -89,6 +89,11 @@ interface LectureLikeInputData {
   userId: number;
 }
 
+interface LikedLectureReviewWhereData {
+  userId?: number;
+  lecturerId?: number;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -104,4 +109,5 @@ export {
   LectureLocation,
   LectureLocationInputData,
   LectureLikeInputData,
+  LikedLectureReviewWhereData,
 };
