@@ -263,14 +263,13 @@ model LectureMethod {
 
 model LikedLecture {
   //고유 id
-  id         Int     @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   //강의 id
-  lectureId  Int
+  lectureId Int
   //유저 id
-  userId     Int
-  lecturerId Int
-  lecture    Lecture @relation(fields: [lectureId], references: [id])
-  user       Users   @relation(fields: [userId], references: [id])
+  userId    Int
+  lecture   Lecture @relation(fields: [lectureId], references: [id])
+  user      Users   @relation(fields: [userId], references: [id])
 
   @@unique([lectureId, userId])
 }
