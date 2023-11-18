@@ -28,6 +28,7 @@ import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
+import { ApiReadOneLectureByNonMember } from '../swagger-decorators/read-one-lecture-by-lecturer-non-member-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -50,14 +51,22 @@ export class LectureController {
   @ApiReadOneLecture()
   @UseGuards(UserAccessTokenGuard)
   @Get(':lectureId')
-  async readLecture(
+  async readLectureWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    const lecture = await this.lectureService.readLecture(
+    const lecture = await this.lectureService.readLectureWithUserId(
       authorizedData.user.id,
       lectureId,
     );
+
+    return lecture;
+  }
+
+  @ApiReadOneLectureByNonMember()
+  @Get(':lectureId')
+  async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
+    const lecture = await this.lectureService.readLecture(lectureId);
 
     return lecture;
   }

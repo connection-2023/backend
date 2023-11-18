@@ -171,7 +171,7 @@ export class LectureService {
     );
   }
 
-  async readLecture(userId: number, lectureId: number) {
+  async readLectureWithUserId(userId: number, lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
     const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
       lecture.lecturerId,
@@ -189,6 +189,18 @@ export class LectureService {
     } else {
       lecture['isLike'] = false;
     }
+    return { lecture, lecturer, location };
+  }
+
+  async readLecture(lectureId: number) {
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    const location = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
+
     return { lecture, lecturer, location };
   }
 
