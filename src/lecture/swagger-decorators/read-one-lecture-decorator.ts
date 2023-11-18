@@ -9,7 +9,7 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiReadOneLecture() {
   return applyDecorators(
     ApiOperation({
-      summary: '강의 상세조회',
+      summary: '유저 강의 상세조회',
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(
