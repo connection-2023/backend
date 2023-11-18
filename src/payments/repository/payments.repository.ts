@@ -48,6 +48,7 @@ export class PaymentsRepository {
           lectureCoupon: {
             select: {
               id: true,
+              title: true,
               percentage: true,
               discountPrice: true,
               maxDiscountPrice: true,
@@ -174,7 +175,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLectureScheduleParticipants(
+  async trxIncrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
     lectureSchedule: LectureSchedule,
   ) {
@@ -272,10 +273,18 @@ export class PaymentsRepository {
           id: true,
           orderId: true,
           price: true,
+          paymentProductType: { select: { id: true, name: true } },
           paymentStatus: {
             select: {
               id: true,
               name: true,
+            },
+          },
+          reservation: {
+            select: {
+              id: true,
+              participants: true,
+              lectureScheduleId: true,
             },
           },
         },
@@ -305,16 +314,17 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePaymentStatus(
+  async trxUpdateLecturePayment(
     transaction: PrismaTransaction,
     paymentId: number,
+    paymentKey: string,
     statusId: number,
     paymentMethodId: number,
   ) {
     try {
       return await transaction.payment.update({
         where: { id: paymentId },
-        data: { statusId, paymentMethodId },
+        data: { paymentKey, statusId, paymentMethodId },
         select: {
           orderId: true,
           orderName: true,
@@ -331,23 +341,18 @@ export class PaymentsRepository {
           },
           createdAt: true,
           updatedAt: true,
+          reservation: {
+            select: {
+              participants: true,
+              requests: true,
+              lectureSchedule: { select: { startDateTime: true, team: true } },
+            },
+          },
           cardPaymentInfo: {
             select: {
               number: true,
               installmentPlanMonths: true,
               approveNo: true,
-              issuer: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
-              acquirer: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
             },
           },
           virtualAccountPaymentInfo: {
@@ -438,6 +443,169 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 가상계좌 결제 정보 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+
+  async getUserReceipt(userId, orderId) {
+    return await this.prismaService.payment.findFirst({
+      where: { orderId, userId, statusId: PaymentOrderStatus.DONE },
+      select: {
+        orderId: true,
+        orderName: true,
+        price: true,
+        paymentProductType: {
+          select: {
+            name: true,
+          },
+        },
+        paymentMethod: {
+          select: {
+            name: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+        cardPaymentInfo: {
+          select: {
+            number: true,
+            installmentPlanMonths: true,
+            approveNo: true,
+            issuer: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+            acquirer: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
+        virtualAccountPaymentInfo: {
+          select: {
+            accountNumber: true,
+            customerName: true,
+            dueDate: true,
+            bank: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
+        paymentCouponUsage: {
+          select: {
+            couponTitle: true,
+            couponDiscountPrice: true,
+            couponMaxDiscountPrice: true,
+            couponPercentage: true,
+            stackableCouponTitle: true,
+            stackableCouponPercentage: true,
+            stackableCouponDiscountPrice: true,
+            stackableCouponMaxDiscountPrice: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getPaymentResult(paymentId) {
+    try {
+      return await this.prismaService.payment.findUnique({
+        where: { id: paymentId },
+        select: {
+          orderId: true,
+          orderName: true,
+          price: true,
+          paymentProductType: {
+            select: {
+              name: true,
+            },
+          },
+          paymentMethod: {
+            select: {
+              name: true,
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+          reservation: {
+            select: {
+              participants: true,
+              requests: true,
+              lectureSchedule: { select: { startDateTime: true, team: true } },
+            },
+          },
+          cardPaymentInfo: {
+            select: {
+              number: true,
+              installmentPlanMonths: true,
+              approveNo: true,
+            },
+          },
+          virtualAccountPaymentInfo: {
+            select: {
+              accountNumber: true,
+              customerName: true,
+              dueDate: true,
+              bank: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxDecrementLectureScheduleParticipants(
+    transaction: PrismaTransaction,
+    reservation: LectureSchedule,
+  ) {
+    try {
+      await transaction.lectureSchedule.update({
+        where: { id: reservation.lectureScheduleId },
+        data: {
+          numberOfParticipants: {
+            decrement: reservation.participants,
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 강의 일정 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturePaymentStatus(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    statusId: number,
+  ) {
+    try {
+      await transaction.payment.update({
+        where: { id: paymentId },
+        data: { statusId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
       );
     }
   }

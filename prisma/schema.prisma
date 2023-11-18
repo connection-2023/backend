@@ -565,14 +565,14 @@ model Payment {
   price                     Int                        @db.Integer
   userId                    Int?
   lecturerId                Int?
-  paymentMethodId           Int
+  paymentMethodId           Int?
   statusId                  Int
   createdAt                 DateTime                   @default(now()) @db.Timestamp(6)
   updatedAt                 DateTime                   @default(now()) @updatedAt @db.Timestamp(6)
   user                      Users?                     @relation(fields: [userId], references: [id])
   lecturer                  Lecturer?                  @relation(fields: [lecturerId], references: [id])
   paymentStatus             PaymentStatus              @relation(fields: [statusId], references: [id])
-  paymentMethod             PaymentMethod              @relation(fields: [paymentMethodId], references: [id])
+  paymentMethod             PaymentMethod?             @relation(fields: [paymentMethodId], references: [id])
   paymentProductType        PaymentProductType         @relation(fields: [paymentProductTypeId], references: [id])
   reservation               Reservation[]
   paymentCouponUsage        PaymentCouponUsage?
@@ -599,10 +599,12 @@ model PaymentCouponUsage {
   id                              Int            @id @default(autoincrement())
   paymentId                       Int            @unique
   couponId                        Int?
+  couponTitle                     String?
   couponPercentage                Int?
   couponDiscountPrice             Int?
   couponMaxDiscountPrice          Int?
   stackableCouponId               Int?
+  stackableCouponTitle            String?
   stackableCouponPercentage       Int?
   stackableCouponDiscountPrice    Int?
   stackableCouponMaxDiscountPrice Int?
