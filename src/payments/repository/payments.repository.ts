@@ -345,7 +345,7 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true, team: true } },
+              lectureSchedule: { select: { startDateTime: true } },
             },
           },
           cardPaymentInfo: {
@@ -538,7 +538,7 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true, team: true } },
+              lectureSchedule: { select: { startDateTime: true } },
             },
           },
           cardPaymentInfo: {

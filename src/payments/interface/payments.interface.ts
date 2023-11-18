@@ -158,7 +158,6 @@ interface IReservationInfo {
 
 interface ILectureSchedule {
   startDateTime: Date;
-  team: string | null;
 }
 
 export {

@@ -188,12 +188,10 @@ export class LectureTemporarilySaveService {
             }
           } else if (lectureMethod === '정기') {
             for (const regularSchedule of regularSchedules) {
-              const { team } = regularSchedule;
               const { day } = regularSchedule;
               const { startDateTime } = regularSchedule;
               const temporaryLectureDayInputData = {
                 lectureId,
-                team,
                 day,
               };
 
@@ -341,10 +339,8 @@ export class LectureTemporarilySaveService {
       const temporaryLectureDaySchedule = [];
 
       for (const temporaryLectureDayObj of temporaryLectureDayArr) {
-        const { team } = temporaryLectureDayObj;
         const { day } = temporaryLectureDayObj;
         const temporaryLectureDayScheduelTransFormData = {
-          team,
           day,
           startDateTime: [],
         };
