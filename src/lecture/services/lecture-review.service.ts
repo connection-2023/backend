@@ -48,14 +48,12 @@ export class LectureReviewService {
     );
   }
 
-  async readManyLectureReview(
-    authorizedData: ValidateResult,
+  async readManyLectureReviewWithUserId(
+    userId: number,
     lectureId: number,
     orderBy: string,
   ) {
     const order = {};
-    const { tokenType } = authorizedData;
-    const likedLectureReviewWhereData = {};
 
     if (orderBy === '최신순') {
       order['reservation'] = {
@@ -73,10 +71,37 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    if (tokenType === 'User') {
-      likedLectureReviewWhereData['userId'] = authorizedData.user.id;
-    } else {
-      likedLectureReviewWhereData['lecturerId'] = authorizedData.lecturer.id;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const reviews =
+          await this.lectureReviewRespository.trxReadManyLectureReviewByLectureWithUserId(
+            transaction,
+            lectureId,
+            userId,
+            order,
+          );
+        return reviews;
+      },
+    );
+  }
+
+  async readManyLectureReview(lectureId: number, orderBy: string) {
+    const order = {};
+
+    if (orderBy === '최신순') {
+      order['reservation'] = {
+        lectureSchedule: {
+          startDateTime: 'desc',
+        },
+      };
+    } else if (orderBy === '좋아요순') {
+      order['likedLectureReview'] = {
+        _count: 'desc',
+      };
+    } else if (orderBy === '평점 높은순') {
+      order['stars'] = 'desc';
+    } else if (orderBy === '평점 낮은순') {
+      order['stars'] = 'asc';
     }
 
     return await this.prismaService.$transaction(
@@ -85,7 +110,6 @@ export class LectureReviewService {
           await this.lectureReviewRespository.trxReadManyLectureReviewByLecture(
             transaction,
             lectureId,
-            likedLectureReviewWhereData,
             order,
           );
         return reviews;

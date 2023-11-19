@@ -400,6 +400,7 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
+  day                  String[]      @default([])
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int

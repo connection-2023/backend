@@ -40,10 +40,10 @@ export class LectureReviewRepository {
     });
   }
 
-  async trxReadManyLectureReviewByLecture(
+  async trxReadManyLectureReviewByLectureWithUserId(
     transaction: PrismaTransaction,
     lectureId: number,
-    likedLectureReviewWhereData: LikedLectureReviewWhereData,
+    userId: number,
     order,
   ): Promise<LectureReview[]> {
     return await transaction.lectureReview.findMany({
@@ -56,7 +56,28 @@ export class LectureReviewRepository {
           include: { userProfileImage: { select: { imageUrl: true } } },
         },
         lecture: { select: { title: true } },
-        likedLectureReview: { where: likedLectureReviewWhereData },
+        likedLectureReview: { where: { userId } },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy: order,
+    });
+  }
+
+  async trxReadManyLectureReviewByLecture(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    order,
+  ): Promise<LectureReview[]> {
+    return await transaction.lectureReview.findMany({
+      where: { lectureId, deletedAt: null },
+      include: {
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
+        users: {
+          include: { userProfileImage: { select: { imageUrl: true } } },
+        },
+        lecture: { select: { title: true } },
         _count: { select: { likedLectureReview: true } },
       },
       orderBy: order,

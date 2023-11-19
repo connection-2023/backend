@@ -23,14 +23,7 @@ interface LectureToRegionInputData {
 
 interface LectureScheduleInputData {
   lectureId: number;
-  startDateTime: Date;
-  endDateTime: Date;
-  numberOfParticipants: number;
-}
-
-interface RegularLectureScheduleInputData {
-  lectureId: number;
-  team: string;
+  day?: string[];
   startDateTime: Date;
   endDateTime: Date;
   numberOfParticipants: number;
@@ -57,7 +50,8 @@ interface LectureHolidayInputData {
 }
 
 interface RegularLectureSchedules {
-  regularSchedules: { [key: string]: Date[] };
+  day: string[];
+  startDateTime: Date[];
 }
 
 interface LectureCouponTargetInputData {
@@ -103,7 +97,6 @@ export {
   LectureNotificationResponse,
   LectureHolidayInputData,
   RegularLectureSchedules,
-  RegularLectureScheduleInputData,
   LectureCouponTargetInputData,
   LectureOrderBy,
   LectureLocation,
