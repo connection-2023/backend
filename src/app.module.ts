@@ -14,6 +14,8 @@ import { UploadsModule } from './uploads/uploads.module';
 import { CouponModule } from './coupon/coupon.module';
 import { PaymentsModule } from './payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
+import { CustomElasticSearchModule } from './common/config/search-module.config';
+import { ElasticsearchService } from '@nestjs/elasticsearch';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { TestModule } from '@src/apiTest/test.module';
     UploadsModule,
     TestModule,
     PaymentsModule,
+    CustomElasticSearchModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

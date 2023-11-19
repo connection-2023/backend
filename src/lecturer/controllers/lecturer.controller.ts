@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { LecturerService } from '@src/lecturer/services/lecturer.service';
@@ -32,6 +33,11 @@ import { ApiGetLecturerBasicProfile } from '@src/lecturer/swagger-decorators/get
 @Controller('lecturers')
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
+
+  @Get()
+  async getLecturers(@Query('value') value: string) {
+    await this.lecturerService.getLecturers(value);
+  }
 
   @ApiCreateLecturer()
   @Post()

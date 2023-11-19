@@ -29,22 +29,49 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
+import { ElasticsearchService } from '@nestjs/elasticsearch';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
   private readonly logger = new Logger(LecturerService.name);
-
+  private readonly client;
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
     private readonly configService: ConfigService,
+    private readonly esService: ElasticsearchService,
   ) {}
 
-  onModuleInit() {
-    this.logger.log('LecturerService Init');
+  onModuleInit() {}
+
+  async getLecturers(a) {
+    const lecturers = await this.elasticsearchGetLecturer(a);
+    console.log(lecturers);
   }
 
+  private async elasticsearchGetLecturer(a) {
+    const { hits } = await this.esService.search({
+      index: 'lecturer',
+      query: {
+        bool: {
+          should: [
+            {
+              match: {
+                'genre.ngram': a,
+              },
+            },
+            {
+              match: {
+                'genre.keyword': a,
+              },
+            },
+          ],
+        },
+      },
+    });
+    return hits.hits[0]._source;
+  }
   async createLecturer(
     userId: number,
     createLecturerDto: CreateLecturerDto,
