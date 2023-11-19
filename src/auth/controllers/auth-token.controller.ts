@@ -42,42 +42,42 @@ export class AuthTokenController {
   }
 
   //유저 토큰 재발급
-  @ApiRefreshUserJwtToken()
-  @Get('/user/refresh')
-  @UseGuards(UserRefreshTokenGuard)
-  async refreshUserJwtToken(
-    @GetAuthorizedUser() authorizedUser: ValidateResult,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const token: Token = await this.authTokenService.regenerateToken(
-      { userId: authorizedUser.user.id },
-      TokenTypes.User,
-    );
-    response.cookie('refreshToken', token.refreshToken, {
-      httpOnly: true,
-    });
+  // @ApiRefreshUserJwtToken()
+  // @Get('/user/refresh')
+  // @UseGuards(UserRefreshTokenGuard)
+  // async refreshUserJwtToken(
+  //   @GetAuthorizedUser() authorizedUser: ValidateResult,
+  //   @Res({ passthrough: true }) response: Response,
+  // ) {
+  //   const token: Token = await this.authTokenService.regenerateToken(
+  //     { userId: authorizedUser.user.id },
+  //     TokenTypes.User,
+  //   );
+  //   response.cookie('refreshToken', token.refreshToken, {
+  //     httpOnly: true,
+  //   });
 
-    return { userAccessToken: token.accessToken };
-  }
+  //   return { userAccessToken: token.accessToken };
+  // }
 
   //강사 토큰 재발급
-  @ApiRefreshLecturerJwtToken()
-  @Get('/lecturer/refresh')
-  @UseGuards(LecturerRefreshTokenGuard)
-  async refreshLecturerJwtToken(
-    @GetAuthorizedUser() authorizedUser: ValidateResult,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const token: Token = await this.authTokenService.regenerateToken(
-      { lecturerId: authorizedUser.lecturer.id },
-      TokenTypes.Lecturer,
-    );
-    response.cookie('refreshToken', token.refreshToken, {
-      httpOnly: true,
-    });
+  // @ApiRefreshLecturerJwtToken()
+  // @Get('/lecturer/refresh')
+  // @UseGuards(LecturerRefreshTokenGuard)
+  // async refreshLecturerJwtToken(
+  //   @GetAuthorizedUser() authorizedUser: ValidateResult,
+  //   @Res({ passthrough: true }) response: Response,
+  // ) {
+  //   const token: Token = await this.authTokenService.regenerateToken(
+  //     { lecturerId: authorizedUser.lecturer.id },
+  //     TokenTypes.Lecturer,
+  //   );
+  //   response.cookie('refreshToken', token.refreshToken, {
+  //     httpOnly: true,
+  //   });
 
-    return { lecturerAccessToken: token.accessToken };
-  }
+  //   return { lecturerAccessToken: token.accessToken };
+  // }
 
   //유저 -> 강사 전환
   @ApiSwitchUserToLecturer()

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { LectureReview } from '@prisma/client';
+import { LectureReview, LikedLectureReview } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import { LikedLectureReviewWhereData } from '../interface/lecture.interface';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -39,11 +40,13 @@ export class LectureReviewRepository {
     });
   }
 
-  async readManyLectureReviewByLecture(
+  async trxReadManyLectureReviewByLecture(
+    transaction: PrismaTransaction,
     lectureId: number,
+    likedLectureReviewWhereData: LikedLectureReviewWhereData,
     order,
   ): Promise<LectureReview[]> {
-    return await this.prismaService.lectureReview.findMany({
+    return await transaction.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
       include: {
         reservation: {
@@ -52,7 +55,8 @@ export class LectureReviewRepository {
         users: {
           include: { userProfileImage: { select: { imageUrl: true } } },
         },
-        lecture: true,
+        lecture: { select: { title: true } },
+        likedLectureReview: { where: likedLectureReviewWhereData },
         _count: { select: { likedLectureReview: true } },
       },
       orderBy: order,
@@ -89,5 +93,14 @@ export class LectureReviewRepository {
     });
 
     return lectureId;
+  }
+
+  async trxGetLectureReviewLike(
+    transaction: PrismaTransaction,
+    lectureReviewId: number,
+  ): Promise<LikedLectureReview> {
+    return await transaction.likedLectureReview.findFirst({
+      where: { lectureReviewId },
+    });
   }
 }

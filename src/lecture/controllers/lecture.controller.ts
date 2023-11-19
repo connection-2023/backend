@@ -48,9 +48,16 @@ export class LectureController {
   }
 
   @ApiReadOneLecture()
+  @UseGuards(UserAccessTokenGuard, LecturerAccessTokenGuard)
   @Get(':lectureId')
-  async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
-    const lecture = await this.lectureService.readLecture(lectureId);
+  async readLecture(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const lecture = await this.lectureService.readLecture(
+      authorizedData,
+      lectureId,
+    );
 
     return lecture;
   }

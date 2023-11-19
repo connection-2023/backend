@@ -11,6 +11,7 @@ export function ApiReadManyLectureReview() {
     ApiOperation({
       summary: '강의 리뷰 조회',
     }),
+    ApiBearerAuth(),
     ApiCreatedResponse(
       SwaggerApiResponse.success('강의 리뷰 조회완료', {
         statusCode: 200,

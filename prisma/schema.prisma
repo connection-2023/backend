@@ -403,7 +403,6 @@ model LectureSchedule {
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
-  team                 String?
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
   reservation          Reservation[]
 }
@@ -713,8 +712,7 @@ model RefundStatus {
 model TemporaryLectureDay {
   id                          Int                           @id @default(autoincrement())
   lectureId                   Int
-  daysOfWeek                  String?
-  team                        String?
+  day                         String[]                      @default([])
   temporaryLecture            TemporaryLecture              @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   temporaryLectureDaySchedule TemporaryLectureDaySchedule[]
 }
@@ -722,7 +720,7 @@ model TemporaryLectureDay {
 model TemporaryLectureDaySchedule {
   id                  Int                 @id @default(autoincrement())
   lectureDayId        Int
-  startDateTime       DateTime?
+  startDateTime       String?
   temporaryLectureDay TemporaryLectureDay @relation(fields: [lectureDayId], references: [id], onDelete: Cascade)
 }
 

@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiCreateLectureLike } from '../swagger-decorators/create-lecture-like-decorator';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
@@ -34,9 +34,16 @@ export class LectureLikeController {
   }
 
   @ApiOperation({ summary: '강의 좋아요 삭제' })
+  @ApiBearerAuth()
+  @UseGuards(UserAccessTokenGuard)
   @Delete()
-  async deleteLectureLike(@Param('id', ParseIntPipe) lectureId: number) {
-    const userId = 1;
-    return await this.lectureLikeService.deleteLikeLecture(lectureId, userId);
+  async deleteLectureLike(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('id', ParseIntPipe) lectureId: number,
+  ) {
+    // return await this.lectureLikeService.deleteLikeLecture(
+    //   lectureId,
+    //   authorizedData.user.id,
+    // );
   }
 }
