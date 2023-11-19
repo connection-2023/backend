@@ -25,7 +25,6 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
-  RegularLectureScheduleInputData,
   RegularLectureSchedules,
 } from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
@@ -111,16 +110,19 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
-            this.createRegularLectureScheduleInputData(
-              newLecture.id,
-              regularSchedules,
-              lecture.duration,
+          for (const schedule of regularSchedules) {
+            const regularDayScheduleInputData =
+              this.createRegularLectureScheduleInputData(
+                newLecture.id,
+                schedule,
+                lecture.duration,
+              );
+
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              regularDayScheduleInputData,
             );
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            regularLectureScheduleInputData,
-          );
+          }
         }
 
         if (holidays) {
@@ -668,27 +670,23 @@ export class LectureService {
 
   private createRegularLectureScheduleInputData(
     lectureId: number,
-    regularSchedules: RegularLectureSchedules,
+    regularSchedule: RegularLectureSchedules,
     duration: number,
   ) {
-    const regularScheduleInputData = [];
-    for (const team in regularSchedules) {
-      regularSchedules[team].map((date) => {
-        const startDateTime = new Date(date);
-        const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
-        );
-        const regularSchedule = {
+    const regularScheduleInputData = regularSchedule.startDateTime.map(
+      (time) => {
+        const startTime = new Date(time);
+        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+
+        return {
           lectureId,
-          team,
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
+          day: regularSchedule.day,
+          startDateTime: startTime,
+          endDateTime: endTime,
           numberOfParticipants: 0,
         };
-        regularScheduleInputData.push(regularSchedule);
-      });
-    }
-
+      },
+    );
     return regularScheduleInputData;
   }
 
