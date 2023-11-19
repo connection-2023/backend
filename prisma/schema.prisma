@@ -170,6 +170,7 @@ model Lecture {
   lectureToDanceGenre LectureToDanceGenre[]
   lectureHoliday      LectureHoliday[]
   lectureLocation     LectureLocation?
+  regularDay          RegularDay[]
 }
 
 model DanceCategory {
@@ -397,13 +398,23 @@ model LecturerProfileImageUrl {
   lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
 }
 
+model RegularDay {
+  id              Int               @id @default(autoincrement())
+  lectureId       Int
+  day             String[]
+  lecture         Lecture           @relation(fields: [lectureId], references: [id])
+  lectureSchedule LectureSchedule[]
+}
+
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
+  regularDayId         Int?
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
+  regularDay           RegularDay?   @relation(fields: [regularDayId], references: [id])
   reservation          Reservation[]
 }
 
