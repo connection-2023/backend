@@ -275,17 +275,21 @@ export class LectureTemporarilySaveService {
         await this.prismaService.temporaryLectureSchedule.findMany({
           where: { lectureId },
         });
-      const temporaryLectureDateSchedule = [];
+      const groupedMap = new Map();
 
-      for (const schedule of temporaryLectureDateScheduleArr) {
-        const { startDateTime } = schedule;
-        temporaryLectureDateSchedule.push(startDateTime);
-      }
+      temporaryLectureDateScheduleArr.forEach(({ date, startDateTime }) => {
+        if (!groupedMap.has(date)) {
+          groupedMap.set(date, { date, startDateTime: [] });
+        }
+        groupedMap.get(date).startDateTime.push(startDateTime);
+      });
+
+      const schedules = Array.from(groupedMap.values());
 
       return {
         temporaryLecture,
         location,
-        temporaryLectureDateSchedule,
+        schedules,
       };
     } else if (dayLecture) {
       const temporaryLectureDayArr =
@@ -293,7 +297,7 @@ export class LectureTemporarilySaveService {
           where: { lectureId },
           include: { temporaryLectureDaySchedule: true },
         });
-      const temporaryLectureDaySchedule = [];
+      const schedules = [];
 
       for (const temporaryLectureDayObj of temporaryLectureDayArr) {
         const { day } = temporaryLectureDayObj;
@@ -309,12 +313,10 @@ export class LectureTemporarilySaveService {
             startDateTime,
           );
         }
-        temporaryLectureDaySchedule.push(
-          temporaryLectureDayScheduelTransFormData,
-        );
+        schedules.push(temporaryLectureDayScheduelTransFormData);
       }
 
-      return { temporaryLecture, location, temporaryLectureDaySchedule };
+      return { temporaryLecture, location, schedules };
     }
 
     return { temporaryLecture, location };
