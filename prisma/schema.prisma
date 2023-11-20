@@ -493,6 +493,7 @@ model TemporaryLecture {
 model TemporaryLectureSchedule {
   id                   Int              @id @default(autoincrement())
   lectureId            Int
+  date                 DateTime?
   startDateTime        DateTime?
   endDateTime          DateTime?
   numberOfParticipants Int?
