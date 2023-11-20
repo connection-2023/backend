@@ -11,7 +11,7 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { ApiRefreshUserJwtToken } from '../swagger-decorators/token/refresh-user-jwt-decorator';
 import { ApiRefreshLecturerJwtToken } from '../swagger-decorators/token/refresh-lecturer-jwt-decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiSwitchUserToLecturer } from '../swagger-decorators/token/switch-user-to-lecturer-decorator';
 import { ApiSwitchLecturerToUser } from '../swagger-decorators/token/switch-lecturer-to-user-decorator';
 import { AuthGuard } from '@nestjs/passport';
@@ -22,6 +22,24 @@ import { ApiRefreshToken } from '../swagger-decorators/token/refresh-target-deco
 @Controller('auth/token')
 export class AuthTokenController {
   constructor(private readonly authTokenService: AuthTokenService) {}
+
+  @ApiOperation({
+    summary: '유저 AccessToken 유효성 검사',
+    description: '서버 랜더링 전용',
+  })
+  @ApiBearerAuth()
+  @Get('/verify/user-access-token')
+  @UseGuards(UserAccessTokenGuard)
+  async verifyUserAccessToken() {}
+
+  @ApiOperation({
+    summary: '강사 AccessToken 유효성 검사',
+    description: '서버 랜더링 전용',
+  })
+  @ApiBearerAuth()
+  @Get('/verify/lecturer-access-token')
+  @UseGuards(LecturerAccessTokenGuard)
+  async verifyLecturerAccessToken() {}
 
   //토큰 생성을 위한 임시 url
   @Get('/test/:userId')
