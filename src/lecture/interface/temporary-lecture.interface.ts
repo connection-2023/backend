@@ -26,16 +26,15 @@ interface TemporaryLectureToRegionInputData {
 
 interface TemporaryLectureScheduleInputData {
   lectureId: number;
-  startDateTime?: Date;
-  endDateTime?: Date;
+  date?: string;
+  startDateTime?: string;
   numberOfParticipants?: number;
 }
 
 interface RegularTemporaryLectureScheduleInputData {
   lectureId: number;
   team?: string;
-  startDateTime?: Date;
-  endDateTime?: Date;
+  startDateTime?: string;
   numberOfParticipants?: number;
 }
 
@@ -66,7 +65,7 @@ interface TemporaryLectureCouponTargetInputData {
 
 interface TemporaryLectureSchedules {
   day?: string[];
-  date?: Date;
+  date?: string;
   startDateTime?: string[];
 }
 
