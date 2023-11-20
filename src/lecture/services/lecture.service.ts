@@ -25,7 +25,6 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
-  RegularLectureScheduleInputData,
   RegularLectureSchedules,
 } from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
@@ -111,16 +110,19 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
-            this.createRegularLectureScheduleInputData(
-              newLecture.id,
-              regularSchedules,
-              lecture.duration,
+          for (const schedule of regularSchedules) {
+            const regularDayScheduleInputData =
+              this.createRegularLectureScheduleInputData(
+                newLecture.id,
+                schedule,
+                lecture.duration,
+              );
+
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              regularDayScheduleInputData,
             );
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            regularLectureScheduleInputData,
-          );
+          }
         }
 
         if (holidays) {
@@ -171,7 +173,7 @@ export class LectureService {
     );
   }
 
-  async readLecture(authorizedData: ValidateResult, lectureId: number) {
+  async readLectureWithUserId(userId: number, lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
     const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
       lecture.lecturerId,
@@ -179,17 +181,9 @@ export class LectureService {
     const location = await this.lectureRepository.readLectureLocation(
       lectureId,
     );
-    const { tokenType } = authorizedData;
-    const where = { lectureId };
-
-    if (tokenType === 'User') {
-      where['userId'] = authorizedData.user.id;
-    } else {
-      where['lecturerId'] = authorizedData.lecturer.id;
-    }
 
     const isLike = await this.prismaService.likedLecture.findFirst({
-      where,
+      where: { userId, lectureId },
     });
 
     if (isLike) {
@@ -197,6 +191,18 @@ export class LectureService {
     } else {
       lecture['isLike'] = false;
     }
+    return { lecture, lecturer, location };
+  }
+
+  async readLecture(lectureId: number) {
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    const location = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
+
     return { lecture, lecturer, location };
   }
 
@@ -664,27 +670,23 @@ export class LectureService {
 
   private createRegularLectureScheduleInputData(
     lectureId: number,
-    regularSchedules: RegularLectureSchedules,
+    regularSchedule: RegularLectureSchedules,
     duration: number,
   ) {
-    const regularScheduleInputData = [];
-    for (const team in regularSchedules) {
-      regularSchedules[team].map((date) => {
-        const startDateTime = new Date(date);
-        const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
-        );
-        const regularSchedule = {
+    const regularScheduleInputData = regularSchedule.startDateTime.map(
+      (time) => {
+        const startTime = new Date(time);
+        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+
+        return {
           lectureId,
-          team,
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
+          day: regularSchedule.day,
+          startDateTime: startTime,
+          endDateTime: endTime,
           numberOfParticipants: 0,
         };
-        regularScheduleInputData.push(regularSchedule);
-      });
-    }
-
+      },
+    );
     return regularScheduleInputData;
   }
 

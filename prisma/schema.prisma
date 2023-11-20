@@ -400,6 +400,7 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
+  day                  String[]      @default([])
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
@@ -492,8 +493,8 @@ model TemporaryLecture {
 model TemporaryLectureSchedule {
   id                   Int              @id @default(autoincrement())
   lectureId            Int
-  startDateTime        DateTime?
-  endDateTime          DateTime?
+  date                 String?
+  startDateTime        String?
   numberOfParticipants Int?
   temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }

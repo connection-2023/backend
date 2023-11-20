@@ -18,11 +18,11 @@ export function ApiReadOneTemporaryLecture() {
         statusCode: 200,
         data: {
           temporaryLecture: {
-            id: 144,
+            id: 120,
             lecturerId: 3,
             step: 2,
             lectureTypeId: 1,
-            lectureMethodId: 2,
+            lectureMethodId: 1,
             isGroup: true,
             startDate: '2023-10-02T15:00:00.000Z',
             endDate: '2023-10-02T15:00:00.000Z',
@@ -38,14 +38,14 @@ export function ApiReadOneTemporaryLecture() {
             price: 40000,
             noShowDeposit: 30000,
             locationDescription: '버스타고 한번에',
-            createdAt: '2023-11-15T17:28:16.471Z',
-            updatedAt: '2023-11-15T18:05:25.664Z',
+            createdAt: '2023-11-09T05:33:36.656Z',
+            updatedAt: '2023-11-20T03:03:16.836Z',
             deletedAt: null,
             lectureType: {
               name: 'dance',
             },
             lectureMethod: {
-              name: '정기',
+              name: '원데이',
             },
             temporaryLecturenotification: {
               notification: '15일 영업 안합니다요',
@@ -112,26 +112,16 @@ export function ApiReadOneTemporaryLecture() {
             ],
           },
           location: {
-            id: 47,
-            lectureId: 144,
+            id: 2,
+            lectureId: 120,
             address: '서울특별시 중랑구 용마산로616',
             detailAddress: '101동 1802호',
             buildingName: '새한아파트',
           },
-          temporaryLectureDaySchedule: [
+          schedules: [
             {
-              team: 'A',
               day: ['월', '화'],
-              startDateTime: ['13:00', '14:00'],
-            },
-            {
-              team: 'B',
-              day: ['월', '화'],
-              startDateTime: ['13:00', '14:00'],
-            },
-            {
-              team: 'C',
-              day: ['월', '화'],
+              date: '10/12',
               startDateTime: ['13:00', '14:00'],
             },
           ],
