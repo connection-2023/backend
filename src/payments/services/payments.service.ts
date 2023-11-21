@@ -133,7 +133,7 @@ export class PaymentsService implements OnModuleInit {
           lecturerId,
           userId,
           paymentInfo,
-          PaymentProductTypes.강의,
+          PaymentProductTypes.클래스,
         );
 
         await Promise.all([
@@ -756,7 +756,7 @@ export class PaymentsService implements OnModuleInit {
       throw new BadRequestException(`취소가 불가능한 상태입니다`);
     }
 
-    if (paymentInfo.paymentProductType.name === PaymentProductTypes.강의) {
+    if (paymentInfo.paymentProductType.name === PaymentProductTypes.클래스) {
       await this.cancelReservationTransaction(paymentInfo);
     }
   }
