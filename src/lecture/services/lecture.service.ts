@@ -463,6 +463,12 @@ export class LectureService {
     return reservation;
   }
 
+  async readManyLectureWithLecturerId(lecturerId: number) {
+    return await this.lectureRepository.readManyLectureWithLectruerId(
+      lecturerId,
+    );
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
