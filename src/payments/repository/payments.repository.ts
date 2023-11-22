@@ -668,4 +668,37 @@ export class PaymentsRepository {
       );
     }
   }
+
+  async getPaymentVirtualAccount(userId: number, paymentId: number) {
+    try {
+      return await this.prismaService.payment.findFirst({
+        where: {
+          id: paymentId,
+          userId,
+          paymentMethodId: PaymentMethods.가상계좌,
+        },
+        select: {
+          price: true,
+          virtualAccountPaymentInfo: {
+            select: {
+              accountNumber: true,
+              customerName: true,
+              dueDate: true,
+              bank: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
 }
