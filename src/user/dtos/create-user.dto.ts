@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Matches,
@@ -86,11 +87,19 @@ export class CreateUserDto {
   authEmail: string;
 
   @ApiProperty({
-    example: true,
-    description: '서비스 이용 약관',
+    example: {
+      termsOfService: true,
+      talk: true,
+      email: true,
+      marketing: {
+        marketingChannelTalk: true,
+        marketingEmail: true,
+      },
+    },
+    description: '약관동의',
     required: true,
   })
-  @IsBoolean()
+  @IsObject()
   @IsNotEmpty()
-  RegisterConsents: RegisterConsents;
+  registerConsents: RegisterConsents;
 }

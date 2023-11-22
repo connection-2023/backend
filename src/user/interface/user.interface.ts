@@ -8,4 +8,13 @@ interface RegisterConsents {
   };
 }
 
-export { RegisterConsents };
+interface RegisterConsentAgreeList {
+  name: string;
+}
+
+interface RegisterConsentInputData {
+  userId: number;
+  registerConsentId: number;
+}
+
+export { RegisterConsents, RegisterConsentAgreeList, RegisterConsentInputData };

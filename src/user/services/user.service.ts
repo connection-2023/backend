@@ -9,8 +9,12 @@ import {
 } from '@nestjs/common';
 import { CreateUserAuthDto } from '@src/auth/dtos/create-user-auth.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import { UserProfileImage, Users } from '@prisma/client';
+import {
+  RegisterConsentInputData,
+  RegisterConsents,
+} from '../interface/user.interface';
 
 @Injectable()
 export class UserService {
@@ -46,6 +50,8 @@ export class UserService {
         }
       }
 
+      const { registerConsents } = user;
+
       return await this.prismaServcie.$transaction(
         async (transaction: PrismaTransaction) => {
           const createUser = await this.userRepository.trxCreateUser(
@@ -61,6 +67,17 @@ export class UserService {
             transaction,
             auth,
           );
+          const registerConsentInputData =
+            await this.createRegisterConsentInputData(
+              createUser.id,
+              registerConsents,
+            );
+
+          const createRegisterConsent =
+            await this.userRepository.trxCreateRegisterConsentAgreement(
+              transaction,
+              registerConsentInputData,
+            );
 
           return { createUser, createAuth };
         },
@@ -97,5 +114,39 @@ export class UserService {
 
   async getMyProfile(userId: number) {
     return await this.userRepository.getMyProfile(userId);
+  }
+
+  private async getRegisterConsentIds(
+    registerConsents: RegisterConsents,
+  ): Promise<Id[]> {
+    const agreeConsentList = [];
+    for (const consent in registerConsents) {
+      if (consent === 'marketing') {
+        for (const marketing in registerConsents[consent]) {
+          if (registerConsents[consent][marketing]) {
+            agreeConsentList.push({ name: marketing });
+          }
+        }
+      } else if (registerConsents[consent]) {
+        agreeConsentList.push({ name: consent });
+      }
+    }
+    return await this.userRepository.getRegisterConsentId(agreeConsentList);
+  }
+
+  private async createRegisterConsentInputData(
+    userId: number,
+    registerConcents: RegisterConsents,
+  ): Promise<RegisterConsentInputData[]> {
+    const registerConsentIds = await this.getRegisterConsentIds(
+      registerConcents,
+    );
+    const registerConsentInputData: RegisterConsentInputData[] =
+      registerConsentIds.map((consentId) => ({
+        userId,
+        registerConsentId: consentId.id,
+      }));
+
+    return registerConsentInputData;
   }
 }

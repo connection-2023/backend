@@ -761,7 +761,7 @@ model RegisterConsentAgreement {
   registerConsentId Int
   userId            Int
   registerConsent   RegisterConsent @relation(fields: [registerConsentId], references: [id])
-  user              Users           @relation(fields: [userId], references: [id])
+  user              Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([registerConsentId, userId])
 }
