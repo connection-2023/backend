@@ -160,6 +160,10 @@ interface ILectureSchedule {
   startDateTime: Date;
 }
 
+interface ICursor {
+  id: number;
+}
+
 export {
   LectureSchedule,
   LectureCoupon,
@@ -177,4 +181,5 @@ export {
   CardPaymentInfoInputData,
   VirtualAccountPaymentInfoInputData,
   IPaymentResult,
+  ICursor,
 };

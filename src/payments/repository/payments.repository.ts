@@ -3,6 +3,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardInfo,
   CardPaymentInfoInputData,
+  ICursor,
   LectureCoupon,
   LectureCouponUseage,
   LecturePaymentUpdateData,
@@ -379,8 +380,10 @@ export class PaymentsRepository {
   }
 
   async getPaymentProductType(
-    productType: PaymentProductTypes,
+    productType: string,
   ): Promise<PaymentProductType> {
+    console.log(productType);
+
     try {
       return this.prismaService.paymentProductType.findFirst({
         where: { name: productType },
@@ -606,6 +609,62 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 결제 정보 수정 실패: ${error}`,
         'PrismaUpdateFailed',
+      );
+    }
+  }
+
+  async countUserPaymentsHistory(userId: number) {
+    return await this.prismaService.payment.count({ where: { userId } });
+  }
+
+  async getUserPaymentHistory(
+    userId: number,
+    take: number,
+    skip: number,
+    cursor: ICursor,
+    paymentProductTypeId?: number,
+  ) {
+    try {
+      return await this.prismaService.payment.findMany({
+        where: { userId, paymentProductTypeId },
+        take,
+        skip,
+        cursor,
+        select: {
+          id: true,
+          orderId: true,
+          orderName: true,
+          price: true,
+          paymentProductType: {
+            select: {
+              name: true,
+            },
+          },
+          paymentMethod: {
+            select: {
+              name: true,
+            },
+          },
+          paymentStatus: {
+            select: {
+              name: true,
+            },
+          },
+          updatedAt: true,
+          lecturer: {
+            select: {
+              profileCardImageUrl: true,
+            },
+          },
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
       );
     }
   }

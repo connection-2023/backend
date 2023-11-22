@@ -23,7 +23,7 @@ export enum VirtualAccountRefundStatus {
 }
 
 export enum PaymentProductTypes {
-  강의 = '강의',
+  클래스 = '클래스',
   패스권 = '패스권',
 }
 
