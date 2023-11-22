@@ -5,16 +5,15 @@ import {
   ParseIntPipe,
   Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { UserPaymentsService } from '../services/user-payments.service';
-import { GetUserPaymentsHistoryDto } from '../dtos/get-user-payments-history.dto';
+import { UserPaymentsService } from '@src/payments/services/user-payments.service';
+import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-history.dto';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiGetUserPaymentsHistory } from '../swagger-decorators/get-user-payments-history-decorator';
-import { ApiPaymentVirtualAccount } from '../swagger-decorators/get-payment-virtual-account-decorator';
+import { ApiGetUserPaymentsHistory } from '@src/payments/swagger-decorators/get-user-payments-history-decorator';
+import { ApiPaymentVirtualAccount } from '@src/payments/swagger-decorators/get-payment-virtual-account-decorator';
 
 @ApiTags('결제')
 @Controller('user-payments')
@@ -41,12 +40,9 @@ export class UserPaymentsController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('paymentId', ParseIntPipe) paymentId: number,
   ) {
-    const paymentVirtualAccountInfo =
-      await this.userPaymentsService.getPaymentVirtualAccount(
-        authorizedData.user.id,
-        paymentId,
-      );
-
-    return paymentVirtualAccountInfo;
+    return await this.userPaymentsService.getPaymentVirtualAccount(
+      authorizedData.user.id,
+      paymentId,
+    );
   }
 }

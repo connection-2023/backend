@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { GetUserPaymentsHistoryDto } from '../dtos/get-user-payments-history.dto';
+import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-history.dto';
 
 @Injectable()
 export class UserPaymentsService implements OnModuleInit {
@@ -19,41 +19,62 @@ export class UserPaymentsService implements OnModuleInit {
   }
 
   async getUserPaymentsHistory(
-    { take, skip, lastItemId, paymentHistoryType }: GetUserPaymentsHistoryDto,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      paymentHistoryType,
+    }: GetUserPaymentsHistoryDto,
     userId: number,
   ) {
-    const paymentCount: number =
-      await this.paymentsRepository.countUserPaymentsHistory(userId);
-    if (!paymentCount) {
-      return;
-    }
+    let paymentType;
 
-    let paymentHistory;
-    const cursor = lastItemId ? { id: lastItemId } : undefined;
-    skip = lastItemId ? 1 : skip;
-
+    // 전체
     if (paymentHistoryType !== '전체') {
-      const paymentType = await this.paymentsRepository.getPaymentProductType(
-        paymentHistoryType,
-      );
+      const paymentProductType =
+        await this.paymentsRepository.getPaymentProductType(paymentHistoryType);
+      paymentType = paymentProductType?.id;
+    }
 
-      paymentHistory = await this.paymentsRepository.getUserPaymentHistory(
+    if (!targetPage) {
+      return await this.paymentsRepository.getUserPaymentHistory(
         userId,
         take,
-        skip,
-        cursor,
-        paymentType.id,
-      );
-    } else {
-      paymentHistory = await this.paymentsRepository.getUserPaymentHistory(
-        userId,
-        take,
-        skip,
-        cursor,
+        paymentType,
       );
     }
 
-    return { paymentCount, paymentHistory };
+    if (currentPage && targetPage) {
+      const pageDiff = currentPage - targetPage;
+
+      const { cursor, skip, changedTake } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      );
+
+      return await this.paymentsRepository.getUserPaymentHistory(
+        userId,
+        changedTake,
+        paymentType,
+        cursor,
+        skip,
+      );
+    }
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor = { id: itemId };
+
+    const calculateSkipValue = (pageDiff: number) => {
+      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    };
+
+    const skip = calculateSkipValue(pageDiff);
+
+    return { cursor, skip, changedTake: pageDiff >= 1 ? -take : take };
   }
 
   async getPaymentVirtualAccount(userId: number, paymentId: number) {

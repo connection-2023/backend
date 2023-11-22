@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsNotEmpty, IsNumber } from 'class-validator';
-import { number } from 'joi';
 
 export class GetUserPaymentsHistoryDto {
   @ApiProperty({
@@ -15,20 +14,38 @@ export class GetUserPaymentsHistoryDto {
   take: number;
 
   @ApiProperty({
-    example: '15',
-    description:
-      '건너뛸 항목의 수/ 현재 페이지에서 임의의 페이지로 넘어갈 떄 사용',
+    example: '1',
+    description: '현재 페이지/첫 요청 시 0',
     required: true,
   })
   @IsNumber()
   @Type(() => Number)
   @IsNotEmpty()
-  skip: number;
+  currentPage: number;
 
   @ApiProperty({
-    example: '70',
-    description:
-      '반환된 내역의 마지막 id/ 현재 페이지에서 다음, 이전페이지로 넘어갈때 사용',
+    example: '3',
+    description: '이동할 페이지/첫 요청 시 0',
+    required: true,
+  })
+  @IsNumber()
+  @Type(() => Number)
+  @IsNotEmpty()
+  targetPage: number;
+
+  @ApiProperty({
+    example: '1',
+    description: '반환된 내역의 첫번째 id',
+    required: true,
+  })
+  @IsNumber()
+  @Type(() => Number)
+  @IsNotEmpty()
+  firstItemId: number;
+
+  @ApiProperty({
+    example: '15',
+    description: '반환된 내역의 마지막 id',
     required: true,
   })
   @IsNumber()
