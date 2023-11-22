@@ -37,7 +37,7 @@ export class CouponService {
   async createLectureCoupon(
     lecturerId: number,
     createLectureCouponDto: CreateLectureCouponDto,
-  ): Promise<void> {
+  ): Promise<LectureCoupon> {
     const { lectureIds, ...couponInfo } = createLectureCouponDto;
     const couponInputData: CouponInputData = {
       lecturerId,
@@ -48,7 +48,7 @@ export class CouponService {
       await this.validateLectureIds(lecturerId, lectureIds);
     }
 
-    await this.prismaService.$transaction(
+    const coupon: LectureCoupon = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const createdCoupon: LectureCoupon =
           await this.couponRepository.trxCreateLectureCoupon(
@@ -64,8 +64,10 @@ export class CouponService {
             createCouponTargetInputData,
           );
         }
+        return createdCoupon;
       },
     );
+    return coupon;
   }
 
   private async validateLectureIds(

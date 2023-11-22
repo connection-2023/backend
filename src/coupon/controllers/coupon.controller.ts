@@ -54,16 +54,18 @@ export class CouponController {
   }
 
   @ApiCreateLectureCoupon()
-  @Post('/lectures')
+  @Post('/lecture')
   @UseGuards(LecturerAccessTokenGuard)
   async createLectureCoupon(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
     @Body() createLectureCouponDto: CreateLectureCouponDto,
   ) {
-    await this.couponService.createLectureCoupon(
+    const coupon = await this.couponService.createLectureCoupon(
       AuthorizedData.lecturer.id,
       createLectureCouponDto,
     );
+
+    return { coupon };
   }
 
   @ApiGetApplicableCouponsForLecture()
