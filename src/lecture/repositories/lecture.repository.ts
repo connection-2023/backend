@@ -259,4 +259,8 @@ export class LectureRepository {
       where: { userId, lectureSchedule: { lectureId } },
     });
   }
+
+  async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({ where: { lecturerId } });
+  }
 }
