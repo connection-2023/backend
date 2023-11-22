@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Param,
   ParseIntPipe,
   Query,
   UseGuards,
@@ -13,6 +14,7 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiGetUserPaymentsHistory } from '../swagger-decorators/get-user-payments-history-decorator';
+import { ApiPaymentVirtualAccount } from '../swagger-decorators/get-payment-virtual-account-decorator';
 
 @ApiTags('결제')
 @Controller('user-payments')
@@ -30,5 +32,21 @@ export class UserPaymentsController {
       getUserPaymentsHistoryDto,
       authorizedData.user.id,
     );
+  }
+
+  @ApiPaymentVirtualAccount()
+  @Get('/:paymentId/virtual-account')
+  @UseGuards(UserAccessTokenGuard)
+  async getPaymentVirtualAccount(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('paymentId', ParseIntPipe) paymentId: number,
+  ) {
+    const paymentVirtualAccountInfo =
+      await this.userPaymentsService.getPaymentVirtualAccount(
+        authorizedData.user.id,
+        paymentId,
+      );
+
+    return paymentVirtualAccountInfo;
   }
 }

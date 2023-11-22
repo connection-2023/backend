@@ -2,8 +2,6 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { number } from 'joi';
-import { ICursor } from '../interface/payments.interface';
 import { GetUserPaymentsHistoryDto } from '../dtos/get-user-payments-history.dto';
 
 @Injectable()
@@ -56,5 +54,12 @@ export class UserPaymentsService implements OnModuleInit {
     }
 
     return { paymentCount, paymentHistory };
+  }
+
+  async getPaymentVirtualAccount(userId: number, paymentId: number) {
+    return await this.paymentsRepository.getPaymentVirtualAccount(
+      userId,
+      paymentId,
+    );
   }
 }
