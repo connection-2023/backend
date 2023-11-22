@@ -9,6 +9,7 @@ import {
   IsString,
   Matches,
 } from 'class-validator';
+import { RegisterConsents } from '@src/user/interface/user.interface';
 
 export class CreateUserDto {
   @ApiProperty({ example: '이재현', description: '이름', required: true })
@@ -83,4 +84,13 @@ export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
   authEmail: string;
+
+  @ApiProperty({
+    example: true,
+    description: '서비스 이용 약관',
+    required: true,
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  RegisterConsents: RegisterConsents;
 }

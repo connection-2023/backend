@@ -748,7 +748,7 @@ model TemporaryLectureLocation {
   temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
-model TermService {
+model RegisterConsent {
   id                   Int                    @id @default(autoincrement())
   name                 String
   description          String
@@ -756,7 +756,7 @@ model TermService {
   termServiceAgreement TermServiceAgreement[]
 }
 
-model TermServiceAgreement {
+model RegisterConsentAgreement {
   id            Int         @id @default(autoincrement())
   termServiceId Int
   userId        Int
