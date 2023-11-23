@@ -29,9 +29,14 @@ export class UserPaymentsService implements OnModuleInit {
     }: GetUserPaymentsHistoryDto,
     userId: number,
   ) {
+    const totalItemCount: number =
+      await this.paymentsRepository.countUserPaymentsHistory(userId);
+    if (!totalItemCount) {
+      return;
+    }
+
     let paymentType;
 
-    // 전체
     if (paymentHistoryType !== '전체') {
       const paymentProductType =
         await this.paymentsRepository.getPaymentProductType(paymentHistoryType);
@@ -39,11 +44,13 @@ export class UserPaymentsService implements OnModuleInit {
     }
 
     if (!targetPage) {
-      return await this.paymentsRepository.getUserPaymentHistory(
-        userId,
-        take,
-        paymentType,
-      );
+      const paymentHistory =
+        await this.paymentsRepository.getUserPaymentHistory(
+          userId,
+          take,
+          paymentType,
+        );
+      return { totalItemCount, paymentHistory };
     }
 
     if (currentPage && targetPage) {
@@ -55,13 +62,15 @@ export class UserPaymentsService implements OnModuleInit {
         take,
       );
 
-      return await this.paymentsRepository.getUserPaymentHistory(
-        userId,
-        changedTake,
-        paymentType,
-        cursor,
-        skip,
-      );
+      const paymentHistory =
+        await this.paymentsRepository.getUserPaymentHistory(
+          userId,
+          changedTake,
+          paymentType,
+          cursor,
+          skip,
+        );
+      return { totalItemCount, paymentHistory };
     }
   }
 

@@ -611,7 +611,7 @@ export class PaymentsRepository {
     }
   }
 
-  async countUserPaymentsHistory(userId: number) {
+  async countUserPaymentsHistory(userId: number): Promise<number> {
     return await this.prismaService.payment.count({ where: { userId } });
   }
 
