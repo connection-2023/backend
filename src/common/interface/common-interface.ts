@@ -64,3 +64,7 @@ export interface GetLecturerResult {
   id: number;
   userId: number;
 }
+
+export interface ICursor {
+  id: number;
+}

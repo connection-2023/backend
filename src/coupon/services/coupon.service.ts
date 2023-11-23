@@ -15,6 +15,7 @@ import { LectureCoupon, LectureCouponTarget, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { createCipheriv, Cipher, createDecipheriv } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
 
 @Injectable()
 export class CouponService {
@@ -273,8 +274,87 @@ export class CouponService {
     }
   }
 
-  async getMyCouponList(userId: number) {
-    return await this.couponRepository.getUserCouponList(userId);
+  async getMyCouponList(
+    userId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      couponStatusOption,
+      filterOption,
+    }: GetMyCouponListDto,
+  ) {
+    const totalItemCount = await this.couponRepository.countUserCouponCount(
+      userId,
+    );
+    if (!totalItemCount) {
+      return;
+    }
+    const { orderBy, endAt } = this.getCouponFIlterOptions(filterOption);
+    if (!targetPage && !lastItemId) {
+      const couponList = await this.couponRepository.getUserCouponList(
+        userId,
+        take,
+        endAt,
+        orderBy,
+      );
+
+      return { totalItemCount, couponList };
+    }
+
+    if (currentPage && targetPage) {
+      const pageDiff = currentPage - targetPage;
+
+      const { cursor, skip, invertedTake } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      );
+
+      const couponList = await this.couponRepository.getUserCouponList(
+        userId,
+        invertedTake,
+        endAt,
+        orderBy,
+        cursor,
+        skip,
+      );
+
+      return { totalItemCount, couponList };
+    }
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor = { id: itemId };
+
+    const calculateSkipValue = (pageDiff: number) => {
+      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    };
+
+    const skip = calculateSkipValue(pageDiff);
+
+    return { cursor, skip, invertedTake: pageDiff >= 1 ? -take : take };
+  }
+
+  private getCouponFIlterOptions(filterOption: string) {
+    const currentTime = new Date();
+    const orderBy =
+      filterOption === '최신'
+        ? { id: 'desc' }
+        : {
+            lectureCoupon: { endAt: 'asc' },
+          };
+
+    const endAt =
+      filterOption === '최신'
+        ? undefined
+        : {
+            gt: currentTime,
+          };
+
+    return { orderBy, endAt };
   }
 
   async getMyIssuedCouponList(lecturerId: number) {

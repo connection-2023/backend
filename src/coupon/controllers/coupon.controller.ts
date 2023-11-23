@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CouponService } from '@src/coupon/services/coupon.service';
@@ -22,7 +23,8 @@ import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lect
 import { ApiGetApplicableCouponsForLecture } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
 import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/get-private-lecture-coupon-code.decorator';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
-import { ApiIssuePrivateCouponToUser } from '../swagger-decorators/issue-private-coupon-to-user.decorator';
+import { ApiIssuePrivateCouponToUser } from '@src/coupon/swagger-decorators/issue-private-coupon-to-user.decorator';
+import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
@@ -32,9 +34,13 @@ export class CouponController {
   @ApiGetMyCouponList()
   @Get('/user')
   @UseGuards(UserAccessTokenGuard)
-  async getMyCouponList(@GetAuthorizedUser() AuthorizedData: ValidateResult) {
+  async getMyCouponList(
+    @Query() getMyCouponListDto: GetMyCouponListDto,
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+  ) {
     const coupons = await this.couponService.getMyCouponList(
       AuthorizedData.user.id,
+      getMyCouponListDto,
     );
 
     return { coupons };
