@@ -382,8 +382,6 @@ export class PaymentsRepository {
   async getPaymentProductType(
     productType: string,
   ): Promise<PaymentProductType> {
-    console.log(productType);
-
     try {
       return this.prismaService.paymentProductType.findFirst({
         where: { name: productType },
@@ -613,16 +611,16 @@ export class PaymentsRepository {
     }
   }
 
-  async countUserPaymentsHistory(userId: number) {
+  async countUserPaymentsHistory(userId: number): Promise<number> {
     return await this.prismaService.payment.count({ where: { userId } });
   }
 
   async getUserPaymentHistory(
     userId: number,
     take: number,
-    skip: number,
-    cursor: ICursor,
-    paymentProductTypeId?: number,
+    paymentProductTypeId: number | undefined,
+    cursor?: ICursor,
+    skip?: number,
   ) {
     try {
       return await this.prismaService.payment.findMany({
