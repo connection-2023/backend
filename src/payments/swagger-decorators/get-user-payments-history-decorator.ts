@@ -20,7 +20,7 @@ export function ApiGetUserPaymentsHistory() {
       SwaggerApiResponse.success('결제 내역 및 데이터 총 개수 반환', {
         statusCode: 200,
         data: {
-          paymentCount: 51,
+          totalItemCount: 51,
           paymentHistory: [
             {
               id: 84,
