@@ -25,6 +25,7 @@ import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/g
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
 import { ApiIssuePrivateCouponToUser } from '@src/coupon/swagger-decorators/issue-private-coupon-to-user.decorator';
 import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
+import { GetMyIssuedCouponListDto } from '@src/coupon/dtos/get-my-issued-coupon-list.dto';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
@@ -35,15 +36,13 @@ export class CouponController {
   @Get('/user')
   @UseGuards(UserAccessTokenGuard)
   async getMyCouponList(
-    @Query() getMyCouponListDto: GetMyCouponListDto,
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Query() getMyCouponListDto: GetMyCouponListDto,
   ) {
-    const coupons = await this.couponService.getMyCouponList(
+    return await this.couponService.getMyCouponList(
       AuthorizedData.user.id,
       getMyCouponListDto,
     );
-
-    return { coupons };
   }
 
   @ApiGetMyIssuedCouponList()
@@ -51,12 +50,12 @@ export class CouponController {
   @UseGuards(LecturerAccessTokenGuard)
   async getMyIssuedCouponList(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Query() getMyIssuedCouponListDto: GetMyIssuedCouponListDto,
   ) {
-    const coupons = await this.couponService.getMyIssuedCouponList(
+    return await this.couponService.getMyIssuedCouponList(
       AuthorizedData.lecturer.id,
+      getMyIssuedCouponListDto,
     );
-
-    return { coupons };
   }
 
   @ApiCreateLectureCoupon()
