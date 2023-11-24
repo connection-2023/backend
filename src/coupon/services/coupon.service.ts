@@ -15,6 +15,11 @@ import { LectureCoupon, LectureCouponTarget, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { createCipheriv, Cipher, createDecipheriv } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
+import {
+  UserCouponFilterOptions,
+  UserCouponStatusOptions,
+} from '../enum/coupon.enum.ts';
 
 @Injectable()
 export class CouponService {
@@ -273,8 +278,122 @@ export class CouponService {
     }
   }
 
-  async getMyCouponList(userId: number) {
-    return await this.couponRepository.getUserCouponList(userId);
+  async getMyCouponList(
+    userId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      couponStatusOption,
+      filterOption,
+    }: GetMyCouponListDto,
+  ) {
+    const totalItemCount = await this.couponRepository.countUserCouponCount(
+      userId,
+    );
+
+    if (!totalItemCount) {
+      return;
+    }
+
+    const { isUsed, orderBy, endAt } = this.getCouponFilterOptions(
+      couponStatusOption,
+      filterOption,
+    );
+
+    let couponList;
+    let cursor;
+    let skip;
+
+    if (!targetPage && !lastItemId) {
+      couponList = await this.couponRepository.getUserCouponList(
+        userId,
+        take,
+        endAt,
+        orderBy,
+        isUsed,
+      );
+    } else if (currentPage && targetPage) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+
+      couponList = await this.couponRepository.getUserCouponList(
+        userId,
+        pageDiff >= 1 ? -take : take,
+        endAt,
+        orderBy,
+        isUsed,
+        cursor,
+        skip,
+      );
+    } else if (lastItemId && take) {
+      cursor = { id: lastItemId };
+      skip = 1;
+
+      couponList = await this.couponRepository.getUserCouponList(
+        userId,
+        take,
+        endAt,
+        orderBy,
+        isUsed,
+        cursor,
+        skip,
+      );
+    }
+
+    return { totalItemCount, couponList };
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor = { id: itemId };
+    const skip =
+      Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    const invertedTake = pageDiff >= 1 ? -take : take;
+
+    return { cursor, skip, invertedTake };
+  }
+
+  private getCouponFilterOptions(
+    couponStatusOption: UserCouponStatusOptions,
+    filterOption: UserCouponFilterOptions,
+  ) {
+    const currentTime = new Date();
+    let isUsed;
+    let orderBy;
+    let endAt;
+
+    switch (couponStatusOption) {
+      case UserCouponStatusOptions.AVAILABLE:
+        isUsed = false;
+        orderBy =
+          filterOption === UserCouponFilterOptions.LATEST
+            ? { id: 'desc' }
+            : { lectureCoupon: { endAt: 'asc' } };
+        endAt =
+          filterOption === UserCouponFilterOptions.LATEST
+            ? undefined
+            : { gt: currentTime };
+
+        return { isUsed, orderBy, endAt };
+
+      case UserCouponStatusOptions.USED:
+        isUsed = true;
+        orderBy = { updatedAt: 'desc' };
+
+        return { isUsed, orderBy, endAt };
+
+      case UserCouponStatusOptions.EXPIRED:
+        endAt = { lt: currentTime };
+        orderBy = { lectureCoupon: { endAt: 'desc' } };
+
+        return { isUsed, orderBy, endAt };
+    }
   }
 
   async getMyIssuedCouponList(lecturerId: number) {
