@@ -16,6 +16,10 @@ import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto
 import { createCipheriv, Cipher, createDecipheriv } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
+import {
+  UserCouponFilterOptions,
+  UserCouponStatusOptions,
+} from '../enum/coupon.enum.ts';
 
 @Injectable()
 export class CouponService {
@@ -289,72 +293,107 @@ export class CouponService {
     const totalItemCount = await this.couponRepository.countUserCouponCount(
       userId,
     );
+
     if (!totalItemCount) {
       return;
     }
-    const { orderBy, endAt } = this.getCouponFIlterOptions(filterOption);
+
+    const { isUsed, orderBy, endAt } = this.getCouponFilterOptions(
+      couponStatusOption,
+      filterOption,
+    );
+
+    let couponList;
+    let cursor;
+    let skip;
+
     if (!targetPage && !lastItemId) {
-      const couponList = await this.couponRepository.getUserCouponList(
+      couponList = await this.couponRepository.getUserCouponList(
         userId,
         take,
         endAt,
         orderBy,
+        isUsed,
       );
-
-      return { totalItemCount, couponList };
-    }
-
-    if (currentPage && targetPage) {
+    } else if (currentPage && targetPage) {
       const pageDiff = currentPage - targetPage;
-
-      const { cursor, skip, invertedTake } = this.getPaginationOptions(
+      ({ cursor, skip } = this.getPaginationOptions(
         pageDiff,
         pageDiff <= -1 ? lastItemId : firstItemId,
         take,
-      );
+      ));
 
-      const couponList = await this.couponRepository.getUserCouponList(
+      couponList = await this.couponRepository.getUserCouponList(
         userId,
-        invertedTake,
+        pageDiff >= 1 ? -take : take,
         endAt,
         orderBy,
+        isUsed,
         cursor,
         skip,
       );
+    } else if (lastItemId && take) {
+      cursor = { id: lastItemId };
+      skip = 1;
 
-      return { totalItemCount, couponList };
+      couponList = await this.couponRepository.getUserCouponList(
+        userId,
+        take,
+        endAt,
+        orderBy,
+        isUsed,
+        cursor,
+        skip,
+      );
     }
+
+    return { totalItemCount, couponList };
   }
 
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
+    const skip =
+      Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    const invertedTake = pageDiff >= 1 ? -take : take;
 
-    const calculateSkipValue = (pageDiff: number) => {
-      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    };
-
-    const skip = calculateSkipValue(pageDiff);
-
-    return { cursor, skip, invertedTake: pageDiff >= 1 ? -take : take };
+    return { cursor, skip, invertedTake };
   }
 
-  private getCouponFIlterOptions(filterOption: string) {
+  private getCouponFilterOptions(
+    couponStatusOption: UserCouponStatusOptions,
+    filterOption: UserCouponFilterOptions,
+  ) {
     const currentTime = new Date();
-    const orderBy =
-      filterOption === '최신'
-        ? { id: 'desc' }
-        : {
-            lectureCoupon: { endAt: 'asc' },
-          };
+    let isUsed;
+    let orderBy;
+    let endAt;
 
-    const endAt =
-      filterOption === '최신'
-        ? undefined
-        : {
-            gt: currentTime,
-          };
+    switch (couponStatusOption) {
+      case UserCouponStatusOptions.AVAILABLE:
+        isUsed = false;
+        orderBy =
+          filterOption === UserCouponFilterOptions.LATEST
+            ? { id: 'desc' }
+            : { lectureCoupon: { endAt: 'asc' } };
+        endAt =
+          filterOption === UserCouponFilterOptions.LATEST
+            ? undefined
+            : { gt: currentTime };
 
-    return { orderBy, endAt };
+        return { isUsed, orderBy, endAt };
+
+      case UserCouponStatusOptions.USED:
+        isUsed = true;
+        orderBy = { updatedAt: 'desc' };
+
+        return { isUsed, orderBy, endAt };
+
+      case UserCouponStatusOptions.EXPIRED:
+        endAt = { lt: currentTime };
+        orderBy = { lectureCoupon: { endAt: 'desc' } };
+
+        return { isUsed, orderBy, endAt };
+    }
   }
 
   async getMyIssuedCouponList(lecturerId: number) {

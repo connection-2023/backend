@@ -265,8 +265,9 @@ export class CouponRepository {
   async getUserCouponList(
     userId: number,
     take: number,
-    endAt?,
-    orderBy?,
+    endAt,
+    orderBy,
+    isUsed: boolean | undefined,
     cursor?: ICursor,
     skip?: number,
   ) {
@@ -277,6 +278,7 @@ export class CouponRepository {
           lectureCoupon: {
             endAt,
           },
+          isUsed,
         },
         take,
         skip,
@@ -286,6 +288,7 @@ export class CouponRepository {
           id: true,
           lectureCouponId: true,
           isUsed: true,
+          updatedAt: true,
           lectureCoupon: {
             select: {
               title: true,
@@ -309,6 +312,8 @@ export class CouponRepository {
         },
       });
     } catch (error) {
+      console.log(error);
+
       throw new InternalServerErrorException(
         `Prisma 결제 정보 조회 실패: ${error}`,
         'PrismaFindFailed',

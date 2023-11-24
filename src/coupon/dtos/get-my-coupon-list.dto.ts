@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsNumber } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import {
+  UserCouponFilterOptions,
+  UserCouponStatusOptions,
+} from '@src/coupon/enum/coupon.enum.ts';
 
 export class GetMyCouponListDto {
   @ApiProperty({
@@ -54,20 +58,22 @@ export class GetMyCouponListDto {
   lastItemId: number;
 
   @ApiProperty({
-    example: '전체',
-    description: '전체, 진행, 종료 중 하나',
+    example: 'AVAILABLE',
+    description: 'AVAILABLE, USED, EXPIRED 중 하나',
     required: true,
   })
-  @IsIn(['전체', '진행', '종료'])
+  @IsEnum(UserCouponStatusOptions, { each: true })
+  @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
-  couponStatusOption: string;
+  couponStatusOption: UserCouponStatusOptions;
 
   @ApiProperty({
-    example: '최신',
-    description: '최신, 임박 중 하나',
+    example: 'LATEST',
+    description: '(AVAILABLE일때만)LATEST, UPCOMING 중 하나',
     required: true,
   })
-  @IsIn(['최신', '임박'])
+  @IsEnum(UserCouponFilterOptions, { each: true })
+  @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
-  filterOption: string;
+  filterOption: UserCouponFilterOptions;
 }
