@@ -2,11 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import {
+  IssuedCouponStatusOptions,
   CouponFilterOptions,
   UserCouponStatusOptions,
 } from '@src/coupon/enum/coupon.enum.ts';
 
-export class GetMyCouponListDto {
+export class GetMyIssuedCouponListDto {
   @ApiProperty({
     example: '15',
     description: '반환되는 결과의 개수',
@@ -59,13 +60,13 @@ export class GetMyCouponListDto {
 
   @ApiProperty({
     example: 'AVAILABLE',
-    description: 'AVAILABLE, USED, EXPIRED 중 하나',
+    description: 'AVAILABLE, DISABLED 중 하나',
     required: true,
   })
-  @IsEnum(UserCouponStatusOptions, { each: true })
+  @IsEnum(IssuedCouponStatusOptions, { each: true })
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
-  couponStatusOption: UserCouponStatusOptions;
+  issuedCouponStatusOptions: IssuedCouponStatusOptions;
 
   @ApiProperty({
     example: 'LATEST',
@@ -76,4 +77,14 @@ export class GetMyCouponListDto {
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
   filterOption: CouponFilterOptions;
+
+  @ApiProperty({
+    example: 1,
+    description: '원하는 클래스 ID',
+    required: false,
+  })
+  @IsNumber()
+  @Type(() => Number)
+  @IsOptional()
+  lectureId: number;
 }

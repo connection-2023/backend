@@ -4,7 +4,12 @@ export enum UserCouponStatusOptions {
   EXPIRED = 'EXPIRED',
 }
 
-export enum UserCouponFilterOptions {
+export enum CouponFilterOptions {
   LATEST = 'LATEST',
   UPCOMING = 'UPCOMING',
+}
+
+export enum IssuedCouponStatusOptions {
+  AVAILABLE = 'AVAILABLE',
+  DISABLED = 'DISABLED',
 }

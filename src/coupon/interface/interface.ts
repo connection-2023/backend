@@ -1,3 +1,5 @@
+import { string } from 'joi';
+
 interface CouponInputData {
   id?: number;
   lecturerId: number;
