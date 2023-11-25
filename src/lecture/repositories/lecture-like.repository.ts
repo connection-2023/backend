@@ -18,9 +18,10 @@ export class LectureLikeRepository {
 
   async readManyLikedLectureWithUserId(
     userId: number,
+    isActive: boolean,
   ): Promise<LikedLecture[]> {
     return await this.prismaService.likedLecture.findMany({
-      where: { userId },
+      where: { userId, lecture: { isActive } },
       include: { lecture: true },
     });
   }
