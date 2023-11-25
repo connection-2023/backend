@@ -85,7 +85,7 @@ export class LectureReviewService {
     );
   }
 
-  async readManyLectureReview(lectureId: number, orderBy: string) {
+  async readManyLectureReviewNonMember(lectureId: number, orderBy: string) {
     const order = {};
 
     if (orderBy === '최신순') {

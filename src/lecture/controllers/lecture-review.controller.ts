@@ -20,6 +20,7 @@ import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-
 import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -60,7 +61,7 @@ export class LectureReviewController {
 
   @ApiReadManyLectureReview()
   @UseGuards(UserAccessTokenGuard)
-  @Get(':lectureId')
+  @Get(':lectureId/users')
   async readManyLectureReviewWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureReviewQueryDto,
@@ -70,6 +71,22 @@ export class LectureReviewController {
     const review =
       await this.lectureReviewService.readManyLectureReviewWithUserId(
         authorizedData.user.id,
+        lectureId,
+        orderBy,
+      );
+
+    return { review };
+  }
+
+  @ApiReadManyLectureReviewNonMember()
+  @Get(':lectureId/non-members')
+  async readManyLectureReviewWithNonMember(
+    @Query() query: ReadManyLectureReviewQueryDto,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const { orderBy } = query;
+    const review =
+      await this.lectureReviewService.readManyLectureReviewNonMember(
         lectureId,
         orderBy,
       );
