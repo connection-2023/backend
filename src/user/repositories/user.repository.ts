@@ -7,6 +7,7 @@ import {
   RegisterConsentAgreeList,
   RegisterConsentInputData,
 } from '@src/user/interface/user.interface';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 
 @Injectable()
 export class UserRepository {
@@ -70,6 +71,17 @@ export class UserRepository {
     return await this.prismaService.registerConsent.findMany({
       where: { OR: registerConsentList },
       select: { id: true },
+    });
+  }
+
+  async trxUpdateUser(
+    transaction: PrismaTransaction,
+    userId: number,
+    updateUserSetData: UpdateUserDto,
+  ): Promise<Users> {
+    return await transaction.users.update({
+      where: { id: userId },
+      data: updateUserSetData,
     });
   }
 }
