@@ -9,11 +9,11 @@ import {
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiIssueCouponToUser() {
+export function ApiIssuePrivateCouponToUser() {
   return applyDecorators(
     ApiOperation({
-      summary: '클래스 공개(public)쿠폰 받기',
-      description: '쿠폰id로 받기',
+      summary: '클래스 비공개(public)쿠폰 받기',
+      description: '쿠폰code로 받기',
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(

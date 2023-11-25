@@ -5,6 +5,9 @@ import {
   Region,
   LectureCoupon,
   LectureCouponTarget,
+  LectureReview,
+  LectureHoliday,
+  Reservation,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
@@ -13,6 +16,8 @@ import {
   LectureHolidayInputData,
   LectureImageInputData,
   LectureInputData,
+  LectureLocation,
+  LectureLocationInputData,
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
@@ -40,6 +45,15 @@ export class LectureRepository {
     });
   }
 
+  async trxCreateLectureLocation(
+    transaction: PrismaTransaction,
+    lectureLocationInputData: LectureLocationInputData,
+  ): Promise<void> {
+    await transaction.lectureLocation.create({
+      data: lectureLocationInputData,
+    });
+  }
+
   async trxCreateLectureSchedule(
     transaction: PrismaTransaction,
     lectureSchedule: LectureScheduleInputData[],
@@ -49,13 +63,20 @@ export class LectureRepository {
     });
   }
 
-  async trxCreateLectureImg(
+  async trxCreateLectureImage(
     transaction: PrismaTransaction,
-    lectureImg: LectureImageInputData[],
+    lectureImage: LectureImageInputData[],
   ): Promise<void> {
     await transaction.lectureImage.createMany({
-      data: lectureImg,
+      data: lectureImage,
     });
+  }
+
+  async trxDeleteLectureImage(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureImage.deleteMany({ where: { lectureId } });
   }
 
   async trxCreateLectureToRegions(
@@ -94,6 +115,7 @@ export class LectureRepository {
       data: { lectureId, notification },
     });
   }
+
   async trxCreateLectureHoliday(
     transaction: PrismaTransaction,
     lectureHoliday: LectureHolidayInputData[],
@@ -140,8 +162,6 @@ export class LectureRepository {
     skip: number,
     take: number,
   ): Promise<Lecture[]> {
-    console.log(where);
-
     return await this.prismaService.lecture.findMany({
       where: { ...where, deletedAt: null },
       orderBy: order,
@@ -165,22 +185,82 @@ export class LectureRepository {
     });
   }
 
-  async trxUpdateLectureImage(
+  async trxReadManyLectureSchedule(
     transaction: PrismaTransaction,
     lectureId: number,
-    lectureImg: LectureImageInputData[],
-  ): Promise<void> {
-    await transaction.lectureImage.updateMany({
+  ): Promise<LectureSchedule[]> {
+    return await transaction.lectureSchedule.findMany({
       where: { lectureId },
-      data: lectureImg,
     });
   }
 
-  async readManyLectureSchedules(
+  async trxReadManyLectureHoliday(
+    transaction: PrismaTransaction,
     lectureId: number,
-  ): Promise<LectureSchedule[]> {
-    return await this.prismaService.lectureSchedule.findMany({
+  ): Promise<LectureHoliday[]> {
+    return await transaction.lectureHoliday.findMany({
       where: { lectureId },
     });
+  }
+
+  async trxDeleteLectureCouponTarget(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureCouponTarget.deleteMany({ where: { lectureId } });
+  }
+
+  async readLectureLocation(lectureId: number): Promise<LectureLocation> {
+    return await this.prismaService.lectureLocation.findUnique({
+      where: { lectureId },
+    });
+  }
+
+  async trxDeleteManyOldSchedule(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    OldSchedule: Date[],
+  ): Promise<void> {
+    await transaction.lectureSchedule.deleteMany({
+      where: {
+        lectureId: lectureId,
+        startDateTime: {
+          in: OldSchedule.map((date) => new Date(date)),
+        },
+      },
+    });
+  }
+
+  async trxDeleteManyLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.lectureHoliday.deleteMany({ where: { lectureId } });
+  }
+
+  async trxCreateManyLectureHoliday(
+    transaction: PrismaTransaction,
+    lectureHoliday: LectureHolidayInputData,
+  ) {
+    await transaction.lectureHoliday.createMany({ data: lectureHoliday });
+  }
+
+  async getCouponId(coupons: number[]): Promise<Id[]> {
+    return await this.prismaService.lectureCoupon.findMany({
+      where: { id: { in: coupons } },
+    });
+  }
+
+  async readLectureReservationWithUser(
+    userId: number,
+    lectureId: number,
+  ): Promise<Reservation> {
+    return await this.prismaService.reservation.findFirst({
+      where: { userId, lectureSchedule: { lectureId } },
+    });
+  }
+
+  async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({ where: { lecturerId } });
   }
 }

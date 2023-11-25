@@ -1,12 +1,20 @@
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Lecture, Region, TemporaryLecture } from '@prisma/client';
+import {
+  Lecture,
+  Region,
+  TemporaryLecture,
+  TemporaryLectureDay,
+} from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
   TemporaryLectureCouponTargetInputData,
+  TemporaryLectureDayInputData,
+  TemporaryLectureDayScheduleInpuData,
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureInputData,
+  TemporaryLectureLocationInputData,
   TemporaryLectureScheduleInputData,
   TemporaryLectureToDanceGenreInputData,
   TemporaryLectureToRegionInputData,
@@ -165,13 +173,6 @@ export class LectureTemporarilySaveRepository {
         temporaryLecturenotification: { select: { notification: true } },
         temporaryLectureImage: { select: { imageUrl: true } },
         temporaryLectureCouponTarget: { select: { lectureCouponId: true } },
-        temporaryLectureSchedule: {
-          select: {
-            startDateTime: true,
-            team: true,
-            numberOfParticipants: true,
-          },
-        },
         temporaryLectureToRegion: {
           select: {
             region: {
@@ -184,6 +185,51 @@ export class LectureTemporarilySaveRepository {
         },
         temporaryLectureHoliday: { select: { holiday: true } },
       },
+    });
+  }
+
+  async trxDeleteTemporaryLectureDay(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureDay.deleteMany({ where: { lectureId } });
+  }
+
+  async trxCreateTemporaryLectureDay(
+    transaction: PrismaTransaction,
+    temporaryLectureDayInputData: TemporaryLectureDayInputData,
+  ): Promise<TemporaryLectureDay> {
+    return await transaction.temporaryLectureDay.create({
+      data: temporaryLectureDayInputData,
+    });
+  }
+
+  async trxDeleteTemporaryLectureDaySchedule(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<void> {
+    await transaction.temporaryLectureDaySchedule.deleteMany({
+      where: { temporaryLectureDay: { lectureId } },
+    });
+  }
+
+  async trxCreateTemporaryLectureDaySchedule(
+    transaction: PrismaTransaction,
+    temporaryLectureDayScheduleInputData: TemporaryLectureDayScheduleInpuData[],
+  ): Promise<void> {
+    await transaction.temporaryLectureDaySchedule.createMany({
+      data: temporaryLectureDayScheduleInputData,
+    });
+  }
+
+  async trxUpsertTemporaryLectureLocation(
+    transaction: PrismaTransaction,
+    temporaryLectureLocationInputData: TemporaryLectureLocationInputData,
+  ): Promise<void> {
+    await transaction.temporaryLectureLocation.upsert({
+      where: { lectureId: temporaryLectureLocationInputData.lectureId },
+      update: temporaryLectureLocationInputData,
+      create: temporaryLectureLocationInputData,
     });
   }
 }

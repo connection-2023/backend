@@ -1,5 +1,7 @@
 interface LectureInputData {
   isGroup: boolean;
+  startDate: Date;
+  endDate: Date;
   title: string;
   introduction?: string;
   curriculum: string;
@@ -21,14 +23,7 @@ interface LectureToRegionInputData {
 
 interface LectureScheduleInputData {
   lectureId: number;
-  startDateTime: Date;
-  endDateTime: Date;
-  numberOfParticipants: number;
-}
-
-interface RegularLectureScheduleInputData {
-  lectureId: number;
-  team: string;
+  day?: string[];
   startDateTime: Date;
   endDateTime: Date;
   numberOfParticipants: number;
@@ -55,7 +50,8 @@ interface LectureHolidayInputData {
 }
 
 interface RegularLectureSchedules {
-  regularSchedules: { [key: string]: string[] };
+  day: string[];
+  startDateTime: Date[];
 }
 
 interface LectureCouponTargetInputData {
@@ -69,6 +65,29 @@ interface LectureOrderBy {
   price?: string;
 }
 
+interface LectureLocation {
+  address: string;
+  detailAddress: string;
+  buildingName: string;
+}
+
+interface LectureLocationInputData {
+  lectureId: number;
+  address: string;
+  detailAddress: string;
+  buildingName: string;
+}
+
+interface LectureLikeInputData {
+  lectureId: number;
+  userId: number;
+}
+
+interface LikedLectureReviewWhereData {
+  userId?: number;
+  lecturerId?: number;
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -78,7 +97,10 @@ export {
   LectureNotificationResponse,
   LectureHolidayInputData,
   RegularLectureSchedules,
-  RegularLectureScheduleInputData,
   LectureCouponTargetInputData,
   LectureOrderBy,
+  LectureLocation,
+  LectureLocationInputData,
+  LectureLikeInputData,
+  LikedLectureReviewWhereData,
 };

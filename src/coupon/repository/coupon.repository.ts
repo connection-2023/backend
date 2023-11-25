@@ -1,12 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
-import {
-  CouponInputData,
-  CouponTargetInputData,
-  LectureData,
-} from '../interface/interface';
+import { CouponInputData, CouponTargetInputData } from '../interface/interface';
 import { LectureCoupon, UserCoupon } from '@prisma/client';
-import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  ICursor,
+  Id,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 
 @Injectable()
 export class CouponRepository {
@@ -160,12 +160,65 @@ export class CouponRepository {
     }
   }
 
-  async getUserCouponList(userId: number) {
+  async getApplicableCouponsForLecture(lectureId: number) {
+    try {
+      return await this.prismaService.lectureCouponTarget.findMany({
+        where: {
+          lectureId,
+          lectureCoupon: { isPrivate: false, isDisabled: false },
+        },
+        select: {
+          lectureCoupon: {
+            select: {
+              id: true,
+              title: true,
+              maxUsageCount: true,
+              usageCount: true,
+              percentage: true,
+              discountPrice: true,
+              maxDiscountPrice: true,
+              isStackable: true,
+              startAt: true,
+              endAt: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getUserCouponList(
+    userId: number,
+    take: number,
+    endAt,
+    orderBy,
+    isUsed: boolean | undefined,
+    cursor?: ICursor,
+    skip?: number,
+  ) {
     try {
       return await this.prismaService.userCoupon.findMany({
-        where: { userId },
+        where: {
+          userId,
+          lectureCoupon: {
+            endAt,
+          },
+          isUsed,
+        },
+        take,
+        skip,
+        cursor,
+        orderBy,
         select: {
+          id: true,
+          lectureCouponId: true,
           isUsed: true,
+          updatedAt: true,
           lectureCoupon: {
             select: {
               title: true,
@@ -190,17 +243,46 @@ export class CouponRepository {
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        `Prisma 유저 쿠폰 조회 실패: ${error}`,
+        `Prisma 쿠폰 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+  async countUserCoupons(userId: number) {
+    try {
+      return await this.prismaService.userCoupon.count({ where: { userId } });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
         'PrismaFindFailed',
       );
     }
   }
 
-  async getLecturerIssuedCouponList(lecturerId: number) {
+  async getLecturerIssuedCouponList(
+    lecturerId: number,
+    OR: Array<object>,
+    orderBy: object,
+    endAt: object,
+    lectureCouponTarget: object,
+    take: number,
+    cursor?: ICursor,
+    skip?: number,
+  ) {
     try {
       return await this.prismaService.lectureCoupon.findMany({
-        where: { lecturerId },
+        where: {
+          lecturerId,
+          endAt,
+          lectureCouponTarget,
+          OR,
+        },
+        take,
+        orderBy,
+        cursor,
+        skip,
         select: {
+          id: true,
           title: true,
           isPrivate: true,
           maxUsageCount: true,
@@ -212,14 +294,13 @@ export class CouponRepository {
           endAt: true,
           isDisabled: true,
           isStackable: true,
+          createdAt: true,
+          updatedAt: true,
           lectureCouponTarget: {
             select: {
               lecture: { select: { id: true, title: true } },
             },
           },
-          createdAt: true,
-          updatedAt: true,
-          deletedAt: true,
         },
       });
     } catch (error) {
@@ -230,29 +311,10 @@ export class CouponRepository {
     }
   }
 
-  async getApplicableCouponsForLecture(lectureId: number) {
+  async countIssuedCoupons(lecturerId: number) {
     try {
-      return await this.prismaService.lectureCouponTarget.findMany({
-        where: {
-          lectureId,
-          lectureCoupon: { isPrivate: false, isDisabled: false },
-        },
-        select: {
-          lectureCoupon: {
-            select: {
-              id: true,
-              title: true,
-              maxUsageCount: true,
-              usageCount: true,
-              percentage: true,
-              discountPrice: true,
-              maxDiscountPrice: true,
-              isStackable: true,
-              startAt: true,
-              endAt: true,
-            },
-          },
-        },
+      return await this.prismaService.lectureCoupon.count({
+        where: { lecturerId },
       });
     } catch (error) {
       throw new InternalServerErrorException(

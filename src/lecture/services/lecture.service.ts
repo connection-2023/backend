@@ -1,13 +1,22 @@
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, Region } from '@prisma/client';
+import { Lecture, LectureHoliday, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  Id,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   LectureCouponTargetInputData,
@@ -16,11 +25,11 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
-  RegularLectureScheduleInputData,
   RegularLectureSchedules,
-} from '../interface/lecture.interface';
+} from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
+import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 
 @Injectable()
 export class LectureService {
@@ -30,11 +39,13 @@ export class LectureService {
     private readonly lecturerRepository: LecturerRepository,
     private readonly queryFilter: QueryFilter,
     private readonly prismaService: PrismaService,
+    private readonly couponRepository: CouponRepository,
   ) {}
 
   async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
     const {
       regions,
+      location,
       schedules,
       regularSchedules,
       genres,
@@ -63,6 +74,16 @@ export class LectureService {
           lecture,
         );
 
+        const lectureLocationInputData = {
+          lectureId: newLecture.id,
+          ...location,
+        };
+
+        await this.lectureRepository.trxCreateLectureLocation(
+          transaction,
+          lectureLocationInputData,
+        );
+
         const lectureToRegionInputData: LectureToRegionInputData[] =
           this.createLectureToRegionInputData(newLecture.id, regionIds);
         await this.lectureRepository.trxCreateLectureToRegions(
@@ -72,7 +93,7 @@ export class LectureService {
 
         const lectureImageInputData: LectureImageInputData[] =
           this.createLectureImageInputData(newLecture.id, images);
-        await this.lectureRepository.trxCreateLectureImg(
+        await this.lectureRepository.trxCreateLectureImage(
           transaction,
           lectureImageInputData,
         );
@@ -89,16 +110,19 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
-            this.createRegularLectureScheduleInputData(
-              newLecture.id,
-              regularSchedules,
-              lecture.duration,
+          for (const schedule of regularSchedules) {
+            const regularDayScheduleInputData =
+              this.createRegularLectureScheduleInputData(
+                newLecture.id,
+                schedule,
+                lecture.duration,
+              );
+
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              regularDayScheduleInputData,
             );
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            regularLectureScheduleInputData,
-          );
+          }
         }
 
         if (holidays) {
@@ -131,6 +155,8 @@ export class LectureService {
         }
 
         if (coupons) {
+          await this.getValidCouponIds(coupons);
+
           const lectureCouponTargetInputData: LectureCouponTargetInputData[] =
             this.createLectureCouponTargetInputData(newLecture.id, coupons);
 
@@ -147,8 +173,37 @@ export class LectureService {
     );
   }
 
+  async readLectureWithUserId(userId: number, lectureId: number) {
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    const location = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
+
+    const isLike = await this.prismaService.likedLecture.findFirst({
+      where: { userId, lectureId },
+    });
+
+    if (isLike) {
+      lecture['isLike'] = true;
+    } else {
+      lecture['isLike'] = false;
+    }
+    return { lecture, lecturer, location };
+  }
+
   async readLecture(lectureId: number) {
-    return await this.lectureRepository.readLecture(lectureId);
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    const location = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
+
+    return { lecture, lecturer, location };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
@@ -268,7 +323,8 @@ export class LectureService {
   }
 
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
-    const { images, coupons, ...lecture } = updateLectureDto;
+    const { images, coupons, holidays, notification, ...lecture } =
+      updateLectureDto;
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -278,13 +334,90 @@ export class LectureService {
           lecture,
         );
 
+        if (holidays) {
+          const oldHolidays =
+            await this.lectureRepository.trxReadManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+          const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
+          const schedule = this.compareHolidays(oldHolidaysArr, holidays);
+          const { createNewSchedule, deleteOldSchedule } = schedule;
+          const { duration } = await this.prismaService.lecture.findFirst({
+            where: { id: lectureId },
+            select: { duration: true },
+          });
+          const lectureHolidayInputData = this.createLectureHolidayInputData(
+            lectureId,
+            holidays,
+          );
+          const createNewScheduleInputData =
+            this.createLectureScheduleInputData(
+              lectureId,
+              createNewSchedule,
+              duration,
+            );
+
+          const deletedOldSchedule =
+            await this.lectureRepository.trxDeleteManyOldSchedule(
+              transaction,
+              lectureId,
+              deleteOldSchedule,
+            );
+          const createdHolidaySchedule =
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              createNewScheduleInputData,
+            );
+
+          const deletedLectureHoliday =
+            await this.lectureRepository.trxDeleteManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+          const createdLectureHoliday =
+            await this.lectureRepository.trxCreateLectureHoliday(
+              transaction,
+              lectureHolidayInputData,
+            );
+        }
+
+        if (notification) {
+          await transaction.lectureNotification.upsert({
+            where: { lectureId },
+            create: { lectureId, notification },
+            update: { notification },
+          });
+        }
+
         if (images) {
           const lectureImageInputData: LectureImageInputData[] =
             this.createLectureImageInputData(lectureId, images);
-          await this.lectureRepository.trxUpdateLectureImage(
+
+          await this.lectureRepository.trxDeleteLectureImage(
             transaction,
             lectureId,
+          );
+          await this.lectureRepository.trxCreateLectureImage(
+            transaction,
             lectureImageInputData,
+          );
+        }
+
+        if (coupons) {
+          await this.getValidCouponIds(coupons);
+
+          const lectureCounponTargetInputData =
+            this.createLectureCouponTargetInputData(lectureId, coupons);
+
+          await this.lectureRepository.trxDeleteLectureCouponTarget(
+            transaction,
+            lectureId,
+          );
+
+          await this.lectureRepository.trxCreateLectureCouponTarget(
+            transaction,
+            lectureCounponTargetInputData,
           );
         }
 
@@ -294,7 +427,46 @@ export class LectureService {
   }
 
   async readManyLectureSchedule(lectureId: number) {
-    return await this.lectureRepository.readManyLectureSchedules(lectureId);
+    const calendar = await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const schedule =
+          await this.lectureRepository.trxReadManyLectureSchedule(
+            transaction,
+            lectureId,
+          );
+        const holiday = await this.lectureRepository.trxReadManyLectureHoliday(
+          transaction,
+          lectureId,
+        );
+
+        return { schedule, holiday };
+      },
+    );
+    const { schedule } = calendar;
+    const { holiday } = calendar;
+    const holidayArr = this.createLectureHolidayArr(holiday);
+
+    return { schedule, holidayArr };
+  }
+
+  async readLectureReservationWithUser(userId: number, lectureId: number) {
+    const reservation =
+      await this.lectureRepository.readLectureReservationWithUser(
+        userId,
+        lectureId,
+      );
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation Not Found');
+    }
+
+    return reservation;
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number) {
+    return await this.lectureRepository.readManyLectureWithLectruerId(
+      lecturerId,
+    );
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -385,7 +557,7 @@ export class LectureService {
 
   private createLectureScheduleInputData(
     lectureId: number,
-    schedules: string[],
+    schedules: Date[],
     duration: number,
   ) {
     const scheduleInputData: LectureScheduleInputData[] = schedules.map(
@@ -406,7 +578,7 @@ export class LectureService {
     return scheduleInputData;
   }
 
-  private createLectureHolidayInputData(lectureId: number, holidays: string[]) {
+  private createLectureHolidayInputData(lectureId: number, holidays: Date[]) {
     const holidayInputData: LectureHolidayInputData[] = holidays.map(
       (date) => ({
         lectureId: lectureId,
@@ -504,27 +676,23 @@ export class LectureService {
 
   private createRegularLectureScheduleInputData(
     lectureId: number,
-    regularSchedules: RegularLectureSchedules,
+    regularSchedule: RegularLectureSchedules,
     duration: number,
   ) {
-    const regularScheduleInputData = [];
-    for (const team in regularSchedules) {
-      regularSchedules[team].map((date) => {
-        const startDateTime = new Date(date);
-        const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
-        );
-        const regularSchedule = {
+    const regularScheduleInputData = regularSchedule.startDateTime.map(
+      (time) => {
+        const startTime = new Date(time);
+        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+
+        return {
           lectureId,
-          team,
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
+          day: regularSchedule.day,
+          startDateTime: startTime,
+          endDateTime: endTime,
           numberOfParticipants: 0,
         };
-        regularScheduleInputData.push(regularSchedule);
-      });
-    }
-
+      },
+    );
     return regularScheduleInputData;
   }
 
@@ -538,5 +706,55 @@ export class LectureService {
         lectureId: lectureId,
       }));
     return lectureCouponTargetInputData;
+  }
+
+  private createLectureHolidayArr(holiday: LectureHoliday[]) {
+    const holidays = [];
+
+    holiday.map((holidayObj) => {
+      const { holiday } = holidayObj;
+      holidays.push(holiday);
+    });
+
+    return holidays;
+  }
+
+  private compareHolidays(oldHolidays: Date[], newHolidays: Date[]) {
+    const deleteOldSchedule = newHolidays.filter(
+      (newHoliday) =>
+        !oldHolidays.some(
+          (oldHoliday) =>
+            new Date(oldHoliday).toISOString() ===
+            new Date(newHoliday).toISOString(),
+        ),
+    );
+
+    const createNewSchedule = oldHolidays.filter(
+      (oldHoliday) =>
+        !newHolidays.some(
+          (newHoliday) =>
+            new Date(newHoliday).toISOString() ===
+            new Date(oldHoliday).toISOString(),
+        ),
+    );
+
+    return { createNewSchedule, deleteOldSchedule };
+  }
+
+  private async getValidCouponIds(coupons: number[]): Promise<void> {
+    const couponDoesNotExist = [];
+    for (const coupon of coupons) {
+      const existCoupon = await this.prismaService.lectureCoupon.findFirst({
+        where: { id: coupon },
+      });
+      if (!existCoupon) {
+        couponDoesNotExist.push(coupon);
+      }
+    }
+    if (couponDoesNotExist) {
+      throw new BadRequestException(
+        `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
+      );
+    }
   }
 }

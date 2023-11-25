@@ -4,8 +4,6 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { LectureTemporarilySaveRepository } from '@src/lecture/repositories/temporary-lecture.repository';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
 import {
-  RegularTemporaryLectureScheduleInputData,
-  RegularTemporaryLectureSchedules,
   TemporaryLectureCouponTargetInputData,
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
@@ -46,8 +44,8 @@ export class LectureTemporarilySaveService {
     const {
       lectureId,
       regions,
+      location,
       schedules,
-      regularSchedules,
       genres,
       etcGenres,
       notification,
@@ -61,6 +59,15 @@ export class LectureTemporarilySaveService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        const dayLecture =
+          await this.prismaService.temporaryLectureDay.findFirst({
+            where: { lectureId },
+          });
+        const dateLecture =
+          await this.prismaService.temporaryLectureSchedule.findFirst({
+            where: { lectureId },
+          });
+
         if (lectureMethod) {
           lecture['lectureMethodId'] = await this.getLectureMethodId(
             lectureMethod,
@@ -78,6 +85,14 @@ export class LectureTemporarilySaveService {
           );
         }
 
+        if (location) {
+          const temporaryLectureLocationInputData = { lectureId, ...location };
+          await this.temporaryLectureRepository.trxUpsertTemporaryLectureLocation(
+            transaction,
+            temporaryLectureLocationInputData,
+          );
+        }
+
         if (regions) {
           const regionIds: Id[] = await this.getValidRegionIds(regions);
           const temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[] =
@@ -92,32 +107,71 @@ export class LectureTemporarilySaveService {
           );
         }
 
-        if (schedules || regularSchedules) {
-          if (lectureMethod === '원데이') {
-            const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
-              this.createLectureScheduleInputData(lectureId, schedules);
-            await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
-              transaction,
-              lectureId,
-            );
-            await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
-              transaction,
-              temporaryLectureScheduleInputData,
-            );
-          } else if (lectureMethod === '정기') {
-            const regularTemporaryLectureScheduleInputData: RegularTemporaryLectureScheduleInputData[] =
-              this.createRegularLectureScheduleInputData(
+        if (schedules) {
+          if (schedules[0].date) {
+            if (dayLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureDay(
+                transaction,
                 lectureId,
-                regularSchedules,
               );
-            await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
-              transaction,
-              lectureId,
-            );
-            await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
-              transaction,
-              regularTemporaryLectureScheduleInputData,
-            );
+            }
+            if (dateLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
+                transaction,
+                lectureId,
+              );
+            }
+            for (const schedule of schedules) {
+              const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
+                this.createLectureScheduleInputData(
+                  lectureId,
+                  schedule.date,
+                  schedule.startDateTime,
+                );
+
+              await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
+                transaction,
+                temporaryLectureScheduleInputData,
+              );
+            }
+          } else if (schedules[0].day) {
+            if (dayLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureDay(
+                transaction,
+                lectureId,
+              );
+            }
+            if (dateLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
+                transaction,
+                lectureId,
+              );
+            }
+            for (const daySchedule of schedules) {
+              const { day } = daySchedule;
+              const { startDateTime } = daySchedule;
+              const temporaryLectureDayInputData = {
+                lectureId,
+                day,
+              };
+
+              const createdTemporaryLectureDay =
+                await this.temporaryLectureRepository.trxCreateTemporaryLectureDay(
+                  transaction,
+                  temporaryLectureDayInputData,
+                );
+              const lectureDayId = createdTemporaryLectureDay.id;
+              const temporaryLectureDayScheduleInputData =
+                this.createLectureDayScheduleInputData(
+                  lectureDayId,
+                  startDateTime,
+                );
+
+              await this.temporaryLectureRepository.trxCreateTemporaryLectureDaySchedule(
+                transaction,
+                temporaryLectureDayScheduleInputData,
+              );
+            }
           }
         }
 
@@ -176,6 +230,8 @@ export class LectureTemporarilySaveService {
         }
 
         if (coupons) {
+          await this.getValidCouponIds(coupons);
+
           const lectureCouponTargetInputData: TemporaryLectureCouponTargetInputData[] =
             this.createLectureCouponTargetInputData(lectureId, coupons);
 
@@ -202,9 +258,70 @@ export class LectureTemporarilySaveService {
       throw new BadRequestException('접근 권한이 없습니다.');
     }
 
-    return await this.temporaryLectureRepository.readOneTemporaryLecture(
-      lectureId,
-    );
+    const temporaryLecture =
+      await this.temporaryLectureRepository.readOneTemporaryLecture(lectureId);
+    const location =
+      await this.prismaService.temporaryLectureLocation.findUnique({
+        where: { lectureId },
+      });
+    const dateLecture =
+      await this.prismaService.temporaryLectureSchedule.findFirst({
+        where: { lectureId },
+      });
+    const dayLecture = await this.prismaService.temporaryLectureDay.findFirst({
+      where: { lectureId },
+    });
+
+    if (dateLecture) {
+      const temporaryLectureDateScheduleArr =
+        await this.prismaService.temporaryLectureSchedule.findMany({
+          where: { lectureId },
+        });
+      const groupedMap = new Map();
+
+      temporaryLectureDateScheduleArr.forEach(({ date, startDateTime }) => {
+        if (!groupedMap.has(date)) {
+          groupedMap.set(date, { date, startDateTime: [] });
+        }
+        groupedMap.get(date).startDateTime.push(startDateTime);
+      });
+
+      const schedules = Array.from(groupedMap.values());
+
+      return {
+        temporaryLecture,
+        location,
+        schedules,
+      };
+    } else if (dayLecture) {
+      const temporaryLectureDayArr =
+        await this.prismaService.temporaryLectureDay.findMany({
+          where: { lectureId },
+          include: { temporaryLectureDaySchedule: true },
+        });
+      const schedules = [];
+
+      for (const temporaryLectureDayObj of temporaryLectureDayArr) {
+        const { day } = temporaryLectureDayObj;
+        const temporaryLectureDayScheduelTransFormData = {
+          day,
+          startDateTime: [],
+        };
+
+        for (const {
+          startDateTime,
+        } of temporaryLectureDayObj.temporaryLectureDaySchedule) {
+          temporaryLectureDayScheduelTransFormData['startDateTime'].push(
+            startDateTime,
+          );
+        }
+        schedules.push(temporaryLectureDayScheduelTransFormData);
+      }
+
+      return { temporaryLecture, location, schedules };
+    }
+
+    return { temporaryLecture, location };
   }
 
   async readManyTemporaryLecture(
@@ -236,6 +353,23 @@ export class LectureTemporarilySaveService {
     }
 
     return regionIds;
+  }
+
+  private async getValidCouponIds(coupons: number[]): Promise<void> {
+    const couponDoesNotExist = [];
+    for (const coupon of coupons) {
+      const existCoupon = await this.prismaService.lectureCoupon.findFirst({
+        where: { id: coupon },
+      });
+      if (!existCoupon) {
+        couponDoesNotExist.push(coupon);
+      }
+    }
+    if (couponDoesNotExist) {
+      throw new BadRequestException(
+        `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
+      );
+    }
   }
 
   private extractRegions(regions) {
@@ -307,14 +441,18 @@ export class LectureTemporarilySaveService {
 
   private createLectureScheduleInputData(
     lectureId: number,
+    date: string,
     schedules: string[],
   ) {
     const scheduleInputData: TemporaryLectureScheduleInputData[] =
-      schedules.map((date) => ({
-        lectureId: lectureId,
-        startDateTime: new Date(date),
-        numberOfParticipants: 0,
-      }));
+      schedules.map((schedule) => {
+        return {
+          lectureId: lectureId,
+          date,
+          startDateTime: schedule,
+          numberOfParticipants: 0,
+        };
+      });
     return scheduleInputData;
   }
 
@@ -396,26 +534,6 @@ export class LectureTemporarilySaveService {
     return lectureTypeId.id;
   }
 
-  private createRegularLectureScheduleInputData(
-    lectureId: number,
-    regularSchedules: RegularTemporaryLectureSchedules,
-  ) {
-    const regularScheduleInputData = [];
-    for (const team in regularSchedules) {
-      regularSchedules[team].map((date) => {
-        const regularSchedule = {
-          lectureId,
-          team,
-          startDateTime: new Date(date),
-          numberOfParticipants: 0,
-        };
-        regularScheduleInputData.push(regularSchedule);
-      });
-    }
-
-    return regularScheduleInputData;
-  }
-
   private createLectureCouponTargetInputData(
     lectureId: number,
     coupons: number[],
@@ -426,5 +544,16 @@ export class LectureTemporarilySaveService {
         lectureId: lectureId,
       }));
     return lectureCouponTargetInputData;
+  }
+
+  private createLectureDayScheduleInputData(
+    lectureDayId: number,
+    startDateTime: string[],
+  ) {
+    const temporaryLectureDayScheduel = startDateTime.map((time) => ({
+      lectureDayId,
+      startDateTime: time,
+    }));
+    return temporaryLectureDayScheduel;
   }
 }

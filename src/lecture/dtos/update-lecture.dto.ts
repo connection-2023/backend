@@ -79,16 +79,6 @@ export class UpdateLectureDto {
   @Type(() => Number)
   noShowDeposit?: number;
 
-  @ApiPropertyOptional({
-    example: 60,
-    description: '강의 시간',
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  duration?: number;
-
   @ApiProperty({
     example: [1, 2],
     description: '강의 생성시 적용할 쿠폰 id',
@@ -98,4 +88,27 @@ export class UpdateLectureDto {
   @IsOptional()
   @Type(() => Array)
   coupons?: number[];
+
+  @ApiProperty({
+    example: '공지공지공지',
+    description: '공지사항',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  notification?: string;
+
+  @ApiProperty({
+    example: [
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+    ],
+    description: '휴무일',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => Array)
+  holidays?: Date[];
 }

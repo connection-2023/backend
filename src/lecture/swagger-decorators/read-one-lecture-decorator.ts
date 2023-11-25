@@ -9,7 +9,7 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiReadOneLecture() {
   return applyDecorators(
     ApiOperation({
-      summary: '강의 상세조회',
+      summary: '유저 강의 상세조회',
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(
@@ -17,28 +17,31 @@ export function ApiReadOneLecture() {
         statusCode: 200,
         data: {
           lecture: {
-            id: 17,
+            id: 34,
             lecturerId: 3,
             lectureTypeId: 1,
             lectureMethodId: 1,
             isGroup: true,
+            startDate: '2023-10-02T15:00:00.000Z',
+            endDate: '2023-10-02T15:00:00.000Z',
             title: '가비쌤과 함께하는 왁킹 클래스',
             introduction: '안녕하세용',
             curriculum: '첫날에 모하징',
-            detailAddress: '용마산로 616 18층',
             duration: 2,
             difficultyLevel: '상',
             minCapacity: 1,
             maxCapacity: 12,
-            reservationDeadline: 2,
+            reservationDeadline: 1,
             reservationComment: '누구나 가능한!',
             price: 40000,
             noShowDeposit: 30000,
             reviewCount: 0,
             stars: 0,
             isActive: true,
-            createdAt: '2023-11-04T00:26:55.070Z',
-            updatedAt: '2023-11-04T00:26:55.070Z',
+            isLike: true,
+            locationDescription: '버스타고 한번에',
+            createdAt: '2023-11-09T13:40:40.476Z',
+            updatedAt: '2023-11-09T13:40:40.476Z',
             deletedAt: null,
             lectureType: {
               name: 'dance',
@@ -46,9 +49,12 @@ export function ApiReadOneLecture() {
             lectureMethod: {
               name: '원데이',
             },
-            lectureReview: [],
             lectureNotification: {
+              id: 63,
+              lectureId: 34,
               notification: '15일 영업 안합니다요',
+              updatedAt: '2023-11-09T13:40:40.476Z',
+              deletedAt: null,
             },
             lectureImage: [
               {
@@ -56,41 +62,6 @@ export function ApiReadOneLecture() {
               },
               {
                 imageUrl: '이미지url2',
-              },
-            ],
-            lectureCouponTarget: [],
-            lectureSchedule: [
-              {
-                id: 42,
-                lectureId: 17,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-              {
-                id: 43,
-                lectureId: 17,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-              {
-                id: 44,
-                lectureId: 17,
-                startDateTime: '2023-10-03T11:00:00.000Z',
-                numberOfParticipants: 0,
-                team: null,
-              },
-            ],
-            lectureHoliday: [
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
-              },
-              {
-                holiday: '2023-10-03T11:00:00.000Z',
               },
             ],
             lectureToRegion: [
@@ -133,11 +104,18 @@ export function ApiReadOneLecture() {
                 },
               },
             ],
-            lecturer: {
-              id: 3,
-              profileCardImageUrl: null,
-              nickname: '올리버쌤',
-            },
+          },
+          lecturer: {
+            id: 3,
+            profileCardImageUrl: null,
+            nickname: '올리버쌤',
+          },
+          location: {
+            id: 8,
+            lectureId: 34,
+            address: '서울특별시 중랑구 용마산로616',
+            detailAddress: '101동 1802호',
+            buildingName: '새한아파트',
           },
         },
       }),

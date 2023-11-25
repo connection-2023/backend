@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -11,7 +12,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { RegularLectureSchedules } from '../interface/lecture.interface';
+import {
+  LectureLocation,
+  RegularLectureSchedules,
+} from '../interface/lecture.interface';
 
 export class CreateLectureDto {
   @ApiProperty({
@@ -45,6 +49,26 @@ export class CreateLectureDto {
   @IsBoolean()
   @Type(() => Boolean)
   isGroup: boolean;
+
+  @ApiProperty({
+    example: 'Tue Oct 03 2023',
+    description: '강의 시작일',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsDate()
+  @Type(() => Date)
+  startDate: Date;
+
+  @ApiProperty({
+    example: 'Tue Oct 03 2023',
+    description: '강의 종료일',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsDate()
+  @Type(() => Date)
+  endDate: Date;
 
   @ApiProperty({
     example: '15일 영업 안합니다요',
@@ -111,13 +135,17 @@ export class CreateLectureDto {
   curriculum: string;
 
   @ApiProperty({
-    example: '용마산로 616 18층',
-    description: '상세주소',
+    example: {
+      address: '서울특별시 중랑구 용마산로616',
+      detailAddress: '101동 1802호',
+      buildingName: '새한아파트',
+    },
+    description: '위치 주소',
     required: true,
   })
   @IsNotEmpty()
-  @IsString()
-  detailAddress: string;
+  @IsObject()
+  location: LectureLocation;
 
   @ApiProperty({ example: 2, description: '강의시간', required: true })
   @IsNotEmpty()
@@ -193,27 +221,41 @@ export class CreateLectureDto {
   @IsArray()
   @IsOptional()
   @Type(() => Array)
-  schedules?: string[];
+  schedules?: Date[];
 
   @ApiProperty({
-    example: {
-      A: [
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-      ],
-      B: [
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-      ],
-    },
+    example: [
+      {
+        day: ['월', '화'],
+        startDateTime: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+      {
+        day: ['월', '수'],
+        startDateTime: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+      {
+        day: ['수', '금'],
+        startDateTime: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+    ],
     description: '정기 클래스일 때 일정',
     required: false,
   })
-  @IsObject()
+  @IsArray()
   @IsOptional()
-  regularSchedules?: RegularLectureSchedules;
+  regularSchedules?: RegularLectureSchedules[];
 
   @ApiProperty({
     example: [
@@ -227,7 +269,7 @@ export class CreateLectureDto {
   @IsArray()
   @IsOptional()
   @Type(() => Array)
-  holidays?: string[];
+  holidays?: Date[];
 
   @ApiProperty({
     example: [1, 2],

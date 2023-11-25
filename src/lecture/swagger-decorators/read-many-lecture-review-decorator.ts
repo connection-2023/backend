@@ -9,8 +9,9 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiReadManyLectureReview() {
   return applyDecorators(
     ApiOperation({
-      summary: '강의 리뷰 조회',
+      summary: '유저용 강의 리뷰 조회',
     }),
+    ApiBearerAuth(),
     ApiCreatedResponse(
       SwaggerApiResponse.success('강의 리뷰 조회완료', {
         statusCode: 200,
@@ -23,6 +24,7 @@ export function ApiReadManyLectureReview() {
               reservationId: 4,
               stars: 1,
               description: 'ggood',
+              isLike: true,
               reservation: {
                 lectureSchedule: {
                   startDateTime: '2023-10-07T09:00:00.000Z',
@@ -75,6 +77,7 @@ export function ApiReadManyLectureReview() {
               reservationId: 3,
               stars: 2,
               description: 'ggood',
+              isLike: true,
               reservation: {
                 lectureSchedule: {
                   startDateTime: '2023-10-03T06:00:00.000Z',
@@ -127,6 +130,7 @@ export function ApiReadManyLectureReview() {
               reservationId: 2,
               stars: 3,
               description: 'ggood',
+              isLike: true,
               reservation: {
                 lectureSchedule: {
                   startDateTime: '2023-10-07T09:00:00.000Z',
@@ -179,6 +183,7 @@ export function ApiReadManyLectureReview() {
               reservationId: 1,
               stars: 4,
               description: 'ggood',
+              isLike: true,
               reservation: {
                 lectureSchedule: {
                   startDateTime: '2023-10-03T06:00:00.000Z',
@@ -231,6 +236,7 @@ export function ApiReadManyLectureReview() {
               reservationId: 18,
               stars: 5,
               description: 'ggood',
+              isLike: true,
               reservation: {
                 lectureSchedule: {
                   startDateTime: '2023-10-03T11:00:00.000Z',
