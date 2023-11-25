@@ -65,7 +65,7 @@ export class LectureController {
   }
 
   @ApiReadOneLectureByNonMember()
-  @Get(':lectureId/nonMembers')
+  @Get(':lectureId/non-members')
   async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
     const lecture = await this.lectureService.readLecture(lectureId);
 
