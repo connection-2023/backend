@@ -129,7 +129,9 @@ export class LectureReviewRepository {
       where: { userId },
       include: {
         lecture: true,
-        reservation: true,
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
         _count: { select: { likedLectureReview: true } },
       },
       orderBy,

@@ -21,6 +21,7 @@ import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lectur
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
+import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -105,8 +106,7 @@ export class LectureReviewController {
     return { deletedLectureReview };
   }
 
-  @ApiOperation({ summary: '작성한 리뷰 조회' })
-  @ApiBearerAuth()
+  @ApiReadManyLectureMyReview()
   @UseGuards(UserAccessTokenGuard)
   @Get('my-reviews')
   async readManyMyReview(
