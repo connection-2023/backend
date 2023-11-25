@@ -55,11 +55,9 @@ export class LectureLikeController {
   @Get('users')
   async readManyLikedLecture(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query('isActive') isActive: boolean,
   ) {
     const likedLecture = await this.lectureLikeService.readManyLikedLecture(
       authorizedData.user.id,
-      isActive,
     );
 
     return { likedLecture };

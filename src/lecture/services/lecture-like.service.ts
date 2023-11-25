@@ -26,10 +26,9 @@ export class LectureLikeService {
     });
   }
 
-  async readManyLikedLecture(userId: number, isActive: boolean) {
+  async readManyLikedLecture(userId: number) {
     return await this.lectureLikeRepository.readManyLikedLectureWithUserId(
       userId,
-      isActive,
     );
   }
 }
