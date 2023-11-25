@@ -104,4 +104,20 @@ export class LectureReviewController {
 
     return { deletedLectureReview };
   }
+
+  @ApiOperation({ summary: '작성한 리뷰 조회' })
+  @ApiBearerAuth()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('my-reviews')
+  async readManyMyReview(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureReviewQueryDto,
+  ) {
+    const review = await this.lectureReviewService.readManyMyReview(
+      authorizedData.user.id,
+      query,
+    );
+
+    return { review };
+  }
 }

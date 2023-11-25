@@ -4,7 +4,6 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
-import { LikedLectureReviewWhereData } from '../interface/lecture.interface';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -122,6 +121,18 @@ export class LectureReviewRepository {
   ): Promise<LikedLectureReview> {
     return await transaction.likedLectureReview.findFirst({
       where: { lectureReviewId },
+    });
+  }
+
+  async readManyMyReview(userId: number, orderBy): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { userId },
+      include: {
+        lecture: true,
+        reservation: true,
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
     });
   }
 }
