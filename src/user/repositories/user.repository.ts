@@ -74,14 +74,23 @@ export class UserRepository {
     });
   }
 
-  async trxUpdateUser(
-    transaction: PrismaTransaction,
+  async updateUser(
     userId: number,
     updateUserSetData: UpdateUserDto,
   ): Promise<Users> {
-    return await transaction.users.update({
+    return await this.prismaService.users.update({
       where: { id: userId },
       data: updateUserSetData,
+    });
+  }
+
+  async updateUserImage(
+    userId: number,
+    imageUrl: string,
+  ): Promise<UserProfileImage> {
+    return await this.prismaService.userProfileImage.update({
+      where: { userId },
+      data: { imageUrl },
     });
   }
 }

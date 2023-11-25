@@ -88,8 +88,15 @@ export class UserController {
   @ApiBearerAuth()
   @UseGuards(UserAccessTokenGuard)
   @Patch('my-pages')
-  async updateMyProfile(
+  async updateUser(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() updateMyProfileDto: UpdateUserDto,
-  ) {}
+  ) {
+    const updatedUser = await this.userService.updateUser(
+      authorizedData.user.id,
+      updateMyProfileDto,
+    );
+
+    return updatedUser;
+  }
 }

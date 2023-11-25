@@ -1,5 +1,6 @@
-import { PartialType, PickType } from '@nestjs/swagger';
+import { ApiPropertyOptional, PartialType, PickType } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateUserDto extends PartialType(
   PickType(CreateUserDto, [
@@ -10,4 +11,13 @@ export class UpdateUserDto extends PartialType(
     'provider',
     'authEmail',
   ] as const),
-) {}
+) {
+  @ApiPropertyOptional({
+    example: 'image url',
+    description: '변경한 s3 이미지 url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
+}

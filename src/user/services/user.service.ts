@@ -118,7 +118,8 @@ export class UserService {
   }
 
   async updateUser(userId: number, updateUserDto: UpdateUserDto) {
-    const { provider, authEmail, ...updateUserSetData } = updateUserDto;
+    const { provider, authEmail, imageUrl, ...updateUserSetData } =
+      updateUserDto;
 
     if (updateUserDto.email) {
       const selectedEmailUser = await this.prismaServcie.users.findUnique({
@@ -148,15 +149,16 @@ export class UserService {
       }
     }
 
-    return await this.prismaServcie.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const user = await this.userRepository.trxUpdateUser(
-          transaction,
-          userId,
-          updateUserSetData,
-        );
-      },
-    );
+    if (imageUrl) {
+      return await this.userRepository.updateUserImage(userId, imageUrl);
+    }
+
+    if (updateUserSetData) {
+      return await this.userRepository.updateUser(userId, updateUserSetData);
+    }
+
+    if (provider || authEmail) {
+    }
   }
 
   private async getRegisterConsentIds(
