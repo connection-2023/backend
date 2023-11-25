@@ -20,9 +20,15 @@ export class LectureLikeService {
     return createdLectureLike;
   }
 
-  // async deleteLikeLecture(lectureId: number, userId: number) {
-  //   return await this.prismaService.likedLecture.delete({
-  //     where: { lectureId, userId },
-  //   });
-  // }
+  async deleteLikeLecture(lectureId: number, userId: number): Promise<void> {
+    await this.prismaService.likedLecture.delete({
+      where: { lectureId_userId: { lectureId, userId } },
+    });
+  }
+
+  async readManyLikedLecture(userId: number) {
+    return await this.lectureLikeRepository.readManyLikedLectureWithUserId(
+      userId,
+    );
+  }
 }

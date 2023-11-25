@@ -15,4 +15,13 @@ export class LectureLikeRepository {
       data: lectureLikeInputData,
     });
   }
+
+  async readManyLikedLectureWithUserId(
+    userId: number,
+  ): Promise<LikedLecture[]> {
+    return await this.prismaService.likedLecture.findMany({
+      where: { userId },
+      include: { lecture: true },
+    });
+  }
 }
