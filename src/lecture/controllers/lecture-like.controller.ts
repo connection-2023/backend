@@ -41,7 +41,7 @@ export class LectureLikeController {
   @Delete(':lectureId')
   async deleteLectureLike(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Param('id', ParseIntPipe) lectureId: number,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
     return await this.lectureLikeService.deleteLikeLecture(
       lectureId,
