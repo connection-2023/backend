@@ -38,6 +38,8 @@ export class PaymentsController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() getLecturePaymentDto: GetLecturePaymentDto,
   ) {
+    console.log(getLecturePaymentDto);
+
     const lecturePaymentInfo =
       await this.paymentsService.createLecturePaymentInfo(
         authorizedData.user.id,

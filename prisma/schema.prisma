@@ -41,6 +41,7 @@ model Users {
   reservation              Reservation[]
   likedLectureReview       LikedLectureReview[]
   registerConsentAgreement RegisterConsentAgreement[]
+  userPass                 UserPass[]
 }
 
 model UserProfileImage {
@@ -108,6 +109,7 @@ model Lecturer {
   lecturerInstagramPostUrl LecturerInstagramPostUrl[]
   lecturerProfileImageUrl  LecturerProfileImageUrl[]
   payment                  Payment[]
+  lecturePass              LecturePass[]
 }
 
 model Lecture {
@@ -171,6 +173,7 @@ model Lecture {
   lectureToDanceGenre LectureToDanceGenre[]
   lectureHoliday      LectureHoliday[]
   lectureLocation     LectureLocation?
+  lecturePassTarget   LecturePassTarget[]
 }
 
 model DanceCategory {
@@ -580,6 +583,7 @@ model Payment {
   paymentCouponUsage        PaymentCouponUsage?
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
+  paymentPassUsage          PaymentPassUsage?
 }
 
 //결제 방식
@@ -764,4 +768,56 @@ model RegisterConsentAgreement {
   user              Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([registerConsentId, userId])
+}
+
+model LecturePass {
+  id                Int                 @id @default(autoincrement())
+  lecturerId        Int
+  title             String
+  price             Int
+  maxUsageCount     Int
+  availableMonths   Int
+  isDisabled        Boolean             @default(false)
+  createdAt         DateTime            @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt         DateTime?           @db.Timestamp(6)
+  lecturer          Lecturer            @relation(fields: [lecturerId], references: [id])
+  lecturePassTarget LecturePassTarget[]
+  userPass          UserPass[]
+  paymentPassUsage  PaymentPassUsage[]
+}
+
+model LecturePassTarget {
+  id            Int         @id @default(autoincrement())
+  lectureId     Int
+  lecturePassId Int
+  lecture       Lecture     @relation(fields: [lectureId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+
+  @@unique([lectureId, lecturePassId])
+}
+
+model UserPass {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  remainingUses Int
+  lecturePassId Int
+  startAt       DateTime?   @db.Timestamp(6)
+  endAt         DateTime?   @db.Timestamp(6)
+  createdAt     DateTime    @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime    @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt     DateTime?   @db.Timestamp(6)
+  users         Users       @relation(fields: [userId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+
+  @@unique([userId, lecturePassId])
+}
+
+model PaymentPassUsage {
+  id            Int         @id @default(autoincrement())
+  paymentId     Int         @unique
+  lecturePassId Int
+  usedCount     Int
+  payment       Payment     @relation(fields: [paymentId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
 }
