@@ -3,7 +3,6 @@ import { CreateLectureCouponDto } from './../../coupon/dtos/create-lecture-coupo
 import { PrismaService } from './../../prisma/prisma.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LectureReviewRepository } from '../repositories/lecture-review.repository';
-import { LectureReview } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
@@ -72,18 +71,41 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const reviews =
-          await this.lectureReviewRespository.trxReadManyLectureReviewByLectureWithUserId(
-            transaction,
-            lectureId,
-            userId,
-            order,
-          );
-        return reviews;
-      },
-    );
+    const readedReviews =
+      await this.lectureReviewRespository.trxReadManyLectureReviewByLectureWithUserId(
+        lectureId,
+        userId,
+        order,
+      );
+    const reviews = [];
+
+    for (const review of readedReviews) {
+      const {
+        _count,
+        likedLectureReview,
+        lecture,
+        reservation,
+        users,
+        ...reviewObj
+      } = review;
+      const { userProfileImage, ...user } = users;
+
+      user['profileImage'] = userProfileImage.imageUrl;
+
+      reviewObj['user'] = user;
+      reviewObj['lectureTitle'] = lecture.title;
+      reviewObj['startDateTime'] = reservation.lectureSchedule.startDateTime;
+
+      if (likedLectureReview[0]) {
+        reviewObj['isLike'] = true;
+      } else {
+        reviewObj['isLike'] = false;
+      }
+      reviews.push(reviewObj);
+      reviewObj['count'] = _count.likedLectureReview;
+    }
+
+    return reviews;
   }
 
   async readManyLectureReviewNonMember(lectureId: number, orderBy: string) {
