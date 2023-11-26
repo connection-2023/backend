@@ -54,7 +54,7 @@ export class PassRepository {
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        `Prisma 쿠폰 대상 생성 실패: ${error}`,
+        `Prisma 패스권 대상 생성 실패: ${error}`,
         'PrismaCreateFailed',
       );
     }
