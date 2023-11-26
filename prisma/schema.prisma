@@ -775,8 +775,9 @@ model LecturePass {
   lecturerId        Int
   title             String
   price             Int
-  maxUsage          Int
+  maxUsageCount     Int
   availableMonths   Int
+  isDisabled        Boolean             @default(false)
   createdAt         DateTime            @default(now()) @db.Timestamp(6)
   updatedAt         DateTime            @default(now()) @updatedAt @db.Timestamp(6)
   deletedAt         DateTime?           @db.Timestamp(6)
