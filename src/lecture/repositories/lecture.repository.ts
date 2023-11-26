@@ -8,6 +8,7 @@ import {
   LectureReview,
   LectureHoliday,
   Reservation,
+  LikedLecture,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';

@@ -21,6 +21,7 @@ import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lectur
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
+import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -103,5 +104,20 @@ export class LectureReviewController {
       await this.lectureReviewService.deleteLectureReview(lectureReviewId);
 
     return { deletedLectureReview };
+  }
+
+  @ApiReadManyLectureMyReview()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('my-reviews')
+  async readManyMyReview(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureReviewQueryDto,
+  ) {
+    const review = await this.lectureReviewService.readManyMyReview(
+      authorizedData.user.id,
+      query,
+    );
+
+    return { review };
   }
 }

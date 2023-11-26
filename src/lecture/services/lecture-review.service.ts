@@ -8,6 +8,7 @@ import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -149,5 +150,27 @@ export class LectureReviewService {
         return deletedLectureReview;
       },
     );
+  }
+
+  async readManyMyReview(userId: number, query: ReadManyLectureReviewQueryDto) {
+    const order = {};
+    const { orderBy } = query;
+    if (orderBy === '최신순') {
+      order['reservation'] = {
+        lectureSchedule: {
+          startDateTime: 'desc',
+        },
+      };
+    } else if (orderBy === '좋아요순') {
+      order['likedLectureReview'] = {
+        _count: 'desc',
+      };
+    } else if (orderBy === '평점 높은순') {
+      order['stars'] = 'desc';
+    } else if (orderBy === '평점 낮은순') {
+      order['stars'] = 'asc';
+    }
+
+    return await this.lectureReviewRespository.readManyMyReview(userId, order);
   }
 }
