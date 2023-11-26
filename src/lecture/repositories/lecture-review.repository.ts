@@ -4,6 +4,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import { LectureReviewResponseDto } from '../dtos/read-many-lecture-review-response.dto';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -40,12 +41,11 @@ export class LectureReviewRepository {
   }
 
   async trxReadManyLectureReviewByLectureWithUserId(
-    transaction: PrismaTransaction,
     lectureId: number,
     userId: number,
     order,
-  ): Promise<LectureReview[]> {
-    return await transaction.lectureReview.findMany({
+  ): Promise<LectureReviewResponseDto[]> {
+    return await this.prismaService.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
       include: {
         reservation: {
