@@ -365,7 +365,7 @@ export class LectureTemporarilySaveService {
         couponDoesNotExist.push(coupon);
       }
     }
-    if (couponDoesNotExist) {
+    if (couponDoesNotExist[0]) {
       throw new BadRequestException(
         `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
       );
