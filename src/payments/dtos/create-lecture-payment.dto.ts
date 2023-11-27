@@ -51,13 +51,22 @@ export class CreateLecturePaymentDto {
   lectureSchedules: LectureSchedule[];
 
   @ApiProperty({
-    example: 10000,
-    description: '결제 금액',
+    example: 100000,
+    description: '할인 적용 전 금액',
     required: true,
   })
   @Type(() => Number)
   @IsNotEmpty()
-  price: number;
+  originalPrice: number;
+
+  @ApiProperty({
+    example: 95000,
+    description: '할인이 적용된 최종 결제 금액',
+    required: true,
+  })
+  @Type(() => Number)
+  @IsNotEmpty()
+  finalPrice: number;
 
   @ApiProperty({
     example: 1,

@@ -278,7 +278,8 @@ export class PaymentsRepository {
         select: {
           id: true,
           orderId: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: { select: { id: true, name: true } },
           paymentStatus: {
             select: {
@@ -334,7 +335,8 @@ export class PaymentsRepository {
         select: {
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -459,7 +461,8 @@ export class PaymentsRepository {
       select: {
         orderId: true,
         orderName: true,
-        price: true,
+        originalPrice: true,
+        finalPrice: true,
         paymentProductType: {
           select: {
             name: true,
@@ -527,7 +530,8 @@ export class PaymentsRepository {
         select: {
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -637,7 +641,8 @@ export class PaymentsRepository {
           id: true,
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -681,7 +686,8 @@ export class PaymentsRepository {
           paymentMethodId: PaymentMethods.가상계좌,
         },
         select: {
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           virtualAccountPaymentInfo: {
             select: {
               accountNumber: true,

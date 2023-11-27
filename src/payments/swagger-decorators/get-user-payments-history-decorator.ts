@@ -20,23 +20,58 @@ export function ApiGetUserPaymentsHistory() {
       SwaggerApiResponse.success('결제 내역 및 데이터 총 개수 반환', {
         statusCode: 200,
         data: {
-          totalItemCount: 51,
+          totalItemCount: 55,
           paymentHistory: [
             {
-              id: 84,
-              orderId: 'dd100',
-              orderName: 'aa',
-              price: 50000,
+              id: 88,
+              orderId: 'M123AE88C3CT',
+              orderName: '결제 테스트',
+              originalPrice: 100000,
+              finalPrice: 95000,
               paymentProductType: {
-                name: '패스권',
+                name: '클래스',
               },
-              paymentMethod: {
-                name: '카드',
-              },
+              paymentMethod: null,
               paymentStatus: {
-                name: 'ABORTED',
+                name: 'READY',
               },
-              updatedAt: '2023-11-21T11:57:07.539Z',
+              updatedAt: '2023-11-27T10:07:24.237Z',
+              lecturer: {
+                profileCardImageUrl: '주소입니다람쥐',
+              },
+            },
+            {
+              id: 87,
+              orderId: 'M123AEC3CT',
+              orderName: '결제 테스트',
+              originalPrice: 100000,
+              finalPrice: 100000,
+              paymentProductType: {
+                name: '클래스',
+              },
+              paymentMethod: null,
+              paymentStatus: {
+                name: 'READY',
+              },
+              updatedAt: '2023-11-27T10:04:32.114Z',
+              lecturer: {
+                profileCardImageUrl: '주소입니다람쥐',
+              },
+            },
+            {
+              id: 86,
+              orderId: 'M123AECCT',
+              orderName: '결제 테스트',
+              originalPrice: 100000,
+              finalPrice: 100000,
+              paymentProductType: {
+                name: '클래스',
+              },
+              paymentMethod: null,
+              paymentStatus: {
+                name: 'READY',
+              },
+              updatedAt: '2023-11-27T10:03:55.909Z',
               lecturer: {
                 profileCardImageUrl: '주소입니다람쥐',
               },
@@ -45,7 +80,8 @@ export function ApiGetUserPaymentsHistory() {
               id: 83,
               orderId: 'dd99',
               orderName: 'aa',
-              price: 50000,
+              originalPrice: 50000,
+              finalPrice: 45000,
               paymentProductType: {
                 name: '클래스',
               },
@@ -62,106 +98,12 @@ export function ApiGetUserPaymentsHistory() {
             },
             {
               id: 82,
-              orderId: 'dd98',
+              orderId: 'dd23199',
               orderName: 'aa',
-              price: 50000,
+              originalPrice: 50000,
+              finalPrice: 45000,
               paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'DONE',
-              },
-              updatedAt: '2023-11-21T11:57:07.439Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 81,
-              orderId: 'dd94',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'EXPIRED',
-              },
-              updatedAt: '2023-11-21T11:57:07.390Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 80,
-              orderId: 'dd93',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'IN_PROGRESS',
-              },
-              updatedAt: '2023-11-21T11:57:07.343Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 79,
-              orderId: 'dd92',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'PARTIAL_CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.294Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 78,
-              orderId: 'dd91',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'WAITING_FOR_DEPOSIT',
-              },
-              updatedAt: '2023-11-21T11:57:07.239Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 77,
-              orderId: 'dd90',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
+                name: '패스권',
               },
               paymentMethod: {
                 name: '카드',
@@ -169,140 +111,7 @@ export function ApiGetUserPaymentsHistory() {
               paymentStatus: {
                 name: 'CANCELED',
               },
-              updatedAt: '2023-11-21T11:57:07.188Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 76,
-              orderId: 'dd89',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.140Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 75,
-              orderId: 'dd88',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.093Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 74,
-              orderId: 'dd87',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.048Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 73,
-              orderId: 'dd86',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.001Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 72,
-              orderId: 'dd85',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:06.943Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 71,
-              orderId: 'dd84',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:06.891Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 70,
-              orderId: 'dd83',
-              orderName: 'aa',
-              price: 50000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:06.845Z',
+              updatedAt: '2023-11-21T11:57:07.489Z',
               lecturer: {
                 profileCardImageUrl: '주소입니다람쥐',
               },

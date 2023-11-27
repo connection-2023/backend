@@ -112,7 +112,7 @@ export class PaymentsService implements OnModuleInit {
     const lecturePaymentInfo = {
       orderId: createLecturePaymentDto.orderId,
       orderName: createLecturePaymentDto.orderName,
-      value: createLecturePaymentDto.price,
+      value: createLecturePaymentDto.finalPrice,
     };
 
     return lecturePaymentInfo;
@@ -127,12 +127,13 @@ export class PaymentsService implements OnModuleInit {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const paymentInfo = {
-          orderName: createLecturePaymentDto.orderName,
-          price: createLecturePaymentDto.price,
           orderId: createLecturePaymentDto.orderId,
+          orderName: createLecturePaymentDto.orderName,
+          originalPrice: createLecturePaymentDto.originalPrice,
+          finalPrice: createLecturePaymentDto.finalPrice,
         };
 
-        const createdLecturePayment: Payment = await this.createPayment(
+        const createdLecturePayment: Payment = await this.trxCreatePayment(
           transaction,
           lecturerId,
           userId,
@@ -141,13 +142,13 @@ export class PaymentsService implements OnModuleInit {
         );
 
         await Promise.all([
-          this.updateCouponUsage(
+          this.trxUpdateCouponUsage(
             transaction,
             userId,
             createdLecturePayment.id,
             coupons,
           ),
-          this.createUserReservation(
+          this.trxCreateUserReservation(
             transaction,
             userId,
             createdLecturePayment.id,
@@ -248,7 +249,7 @@ export class PaymentsService implements OnModuleInit {
     {
       couponId,
       stackableCouponId,
-      price: clientPrice,
+      finalPrice: clientPrice,
       lectureSchedules,
     }: CreateLecturePaymentDto,
   ): Promise<Coupons> {
@@ -405,14 +406,14 @@ export class PaymentsService implements OnModuleInit {
     return { ...coupon.lectureCoupon };
   }
 
-  private async createPayment(
+  private async trxCreatePayment(
     transaction: PrismaTransaction,
     lecturerId: number,
     userId: number,
     paymentInfo: PaymentInfo,
     productType: PaymentProductTypes,
   ): Promise<Payment> {
-    const { orderName, price, orderId } = paymentInfo;
+    const { orderName, originalPrice, finalPrice, orderId } = paymentInfo;
 
     const paymentType = await this.paymentsRepository.getPaymentProductType(
       productType,
@@ -425,7 +426,8 @@ export class PaymentsService implements OnModuleInit {
       orderName,
       statusId: PaymentOrderStatus.READY,
       paymentProductTypeId: paymentType.id,
-      price,
+      originalPrice,
+      finalPrice,
     };
 
     return await this.paymentsRepository.createPayment(
@@ -434,7 +436,7 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  private async createUserReservation(
+  private async trxCreateUserReservation(
     transaction: PrismaTransaction,
     userId: number,
     paymentId: number,
@@ -464,7 +466,7 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  private async updateCouponUsage(
+  private async trxUpdateCouponUsage(
     transaction: PrismaTransaction,
     userId: number,
     paymentId: number,
@@ -527,7 +529,7 @@ export class PaymentsService implements OnModuleInit {
     const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
     const paymentInfo = await this.getPaymentInfo(orderId);
 
-    if (amount !== paymentInfo.price) {
+    if (amount !== paymentInfo.finalPrice) {
       throw new BadRequestException(
         `결제 금액이 일치하지 않습니다.`,
         'PaymentAmountMismatch',

@@ -17,7 +17,8 @@ export function ApiConfirmLecturePayment() {
             paymentResult: {
               orderId: 'cardOrder6',
               orderName: '단스강의',
-              price: 45000,
+              originalPrice: 50000,
+              finalPrice: 45000,
               paymentProductType: {
                 name: '강의',
               },

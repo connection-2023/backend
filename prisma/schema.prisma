@@ -567,7 +567,8 @@ model Payment {
   orderId                   String                     @unique
   orderName                 String
   //가격
-  price                     Int                        @db.Integer
+  originalPrice             Int
+  finalPrice                Int
   userId                    Int?
   lecturerId                Int?
   paymentMethodId           Int?
