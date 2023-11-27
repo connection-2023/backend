@@ -13,6 +13,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import {
+  EnrollLectureReservationResponseData,
   LectureCouponTargetInputData,
   LectureHolidayInputData,
   LectureImageInputData,
@@ -263,5 +264,21 @@ export class LectureRepository {
 
   async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
     return await this.prismaService.lecture.findMany({ where: { lecturerId } });
+  }
+
+  async readManyEnrollLectureWithUserId(
+    userId: number,
+  ): Promise<EnrollLectureReservationResponseData[]> {
+    return await this.prismaService.reservation.findMany({
+      where: { userId },
+      include: {
+        lectureSchedule: {
+          select: {
+            startDateTime: true,
+            lecture: { select: { id: true, lecturerId: true, title: true } },
+          },
+        },
+      },
+    });
   }
 }

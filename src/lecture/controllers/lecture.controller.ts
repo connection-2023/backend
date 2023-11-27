@@ -139,4 +139,16 @@ export class LectureController {
 
     return { lecture };
   }
+
+  @ApiOperation({ summary: '유저 내 클래스 조회' })
+  @ApiBearerAuth()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('users')
+  async readManyEnrollLectureWithUserId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.lectureService.readManyEnrollLectureWithUserId(
+      authorizedData.user.id,
+    );
+  }
 }

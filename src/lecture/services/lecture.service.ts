@@ -469,6 +469,33 @@ export class LectureService {
     );
   }
 
+  async readManyEnrollLectureWithUserId(userId: number) {
+    const reservation =
+      await this.lectureRepository.readManyEnrollLectureWithUserId(userId);
+
+    if (reservation[0]) {
+      const enrollLecture = {};
+      reservation.forEach((item) => {
+        const lectureId = item.lectureSchedule.lecture.id;
+
+        if (!enrollLecture[lectureId]) {
+          enrollLecture[lectureId] = {
+            lectureId: lectureId,
+            title: item.lectureSchedule.lecture.title,
+            lecturerId: item.lectureSchedule.lecture.lecturerId,
+            startDateTime: [],
+          };
+        }
+
+        enrollLecture[lectureId].startDateTime.push(
+          item.lectureSchedule.startDateTime,
+        );
+      });
+
+      return Object.values(enrollLecture);
+    }
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
