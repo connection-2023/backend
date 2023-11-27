@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardInfo,
@@ -174,6 +178,13 @@ export class PaymentsRepository {
         data: paymentInputData,
       });
     } catch (error) {
+      if (error.code === 'P2002') {
+        throw new BadRequestException(
+          `주문Id가 중복되었습니다.`,
+          'DuplicateOrderId',
+        );
+      }
+
       throw new InternalServerErrorException(
         `Prisma 결제 정보 생성 실패: ${error}`,
         'PrismaCreateFailed',

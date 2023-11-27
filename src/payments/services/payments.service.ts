@@ -189,7 +189,10 @@ export class PaymentsService implements OnModuleInit {
     const payment: Payment =
       await this.paymentsRepository.getUserLecturePayment(userId, orderId);
     if (payment) {
-      throw new BadRequestException(`결제정보가 이미 존재합니다.`);
+      throw new BadRequestException(
+        `결제정보가 이미 존재합니다.`,
+        'PaymentAlreadyExists',
+      );
     }
   }
 
@@ -276,7 +279,10 @@ export class PaymentsService implements OnModuleInit {
         return coupons;
       }
     } else if (clientPrice !== lecturePrice * numberOfApplicants) {
-      throw new BadRequestException(`상품 가격이 일치하지 않습니다.`);
+      throw new BadRequestException(
+        `상품 가격이 일치하지 않습니다.`,
+        'ProductPriceMismatch',
+      );
     }
   }
 
@@ -294,7 +300,10 @@ export class PaymentsService implements OnModuleInit {
 
     // 최종 가격과 클라이언트 가격 비교
     if (clientPrice !== totalPrice) {
-      throw new BadRequestException(`상품 가격이 일치하지 않습니다.`);
+      throw new BadRequestException(
+        `상품 가격이 일치하지 않습니다.`,
+        'ProductPriceMismatch',
+      );
     }
   }
 
@@ -381,7 +390,10 @@ export class PaymentsService implements OnModuleInit {
     }
     if (coupons.coupon && coupons.stackableCoupon) {
       if (coupons.coupon.percentage && coupons.stackableCoupon.percentage) {
-        throw new BadRequestException(`할인율은 중복적용이 불가능합니다.`);
+        throw new BadRequestException(
+          `할인율은 중복적용이 불가능합니다.`,
+          'DuplicateDiscount',
+        );
       }
     }
 
@@ -401,6 +413,7 @@ export class PaymentsService implements OnModuleInit {
     if (!coupon) {
       throw new NotFoundException(
         `사용가능한 ${stackable ? '중복 쿠폰' : '쿠폰'}이 존재하지 않습니다.`,
+        'NoAvailableCouponsError',
       );
     }
     return { ...coupon.lectureCoupon };
@@ -787,64 +800,68 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  // async createPassPaymentInfo(
-  //   userId: number,
-  //   createPassPaymentDto: CreatePassPaymentDto,
-  // ) {
-  //   const pass = await this.checkPassValidity(createPassPaymentDto.passId);
-  //   await this.createPassPaymentTransaction(
-  //     userId,
-  //     pass.lecturerId,
-  //     createPassPaymentDto,
-  //   );
-  // }
+  async createPassPaymentInfo(
+    userId: number,
+    createPassPaymentDto: CreatePassPaymentDto,
+  ) {
+    const pass: LecturePass = await this.checkPassValidity(
+      createPassPaymentDto.passId,
+      createPassPaymentDto.finalPrice,
+    );
+    await this.createPassPaymentTransaction(
+      userId,
+      pass.lecturerId,
+      createPassPaymentDto,
+    );
 
-  // private async checkPassValidity(passId: number) {
-  //   const pass: LecturePass = await this.paymentsRepository.getAvailablePass(
-  //     passId,
-  //   );
-  //   if (!pass) {
-  //     throw new NotFoundException(`패스권 정보가 존재하지 않습니다.`);
-  //   }
-  //   return pass;
-  // }
+    return {
+      orderId: createPassPaymentDto.orderId,
+      orderName: createPassPaymentDto.orderName,
+      value: createPassPaymentDto.finalPrice,
+    };
+  }
 
-  // private async createPassPaymentTransaction(
-  //   lecturerId: number,
-  //   userId: number,
-  //   createPassPaymentDto: CreatePassPaymentDto,
-  // ): Promise<void> {
-  //   await this.prismaService.$transaction(
-  //     async (transaction: PrismaTransaction) => {
-  //       const paymentInfo = {
-  //         orderName: createPassPaymentDto.orderName,
-  //         price: createPassPaymentDto.price,
-  //         orderId: createPassPaymentDto.orderId,
-  //       };
+  private async checkPassValidity(passId: number, clientPrice: number) {
+    const pass: LecturePass = await this.paymentsRepository.getAvailablePass(
+      passId,
+    );
+    if (!pass) {
+      throw new NotFoundException(
+        `패스권 정보가 존재하지 않습니다.`,
+        'PassInfoNotFound',
+      );
+    }
+    if (pass.price !== clientPrice) {
+      throw new BadRequestException(
+        `상품 가격이 일치하지 않습니다.`,
+        'ProductPriceMismatch',
+      );
+    }
+    return pass;
+  }
 
-  //       const createdPassPayment: Payment = await this.createPayment(
-  //         transaction,
-  //         lecturerId,
-  //         userId,
-  //         paymentInfo,
-  //         PaymentProductTypes.패스권,
-  //       );
+  private async createPassPaymentTransaction(
+    lecturerId: number,
+    userId: number,
+    createPassPaymentDto: CreatePassPaymentDto,
+  ): Promise<void> {
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const paymentInfo = {
+          orderId: createPassPaymentDto.orderId,
+          orderName: createPassPaymentDto.orderName,
+          originalPrice: createPassPaymentDto.originalPrice,
+          finalPrice: createPassPaymentDto.finalPrice,
+        };
 
-  //       await Promise.all([
-  //         this.trxUpdatePassUsage(
-  //           transaction,
-  //           userId,
-  //           createdPassPayment.id,
-  //           createPassPaymentDto.passId,
-  //         ),
-  //       ]);
-  //     },
-  //   );
-  // }
-  // private async trxUpdatePassUsage(
-  //   transaction: PrismaTransaction,
-  //   userId: number,
-  //   paymentId: number,
-  //   passId: number,
-  // ) {}
+        await this.trxCreatePayment(
+          transaction,
+          lecturerId,
+          userId,
+          paymentInfo,
+          PaymentProductTypes.패스권,
+        );
+      },
+    );
+  }
 }

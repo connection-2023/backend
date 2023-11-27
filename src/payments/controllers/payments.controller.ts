@@ -21,6 +21,7 @@ import { IPaymentResult } from '@src/payments/interface/payments.interface';
 import { ApiGetUserReceipt } from '@src/payments/swagger-decorators/get-user-receipt-decorator';
 import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
 import { CreatePassPaymentDto } from '../dtos/create-pass-payment.dto';
+import { ApiCreatePassPaymentInfo } from '../swagger-decorators/create-pass-payment-info-decorater';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -48,19 +49,20 @@ export class PaymentsController {
     return { lecturePaymentInfo };
   }
 
-  // @Post('/pass')
-  // @UseGuards(UserAccessTokenGuard)
-  // async createPassPaymentInfo(
-  //   @GetAuthorizedUser() authorizedData: ValidateResult,
-  //   @Body() createPassPaymentDto: CreatePassPaymentDto,
-  // ) {
-  //   const lecturePaymentInfo = await this.paymentsService.createPassPaymentInfo(
-  //     authorizedData.user.id,
-  //     createPassPaymentDto,
-  //   );
+  @ApiCreatePassPaymentInfo()
+  @Post('/pass')
+  @UseGuards(UserAccessTokenGuard)
+  async createPassPaymentInfo(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() createPassPaymentDto: CreatePassPaymentDto,
+  ) {
+    const passPaymentInfo = await this.paymentsService.createPassPaymentInfo(
+      authorizedData.user.id,
+      createPassPaymentDto,
+    );
 
-  //   return { lecturePaymentInfo };
-  // }
+    return { passPaymentInfo };
+  }
 
   @ApiConfirmLecturePayment()
   @Patch('/lecture/confirm')
