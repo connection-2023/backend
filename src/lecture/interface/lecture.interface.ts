@@ -88,6 +88,25 @@ interface LikedLectureReviewWhereData {
   lecturerId?: number;
 }
 
+interface EnrollLectureReservationResponseData {
+  id: number;
+  userId: number;
+  paymentId: number;
+  lectureScheduleId: number;
+  representative: string;
+  phoneNumber: string;
+  participants: number;
+  requests: string | null;
+  lectureSchedule: {
+    startDateTime: Date;
+    lecture: {
+      id: number;
+      lecturerId: number;
+      title: string;
+    };
+  };
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -103,4 +122,5 @@ export {
   LectureLocationInputData,
   LectureLikeInputData,
   LikedLectureReviewWhereData,
+  EnrollLectureReservationResponseData,
 };
