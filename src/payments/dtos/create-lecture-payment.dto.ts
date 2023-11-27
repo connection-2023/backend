@@ -10,7 +10,7 @@ import { LectureSchedule } from '@src/payments/interface/payments.interface';
 import { PaymentMethods } from '@src/payments/enum/payment.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GetLecturePaymentDto {
+export class CreateLecturePaymentDto {
   @ApiProperty({
     example: 1,
     description: '강의 Id',

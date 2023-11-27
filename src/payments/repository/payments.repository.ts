@@ -18,7 +18,12 @@ import {
   PaymentOrderStatus,
   PaymentMethods,
 } from '../enum/payment.enum';
-import { Payment, PaymentProductType, PaymentStatus } from '@prisma/client';
+import {
+  LecturePass,
+  Payment,
+  PaymentProductType,
+  PaymentStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class PaymentsRepository {
@@ -695,6 +700,18 @@ export class PaymentsRepository {
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+  async getAvailablePass(passId: number): Promise<LecturePass> {
+    try {
+      return this.prismaService.lecturePass.findUnique({
+        where: { id: passId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 정보 조회 실패: ${error}`,
         'PrismaFindFailed',
       );
     }
