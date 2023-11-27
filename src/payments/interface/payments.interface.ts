@@ -32,7 +32,8 @@ interface PaymentInputData {
   orderId: string;
   orderName: string;
   statusId: number;
-  price: number;
+  originalPrice: number;
+  finalPrice: number;
   paymentProductTypeId: number;
 }
 
@@ -60,7 +61,8 @@ interface PaymentInfo {
   orderName?: string;
   method?: PaymentMethods;
   value?: number;
-  price?: number;
+  originalPrice?: number;
+  finalPrice?: number;
 }
 
 interface TossPaymentsConfirmResponse {
@@ -110,7 +112,8 @@ interface LecturePaymentUpdateData {
 interface IPaymentResult {
   orderId: string;
   orderName: string;
-  price: number;
+  originalPrice: number;
+  finalPrice: number;
   createdAt: Date;
   updatedAt: Date;
   paymentProductType: {

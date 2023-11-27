@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
-import { GetLecturePaymentDto } from '@src/payments/dtos/get-lecture-payment.dto';
+import { CreateLecturePaymentDto } from '@src/payments/dtos/create-lecture-payment.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
@@ -20,6 +20,7 @@ import { ApiConfirmLecturePayment } from '@src/payments/swagger-decorators/confi
 import { IPaymentResult } from '@src/payments/interface/payments.interface';
 import { ApiGetUserReceipt } from '@src/payments/swagger-decorators/get-user-receipt-decorator';
 import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
+import { CreatePassPaymentDto } from '../dtos/create-pass-payment.dto';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -36,18 +37,30 @@ export class PaymentsController {
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentInfo(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body() getLecturePaymentDto: GetLecturePaymentDto,
+    @Body() createLecturePaymentDto: CreateLecturePaymentDto,
   ) {
-    console.log(getLecturePaymentDto);
-
     const lecturePaymentInfo =
       await this.paymentsService.createLecturePaymentInfo(
         authorizedData.user.id,
-        getLecturePaymentDto,
+        createLecturePaymentDto,
       );
 
     return { lecturePaymentInfo };
   }
+
+  // @Post('/pass')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createPassPaymentInfo(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body() createPassPaymentDto: CreatePassPaymentDto,
+  // ) {
+  //   const lecturePaymentInfo = await this.paymentsService.createPassPaymentInfo(
+  //     authorizedData.user.id,
+  //     createPassPaymentDto,
+  //   );
+
+  //   return { lecturePaymentInfo };
+  // }
 
   @ApiConfirmLecturePayment()
   @Patch('/lecture/confirm')

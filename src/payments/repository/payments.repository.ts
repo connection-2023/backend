@@ -18,7 +18,12 @@ import {
   PaymentOrderStatus,
   PaymentMethods,
 } from '../enum/payment.enum';
-import { Payment, PaymentProductType, PaymentStatus } from '@prisma/client';
+import {
+  LecturePass,
+  Payment,
+  PaymentProductType,
+  PaymentStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class PaymentsRepository {
@@ -273,7 +278,8 @@ export class PaymentsRepository {
         select: {
           id: true,
           orderId: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: { select: { id: true, name: true } },
           paymentStatus: {
             select: {
@@ -329,7 +335,8 @@ export class PaymentsRepository {
         select: {
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -454,7 +461,8 @@ export class PaymentsRepository {
       select: {
         orderId: true,
         orderName: true,
-        price: true,
+        originalPrice: true,
+        finalPrice: true,
         paymentProductType: {
           select: {
             name: true,
@@ -522,7 +530,8 @@ export class PaymentsRepository {
         select: {
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -632,7 +641,8 @@ export class PaymentsRepository {
           id: true,
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -676,7 +686,8 @@ export class PaymentsRepository {
           paymentMethodId: PaymentMethods.가상계좌,
         },
         select: {
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           virtualAccountPaymentInfo: {
             select: {
               accountNumber: true,
@@ -695,6 +706,18 @@ export class PaymentsRepository {
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+  async getAvailablePass(passId: number): Promise<LecturePass> {
+    try {
+      return this.prismaService.lecturePass.findUnique({
+        where: { id: passId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 정보 조회 실패: ${error}`,
         'PrismaFindFailed',
       );
     }
