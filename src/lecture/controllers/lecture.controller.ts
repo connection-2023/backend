@@ -30,6 +30,7 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
 import { ApiReadOneLectureByNonMember } from '../swagger-decorators/read-one-lecture-by-lecturer-non-member-decorator';
 import { ApiReadManyLectureWithLecturer } from '../swagger-decorators/read-many-lecture-with-lecturers-decorator';
+import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -140,8 +141,7 @@ export class LectureController {
     return { lecture };
   }
 
-  @ApiOperation({ summary: '유저 내 클래스 조회' })
-  @ApiBearerAuth()
+  @ApiReadManyEnrollLecture()
   @UseGuards(UserAccessTokenGuard)
   @Get('users')
   async readManyEnrollLectureWithUserId(
