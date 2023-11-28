@@ -167,6 +167,13 @@ interface ICursor {
   id: number;
 }
 
+interface UserPassInputData {
+  userId: number;
+  paymentId: number;
+  lecturePassId: number;
+  remainingUses: number;
+}
+
 export {
   LectureSchedule,
   LectureCoupon,
@@ -185,4 +192,5 @@ export {
   VirtualAccountPaymentInfoInputData,
   IPaymentResult,
   ICursor,
+  UserPassInputData,
 };

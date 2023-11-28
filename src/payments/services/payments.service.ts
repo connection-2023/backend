@@ -808,10 +808,11 @@ export class PaymentsService implements OnModuleInit {
       createPassPaymentDto.passId,
       createPassPaymentDto.finalPrice,
     );
-    await this.createPassPaymentTransaction(
-      userId,
+    await this.trxCreatePassPayment(
       pass.lecturerId,
+      userId,
       createPassPaymentDto,
+      pass,
     );
 
     return {
@@ -840,10 +841,11 @@ export class PaymentsService implements OnModuleInit {
     return pass;
   }
 
-  private async createPassPaymentTransaction(
+  private async trxCreatePassPayment(
     lecturerId: number,
     userId: number,
     createPassPaymentDto: CreatePassPaymentDto,
+    pass: LecturePass,
   ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -854,14 +856,40 @@ export class PaymentsService implements OnModuleInit {
           finalPrice: createPassPaymentDto.finalPrice,
         };
 
-        await this.trxCreatePayment(
+        const createdPayment: Payment = await this.trxCreatePayment(
           transaction,
           lecturerId,
           userId,
           paymentInfo,
           PaymentProductTypes.패스권,
         );
+
+        await this.trxCreateUserPass(
+          transaction,
+          userId,
+          pass,
+          createdPayment.id,
+        );
       },
+    );
+  }
+
+  private async trxCreateUserPass(
+    transaction: PrismaTransaction,
+    userId: number,
+    pass: LecturePass,
+    paymentId: number,
+  ) {
+    const userPassInputData = {
+      userId,
+      paymentId,
+      lecturePassId: pass.id,
+      remainingUses: pass.maxUsageCount,
+    };
+
+    await this.paymentsRepository.trxCreateUserPass(
+      transaction,
+      userPassInputData,
     );
   }
 }

@@ -14,6 +14,7 @@ import {
   LectureSchedule,
   PaymentInputData,
   ReservationInputData,
+  UserPassInputData,
   VirtualAccountPaymentInfoInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
@@ -178,6 +179,8 @@ export class PaymentsRepository {
         data: paymentInputData,
       });
     } catch (error) {
+      console.log(error);
+
       if (error.code === 'P2002') {
         throw new BadRequestException(
           `주문Id가 중복되었습니다.`,
@@ -730,6 +733,19 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 패스권 정보 조회 실패: ${error}`,
         'PrismaFindFailed',
+      );
+    }
+  }
+  async trxCreateUserPass(
+    transaction: PrismaTransaction,
+    userPassInputData: UserPassInputData,
+  ) {
+    try {
+      await transaction.userPass.create({ data: userPassInputData });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 패스권 생성 실패: ${error}`,
+        'PrismaCreateFailed',
       );
     }
   }
