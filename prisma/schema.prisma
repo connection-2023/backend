@@ -585,6 +585,7 @@ model Payment {
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
   paymentPassUsage          PaymentPassUsage?
+  userPass          UserPass[]
 }
 
 //결제 방식
@@ -639,6 +640,7 @@ model Reservation {
   participants      Int
   //예약 요청사항
   requests          String?
+  isEnabled         Boolean @default(false)
   user              Users           @relation(fields: [userId], references: [id])
   lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
   payment           Payment         @relation(fields: [paymentId], references: [id])
@@ -802,8 +804,10 @@ model LecturePassTarget {
 model UserPass {
   id            Int         @id @default(autoincrement())
   userId        Int
+  paymentId     Int         
   remainingUses Int
   lecturePassId Int
+  isEnabled         Boolean @default(false)
   startAt       DateTime?   @db.Timestamp(6)
   endAt         DateTime?   @db.Timestamp(6)
   createdAt     DateTime    @default(now()) @db.Timestamp(6)
@@ -811,8 +815,8 @@ model UserPass {
   deletedAt     DateTime?   @db.Timestamp(6)
   users         Users       @relation(fields: [userId], references: [id])
   lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+  payment       Payment     @relation(fields: [paymentId], references: [id])
 
-  @@unique([userId, lecturePassId])
 }
 
 model PaymentPassUsage {
