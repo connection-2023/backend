@@ -179,8 +179,6 @@ export class PaymentsRepository {
         data: paymentInputData,
       });
     } catch (error) {
-      console.log(error);
-
       if (error.code === 'P2002') {
         throw new BadRequestException(
           `주문Id가 중복되었습니다.`,
