@@ -26,16 +26,15 @@ interface TemporaryLectureToRegionInputData {
 
 interface TemporaryLectureScheduleInputData {
   lectureId: number;
-  startDateTime?: Date;
-  endDateTime?: Date;
+  date?: string;
+  startDateTime?: string;
   numberOfParticipants?: number;
 }
 
 interface RegularTemporaryLectureScheduleInputData {
   lectureId: number;
   team?: string;
-  startDateTime?: Date;
-  endDateTime?: Date;
+  startDateTime?: string;
   numberOfParticipants?: number;
 }
 
@@ -59,28 +58,25 @@ interface TemporaryLectureHolidayInputData {
   holiday?: Date;
 }
 
-interface RegularTemporaryLectureSchedules {
-  regularSchedules?: { [team: string]: { [day: string]: Date[] } };
-}
-
 interface TemporaryLectureCouponTargetInputData {
   lectureCouponId: number;
   lectureId: number;
 }
 
-interface TemporaryLectureDaySchedules {
-  regularSchedules: { [key: string]: Date[] };
+interface TemporaryLectureSchedules {
+  day?: string[];
+  date?: string;
+  startDateTime?: string[];
 }
 
 interface TemporaryLectureDayInputData {
   lectureId: number;
-  daysOfWeek: string;
-  team?: string;
+  day: string[];
 }
 
 interface TemporaryLectureDayScheduleInpuData {
   lectureDayId: number;
-  startDateTime: Date;
+  startDateTime: string;
 }
 
 interface TemporaryLectureLocation {
@@ -104,10 +100,9 @@ export {
   TemporaryLectureToDanceGenreInputData,
   TemporaryLectureNotificationResponse,
   TemporaryLectureHolidayInputData,
-  RegularTemporaryLectureSchedules,
   RegularTemporaryLectureScheduleInputData,
   TemporaryLectureCouponTargetInputData,
-  TemporaryLectureDaySchedules,
+  TemporaryLectureSchedules,
   TemporaryLectureDayInputData,
   TemporaryLectureDayScheduleInpuData,
   TemporaryLectureLocation,

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { LectureReview } from '@prisma/client';
+import { LectureReview, LikedLectureReview } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import { LectureReviewResponseDto } from '../dtos/read-many-lecture-review-response.dto';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -39,10 +40,11 @@ export class LectureReviewRepository {
     });
   }
 
-  async readManyLectureReviewByLecture(
+  async trxReadManyLectureReviewByLectureWithUserId(
     lectureId: number,
+    userId: number,
     order,
-  ): Promise<LectureReview[]> {
+  ): Promise<LectureReviewResponseDto[]> {
     return await this.prismaService.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
       include: {
@@ -52,7 +54,30 @@ export class LectureReviewRepository {
         users: {
           include: { userProfileImage: { select: { imageUrl: true } } },
         },
-        lecture: true,
+        lecture: { select: { title: true } },
+        likedLectureReview: { where: { userId } },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy: order,
+    });
+  }
+
+  async trxReadManyLectureReviewByLecture(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    order,
+  ): Promise<LectureReview[]> {
+    return await transaction.lectureReview.findMany({
+      where: { lectureId, deletedAt: null },
+      include: {
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
+        users: {
+          include: { userProfileImage: { select: { imageUrl: true } } },
+        },
+        lecture: { select: { title: true } },
+        _count: { select: { likedLectureReview: true } },
       },
       orderBy: order,
     });
@@ -88,5 +113,28 @@ export class LectureReviewRepository {
     });
 
     return lectureId;
+  }
+
+  async trxGetLectureReviewLike(
+    transaction: PrismaTransaction,
+    lectureReviewId: number,
+  ): Promise<LikedLectureReview> {
+    return await transaction.likedLectureReview.findFirst({
+      where: { lectureReviewId },
+    });
+  }
+
+  async readManyMyReview(userId: number, orderBy): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { userId },
+      include: {
+        lecture: true,
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
+    });
   }
 }

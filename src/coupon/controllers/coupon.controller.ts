@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CouponService } from '@src/coupon/services/coupon.service';
@@ -22,7 +23,9 @@ import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lect
 import { ApiGetApplicableCouponsForLecture } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
 import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/get-private-lecture-coupon-code.decorator';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
-import { ApiIssuePrivateCouponToUser } from '../swagger-decorators/issue-private-coupon-to-user.decorator';
+import { ApiIssuePrivateCouponToUser } from '@src/coupon/swagger-decorators/issue-private-coupon-to-user.decorator';
+import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
+import { GetMyIssuedCouponListDto } from '@src/coupon/dtos/get-my-issued-coupon-list.dto';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
@@ -32,12 +35,14 @@ export class CouponController {
   @ApiGetMyCouponList()
   @Get('/user')
   @UseGuards(UserAccessTokenGuard)
-  async getMyCouponList(@GetAuthorizedUser() AuthorizedData: ValidateResult) {
-    const coupons = await this.couponService.getMyCouponList(
+  async getMyCouponList(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Query() getMyCouponListDto: GetMyCouponListDto,
+  ) {
+    return await this.couponService.getMyCouponList(
       AuthorizedData.user.id,
+      getMyCouponListDto,
     );
-
-    return { coupons };
   }
 
   @ApiGetMyIssuedCouponList()
@@ -45,25 +50,27 @@ export class CouponController {
   @UseGuards(LecturerAccessTokenGuard)
   async getMyIssuedCouponList(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Query() getMyIssuedCouponListDto: GetMyIssuedCouponListDto,
   ) {
-    const coupons = await this.couponService.getMyIssuedCouponList(
+    return await this.couponService.getMyIssuedCouponList(
       AuthorizedData.lecturer.id,
+      getMyIssuedCouponListDto,
     );
-
-    return { coupons };
   }
 
   @ApiCreateLectureCoupon()
-  @Post('/lectures')
+  @Post('/lecture')
   @UseGuards(LecturerAccessTokenGuard)
   async createLectureCoupon(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
     @Body() createLectureCouponDto: CreateLectureCouponDto,
   ) {
-    await this.couponService.createLectureCoupon(
+    const coupon = await this.couponService.createLectureCoupon(
       AuthorizedData.lecturer.id,
       createLectureCouponDto,
     );
+
+    return { coupon };
   }
 
   @ApiGetApplicableCouponsForLecture()

@@ -116,7 +116,7 @@ export class CreateLectureCouponDto {
 
   @ApiProperty({
     example: [1, 2],
-    description: '강의 Id',
+    description: '강의 Id/ 생략 가능',
     required: false,
   })
   @IsOptional()

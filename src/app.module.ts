@@ -16,6 +16,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
 import { LectureReviewController } from '@src/lecture/controllers/lecture-review.controller';
 import { LectureReviewService } from '@src/lecture/services/lecture-review.service';
+import { PassModule } from './pass/pass.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { LectureReviewService } from '@src/lecture/services/lecture-review.servi
     UploadsModule,
     TestModule,
     PaymentsModule,
+    PassModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

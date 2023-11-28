@@ -1,13 +1,22 @@
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { Lecture, LectureHoliday, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  Id,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   LectureCouponTargetInputData,
@@ -16,7 +25,6 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
-  RegularLectureScheduleInputData,
   RegularLectureSchedules,
 } from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
@@ -102,16 +110,19 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
-            this.createRegularLectureScheduleInputData(
-              newLecture.id,
-              regularSchedules,
-              lecture.duration,
+          for (const schedule of regularSchedules) {
+            const regularDayScheduleInputData =
+              this.createRegularLectureScheduleInputData(
+                newLecture.id,
+                schedule,
+                lecture.duration,
+              );
+
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              regularDayScheduleInputData,
             );
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            regularLectureScheduleInputData,
-          );
+          }
         }
 
         if (holidays) {
@@ -160,6 +171,27 @@ export class LectureService {
         };
       },
     );
+  }
+
+  async readLectureWithUserId(userId: number, lectureId: number) {
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    const location = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
+
+    const isLike = await this.prismaService.likedLecture.findFirst({
+      where: { userId, lectureId },
+    });
+
+    if (isLike) {
+      lecture['isLike'] = true;
+    } else {
+      lecture['isLike'] = false;
+    }
+    return { lecture, lecturer, location };
   }
 
   async readLecture(lectureId: number) {
@@ -417,6 +449,53 @@ export class LectureService {
     return { schedule, holidayArr };
   }
 
+  async readLectureReservationWithUser(userId: number, lectureId: number) {
+    const reservation =
+      await this.lectureRepository.readLectureReservationWithUser(
+        userId,
+        lectureId,
+      );
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation Not Found');
+    }
+
+    return reservation;
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number) {
+    return await this.lectureRepository.readManyLectureWithLectruerId(
+      lecturerId,
+    );
+  }
+
+  async readManyEnrollLectureWithUserId(userId: number) {
+    const reservation =
+      await this.lectureRepository.readManyEnrollLectureWithUserId(userId);
+
+    if (reservation[0]) {
+      const enrollLecture = {};
+      reservation.forEach((item) => {
+        const lectureId = item.lectureSchedule.lecture.id;
+
+        if (!enrollLecture[lectureId]) {
+          enrollLecture[lectureId] = {
+            lectureId: lectureId,
+            title: item.lectureSchedule.lecture.title,
+            lecturerId: item.lectureSchedule.lecture.lecturerId,
+            startDateTime: [],
+          };
+        }
+
+        enrollLecture[lectureId].startDateTime.push(
+          item.lectureSchedule.startDateTime,
+        );
+      });
+
+      return Object.values(enrollLecture);
+    }
+  }
+
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
     const extractRegions: Region[] = this.extractRegions(regions);
     const regionIds: Id[] = await this.lectureRepository.getRegionsId(
@@ -624,27 +703,23 @@ export class LectureService {
 
   private createRegularLectureScheduleInputData(
     lectureId: number,
-    regularSchedules: RegularLectureSchedules,
+    regularSchedule: RegularLectureSchedules,
     duration: number,
   ) {
-    const regularScheduleInputData = [];
-    for (const team in regularSchedules) {
-      regularSchedules[team].map((date) => {
-        const startDateTime = new Date(date);
-        const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
-        );
-        const regularSchedule = {
+    const regularScheduleInputData = regularSchedule.startDateTime.map(
+      (time) => {
+        const startTime = new Date(time);
+        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+
+        return {
           lectureId,
-          team,
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
+          day: regularSchedule.day,
+          startDateTime: startTime,
+          endDateTime: endTime,
           numberOfParticipants: 0,
         };
-        regularScheduleInputData.push(regularSchedule);
-      });
-    }
-
+      },
+    );
     return regularScheduleInputData;
   }
 
@@ -703,7 +778,7 @@ export class LectureService {
         couponDoesNotExist.push(coupon);
       }
     }
-    if (couponDoesNotExist) {
+    if (couponDoesNotExist[0]) {
       throw new BadRequestException(
         `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
       );

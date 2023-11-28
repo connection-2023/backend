@@ -9,37 +9,39 @@ datasource db {
 
 model Users {
   //고유 id
-  id                 Int                  @id @default(autoincrement())
-  uuid               String               @default(uuid())
+  id                       Int                        @id @default(autoincrement())
+  uuid                     String                     @default(uuid())
   //이름
-  name               String               @db.VarChar(10)
+  name                     String                     @db.VarChar(10)
   //사용자 닉네임
-  nickname           String               @unique @db.VarChar(30)
+  nickname                 String                     @unique @db.VarChar(30)
   //사용 이메일
-  email              String               @unique
+  email                    String                     @unique
   //프로필 공개 여부(open: true, close: false)
-  isProfileOpen      Boolean              @default(false) @db.Boolean
+  isProfileOpen            Boolean                    @default(false) @db.Boolean
   //핸드폰 번호
-  phoneNumber        String?              @unique @db.VarChar(11)
+  phoneNumber              String?                    @unique @db.VarChar(11)
   //성별
-  gender             Int?                 @db.SmallInt
+  gender                   Int?                       @db.SmallInt
   //생성일자
-  createdAt          DateTime             @default(now()) @db.Timestamp(6)
+  createdAt                DateTime                   @default(now()) @db.Timestamp(6)
   //수정일자
-  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt                DateTime                   @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt          DateTime?            @db.Timestamp(6)
-  auth               Auth?
-  userProfileImage   UserProfileImage?
-  lecturer           Lecturer?
-  lectureReview      LectureReview[]
-  lecturerReview     LecturerReview[]
-  likedLecture       LikedLecture[]
-  dailySmsUsage      DailySmsUsage?
-  userCoupon         UserCoupon[]
-  payment            Payment[]
-  reservation        Reservation[]
-  likedLectureReview LikedLectureReview[]
+  deletedAt                DateTime?                  @db.Timestamp(6)
+  auth                     Auth?
+  userProfileImage         UserProfileImage?
+  lecturer                 Lecturer?
+  lectureReview            LectureReview[]
+  lecturerReview           LecturerReview[]
+  likedLecture             LikedLecture[]
+  dailySmsUsage            DailySmsUsage?
+  userCoupon               UserCoupon[]
+  payment                  Payment[]
+  reservation              Reservation[]
+  likedLectureReview       LikedLectureReview[]
+  registerConsentAgreement RegisterConsentAgreement[]
+  userPass                 UserPass[]
 }
 
 model UserProfileImage {
@@ -107,6 +109,7 @@ model Lecturer {
   lecturerInstagramPostUrl LecturerInstagramPostUrl[]
   lecturerProfileImageUrl  LecturerProfileImageUrl[]
   payment                  Payment[]
+  lecturePass              LecturePass[]
 }
 
 model Lecture {
@@ -170,6 +173,7 @@ model Lecture {
   lectureToDanceGenre LectureToDanceGenre[]
   lectureHoliday      LectureHoliday[]
   lectureLocation     LectureLocation?
+  lecturePassTarget   LecturePassTarget[]
 }
 
 model DanceCategory {
@@ -400,10 +404,10 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
+  day                  String[]      @default([])
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
-  team                 String?
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
   reservation          Reservation[]
 }
@@ -493,8 +497,8 @@ model TemporaryLecture {
 model TemporaryLectureSchedule {
   id                   Int              @id @default(autoincrement())
   lectureId            Int
-  startDateTime        DateTime?
-  endDateTime          DateTime?
+  date                 String?
+  startDateTime        String?
   numberOfParticipants Int?
   temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
@@ -563,7 +567,8 @@ model Payment {
   orderId                   String                     @unique
   orderName                 String
   //가격
-  price                     Int                        @db.Integer
+  originalPrice             Int
+  finalPrice                Int
   userId                    Int?
   lecturerId                Int?
   paymentMethodId           Int?
@@ -579,6 +584,7 @@ model Payment {
   paymentCouponUsage        PaymentCouponUsage?
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
+  paymentPassUsage          PaymentPassUsage?
 }
 
 //결제 방식
@@ -713,8 +719,7 @@ model RefundStatus {
 model TemporaryLectureDay {
   id                          Int                           @id @default(autoincrement())
   lectureId                   Int
-  daysOfWeek                  String?
-  team                        String?
+  day                         String[]                      @default([])
   temporaryLecture            TemporaryLecture              @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   temporaryLectureDaySchedule TemporaryLectureDaySchedule[]
 }
@@ -722,7 +727,7 @@ model TemporaryLectureDay {
 model TemporaryLectureDaySchedule {
   id                  Int                 @id @default(autoincrement())
   lectureDayId        Int
-  startDateTime       DateTime?
+  startDateTime       String?
   temporaryLectureDay TemporaryLectureDay @relation(fields: [lectureDayId], references: [id], onDelete: Cascade)
 }
 
@@ -746,4 +751,75 @@ model TemporaryLectureLocation {
   //건물명
   buildingName     String?
   temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+}
+
+model RegisterConsent {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  description              String
+  required                 Boolean
+  registerConsentAgreement RegisterConsentAgreement[]
+}
+
+model RegisterConsentAgreement {
+  id                Int             @id @default(autoincrement())
+  registerConsentId Int
+  userId            Int
+  registerConsent   RegisterConsent @relation(fields: [registerConsentId], references: [id])
+  user              Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([registerConsentId, userId])
+}
+
+model LecturePass {
+  id                Int                 @id @default(autoincrement())
+  lecturerId        Int
+  title             String
+  price             Int
+  maxUsageCount     Int
+  availableMonths   Int
+  salesCount        Int                 @default(0)
+  isDisabled        Boolean             @default(false)
+  createdAt         DateTime            @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt         DateTime?           @db.Timestamp(6)
+  lecturer          Lecturer            @relation(fields: [lecturerId], references: [id])
+  lecturePassTarget LecturePassTarget[]
+  userPass          UserPass[]
+  paymentPassUsage  PaymentPassUsage[]
+}
+
+model LecturePassTarget {
+  id            Int         @id @default(autoincrement())
+  lectureId     Int
+  lecturePassId Int
+  lecture       Lecture     @relation(fields: [lectureId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+
+  @@unique([lectureId, lecturePassId])
+}
+
+model UserPass {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  remainingUses Int
+  lecturePassId Int
+  startAt       DateTime?   @db.Timestamp(6)
+  endAt         DateTime?   @db.Timestamp(6)
+  createdAt     DateTime    @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime    @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt     DateTime?   @db.Timestamp(6)
+  users         Users       @relation(fields: [userId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+
+  @@unique([userId, lecturePassId])
+}
+
+model PaymentPassUsage {
+  id            Int         @id @default(autoincrement())
+  paymentId     Int         @unique
+  lecturePassId Int
+  usedCount     Int
+  payment       Payment     @relation(fields: [paymentId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
 }

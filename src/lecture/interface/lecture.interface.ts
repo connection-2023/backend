@@ -23,14 +23,7 @@ interface LectureToRegionInputData {
 
 interface LectureScheduleInputData {
   lectureId: number;
-  startDateTime: Date;
-  endDateTime: Date;
-  numberOfParticipants: number;
-}
-
-interface RegularLectureScheduleInputData {
-  lectureId: number;
-  team: string;
+  day?: string[];
   startDateTime: Date;
   endDateTime: Date;
   numberOfParticipants: number;
@@ -57,7 +50,8 @@ interface LectureHolidayInputData {
 }
 
 interface RegularLectureSchedules {
-  regularSchedules: { [key: string]: Date[] };
+  day: string[];
+  startDateTime: Date[];
 }
 
 interface LectureCouponTargetInputData {
@@ -84,6 +78,35 @@ interface LectureLocationInputData {
   buildingName: string;
 }
 
+interface LectureLikeInputData {
+  lectureId: number;
+  userId: number;
+}
+
+interface LikedLectureReviewWhereData {
+  userId?: number;
+  lecturerId?: number;
+}
+
+interface EnrollLectureReservationResponseData {
+  id: number;
+  userId: number;
+  paymentId: number;
+  lectureScheduleId: number;
+  representative: string;
+  phoneNumber: string;
+  participants: number;
+  requests: string | null;
+  lectureSchedule: {
+    startDateTime: Date;
+    lecture: {
+      id: number;
+      lecturerId: number;
+      title: string;
+    };
+  };
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -93,9 +116,11 @@ export {
   LectureNotificationResponse,
   LectureHolidayInputData,
   RegularLectureSchedules,
-  RegularLectureScheduleInputData,
   LectureCouponTargetInputData,
   LectureOrderBy,
   LectureLocation,
   LectureLocationInputData,
+  LectureLikeInputData,
+  LikedLectureReviewWhereData,
+  EnrollLectureReservationResponseData,
 };
