@@ -308,49 +308,30 @@ export class CouponService {
     let cursor;
     let skip;
 
-    const isInitialRequest = !currentPage && !targetPage && !lastItemId;
     const isPagination = currentPage && targetPage;
     const isInfiniteScroll = lastItemId && take;
 
-    if (isInitialRequest) {
-      couponList = await this.getUserCouponList(
-        userId,
-        take,
-        endAt,
-        orderBy,
-        isUsed,
-      );
-    } else if (isPagination) {
+    if (isPagination) {
       const pageDiff = currentPage - targetPage;
-      ({ cursor, skip } = this.getPaginationOptions(
+      ({ cursor, skip, take } = this.getPaginationOptions(
         pageDiff,
         pageDiff <= -1 ? lastItemId : firstItemId,
         take,
       ));
-
-      couponList = await this.getUserCouponList(
-        userId,
-        pageDiff >= 1 ? -take : take,
-        endAt,
-        orderBy,
-        isUsed,
-        cursor,
-        skip,
-      );
     } else if (isInfiniteScroll) {
       cursor = { id: lastItemId };
       skip = 1;
-
-      couponList = await this.getUserCouponList(
-        userId,
-        take,
-        endAt,
-        orderBy,
-        isUsed,
-        cursor,
-        skip,
-      );
     }
+
+    couponList = await this.getUserCouponList(
+      userId,
+      take,
+      endAt,
+      orderBy,
+      isUsed,
+      cursor,
+      skip,
+    );
 
     return { totalItemCount, couponList };
   }
@@ -359,9 +340,8 @@ export class CouponService {
     const cursor: ICursor = { id: itemId };
     const skip =
       Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    const invertedTake = pageDiff >= 1 ? -take : take;
 
-    return { cursor, skip, invertedTake };
+    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
   }
 
   private getCouponFilterOptions(
@@ -440,10 +420,6 @@ export class CouponService {
       return;
     }
 
-    let couponList;
-    let cursor;
-    let skip;
-
     const { OR, orderBy, endAt, lectureCouponTarget } =
       this.getIssuedCouponFilterOptions(
         issuedCouponStatusOptions,
@@ -451,52 +427,34 @@ export class CouponService {
         lectureId,
       );
 
-    const isInitialRequest = !currentPage && !targetPage && !lastItemId;
+    let couponList;
+    let cursor;
+    let skip;
     const isPagination = currentPage && targetPage;
     const isInfiniteScroll = lastItemId && take;
 
-    if (isInitialRequest) {
-      couponList = await this.getIssuedCouponList(
-        lecturerId,
-        OR,
-        orderBy,
-        endAt,
-        lectureCouponTarget,
-        take,
-      );
-    } else if (isPagination) {
+    if (isPagination) {
       const pageDiff = currentPage - targetPage;
-      ({ cursor, skip } = this.getPaginationOptions(
+      ({ cursor, skip, take } = this.getPaginationOptions(
         pageDiff,
         pageDiff <= -1 ? lastItemId : firstItemId,
         take,
       ));
-
-      couponList = await this.getIssuedCouponList(
-        lecturerId,
-        OR,
-        orderBy,
-        endAt,
-        lectureCouponTarget,
-        pageDiff >= 1 ? -take : take,
-        cursor,
-        skip,
-      );
     } else if (isInfiniteScroll) {
       cursor = { id: lastItemId };
       skip = 1;
-
-      couponList = await this.getIssuedCouponList(
-        lecturerId,
-        OR,
-        orderBy,
-        endAt,
-        lectureCouponTarget,
-        take,
-        cursor,
-        skip,
-      );
     }
+
+    couponList = await this.getIssuedCouponList(
+      lecturerId,
+      OR,
+      orderBy,
+      endAt,
+      lectureCouponTarget,
+      take,
+      cursor,
+      skip,
+    );
 
     return { totalItemCount, couponList };
   }
