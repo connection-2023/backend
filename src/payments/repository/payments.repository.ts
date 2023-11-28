@@ -179,8 +179,6 @@ export class PaymentsRepository {
         data: paymentInputData,
       });
     } catch (error) {
-      console.log(error);
-
       if (error.code === 'P2002') {
         throw new BadRequestException(
           `주문Id가 중복되었습니다.`,
@@ -335,7 +333,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePayment(
+  async trxUpdatePayment(
     transaction: PrismaTransaction,
     paymentId: number,
     paymentKey: string,
@@ -367,7 +365,24 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true } },
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
           cardPaymentInfo: {
@@ -562,7 +577,24 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true } },
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
           cardPaymentInfo: {
@@ -746,6 +778,23 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 유저 패스권 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+  async trxUpdateProductEnabled(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    target: string,
+  ) {
+    try {
+      await transaction[target].updateMany({
+        where: { paymentId },
+        data: { isEnabled: true },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 패스권 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
       );
     }
   }
