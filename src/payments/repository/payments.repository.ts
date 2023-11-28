@@ -706,9 +706,33 @@ export class PaymentsRepository {
             },
           },
           updatedAt: true,
-          lecturer: {
+          reservation: {
             select: {
-              profileCardImageUrl: true,
+              participants: true,
+              requests: true,
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                  lecture: {
+                    select: {
+                      lectureImage: { select: { imageUrl: true }, take: 1 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
         },
