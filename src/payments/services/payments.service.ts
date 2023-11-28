@@ -603,6 +603,10 @@ export class PaymentsService implements OnModuleInit {
             target,
           );
 
+          if (productType === PaymentProductTypes.패스권) {
+            await this.trxUpdateLecturePassSalesCount(transaction, paymentId);
+          }
+
           await this.createCardPaymentInfo(
             transaction,
             paymentId,
@@ -893,7 +897,7 @@ export class PaymentsService implements OnModuleInit {
     userId: number,
     pass: LecturePass,
     paymentId: number,
-  ) {
+  ): Promise<void> {
     const userPassInputData = {
       userId,
       paymentId,
@@ -904,6 +908,20 @@ export class PaymentsService implements OnModuleInit {
     await this.paymentsRepository.trxCreateUserPass(
       transaction,
       userPassInputData,
+    );
+  }
+
+  private async trxUpdateLecturePassSalesCount(
+    transaction: PrismaTransaction,
+    paymentId: number,
+  ): Promise<void> {
+    const { lecturePassId } = await this.paymentsRepository.getUserLecturePass(
+      paymentId,
+    );
+
+    await this.paymentsRepository.trxUpdateLecturePassSalesCount(
+      transaction,
+      lecturePassId,
     );
   }
 }
