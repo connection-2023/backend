@@ -69,9 +69,9 @@ export function ApiGetUserPaymentsHistory() {
                   participants: 2,
                   requests: '',
                   lectureSchedule: {
-                    lectureId: 2,
                     startDateTime: '2023-10-03T11:00:00.000Z',
                     lecture: {
+                      id: 2,
                       lectureImage: [
                         {
                           imageUrl: '이미지url1',
@@ -102,9 +102,9 @@ export function ApiGetUserPaymentsHistory() {
                   participants: 1,
                   requests: '',
                   lectureSchedule: {
-                    lectureId: 2,
                     startDateTime: '2023-10-03T11:00:00.000Z',
                     lecture: {
+                      id: 2,
                       lectureImage: [
                         {
                           imageUrl: '이미지url1',

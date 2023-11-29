@@ -1,7 +1,9 @@
+import { UserPass } from '@prisma/client';
 import {
   PaymentMethods,
   VirtualAccountRefundStatus,
 } from '@src/payments/enum/payment.enum';
+import { extend } from 'joi';
 
 interface LectureSchedule {
   id?: number;
@@ -35,6 +37,7 @@ interface PaymentInputData {
   originalPrice: number;
   finalPrice: number;
   paymentProductTypeId: number;
+  paymentMethodId?: number;
 }
 
 interface ReservationInputData {
@@ -116,7 +119,6 @@ interface IPaymentResult {
   finalPrice: number;
   createdAt: Date;
   updatedAt: Date;
-
   paymentProductType: {
     name: string;
   };
@@ -158,7 +160,6 @@ interface VirtualAccountPaymentInfoInputData {
 interface IReservationInfo {
   lectureSchedule: ILectureSchedule;
   participants: number;
-  requests: string | null;
 }
 
 interface IUserPass {
@@ -185,6 +186,20 @@ interface UserPassInputData {
   lecturePassId: number;
   remainingUses: number;
 }
+interface IPaymentPassUsageInputData {
+  paymentId: number;
+  lecturePassId: number;
+  usedCount: number;
+}
+
+interface ISelectedUserPass extends UserPass {
+  lecturePass: {
+    availableMonths: number;
+    lecturePassTarget: {
+      lectureId: number;
+    }[];
+  };
+}
 
 export {
   LectureSchedule,
@@ -205,4 +220,6 @@ export {
   IPaymentResult,
   ICursor,
   UserPassInputData,
+  IPaymentPassUsageInputData,
+  ISelectedUserPass,
 };

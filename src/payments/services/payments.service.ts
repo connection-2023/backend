@@ -7,13 +7,14 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CreateLecturePaymentDto } from '@src/payments/dtos/create-lecture-payment.dto';
+import { CreateLecturePaymentWithTossDto } from '@src/payments/dtos/create-lecture-payment-with-toss.dto';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import {
   CardPaymentInfoInputData,
   Coupon,
   Coupons,
   IPaymentResult,
+  ISelectedUserPass,
   LectureCoupon,
   LectureCouponUseage,
   LectureSchedule,
@@ -25,7 +26,13 @@ import {
   VirtualAccountPaymentInfoInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Card, Lecture, LecturePass, Payment } from '@prisma/client';
+import {
+  Card,
+  Lecture,
+  LecturePass,
+  Payment,
+  PaymentProductType,
+} from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ConfirmLecturePaymentDto as ConfirmPaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import {
@@ -35,7 +42,8 @@ import {
   VirtualAccountRefundStatus,
 } from '@src/payments/enum/payment.enum';
 import axios from 'axios';
-import { CreatePassPaymentDto } from '../dtos/create-pass-payment.dto';
+import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
+import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -83,17 +91,20 @@ export class PaymentsService implements OnModuleInit {
   //   const response = await axios.post(this.kftGetTokenUri, data);
   // }
 
-  async createLecturePaymentInfo(
+  async createLecturePaymentWithToss(
     userId: number,
-    createLecturePaymentDto: CreateLecturePaymentDto,
+    createLecturePaymentDto: CreateLecturePaymentWithTossDto,
   ) {
+    const { lectureId, lectureSchedules } = createLecturePaymentDto;
     const lecture: Lecture = await this.checkLectureValidity(
-      createLecturePaymentDto,
+      lectureId,
+      lectureSchedules,
     );
     await this.checkUserPaymentValidity(
       userId,
       createLecturePaymentDto.orderId,
     );
+    await this.checkApplicableCoupon(createLecturePaymentDto);
 
     // 강의 자리수 확인 및 쿠폰 비교
     const coupons: Coupons = await this.comparePrice(
@@ -102,9 +113,9 @@ export class PaymentsService implements OnModuleInit {
       createLecturePaymentDto,
     );
 
-    await this.createLecturePaymentTransaction(
-      lecture.lecturerId,
+    await this.trxCreateLecturePaymentWithToss(
       userId,
+      lecture.lecturerId,
       createLecturePaymentDto,
       coupons,
     );
@@ -118,27 +129,22 @@ export class PaymentsService implements OnModuleInit {
     return lecturePaymentInfo;
   }
 
-  private async createLecturePaymentTransaction(
-    lecturerId: number,
+  private async trxCreateLecturePaymentWithToss(
     userId: number,
-    createLecturePaymentDto: CreateLecturePaymentDto,
+    lecturerId: number,
+    createLecturePaymentDto: CreateLecturePaymentWithTossDto,
     coupons: Coupons,
   ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const paymentInfo = {
-          orderId: createLecturePaymentDto.orderId,
-          orderName: createLecturePaymentDto.orderName,
-          originalPrice: createLecturePaymentDto.originalPrice,
-          finalPrice: createLecturePaymentDto.finalPrice,
-        };
-
+        const paymentInfo = this.createPaymentInfo(createLecturePaymentDto);
         const createdLecturePayment: Payment = await this.trxCreatePayment(
           transaction,
           lecturerId,
           userId,
           paymentInfo,
           PaymentProductTypes.클래스,
+          PaymentOrderStatus.READY,
         );
 
         await Promise.all([
@@ -159,12 +165,10 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  private async checkLectureValidity({
-    lectureId,
-    couponId,
-    stackableCouponId,
-    lectureSchedules,
-  }: CreateLecturePaymentDto): Promise<Lecture> {
+  private async checkLectureValidity(
+    lectureId: number,
+    lectureSchedules: LectureSchedule[],
+  ): Promise<Lecture> {
     const lecture: Lecture = await this.paymentsRepository.getLecture(
       lectureId,
     );
@@ -175,12 +179,8 @@ export class PaymentsService implements OnModuleInit {
       throw new BadRequestException(`활성화되지 않은 강의입니다.`);
     }
 
-    Promise.all([
-      //적용가능한 쿠폰인지 확인
-      (await this.checkApplicableCoupon(lectureId, couponId, stackableCouponId),
-      //강의 인원수 확인
-      await this.checkLectureSchedules(lecture.maxCapacity, lectureSchedules)),
-    ]);
+    //강의 인원수 확인
+    await this.checkLectureSchedules(lecture.maxCapacity, lectureSchedules);
 
     return lecture;
   }
@@ -223,7 +223,11 @@ export class PaymentsService implements OnModuleInit {
   }
 
   //적용할 쿠폰이 올바른지 확인
-  private async checkApplicableCoupon(lectureId, couponId, stackableCouponId) {
+  private async checkApplicableCoupon({
+    lectureId,
+    couponId,
+    stackableCouponId,
+  }: CreateLecturePaymentWithTossDto) {
     const couponIds: number[] = [couponId, stackableCouponId].filter(
       (id) => id != null && id !== undefined,
     );
@@ -254,7 +258,7 @@ export class PaymentsService implements OnModuleInit {
       stackableCouponId,
       finalPrice: clientPrice,
       lectureSchedules,
-    }: CreateLecturePaymentDto,
+    }: CreateLecturePaymentWithTossDto,
   ): Promise<Coupons> {
     let numberOfApplicants: number = 0;
     lectureSchedules.map((lectureSchedule) => {
@@ -419,28 +423,46 @@ export class PaymentsService implements OnModuleInit {
     return { ...coupon.lectureCoupon };
   }
 
+  private createPaymentInfo(
+    data:
+      | CreatePassPaymentDto
+      | CreateLecturePaymentWithTossDto
+      | CreateLecturePaymentWithPassDto,
+  ): PaymentInfo {
+    const paymentInfo = {
+      orderId: data.orderId,
+      orderName: data.orderName,
+      originalPrice: data.originalPrice,
+      finalPrice: data.finalPrice,
+    };
+
+    return paymentInfo;
+  }
+
   private async trxCreatePayment(
     transaction: PrismaTransaction,
     lecturerId: number,
     userId: number,
     paymentInfo: PaymentInfo,
     productType: PaymentProductTypes,
+    statusId: number,
+    paymentMethodId?: number,
   ): Promise<Payment> {
     const { orderName, originalPrice, finalPrice, orderId } = paymentInfo;
 
-    const paymentType = await this.paymentsRepository.getPaymentProductType(
-      productType,
-    );
+    const paymentType: PaymentProductType =
+      await this.paymentsRepository.getPaymentProductType(productType);
 
     const paymentInputData = {
-      lecturerId,
-      userId,
       orderId,
       orderName,
-      statusId: PaymentOrderStatus.READY,
+      userId,
+      lecturerId,
+      statusId,
       paymentProductTypeId: paymentType.id,
       originalPrice,
       finalPrice,
+      paymentMethodId,
     };
 
     return await this.paymentsRepository.createPayment(
@@ -453,7 +475,9 @@ export class PaymentsService implements OnModuleInit {
     transaction: PrismaTransaction,
     userId: number,
     paymentId: number,
-    getLecturePaymentDto: CreateLecturePaymentDto,
+    getLecturePaymentDto:
+      | CreateLecturePaymentWithTossDto
+      | CreateLecturePaymentWithPassDto,
   ): Promise<void> {
     const { lectureSchedules, representative, phoneNumber, requests } =
       getLecturePaymentDto;
@@ -553,7 +577,9 @@ export class PaymentsService implements OnModuleInit {
     ];
 
     if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
-      return this.paymentsRepository.getPaymentResult(paymentInfo.id);
+      return await this.paymentsRepository.getLecturePaymentResultWithToss(
+        paymentInfo.id,
+      );
     }
 
     if (paymentInfo.paymentStatus.id === PaymentOrderStatus.READY) {
@@ -679,6 +705,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async getPaymentInfo(orderId: string) {
     const paymentInfo = await this.paymentsRepository.getPaymentInfo(orderId);
+
     if (!paymentInfo) {
       throw new NotFoundException(
         `결제 정보가 존재하지 않습니다.`,
@@ -818,7 +845,7 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  async createPassPaymentInfo(
+  async createPassPaymentWithToss(
     userId: number,
     createPassPaymentDto: CreatePassPaymentDto,
   ) {
@@ -867,12 +894,8 @@ export class PaymentsService implements OnModuleInit {
   ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const paymentInfo = {
-          orderId: createPassPaymentDto.orderId,
-          orderName: createPassPaymentDto.orderName,
-          originalPrice: createPassPaymentDto.originalPrice,
-          finalPrice: createPassPaymentDto.finalPrice,
-        };
+        const paymentInfo: PaymentInfo =
+          this.createPaymentInfo(createPassPaymentDto);
 
         const createdPayment: Payment = await this.trxCreatePayment(
           transaction,
@@ -880,6 +903,7 @@ export class PaymentsService implements OnModuleInit {
           userId,
           paymentInfo,
           PaymentProductTypes.패스권,
+          PaymentOrderStatus.READY,
         );
 
         await this.trxCreateUserPass(
@@ -922,6 +946,165 @@ export class PaymentsService implements OnModuleInit {
     await this.paymentsRepository.trxUpdateLecturePassSalesCount(
       transaction,
       lecturePassId,
+    );
+  }
+
+  async createLecturePaymentWithPass(
+    userId,
+    createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
+  ) {
+    const { passId, orderId, lectureId, lectureSchedules } =
+      createLecturePaymentWithPassDto;
+
+    //결제 완료된 상태면 결제 내역 반환
+    const paymentInfo = await this.paymentsRepository.getPaymentInfo(orderId);
+    if (
+      paymentInfo &&
+      paymentInfo.paymentStatus.id === PaymentOrderStatus.DONE
+    ) {
+      return await this.paymentsRepository.getLecturePaymentResultWithPass(
+        paymentInfo.id,
+      );
+    }
+
+    const lecture = await this.checkLectureValidity(
+      lectureId,
+      lectureSchedules,
+    );
+    await this.checkUserPaymentValidity(
+      userId,
+      createLecturePaymentWithPassDto.orderId,
+    );
+    const userPass: ISelectedUserPass = await this.checkUserPassValidity(
+      userId,
+      passId,
+      lectureId,
+      lectureSchedules,
+    );
+
+    const payment: Payment = await this.trxCreateLecturePaymentWithPass(
+      userId,
+      lecture.lecturerId,
+      createLecturePaymentWithPassDto,
+      userPass,
+    );
+
+    return await this.paymentsRepository.getLecturePaymentResultWithPass(
+      payment.id,
+    );
+  }
+
+  private async checkUserPassValidity(
+    userId: number,
+    passId: number,
+    lectureId: number,
+    lectureSchedules: LectureSchedule[],
+  ) {
+    const totalParticipants = lectureSchedules.reduce(
+      (total, item) => total + item.participants,
+      0,
+    );
+
+    const currentDate = new Date();
+
+    const selectedPass: ISelectedUserPass =
+      await this.paymentsRepository.getUserPass(userId, passId);
+    if (!selectedPass) {
+      throw new BadRequestException(`패스권이 존재하지 않습니다.`);
+    }
+
+    if (selectedPass.remainingUses < totalParticipants) {
+      throw new BadRequestException(`패스권의 사용 가능 횟수를 초과했습니다.`);
+    }
+
+    const lectureTargetExist = selectedPass.lecturePass.lecturePassTarget.some(
+      (item) => item.lectureId === lectureId,
+    );
+    if (!lectureTargetExist) {
+      throw new BadRequestException(`패스권 적용 대상이 아닙니다.`);
+    }
+
+    if (selectedPass.endAt && selectedPass.endAt < currentDate) {
+      throw new BadRequestException(`사용기간이 만료된 패스권입니다.`);
+    }
+    return selectedPass;
+  }
+
+  private async trxCreateLecturePaymentWithPass(
+    userId: number,
+    lecturerId: number,
+    createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
+    userPass: ISelectedUserPass,
+  ) {
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const paymentInfo = this.createPaymentInfo(
+          createLecturePaymentWithPassDto,
+        );
+        const createdLecturePayment: Payment = await this.trxCreatePayment(
+          transaction,
+          lecturerId,
+          userId,
+          paymentInfo,
+          PaymentProductTypes.클래스,
+          PaymentOrderStatus.DONE,
+          PaymentMethods.패스권,
+        );
+
+        await Promise.all([
+          (this.trxCreateUserReservation(
+            transaction,
+            userId,
+            createdLecturePayment.id,
+            createLecturePaymentWithPassDto,
+          ),
+          this.trxUpdatePassUsage(
+            transaction,
+            createdLecturePayment.id,
+            createLecturePaymentWithPassDto,
+            userPass,
+          )),
+        ]);
+
+        return createdLecturePayment;
+      },
+    );
+  }
+
+  private async trxUpdatePassUsage(
+    transaction,
+    paymentId: number,
+    { passId, lectureSchedules }: CreateLecturePaymentWithPassDto,
+    userPass: ISelectedUserPass,
+  ) {
+    const totalParticipants: number = lectureSchedules.reduce(
+      (total, item) => total + item.participants,
+      0,
+    );
+
+    await this.paymentsRepository.trxCreatePaymentPassUsage(transaction, {
+      paymentId,
+      lecturePassId: passId,
+      usedCount: totalParticipants,
+    });
+
+    let startAt;
+    let endAt;
+
+    //패스권을 처음 사용했을때 기간 설정
+    if (userPass.endAt === null) {
+      startAt = new Date();
+      endAt = new Date();
+
+      endAt.setMonth(endAt.getMonth() + userPass.lecturePass.availableMonths);
+    }
+
+    await this.paymentsRepository.trxUpdateUserPassRemainingUses(
+      transaction,
+      userPass,
+      startAt,
+      endAt,
+      totalParticipants,
     );
   }
 }
