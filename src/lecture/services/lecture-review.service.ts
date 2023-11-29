@@ -72,7 +72,7 @@ export class LectureReviewService {
     }
 
     const readedReviews =
-      await this.lectureReviewRespository.trxReadManyLectureReviewByLectureWithUserId(
+      await this.lectureReviewRespository.readManyLectureReviewByLectureWithUserId(
         lectureId,
         userId,
         order,
@@ -127,17 +127,28 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const reviews =
-          await this.lectureReviewRespository.trxReadManyLectureReviewByLecture(
-            transaction,
-            lectureId,
-            order,
-          );
-        return reviews;
-      },
-    );
+    const readedReviews =
+      await this.lectureReviewRespository.readManyLectureReviewByLecture(
+        lectureId,
+        order,
+      );
+    const reviews = [];
+
+    for (const review of readedReviews) {
+      const { _count, lecture, reservation, users, ...reviewObj } = review;
+      const { userProfileImage, ...user } = users;
+
+      user['profileImage'] = userProfileImage.imageUrl;
+
+      reviewObj['user'] = user;
+      reviewObj['lectureTitle'] = lecture.title;
+      reviewObj['startDateTime'] = reservation.lectureSchedule.startDateTime;
+
+      reviews.push(reviewObj);
+      reviewObj['count'] = _count.likedLectureReview;
+    }
+
+    return reviews;
   }
 
   async updateLectureReview(

@@ -40,7 +40,7 @@ export class LectureReviewRepository {
     });
   }
 
-  async trxReadManyLectureReviewByLectureWithUserId(
+  async readManyLectureReviewByLectureWithUserId(
     lectureId: number,
     userId: number,
     order,
@@ -62,12 +62,11 @@ export class LectureReviewRepository {
     });
   }
 
-  async trxReadManyLectureReviewByLecture(
-    transaction: PrismaTransaction,
+  async readManyLectureReviewByLecture(
     lectureId: number,
     order,
-  ): Promise<LectureReview[]> {
-    return await transaction.lectureReview.findMany({
+  ): Promise<LectureReviewResponseDto[]> {
+    return await this.prismaService.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
       include: {
         reservation: {
