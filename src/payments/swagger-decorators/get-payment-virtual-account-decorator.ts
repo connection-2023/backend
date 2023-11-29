@@ -19,7 +19,8 @@ export function ApiPaymentVirtualAccount() {
       SwaggerApiResponse.success('영수증에 필요한 정보 반환', {
         statusCode: 200,
         data: {
-          price: 45000,
+          originalPrice: 50000,
+          finalPrice: 45000,
           virtualAccountPaymentInfo: {
             accountNumber: 'X9940003656612',
             customerName: '김토스',

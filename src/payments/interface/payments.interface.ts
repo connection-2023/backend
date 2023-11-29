@@ -32,7 +32,8 @@ interface PaymentInputData {
   orderId: string;
   orderName: string;
   statusId: number;
-  price: number;
+  originalPrice: number;
+  finalPrice: number;
   paymentProductTypeId: number;
 }
 
@@ -60,7 +61,8 @@ interface PaymentInfo {
   orderName?: string;
   method?: PaymentMethods;
   value?: number;
-  price?: number;
+  originalPrice?: number;
+  finalPrice?: number;
 }
 
 interface TossPaymentsConfirmResponse {
@@ -110,9 +112,11 @@ interface LecturePaymentUpdateData {
 interface IPaymentResult {
   orderId: string;
   orderName: string;
-  price: number;
+  originalPrice: number;
+  finalPrice: number;
   createdAt: Date;
   updatedAt: Date;
+
   paymentProductType: {
     name: string;
   };
@@ -122,6 +126,7 @@ interface IPaymentResult {
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
   reservation: IReservationInfo[];
+  userPass: IUserPass[];
 }
 
 interface ICardPaymentInfo {
@@ -156,12 +161,29 @@ interface IReservationInfo {
   requests: string | null;
 }
 
+interface IUserPass {
+  lecturePass: ILecturePass;
+}
+
+interface ILecturePass {
+  id: number;
+  availableMonths: number;
+}
+
 interface ILectureSchedule {
+  lectureId: number;
   startDateTime: Date;
 }
 
 interface ICursor {
   id: number;
+}
+
+interface UserPassInputData {
+  userId: number;
+  paymentId: number;
+  lecturePassId: number;
+  remainingUses: number;
 }
 
 export {
@@ -182,4 +204,5 @@ export {
   VirtualAccountPaymentInfoInputData,
   IPaymentResult,
   ICursor,
+  UserPassInputData,
 };

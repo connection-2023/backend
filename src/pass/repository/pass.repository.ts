@@ -1,5 +1,9 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  ICursor,
+  Id,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturePassInputData,
@@ -56,6 +60,60 @@ export class PassRepository {
       throw new InternalServerErrorException(
         `Prisma 패스권 대상 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+  async countIssuedPasses(lecturerId: number) {
+    try {
+      return await this.prismaService.lecturePass.count({
+        where: { lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getIssuedLecturePasses(
+    lecturerId: number,
+    take: number,
+    isDisabled: boolean,
+    orderBy: object,
+    lecturePassTarget: object,
+    cursor: ICursor,
+    skip: number,
+  ) {
+    try {
+      return await this.prismaService.lecturePass.findMany({
+        where: {
+          lecturerId,
+          isDisabled,
+          lecturePassTarget,
+        },
+        take,
+        orderBy,
+        cursor,
+        skip,
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          availableMonths: true,
+          maxUsageCount: true,
+          salesCount: true,
+          lecturePassTarget: {
+            select: {
+              lecture: { select: { id: true, title: true } },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 조회 실패: ${error}`,
+        'PrismaFindFailed',
       );
     }
   }

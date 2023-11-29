@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardInfo,
@@ -10,6 +14,7 @@ import {
   LectureSchedule,
   PaymentInputData,
   ReservationInputData,
+  UserPassInputData,
   VirtualAccountPaymentInfoInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
@@ -18,7 +23,13 @@ import {
   PaymentOrderStatus,
   PaymentMethods,
 } from '../enum/payment.enum';
-import { Payment, PaymentProductType, PaymentStatus } from '@prisma/client';
+import {
+  LecturePass,
+  Payment,
+  PaymentProductType,
+  PaymentStatus,
+  UserPass,
+} from '@prisma/client';
 
 @Injectable()
 export class PaymentsRepository {
@@ -169,6 +180,13 @@ export class PaymentsRepository {
         data: paymentInputData,
       });
     } catch (error) {
+      if (error.code === 'P2002') {
+        throw new BadRequestException(
+          `주문Id가 중복되었습니다.`,
+          'DuplicateOrderId',
+        );
+      }
+
       throw new InternalServerErrorException(
         `Prisma 결제 정보 생성 실패: ${error}`,
         'PrismaCreateFailed',
@@ -273,7 +291,8 @@ export class PaymentsRepository {
         select: {
           id: true,
           orderId: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: { select: { id: true, name: true } },
           paymentStatus: {
             select: {
@@ -315,7 +334,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePayment(
+  async trxUpdatePayment(
     transaction: PrismaTransaction,
     paymentId: number,
     paymentKey: string,
@@ -329,7 +348,8 @@ export class PaymentsRepository {
         select: {
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -346,7 +366,24 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true } },
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
           cardPaymentInfo: {
@@ -454,7 +491,8 @@ export class PaymentsRepository {
       select: {
         orderId: true,
         orderName: true,
-        price: true,
+        originalPrice: true,
+        finalPrice: true,
         paymentProductType: {
           select: {
             name: true,
@@ -522,7 +560,8 @@ export class PaymentsRepository {
         select: {
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -539,7 +578,24 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true } },
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
           cardPaymentInfo: {
@@ -632,7 +688,8 @@ export class PaymentsRepository {
           id: true,
           orderId: true,
           orderName: true,
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           paymentProductType: {
             select: {
               name: true,
@@ -649,9 +706,33 @@ export class PaymentsRepository {
             },
           },
           updatedAt: true,
-          lecturer: {
+          reservation: {
             select: {
-              profileCardImageUrl: true,
+              participants: true,
+              requests: true,
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                  lecture: {
+                    select: {
+                      lectureImage: { select: { imageUrl: true }, take: 1 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
         },
@@ -676,7 +757,8 @@ export class PaymentsRepository {
           paymentMethodId: PaymentMethods.가상계좌,
         },
         select: {
-          price: true,
+          originalPrice: true,
+          finalPrice: true,
           virtualAccountPaymentInfo: {
             select: {
               accountNumber: true,
@@ -696,6 +778,83 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 결제 정보 조회 실패: ${error}`,
         'PrismaFindFailed',
+      );
+    }
+  }
+  async getAvailablePass(passId: number): Promise<LecturePass> {
+    try {
+      return this.prismaService.lecturePass.findUnique({
+        where: { id: passId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+  async trxCreateUserPass(
+    transaction: PrismaTransaction,
+    userPassInputData: UserPassInputData,
+  ): Promise<void> {
+    try {
+      await transaction.userPass.create({ data: userPassInputData });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 패스권 생성 실패: ${error}`,
+        'PrismaCreateFailed',
+      );
+    }
+  }
+  async trxUpdateProductEnabled(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    target: string,
+  ) {
+    try {
+      return await transaction[target].updateMany({
+        where: { paymentId },
+        data: { isEnabled: true },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 타겟 데이터 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
+  }
+
+  async getUserLecturePass(paymentId: number): Promise<{ lecturePassId }> {
+    try {
+      return await this.prismaService.userPass.findUnique({
+        where: { paymentId },
+        select: { lecturePassId: true },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 패스권 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturePassSalesCount(
+    transaction: PrismaTransaction,
+    lecturePassId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturePass.update({
+        where: { id: lecturePassId },
+        data: {
+          salesCount: {
+            increment: 1,
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
       );
     }
   }

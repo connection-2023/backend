@@ -562,12 +562,12 @@ model TemporaryLectureImage {
 //강의 결제내역
 model Payment {
   id                        Int                        @id @default(autoincrement())
-  paymentKey                String?
+  paymentKey                String?                    @unique
   paymentProductTypeId      Int
   orderId                   String                     @unique
   orderName                 String
-  //가격
-  price                     Int                        @db.Integer
+  originalPrice             Int
+  finalPrice                Int
   userId                    Int?
   lecturerId                Int?
   paymentMethodId           Int?
@@ -584,6 +584,7 @@ model Payment {
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
   paymentPassUsage          PaymentPassUsage?
+  userPass                  UserPass[]
 }
 
 //결제 방식
@@ -638,6 +639,7 @@ model Reservation {
   participants      Int
   //예약 요청사항
   requests          String?
+  isEnabled         Boolean         @default(false)
   user              Users           @relation(fields: [userId], references: [id])
   lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
   payment           Payment         @relation(fields: [paymentId], references: [id])
@@ -777,6 +779,7 @@ model LecturePass {
   price             Int
   maxUsageCount     Int
   availableMonths   Int
+  salesCount        Int                 @default(0)
   isDisabled        Boolean             @default(false)
   createdAt         DateTime            @default(now()) @db.Timestamp(6)
   updatedAt         DateTime            @default(now()) @updatedAt @db.Timestamp(6)
@@ -800,8 +803,10 @@ model LecturePassTarget {
 model UserPass {
   id            Int         @id @default(autoincrement())
   userId        Int
+  paymentId     Int         @unique
   remainingUses Int
   lecturePassId Int
+  isEnabled     Boolean     @default(false)
   startAt       DateTime?   @db.Timestamp(6)
   endAt         DateTime?   @db.Timestamp(6)
   createdAt     DateTime    @default(now()) @db.Timestamp(6)
@@ -809,8 +814,7 @@ model UserPass {
   deletedAt     DateTime?   @db.Timestamp(6)
   users         Users       @relation(fields: [userId], references: [id])
   lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
-
-  @@unique([userId, lecturePassId])
+  payment       Payment     @relation(fields: [paymentId], references: [id])
 }
 
 model PaymentPassUsage {

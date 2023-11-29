@@ -34,8 +34,9 @@ export class UserPaymentsService implements OnModuleInit {
     if (!totalItemCount) {
       return;
     }
-
     let paymentType;
+    let cursor;
+    let skip;
 
     if (paymentHistoryType !== '전체') {
       const paymentProductType =
@@ -43,35 +44,30 @@ export class UserPaymentsService implements OnModuleInit {
       paymentType = paymentProductType?.id;
     }
 
-    if (!targetPage) {
-      const paymentHistory =
-        await this.paymentsRepository.getUserPaymentHistory(
-          userId,
-          take,
-          paymentType,
-        );
-      return { totalItemCount, paymentHistory };
-    }
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
 
-    if (currentPage && targetPage) {
+    if (isPagination) {
       const pageDiff = currentPage - targetPage;
-
-      const { cursor, skip, changedTake } = this.getPaginationOptions(
+      ({ cursor, skip, take } = this.getPaginationOptions(
         pageDiff,
         pageDiff <= -1 ? lastItemId : firstItemId,
         take,
-      );
-
-      const paymentHistory =
-        await this.paymentsRepository.getUserPaymentHistory(
-          userId,
-          changedTake,
-          paymentType,
-          cursor,
-          skip,
-        );
-      return { totalItemCount, paymentHistory };
+      ));
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
     }
+
+    const paymentHistory = await this.paymentsRepository.getUserPaymentHistory(
+      userId,
+      take,
+      paymentType,
+      cursor,
+      skip,
+    );
+
+    return { totalItemCount, paymentHistory };
   }
 
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
@@ -83,7 +79,7 @@ export class UserPaymentsService implements OnModuleInit {
 
     const skip = calculateSkipValue(pageDiff);
 
-    return { cursor, skip, changedTake: pageDiff >= 1 ? -take : take };
+    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
   }
 
   async getPaymentVirtualAccount(userId: number, paymentId: number) {
