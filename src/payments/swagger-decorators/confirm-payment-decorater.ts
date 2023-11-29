@@ -2,12 +2,13 @@ import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiConfirmLecturePayment() {
+export function ApiConfirmPayment() {
   return applyDecorators(
     ApiOperation({
       summary: '결제 승인',
       description: '유저 결제 성공시 반환되는 paymentKey를 사용하여 결제 승인',
     }),
+    ApiBearerAuth(),
     ApiOkResponse(
       SwaggerApiResponse.success(
         '결제 내역 반환 cardPaymentInfo가 있으면 가상계좌는 null 반대경우도 동일',
@@ -20,7 +21,7 @@ export function ApiConfirmLecturePayment() {
               originalPrice: 50000,
               finalPrice: 45000,
               paymentProductType: {
-                name: '강의',
+                name: '클래스or패스권',
               },
               paymentMethod: {
                 name: '카드',
@@ -32,16 +33,26 @@ export function ApiConfirmLecturePayment() {
                   participants: 4,
                   requests: '밥 많이 주세요',
                   lectureSchedule: {
-                    startDateTime: '2023-10-03T11:00:00.000Z',
-                    team: null,
+                    lectureId: 2,
+                    startDateTime: '2023-10-04T11:00:00.000Z',
                   },
                 },
                 {
-                  participants: 1,
+                  participants: 4,
                   requests: '밥 많이 주세요',
                   lectureSchedule: {
+                    lectureId: 2,
                     startDateTime: '2023-10-03T11:00:00.000Z',
-                    team: null,
+                  },
+                },
+              ],
+              userPass: [
+                {
+                  lecturePass: {
+                    id: 2,
+                    title: '페이커의 날카로운 패스',
+                    maxUsageCount: 10,
+                    availableMonths: 3,
                   },
                 },
               ],

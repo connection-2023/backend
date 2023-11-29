@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsNumber } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
+import { PaymentHistoryTypes } from '../enum/payment.enum';
 
 export class GetUserPaymentsHistoryDto {
   @ApiProperty({
@@ -15,50 +22,50 @@ export class GetUserPaymentsHistoryDto {
 
   @ApiProperty({
     example: '1',
-    description: '현재 페이지/첫 요청 시 0',
-    required: true,
+    description: '현재 페이지/첫 요청 시 0 또는 undefined가능',
+    required: false,
   })
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty()
+  @IsOptional()
   currentPage: number;
 
   @ApiProperty({
     example: '3',
-    description: '이동할 페이지/첫 요청 시 0',
-    required: true,
+    description: '이동할 페이지/첫 요청 시 0 또는 undefined가능',
+    required: false,
   })
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty()
+  @IsOptional()
   targetPage: number;
 
   @ApiProperty({
     example: '1',
-    description: '반환된 내역의 첫번째 id',
-    required: true,
+    description: '반환된 내역의 첫번째 id/  0 또는 undefined가능',
+    required: false,
   })
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty()
+  @IsOptional()
   firstItemId: number;
 
   @ApiProperty({
     example: '15',
-    description: '반환된 내역의 마지막 id',
-    required: true,
+    description: '반환된 내역의 마지막 id/  0 또는 undefined가능',
+    required: false,
   })
   @IsNumber()
   @Type(() => Number)
-  @IsNotEmpty()
+  @IsOptional()
   lastItemId: number;
 
   @ApiProperty({
     example: '전체',
-    description: '전체, 클래스, 패스권 셋 중 하나',
+    description: '전체, 클래스, 패스권 중 하나',
     required: true,
   })
-  @IsIn(['전체', '클래스', '패스권'])
+  @IsEnum(PaymentHistoryTypes, { each: true })
   @IsNotEmpty()
-  paymentHistoryType: string;
+  paymentHistoryType: PaymentHistoryTypes;
 }

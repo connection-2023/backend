@@ -27,7 +27,7 @@ import {
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Card, Lecture, LecturePass, Payment } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
+import { ConfirmLecturePaymentDto as ConfirmPaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import {
   PaymentMethods,
   PaymentProductTypes,
@@ -536,10 +536,8 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  async confirmLecturePayment(
-    confirmLecturePaymentDto: ConfirmLecturePaymentDto,
-  ) {
-    const { orderId, amount, paymentKey } = confirmLecturePaymentDto;
+  async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
+    const { orderId, amount, paymentKey } = confirmPaymentDto;
     const paymentInfo = await this.getPaymentInfo(orderId);
 
     if (amount !== paymentInfo.finalPrice) {
@@ -568,6 +566,7 @@ export class PaymentsService implements OnModuleInit {
 
       return await this.confirmPaymentTransaction(
         paymentInfo.id,
+        paymentInfo.paymentProductType.name,
         paymentKey,
         authorizedPaymentInfo,
       );
@@ -581,41 +580,60 @@ export class PaymentsService implements OnModuleInit {
 
   private async confirmPaymentTransaction(
     paymentId: number,
+    productType: string,
     paymentKey: string,
     paymentInfo: TossPaymentsConfirmResponse,
   ): Promise<IPaymentResult> {
-    const paymentResult = await this.prismaService.$transaction(
+    const paymentResult: IPaymentResult = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        let paymentMethodId: number;
+        let statusId: number;
+
         if (paymentInfo.card) {
+          paymentMethodId = PaymentMethods.카드;
+          statusId = PaymentOrderStatus.DONE;
+          const target =
+            productType === PaymentProductTypes.클래스
+              ? 'reservation'
+              : 'userPass';
+
+          await this.paymentsRepository.trxUpdateProductEnabled(
+            transaction,
+            paymentId,
+            target,
+          );
+
+          if (productType === PaymentProductTypes.패스권) {
+            await this.trxUpdateLecturePassSalesCount(transaction, paymentId);
+          }
+
           await this.createCardPaymentInfo(
             transaction,
             paymentId,
             paymentInfo.card,
           );
-          return await this.paymentsRepository.trxUpdateLecturePayment(
-            transaction,
-            paymentId,
-            paymentKey,
-            PaymentOrderStatus.DONE,
-            PaymentMethods.카드,
-          );
         }
         if (paymentInfo.virtualAccount) {
+          paymentMethodId = PaymentMethods.가상계좌;
+          statusId = PaymentOrderStatus.WAITING_FOR_DEPOSIT;
+
           await this.createVirtualAccountPaymentInfo(
             transaction,
             paymentId,
             paymentInfo.virtualAccount,
           );
-          return await this.paymentsRepository.trxUpdateLecturePayment(
-            transaction,
-            paymentId,
-            paymentKey,
-            PaymentOrderStatus.WAITING_FOR_DEPOSIT,
-            PaymentMethods.가상계좌,
-          );
         }
+
+        return await this.paymentsRepository.trxUpdatePayment(
+          transaction,
+          paymentId,
+          paymentKey,
+          statusId,
+          paymentMethodId,
+        );
       },
     );
+
     return paymentResult;
   }
 
@@ -879,7 +897,7 @@ export class PaymentsService implements OnModuleInit {
     userId: number,
     pass: LecturePass,
     paymentId: number,
-  ) {
+  ): Promise<void> {
     const userPassInputData = {
       userId,
       paymentId,
@@ -890,6 +908,20 @@ export class PaymentsService implements OnModuleInit {
     await this.paymentsRepository.trxCreateUserPass(
       transaction,
       userPassInputData,
+    );
+  }
+
+  private async trxUpdateLecturePassSalesCount(
+    transaction: PrismaTransaction,
+    paymentId: number,
+  ): Promise<void> {
+    const { lecturePassId } = await this.paymentsRepository.getUserLecturePass(
+      paymentId,
+    );
+
+    await this.paymentsRepository.trxUpdateLecturePassSalesCount(
+      transaction,
+      lecturePassId,
     );
   }
 }
