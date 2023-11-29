@@ -16,7 +16,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiCreateLecturePaymentInfo } from '@src/payments/swagger-decorators/create-lecture-payment-info-decorater';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
-import { ApiConfirmLecturePayment } from '@src/payments/swagger-decorators/confirm-lecture-payment-decorater';
+import { ApiConfirmPayment } from '@src/payments/swagger-decorators/confirm-payment-decorater';
 import { IPaymentResult } from '@src/payments/interface/payments.interface';
 import { ApiGetUserReceipt } from '@src/payments/swagger-decorators/get-user-receipt-decorator';
 import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
@@ -64,15 +64,14 @@ export class PaymentsController {
     return { passPaymentInfo };
   }
 
-  @ApiConfirmLecturePayment()
-  @Patch('/lecture/confirm')
+  @ApiConfirmPayment()
+  @Patch('/confirm')
+  @UseGuards(UserAccessTokenGuard)
   async confirmLecturePayment(
-    @Body() confirmLecturePaymentDto: ConfirmLecturePaymentDto,
+    @Body() confirmPaymentDto: ConfirmLecturePaymentDto,
   ) {
     const paymentResult: IPaymentResult =
-      await this.paymentsService.confirmLecturePayment(
-        confirmLecturePaymentDto,
-      );
+      await this.paymentsService.confirmPayment(confirmPaymentDto);
 
     return { paymentResult };
   }

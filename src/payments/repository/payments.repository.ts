@@ -28,6 +28,7 @@ import {
   Payment,
   PaymentProductType,
   PaymentStatus,
+  UserPass,
 } from '@prisma/client';
 
 @Injectable()
@@ -333,7 +334,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePayment(
+  async trxUpdatePayment(
     transaction: PrismaTransaction,
     paymentId: number,
     paymentKey: string,
@@ -365,7 +366,24 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true } },
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
           cardPaymentInfo: {
@@ -560,7 +578,24 @@ export class PaymentsRepository {
             select: {
               participants: true,
               requests: true,
-              lectureSchedule: { select: { startDateTime: true } },
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
           cardPaymentInfo: {
@@ -671,9 +706,33 @@ export class PaymentsRepository {
             },
           },
           updatedAt: true,
-          lecturer: {
+          reservation: {
             select: {
-              profileCardImageUrl: true,
+              participants: true,
+              requests: true,
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
+                  lecture: {
+                    select: {
+                      lectureImage: { select: { imageUrl: true }, take: 1 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          userPass: {
+            select: {
+              lecturePass: {
+                select: {
+                  id: true,
+                  title: true,
+                  maxUsageCount: true,
+                  availableMonths: true,
+                },
+              },
             },
           },
         },
@@ -737,13 +796,65 @@ export class PaymentsRepository {
   async trxCreateUserPass(
     transaction: PrismaTransaction,
     userPassInputData: UserPassInputData,
-  ) {
+  ): Promise<void> {
     try {
       await transaction.userPass.create({ data: userPassInputData });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 유저 패스권 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+  async trxUpdateProductEnabled(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    target: string,
+  ) {
+    try {
+      return await transaction[target].updateMany({
+        where: { paymentId },
+        data: { isEnabled: true },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 타겟 데이터 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
+  }
+
+  async getUserLecturePass(paymentId: number): Promise<{ lecturePassId }> {
+    try {
+      return await this.prismaService.userPass.findUnique({
+        where: { paymentId },
+        select: { lecturePassId: true },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 패스권 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxUpdateLecturePassSalesCount(
+    transaction: PrismaTransaction,
+    lecturePassId: number,
+  ): Promise<void> {
+    try {
+      await transaction.lecturePass.update({
+        where: { id: lecturePassId },
+        data: {
+          salesCount: {
+            increment: 1,
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
       );
     }
   }

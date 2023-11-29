@@ -116,6 +116,7 @@ interface IPaymentResult {
   finalPrice: number;
   createdAt: Date;
   updatedAt: Date;
+
   paymentProductType: {
     name: string;
   };
@@ -125,6 +126,7 @@ interface IPaymentResult {
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
   reservation: IReservationInfo[];
+  userPass: IUserPass[];
 }
 
 interface ICardPaymentInfo {
@@ -159,7 +161,17 @@ interface IReservationInfo {
   requests: string | null;
 }
 
+interface IUserPass {
+  lecturePass: ILecturePass;
+}
+
+interface ILecturePass {
+  id: number;
+  availableMonths: number;
+}
+
 interface ILectureSchedule {
+  lectureId: number;
   startDateTime: Date;
 }
 

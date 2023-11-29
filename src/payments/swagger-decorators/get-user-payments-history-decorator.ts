@@ -23,22 +23,32 @@ export function ApiGetUserPaymentsHistory() {
           totalItemCount: 55,
           paymentHistory: [
             {
-              id: 88,
-              orderId: 'M123AE88C3CT',
+              id: 100,
+              orderId: 'MENH-Xzqla107423414144nXAE44CCT',
               orderName: '결제 테스트',
               originalPrice: 100000,
-              finalPrice: 95000,
+              finalPrice: 33333,
               paymentProductType: {
-                name: '클래스',
+                name: '패스권',
               },
-              paymentMethod: null,
+              paymentMethod: {
+                name: '카드',
+              },
               paymentStatus: {
-                name: 'READY',
+                name: 'DONE',
               },
-              updatedAt: '2023-11-27T10:07:24.237Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
+              updatedAt: '2023-11-28T08:35:45.918Z',
+              reservation: [],
+              userPass: [
+                {
+                  lecturePass: {
+                    id: 2,
+                    title: '페이커의 날카로운 패스',
+                    maxUsageCount: 10,
+                    availableMonths: 3,
+                  },
+                },
+              ],
             },
             {
               id: 87,
@@ -54,9 +64,24 @@ export function ApiGetUserPaymentsHistory() {
                 name: 'READY',
               },
               updatedAt: '2023-11-27T10:04:32.114Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
+              reservation: [
+                {
+                  participants: 2,
+                  requests: '',
+                  lectureSchedule: {
+                    lectureId: 2,
+                    startDateTime: '2023-10-03T11:00:00.000Z',
+                    lecture: {
+                      lectureImage: [
+                        {
+                          imageUrl: '이미지url1',
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+              userPass: [],
             },
             {
               id: 86,
@@ -72,49 +97,24 @@ export function ApiGetUserPaymentsHistory() {
                 name: 'READY',
               },
               updatedAt: '2023-11-27T10:03:55.909Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 83,
-              orderId: 'dd99',
-              orderName: 'aa',
-              originalPrice: 50000,
-              finalPrice: 45000,
-              paymentProductType: {
-                name: '클래스',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.489Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
-            },
-            {
-              id: 82,
-              orderId: 'dd23199',
-              orderName: 'aa',
-              originalPrice: 50000,
-              finalPrice: 45000,
-              paymentProductType: {
-                name: '패스권',
-              },
-              paymentMethod: {
-                name: '카드',
-              },
-              paymentStatus: {
-                name: 'CANCELED',
-              },
-              updatedAt: '2023-11-21T11:57:07.489Z',
-              lecturer: {
-                profileCardImageUrl: '주소입니다람쥐',
-              },
+              reservation: [
+                {
+                  participants: 1,
+                  requests: '',
+                  lectureSchedule: {
+                    lectureId: 2,
+                    startDateTime: '2023-10-03T11:00:00.000Z',
+                    lecture: {
+                      lectureImage: [
+                        {
+                          imageUrl: '이미지url1',
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+              userPass: [],
             },
           ],
         },
