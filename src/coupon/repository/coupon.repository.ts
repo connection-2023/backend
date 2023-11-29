@@ -248,9 +248,22 @@ export class CouponRepository {
       );
     }
   }
-  async countUserCoupons(userId: number) {
+
+  async countUserCoupons(
+    userId: number,
+    endAt,
+    isUsed: boolean | undefined,
+  ): Promise<number> {
     try {
-      return await this.prismaService.userCoupon.count({ where: { userId } });
+      return await this.prismaService.userCoupon.count({
+        where: {
+          userId,
+          lectureCoupon: {
+            endAt,
+          },
+          isUsed,
+        },
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 쿠폰 조회 실패: ${error}`,
@@ -311,10 +324,15 @@ export class CouponRepository {
     }
   }
 
-  async countIssuedCoupons(lecturerId: number) {
+  async countIssuedCoupons(
+    lecturerId: number,
+    endAt: object,
+    lectureCouponTarget: object,
+    OR: Array<object>,
+  ): Promise<number> {
     try {
       return await this.prismaService.lectureCoupon.count({
-        where: { lecturerId },
+        where: { lecturerId, endAt, lectureCouponTarget, OR },
       });
     } catch (error) {
       throw new InternalServerErrorException(
