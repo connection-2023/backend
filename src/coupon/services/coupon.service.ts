@@ -293,16 +293,19 @@ export class CouponService {
       filterOption,
     }: GetMyCouponListDto,
   ) {
-    const totalItemCount = await this.couponRepository.countUserCoupons(userId);
-
-    if (!totalItemCount) {
-      return;
-    }
-
     const { isUsed, orderBy, endAt } = this.getCouponFilterOptions(
       couponStatusOption,
       filterOption,
     );
+
+    const totalItemCount = await this.couponRepository.countUserCoupons(
+      userId,
+      isUsed,
+      endAt,
+    );
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
 
     let couponList;
     let cursor;
@@ -414,18 +417,23 @@ export class CouponService {
       lastItemId,
     }: GetMyIssuedCouponListDto,
   ) {
-    const totalItemCount: number =
-      await this.couponRepository.countIssuedCoupons(lecturerId);
-    if (!totalItemCount) {
-      return;
-    }
-
     const { OR, orderBy, endAt, lectureCouponTarget } =
       this.getIssuedCouponFilterOptions(
         issuedCouponStatusOptions,
         filterOption,
         lectureId,
       );
+
+    const totalItemCount: number =
+      await this.couponRepository.countIssuedCoupons(
+        lecturerId,
+        endAt,
+        lectureCouponTarget,
+        OR,
+      );
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
 
     let couponList;
     let cursor;
