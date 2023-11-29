@@ -11,7 +11,7 @@ export class LectureReviewResponseDto {
   deletedAt: Date | null;
   users: Users & { userProfileImage: { imageUrl: string } };
   reservation: { lectureSchedule: { startDateTime: Date } };
-  likedLectureReview: LikedLectureReview[];
+  likedLectureReview?: LikedLectureReview[];
   _count: { likedLectureReview: number };
   lecture: { title: string };
 }
