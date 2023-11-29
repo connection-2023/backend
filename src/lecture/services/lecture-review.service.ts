@@ -88,7 +88,8 @@ export class LectureReviewService {
         users,
         ...reviewObj
       } = review;
-      const { userProfileImage, ...user } = users;
+      const { userProfileImage, phoneNumber, email, gender, name, ...user } =
+        users;
 
       user['profileImage'] = userProfileImage.imageUrl;
 
@@ -136,7 +137,8 @@ export class LectureReviewService {
 
     for (const review of readedReviews) {
       const { _count, lecture, reservation, users, ...reviewObj } = review;
-      const { userProfileImage, ...user } = users;
+      const { userProfileImage, phoneNumber, email, gender, name, ...user } =
+        users;
 
       user['profileImage'] = userProfileImage.imageUrl;
 
