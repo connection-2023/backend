@@ -151,4 +151,11 @@ export class LectureController {
       authorizedData.user.id,
     );
   }
+
+  // @ApiOperation({summary:'강사 내 클래스 진행도 조회'})
+  // @UseGuards(LecturerAccessTokenGuard)
+  // @Get('lecturers/progress')
+  // async readManyLectureProgress(@GetAuthorizedUser() authorizedData:ValidateResult){
+  //   const progress
+  // }
 }
