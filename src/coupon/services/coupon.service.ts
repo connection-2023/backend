@@ -291,17 +291,17 @@ export class CouponService {
       lastItemId,
       couponStatusOption,
       filterOption,
+      lectureIds,
     }: GetMyCouponListDto,
   ) {
-    const { isUsed, orderBy, endAt } = this.getCouponFilterOptions(
-      couponStatusOption,
-      filterOption,
-    );
+    const { isUsed, orderBy, endAt, lectureCouponTarget } =
+      this.getCouponFilterOptions(couponStatusOption, filterOption, lectureIds);
 
     const totalItemCount = await this.couponRepository.countUserCoupons(
       userId,
       isUsed,
       endAt,
+      lectureCouponTarget,
     );
     if (!totalItemCount) {
       return { totalItemCount };
@@ -332,6 +332,7 @@ export class CouponService {
       endAt,
       orderBy,
       isUsed,
+      lectureCouponTarget,
       cursor,
       skip,
     );
@@ -350,11 +351,16 @@ export class CouponService {
   private getCouponFilterOptions(
     couponStatusOption: UserCouponStatusOptions,
     filterOption: CouponFilterOptions,
+    lectureIds: number[],
   ) {
     const currentTime = new Date();
     let isUsed;
     let orderBy;
     let endAt;
+
+    const lectureCouponTarget = lectureIds
+      ? { some: { lectureId: { in: lectureIds } } }
+      : undefined;
 
     switch (couponStatusOption) {
       case UserCouponStatusOptions.AVAILABLE:
@@ -367,21 +373,19 @@ export class CouponService {
           filterOption === CouponFilterOptions.LATEST
             ? undefined
             : { gt: currentTime };
-
-        return { isUsed, orderBy, endAt };
+        break;
 
       case UserCouponStatusOptions.USED:
         isUsed = true;
         orderBy = { updatedAt: 'desc' };
-
-        return { isUsed, orderBy, endAt };
+        break;
 
       case UserCouponStatusOptions.EXPIRED:
         endAt = { lt: currentTime };
         orderBy = { lectureCoupon: { endAt: 'desc' } };
-
-        return { isUsed, orderBy, endAt };
+        break;
     }
+    return { isUsed, orderBy, endAt, lectureCouponTarget };
   }
 
   private async getUserCouponList(
@@ -390,6 +394,7 @@ export class CouponService {
     endAt: object,
     orderBy: object,
     isUsed: boolean,
+    lectureCouponTarget,
     cursor?: ICursor,
     skip?: number,
   ) {
@@ -399,6 +404,7 @@ export class CouponService {
       endAt,
       orderBy,
       isUsed,
+      lectureCouponTarget,
       cursor,
       skip,
     );
