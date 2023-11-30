@@ -279,7 +279,7 @@ export class CouponRepository {
   async getLecturerIssuedCouponList(
     lecturerId: number,
     OR: Array<object>,
-    orderBy: object,
+    orderBy: Array<object> | object,
     endAt: object,
     lectureCouponTarget: object,
     take: number,

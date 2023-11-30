@@ -307,7 +307,6 @@ export class CouponService {
       return { totalItemCount };
     }
 
-    let couponList;
     let cursor;
     let skip;
 
@@ -326,7 +325,7 @@ export class CouponService {
       skip = 1;
     }
 
-    couponList = await this.getUserCouponList(
+    const couponList = await this.getUserCouponList(
       userId,
       take,
       endAt,
@@ -368,7 +367,7 @@ export class CouponService {
         orderBy =
           filterOption === CouponFilterOptions.LATEST
             ? { id: 'desc' }
-            : { lectureCoupon: { endAt: 'asc' } };
+            : [{ lectureCoupon: { endAt: 'asc' } }, { id: 'asc' }];
         endAt =
           filterOption === CouponFilterOptions.LATEST
             ? undefined
@@ -377,12 +376,12 @@ export class CouponService {
 
       case UserCouponStatusOptions.USED:
         isUsed = true;
-        orderBy = { updatedAt: 'desc' };
+        orderBy = [{ updatedAt: 'desc' }, { id: 'desc' }];
         break;
 
       case UserCouponStatusOptions.EXPIRED:
         endAt = { lt: currentTime };
-        orderBy = { lectureCoupon: { endAt: 'desc' } };
+        orderBy = [{ lectureCoupon: { endAt: 'asc' } }, { id: 'asc' }];
         break;
     }
     return { isUsed, orderBy, endAt, lectureCouponTarget };
@@ -441,7 +440,6 @@ export class CouponService {
       return { totalItemCount };
     }
 
-    let couponList;
     let cursor;
     let skip;
     const isPagination = currentPage && targetPage;
@@ -459,7 +457,7 @@ export class CouponService {
       skip = 1;
     }
 
-    couponList = await this.getIssuedCouponList(
+    const couponList = await this.getIssuedCouponList(
       lecturerId,
       OR,
       orderBy,
@@ -491,7 +489,7 @@ export class CouponService {
       orderBy =
         filterOption === CouponFilterOptions.LATEST
           ? { id: 'desc' }
-          : { endAt: 'asc' };
+          : [{ endAt: 'asc' }, { id: 'asc' }];
 
       return { OR, orderBy, endAt, lectureCouponTarget };
     }
@@ -499,7 +497,7 @@ export class CouponService {
     if (issuedCouponStatusOptions === IssuedCouponStatusOptions.DISABLED) {
       endAt = { lt: currentTime };
       OR = [{ isDisabled: true }, { endAt }];
-      orderBy = { endAt: 'desc' };
+      orderBy = [{ endAt: 'desc' }, { id: 'desc' }];
 
       return { OR, orderBy, lectureCouponTarget };
     }
@@ -508,7 +506,7 @@ export class CouponService {
   private async getIssuedCouponList(
     lecturerId: number,
     OR: Array<object>,
-    orderBy: object,
+    orderBy: Array<object> | object,
     endAt: object,
     lectureCouponTarget: object,
     take: number,
