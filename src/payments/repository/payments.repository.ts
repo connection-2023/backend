@@ -8,6 +8,8 @@ import {
   CardInfo,
   CardPaymentInfoInputData,
   ICursor,
+  IPaymentPassUsageInputData,
+  ISelectedUserPass,
   LectureCoupon,
   LectureCouponUseage,
   LecturePaymentUpdateData,
@@ -549,11 +551,21 @@ export class PaymentsRepository {
             stackableCouponMaxDiscountPrice: true,
           },
         },
+        paymentPassUsage: {
+          select: {
+            usedCount: true,
+            lecturePass: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        },
       },
     });
   }
 
-  async getPaymentResult(paymentId) {
+  async getLecturePaymentResultWithToss(paymentId: number) {
     try {
       return await this.prismaService.payment.findUnique({
         where: { id: paymentId },
@@ -577,7 +589,6 @@ export class PaymentsRepository {
           reservation: {
             select: {
               participants: true,
-              requests: true,
               lectureSchedule: {
                 select: {
                   lectureId: true,
@@ -614,6 +625,59 @@ export class PaymentsRepository {
                 select: {
                   code: true,
                   name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제 정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getLecturePaymentResultWithPass(paymentId: number) {
+    try {
+      return await this.prismaService.payment.findUnique({
+        where: { id: paymentId },
+        select: {
+          orderId: true,
+          orderName: true,
+          originalPrice: true,
+          finalPrice: true,
+          paymentProductType: {
+            select: {
+              name: true,
+            },
+          },
+          paymentMethod: {
+            select: {
+              name: true,
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+          paymentPassUsage: {
+            select: {
+              usedCount: true,
+              lecturePass: {
+                select: {
+                  title: true,
+                },
+              },
+            },
+          },
+          reservation: {
+            select: {
+              participants: true,
+              requests: true,
+              lectureSchedule: {
+                select: {
+                  lectureId: true,
+                  startDateTime: true,
                 },
               },
             },
@@ -667,8 +731,13 @@ export class PaymentsRepository {
     }
   }
 
-  async countUserPaymentsHistory(userId: number): Promise<number> {
-    return await this.prismaService.payment.count({ where: { userId } });
+  async countUserPaymentsHistory(
+    userId: number,
+    paymentProductTypeId: number,
+  ): Promise<number> {
+    return await this.prismaService.payment.count({
+      where: { userId, paymentProductTypeId },
+    });
   }
 
   async getUserPaymentHistory(
@@ -709,13 +778,12 @@ export class PaymentsRepository {
           reservation: {
             select: {
               participants: true,
-              requests: true,
               lectureSchedule: {
                 select: {
-                  lectureId: true,
                   startDateTime: true,
                   lecture: {
                     select: {
+                      id: true,
                       lectureImage: { select: { imageUrl: true }, take: 1 },
                     },
                   },
@@ -855,6 +923,68 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 패스권 수정 실패: ${error}`,
         'PrismaUpdateFailed',
+      );
+    }
+  }
+  async getUserPass(userId: number, passId: number) {
+    try {
+      return await this.prismaService.userPass.findFirst({
+        where: {
+          userId,
+          lecturePassId: passId,
+          isEnabled: true,
+        },
+        include: {
+          lecturePass: {
+            select: {
+              availableMonths: true,
+              lecturePassTarget: { select: { lectureId: true } },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 유저 패스권 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxCreatePaymentPassUsage(
+    transaction: PrismaTransaction,
+    data: IPaymentPassUsageInputData,
+  ) {
+    try {
+      await transaction.paymentPassUsage.create({ data });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 사용내역 생성 실패: ${error}`,
+        'PrismaCreateFailed',
+      );
+    }
+  }
+
+  async trxUpdateUserPassRemainingUses(
+    transaction: PrismaTransaction,
+    userPass: ISelectedUserPass,
+    startAt: Date,
+    endAt: Date,
+    totalParticipants: number,
+  ) {
+    try {
+      await transaction.userPass.update({
+        where: { id: userPass.id },
+        data: {
+          startAt,
+          endAt,
+          remainingUses: { decrement: totalParticipants },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 사용내역 생성 실패: ${error}`,
+        'PrismaCreateFailed',
       );
     }
   }

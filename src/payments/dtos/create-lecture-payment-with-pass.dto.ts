@@ -7,10 +7,18 @@ import {
   Matches,
 } from 'class-validator';
 import { LectureSchedule } from '@src/payments/interface/payments.interface';
-import { PaymentMethods } from '@src/payments/enum/payment.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateLecturePaymentDto {
+export class CreateLecturePaymentWithPassDto {
+  @ApiProperty({
+    example: 1,
+    description: '강의 Id',
+    required: true,
+  })
+  @Type(() => Number)
+  @IsNotEmpty()
+  passId: number;
+
   @ApiProperty({
     example: 1,
     description: '강의 Id',
@@ -67,24 +75,6 @@ export class CreateLecturePaymentDto {
   @Type(() => Number)
   @IsNotEmpty()
   finalPrice: number;
-
-  @ApiProperty({
-    example: 1,
-    description: '일반 쿠폰 Id',
-    required: false,
-  })
-  @Type(() => Number)
-  @IsOptional()
-  couponId: number;
-
-  @ApiProperty({
-    example: 1,
-    description: '중복쿠폰 Id',
-    required: false,
-  })
-  @Type(() => Number)
-  @IsOptional()
-  stackableCouponId: number;
 
   @ApiProperty({
     example: '김현수',

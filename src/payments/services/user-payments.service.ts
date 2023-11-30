@@ -29,11 +29,6 @@ export class UserPaymentsService implements OnModuleInit {
     }: GetUserPaymentsHistoryDto,
     userId: number,
   ) {
-    const totalItemCount: number =
-      await this.paymentsRepository.countUserPaymentsHistory(userId);
-    if (!totalItemCount) {
-      return;
-    }
     let paymentType;
     let cursor;
     let skip;
@@ -42,6 +37,15 @@ export class UserPaymentsService implements OnModuleInit {
       const paymentProductType =
         await this.paymentsRepository.getPaymentProductType(paymentHistoryType);
       paymentType = paymentProductType?.id;
+    }
+
+    const totalItemCount: number =
+      await this.paymentsRepository.countUserPaymentsHistory(
+        userId,
+        paymentType,
+      );
+    if (!totalItemCount) {
+      return { totalItemCount };
     }
 
     const isPagination = currentPage && targetPage;
