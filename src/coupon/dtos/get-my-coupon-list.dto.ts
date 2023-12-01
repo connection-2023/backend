@@ -1,10 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import {
   CouponFilterOptions,
   UserCouponStatusOptions,
 } from '@src/coupon/enum/coupon.enum.ts';
+import { number } from 'joi';
 
 export class GetMyCouponListDto {
   @ApiProperty({
@@ -76,4 +84,15 @@ export class GetMyCouponListDto {
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
   filterOption: CouponFilterOptions;
+
+  @ApiProperty({
+    example: [1, 2],
+    description: '강의 Id 1개도 배열',
+    required: false,
+  })
+  @ArrayMinSize(1)
+  @Transform(({ value }) => value.map(Number))
+  @IsArray()
+  @IsOptional()
+  lectureIds: number[];
 }

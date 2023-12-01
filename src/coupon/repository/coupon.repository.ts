@@ -198,6 +198,7 @@ export class CouponRepository {
     endAt,
     orderBy,
     isUsed: boolean | undefined,
+    lectureCouponTarget,
     cursor?: ICursor,
     skip?: number,
   ) {
@@ -207,6 +208,7 @@ export class CouponRepository {
           userId,
           lectureCoupon: {
             endAt,
+            lectureCouponTarget,
           },
           isUsed,
         },
@@ -251,8 +253,9 @@ export class CouponRepository {
 
   async countUserCoupons(
     userId: number,
-    endAt,
     isUsed: boolean | undefined,
+    endAt,
+    lectureCouponTarget,
   ): Promise<number> {
     try {
       return await this.prismaService.userCoupon.count({
@@ -260,6 +263,7 @@ export class CouponRepository {
           userId,
           lectureCoupon: {
             endAt,
+            lectureCouponTarget,
           },
           isUsed,
         },
@@ -275,7 +279,7 @@ export class CouponRepository {
   async getLecturerIssuedCouponList(
     lecturerId: number,
     OR: Array<object>,
-    orderBy: object,
+    orderBy: Array<object> | object,
     endAt: object,
     lectureCouponTarget: object,
     take: number,
