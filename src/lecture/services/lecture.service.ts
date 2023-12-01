@@ -30,6 +30,7 @@ import {
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
+import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 
 @Injectable()
 export class LectureService {
@@ -469,31 +470,89 @@ export class LectureService {
     );
   }
 
-  async readManyEnrollLectureWithUserId(userId: number) {
-    const reservation =
-      await this.lectureRepository.readManyEnrollLectureWithUserId(userId);
-
-    if (reservation[0]) {
-      const enrollLecture = {};
-      reservation.forEach((item) => {
-        const lectureId = item.lectureSchedule.lecture.id;
-
-        if (!enrollLecture[lectureId]) {
-          enrollLecture[lectureId] = {
-            lectureId: lectureId,
-            title: item.lectureSchedule.lecture.title,
-            lecturerId: item.lectureSchedule.lecture.lecturerId,
-            startDateTime: [],
-          };
-        }
-
-        enrollLecture[lectureId].startDateTime.push(
-          item.lectureSchedule.startDateTime,
-        );
-      });
-
-      return Object.values(enrollLecture);
+  async readManyEnrollLectureWithUserId(
+    userId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      enrollLectureType,
+    }: ReadManyEnrollLectureQueryDto,
+  ) {
+    const existEnrollLecture = await this.prismaService.reservation.findFirst({
+      where: { userId },
+    });
+    if (!existEnrollLecture) {
+      return;
     }
+
+    let cursor;
+    let skip;
+    const currentTime = {};
+
+    if (enrollLectureType === '진행중') {
+      currentTime['reservation'] = {
+        every: {
+          lectureSchedule: {
+            startDateTime: {
+              lt: new Date(),
+            },
+          },
+        },
+      };
+    } else if (enrollLectureType === '수강 완료') {
+      currentTime['reservation'] = {
+        some: {
+          lectureSchedule: {
+            startDateTime: {
+              gt: new Date(),
+            },
+          },
+        },
+      };
+    }
+    const isPagination = currentPage && targetPage;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip, take } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+    }
+
+    return await this.lectureRepository.readManyEnrollLectureWithUserId(
+      userId,
+      take,
+      currentTime,
+      cursor,
+      skip,
+    );
+  }
+
+  async readManyLectureProgress(lecturerId: number) {
+    const lectures = await this.lectureRepository.readManyLectureProgress(
+      lecturerId,
+    );
+    console.log(lectures);
+
+    for (const lecture of lectures) {
+    }
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor = { id: itemId };
+
+    const calculateSkipValue = (pageDiff: number) => {
+      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    };
+
+    const skip = calculateSkipValue(pageDiff);
+
+    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
