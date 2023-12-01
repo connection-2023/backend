@@ -11,7 +11,11 @@ import {
   LikedLecture,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
-import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  Id,
+  ICursor,
+} from '@src/common/interface/common-interface';
 import {
   EnrollLectureReservationResponseData,
   LectureCouponTargetInputData,
@@ -268,14 +272,44 @@ export class LectureRepository {
 
   async readManyEnrollLectureWithUserId(
     userId: number,
-  ): Promise<EnrollLectureReservationResponseData[]> {
-    return await this.prismaService.reservation.findMany({
-      where: { userId },
-      include: {
-        lectureSchedule: {
+    take: number,
+    currentTime,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<any> {
+    return await this.prismaService.payment.findMany({
+      where: {
+        userId,
+        ...currentTime,
+      },
+      take,
+      skip,
+      cursor,
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        orderId: true,
+        orderName: true,
+        reservation: {
           select: {
-            startDateTime: true,
-            lecture: { select: { id: true, lecturerId: true, title: true } },
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: {
+                  select: {
+                    id: true,
+                    title: true,
+                    lectureImage: { select: { imageUrl: true }, take: 1 },
+                  },
+                },
+              },
+            },
+          },
+        },
+        lecturer: {
+          select: {
+            nickname: true,
+            lecturerProfileImageUrl: { select: { url: true }, take: 1 },
           },
         },
       },
