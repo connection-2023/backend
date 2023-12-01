@@ -315,4 +315,20 @@ export class LectureRepository {
       },
     });
   }
+
+  async readManyLectureProgress(lecturerId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, isActive: true },
+      include: { _count: { select: { lectureSchedule: true } } },
+    });
+  }
+
+  async readManyCompletedLectureScheduleCount(
+    lectureId: number,
+    currentTime: Date,
+  ): Promise<any> {
+    return await this.prismaService.lectureSchedule.count({
+      where: { lectureId, startDateTime: { lt: currentTime } },
+    });
+  }
 }

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EnrollLectureType } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
@@ -54,11 +55,11 @@ export class ReadManyEnrollLectureQueryDto {
   lastItemId: number;
 
   @ApiProperty({
-    example: 'lt',
-    description: '진행중:gt,완료:lt',
+    example: '진행중',
+    description: '진행중,수강 완료',
     required: true,
   })
   @IsString()
   @IsNotEmpty()
-  orderBy: string;
+  enrollLectureType: EnrollLectureType;
 }

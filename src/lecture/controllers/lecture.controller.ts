@@ -155,10 +155,15 @@ export class LectureController {
     );
   }
 
-  // @ApiOperation({summary:'강사 내 클래스 진행도 조회'})
-  // @UseGuards(LecturerAccessTokenGuard)
-  // @Get('lecturers/progress')
-  // async readManyLectureProgress(@GetAuthorizedUser() authorizedData:ValidateResult){
-  //   const progress
-  // }
+  @ApiOperation({ summary: '강사 내 클래스 진행도 조회' })
+  @ApiBearerAuth()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('lecturers/progress')
+  async readManyLectureProgress(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const progress = await this.lectureService.readManyLectureProgress(
+      authorizedData.lecturer.id,
+    );
+  }
 }

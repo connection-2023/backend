@@ -478,7 +478,7 @@ export class LectureService {
       targetPage,
       firstItemId,
       lastItemId,
-      orderBy,
+      enrollLectureType,
     }: ReadManyEnrollLectureQueryDto,
   ) {
     const existEnrollLecture = await this.prismaService.reservation.findFirst({
@@ -492,7 +492,7 @@ export class LectureService {
     let skip;
     const currentTime = {};
 
-    if (orderBy === 'lt') {
+    if (enrollLectureType === '진행중') {
       currentTime['reservation'] = {
         every: {
           lectureSchedule: {
@@ -502,7 +502,7 @@ export class LectureService {
           },
         },
       };
-    } else {
+    } else if (enrollLectureType === '수강 완료') {
       currentTime['reservation'] = {
         some: {
           lectureSchedule: {
@@ -531,6 +531,16 @@ export class LectureService {
       cursor,
       skip,
     );
+  }
+
+  async readManyLectureProgress(lecturerId: number) {
+    const lectures = await this.lectureRepository.readManyLectureProgress(
+      lecturerId,
+    );
+    console.log(lectures);
+
+    for (const lecture of lectures) {
+    }
   }
 
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {

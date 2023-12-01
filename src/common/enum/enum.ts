@@ -26,3 +26,8 @@ export enum DanceCapacity {
 export enum LectureType {
   'dance' = 'dance',
 }
+
+export enum EnrollLectureType {
+  '진행중' = '진행중',
+  '수강 완료' = '수강 완료',
+}
