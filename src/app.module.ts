@@ -9,14 +9,13 @@ import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CustomJwtModule } from './common/config/jwt-module.cofig';
-import { UploadsModule } from './uploads/uploads.module';
-import { CouponModule } from './coupon/coupon.module';
-import { PaymentsModule } from './payments/payments.module';
+import { CustomJwtModule } from '@src/common/config/jwt-module.cofig';
+import { UploadsModule } from '@src/uploads/uploads.module';
+import { CouponModule } from '@src/coupon/coupon.module';
+import { PaymentsModule } from '@src/payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
-import { LectureReviewController } from '@src/lecture/controllers/lecture-review.controller';
-import { LectureReviewService } from '@src/lecture/services/lecture-review.service';
-import { PassModule } from './pass/pass.module';
+import { PassModule } from '@src/pass/pass.module';
+import { ReportModule } from '@src/report/report.module';
 
 @Module({
   imports: [
@@ -35,6 +34,7 @@ import { PassModule } from './pass/pass.module';
     TestModule,
     PaymentsModule,
     PassModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

@@ -42,6 +42,9 @@ model Users {
   likedLectureReview       LikedLectureReview[]
   registerConsentAgreement RegisterConsentAgreement[]
   userPass                 UserPass[]
+  reportedUserReports      UserReport[]               @relation("ReportedUser")
+  targetUserReports        UserReport[]               @relation("TargetUser")
+  targetLecturerReports    LecturerReport[]
 }
 
 model UserProfileImage {
@@ -110,6 +113,9 @@ model Lecturer {
   lecturerProfileImageUrl  LecturerProfileImageUrl[]
   payment                  Payment[]
   lecturePass              LecturePass[]
+  userReport               UserReport[]
+  reportedLecturerReports  LecturerReport[]           @relation("ReportedLecturer")
+  targetLecturerReports    LecturerReport[]           @relation("TargetLecturer")
 }
 
 model Lecture {
@@ -197,27 +203,29 @@ model LectureType {
 
 model LectureReview {
   //고유 id
-  id                 Int                  @id @default(autoincrement())
+  id                     Int                      @id @default(autoincrement())
   //강의 id
-  lectureId          Int
+  lectureId              Int
   //유저 id
-  userId             Int
+  userId                 Int
   //예약 id
-  reservationId      Int                  @unique
+  reservationId          Int                      @unique
   //별점
-  stars              Int                  @db.Integer
+  stars                  Int                      @db.Integer
   //후기
-  description        String?              @db.VarChar(255)
+  description            String?                  @db.VarChar(255)
   //생성일자
-  createdAt          DateTime             @default(now()) @db.Timestamp(6)
+  createdAt              DateTime                 @default(now()) @db.Timestamp(6)
   //수정일자
-  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt              DateTime                 @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt          DateTime?            @db.Timestamp(6)
-  lecture            Lecture              @relation(fields: [lectureId], references: [id])
-  users              Users                @relation(fields: [userId], references: [id])
-  reservation        Reservation          @relation(fields: [reservationId], references: [id])
-  likedLectureReview LikedLectureReview[]
+  deletedAt              DateTime?                @db.Timestamp(6)
+  lecture                Lecture                  @relation(fields: [lectureId], references: [id])
+  users                  Users                    @relation(fields: [userId], references: [id])
+  reservation            Reservation              @relation(fields: [reservationId], references: [id])
+  likedLectureReview     LikedLectureReview[]
+  userReportedReview     UserReportedReview[]
+  lecturerReportedReview LecturerReportedReview[]
 }
 
 model LikedLectureReview {
@@ -235,17 +243,19 @@ model LikedLectureReview {
 
 model LecturerReview {
   //고유 id
-  id          Int      @id @default(autoincrement())
+  id                     Int                      @id @default(autoincrement())
   //강사 id
-  lecturerId  Int
+  lecturerId             Int
   //유저 id
-  userId      Int
+  userId                 Int
   //별점
-  stars       Int      @db.Integer
+  stars                  Int                      @db.Integer
   //후기
-  description String?  @db.VarChar(255)
-  lecturer    Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-  users       Users    @relation(fields: [userId], references: [id])
+  description            String?                  @db.VarChar(255)
+  lecturer               Lecturer                 @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  users                  Users                    @relation(fields: [userId], references: [id])
+  userReportedReview     UserReportedReview[]
+  lecturerReportedReview LecturerReportedReview[]
 }
 
 model DailySmsUsage {
@@ -824,4 +834,77 @@ model PaymentPassUsage {
   usedCount     Int
   payment       Payment     @relation(fields: [paymentId], references: [id])
   lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+}
+
+//신고 유형 
+model ReportType {
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String
+  userReport     UserReport[]
+  LecturerReport LecturerReport[]
+}
+
+//유저가 신고한 내역
+model UserReport {
+  id               Int      @id @default(autoincrement())
+  reportedUserId   Int
+  reportTypeId     Int
+  targetUserId     Int?
+  targetLecturerId Int?
+  reason           String?
+  isAnswered       Boolean  @default(false)
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  reportedUser       Users               @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  targetUser         Users?              @relation("TargetUser", fields: [targetUserId], references: [id])
+  targetLecturer     Lecturer?           @relation(fields: [targetLecturerId], references: [id])
+  reportType         ReportType          @relation(fields: [reportTypeId], references: [id])
+  userReportedReview UserReportedReview?
+}
+
+//유저가 신고한 리뷰 내역
+model UserReportedReview {
+  id               Int     @id @default(autoincrement())
+  reportId         Int     @unique()
+  lectureReviewId  Int?
+  lecturerReviewId Int?
+  description      String?
+
+  report         UserReport      @relation(fields: [reportId], references: [id])
+  lectureReview  LectureReview?  @relation(fields: [lectureReviewId], references: [id])
+  lecturerReview LecturerReview? @relation(fields: [lecturerReviewId], references: [id])
+}
+
+//강사가 신고한 내역
+model LecturerReport {
+  id                 Int      @id @default(autoincrement())
+  reportedLecturerId Int
+  reportTypeId       Int
+  targetUserId       Int?
+  targetLecturerId   Int?
+  reason             String?
+  isAnswered         Boolean  @default(false)
+  createdAt          DateTime @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  reportedLecturer       Lecturer                @relation("ReportedLecturer", fields: [reportedLecturerId], references: [id])
+  targetUser             Users?                  @relation(fields: [targetUserId], references: [id])
+  targetLecturer         Lecturer?               @relation("TargetLecturer", fields: [targetLecturerId], references: [id])
+  reportType             ReportType              @relation(fields: [reportTypeId], references: [id])
+  lecturerReportedReview LecturerReportedReview?
+}
+
+//강사가 신고한 리뷰 내역
+model LecturerReportedReview {
+  id               Int     @id @default(autoincrement())
+  reportId         Int     @unique()
+  lectureReviewId  Int?
+  lecturerReviewId Int?
+  description      String?
+
+  report         LecturerReport  @relation(fields: [reportId], references: [id])
+  lectureReview  LectureReview?  @relation(fields: [lectureReviewId], references: [id])
+  lecturerReview LecturerReview? @relation(fields: [lecturerReviewId], references: [id])
 }
