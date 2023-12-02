@@ -534,13 +534,39 @@ export class LectureService {
   }
 
   async readManyLectureProgress(lecturerId: number) {
-    const lectures = await this.lectureRepository.readManyLectureProgress(
-      lecturerId,
-    );
-    console.log(lectures);
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const lectures =
+          await this.lectureRepository.trxReadManyLectureProgress(
+            transaction,
+            lecturerId,
+          );
+        const inprogressLecture = [];
 
-    for (const lecture of lectures) {
-    }
+        for (const lecture of lectures) {
+          const currentTime = new Date();
+          const completedLectureSchedule =
+            await this.lectureRepository.trxReadManyCompletedLectureScheduleCount(
+              transaction,
+              lecture.id,
+              currentTime,
+            );
+          const progress = Math.round(
+            (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+          );
+          const inprogressLectureData = {
+            ...lecture,
+            progress,
+            allSchedule: lecture._count.lectureSchedule,
+            completedSchedule: completedLectureSchedule,
+          };
+
+          inprogressLecture.push(inprogressLectureData);
+        }
+
+        return inprogressLecture;
+      },
+    );
   }
 
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
