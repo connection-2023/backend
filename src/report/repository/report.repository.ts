@@ -3,6 +3,7 @@ import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerReportInputData,
+  ReportTypeInputData,
   ReportedReviewInputData,
   UserReportInputData,
 } from '../interface/report.interface';
@@ -109,11 +110,13 @@ export class ReportRepository {
           id: true,
           targetUser: { select: { nickname: true } },
           targetLecturer: { select: { nickname: true } },
-          reportType: { select: { description: true } },
           reason: true,
           isAnswered: true,
           createdAt: true,
           updatedAt: true,
+          userReportType: {
+            select: { reportType: { select: { description: true } } },
+          },
         },
         orderBy: {
           id: 'desc',
@@ -144,11 +147,13 @@ export class ReportRepository {
           id: true,
           targetUser: { select: { nickname: true } },
           targetLecturer: { select: { nickname: true } },
-          reportType: { select: { description: true } },
           reason: true,
           isAnswered: true,
           createdAt: true,
           updatedAt: true,
+          lecturerReportType: {
+            select: { reportType: { select: { description: true } } },
+          },
         },
         orderBy: {
           id: 'desc',
@@ -158,6 +163,23 @@ export class ReportRepository {
       throw new InternalServerErrorException(
         `Prisma 신고 조회 실패: ${error}`,
         'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxCreateReportType(
+    transaction: PrismaTransaction,
+    reportTargetTypeTable: string,
+    reportTypeInputData: ReportTypeInputData[],
+  ) {
+    try {
+      await transaction[reportTargetTypeTable].createMany({
+        data: reportTypeInputData,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 신고 생성 실패: ${error}`,
+        'PrismaCreateFailed',
       );
     }
   }

@@ -15,6 +15,7 @@ import {
 import { ReportFilterOptions } from '@src/report/eunm/report-enum';
 import {
   ReportTargetData,
+  ReportTypeInputData,
   ReviewData,
 } from '@src/report/interface/report.interface';
 import { GetMyReportListDto } from '@src/report/dtos/get-my-report-list.dto';
@@ -31,13 +32,17 @@ export class ReportService {
     {
       lectureReviewId,
       lecturerReviewId,
-      reportType,
+      reportTypes,
       targetUserId,
       ...reportInputData
     }: CreateReportDto,
   ): Promise<void> {
-    const { reportTargetTable, reportTargetReviewTable, reportedTarget } =
-      this.getReportTargetData(authorizedData);
+    const {
+      reportTargetTable,
+      reportTargetReviewTable,
+      reportTargetTypeTable,
+      reportedTarget,
+    } = this.getReportTargetData(authorizedData);
 
     const reportedReviewData: ReviewData = await this.getReportedReviewData(
       targetUserId,
@@ -45,7 +50,7 @@ export class ReportService {
       lecturerReviewId,
     );
 
-    const reportTypeId: number = await this.getReportTypeId(reportType);
+    const reportTypeIds: number[] = await this.getReportTypeId(reportTypes);
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -55,11 +60,16 @@ export class ReportService {
             reportTargetTable,
             {
               targetUserId,
-              reportTypeId,
               ...reportedTarget,
               ...reportInputData,
             },
           );
+        await this.trxCreateReportTarget(
+          transaction,
+          reportTargetTypeTable,
+          createdReport.id,
+          reportTypeIds,
+        );
 
         if (reportedReviewData) {
           await this.reportRepository.trxCreateReportedReview(
@@ -80,30 +90,77 @@ export class ReportService {
   ): ReportTargetData {
     let reportTargetTable: string;
     let reportTargetReviewTable: string;
+    let reportTargetTypeTable: string;
+
     let reportedTarget;
 
+    //신고한 사용자가 유저일때의 테이블 설정
     if (authorizedData.user) {
       reportTargetTable = 'userReport';
+      reportTargetTypeTable = 'userReportType';
       reportTargetReviewTable = 'userReportedReview';
       reportedTarget = { reportedUserId: authorizedData.user.id };
-    } else {
+    }
+    //신고한 사용자가 강사일때의 테이블 설정
+    else {
       reportTargetTable = 'lecturerReport';
+      reportTargetTypeTable = 'lecturerReportType';
       reportTargetReviewTable = 'lecturerReportedReview';
       reportedTarget = { reportedLecturerId: authorizedData.lecturer.id };
     }
 
-    return { reportTargetTable, reportTargetReviewTable, reportedTarget };
+    return {
+      reportTargetTable,
+      reportTargetReviewTable,
+      reportTargetTypeTable,
+      reportedTarget,
+    };
   }
 
-  private async getReportTypeId(reportType: string): Promise<number> {
-    const selectedReportType: ReportType =
-      await this.reportRepository.getReportType(reportType);
+  private async getReportTypeId(reportTypes: string[]): Promise<number[]> {
+    const selectedReportTypeIds: number[] = [];
+    for (const reportType of reportTypes) {
+      const selectedReportType: ReportType =
+        await this.reportRepository.getReportType(reportType);
 
-    if (!selectedReportType) {
-      throw new BadRequestException(`잘못된 신고 타입입니다.`);
+      if (!selectedReportType) {
+        throw new BadRequestException(`잘못된 신고 타입입니다.`);
+      }
+
+      selectedReportTypeIds.push(selectedReportType.id);
     }
 
-    return selectedReportType.id;
+    return selectedReportTypeIds;
+  }
+
+  private async trxCreateReportTarget(
+    transaction: PrismaTransaction,
+    reportTargetTypeTable: string,
+    reportId: number,
+    reportTypeIds: number[],
+  ): Promise<void> {
+    const reportTypeInputData: ReportTypeInputData[] =
+      this.createPassTargetInputData(reportId, reportTypeIds);
+
+    await this.reportRepository.trxCreateReportType(
+      transaction,
+      reportTargetTypeTable,
+      reportTypeInputData,
+    );
+  }
+
+  private createPassTargetInputData(
+    reportId: number,
+    reportTypeIds: number[],
+  ): ReportTypeInputData[] {
+    const reportTypeInputData: ReportTypeInputData[] = reportTypeIds.map(
+      (reportTypeId: number) => ({
+        reportId,
+        reportTypeId,
+      }),
+    );
+
+    return reportTypeInputData;
   }
 
   private async getReportedReviewData(

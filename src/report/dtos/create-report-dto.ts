@@ -10,9 +10,11 @@ export class CreateReportDto {
     enum: ReportTypes,
     required: true,
   })
-  @Transform(({ value }) => value.toUpperCase())
+  @Transform(({ value }) =>
+    Array.isArray(value) ? value : value.toUpperCase(),
+  )
   @IsEnum(ReportTypes, { each: true })
-  reportType: ReportTypes;
+  reportTypes: ReportTypes[];
 
   @ApiProperty({
     example: 1,

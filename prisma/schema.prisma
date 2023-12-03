@@ -838,18 +838,17 @@ model PaymentPassUsage {
 
 //신고 유형 
 model ReportType {
-  id             Int              @id @default(autoincrement())
-  name           String
-  description    String
-  userReport     UserReport[]
-  LecturerReport LecturerReport[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  description        String
+  userReportType     UserReportType[]
+  lecturerReportType LecturerReportType[]
 }
 
 //유저가 신고한 내역
 model UserReport {
   id               Int      @id @default(autoincrement())
   reportedUserId   Int
-  reportTypeId     Int
   targetUserId     Int?
   targetLecturerId Int?
   reason           String?
@@ -860,8 +859,8 @@ model UserReport {
   reportedUser       Users               @relation("ReportedUser", fields: [reportedUserId], references: [id])
   targetUser         Users?              @relation("TargetUser", fields: [targetUserId], references: [id])
   targetLecturer     Lecturer?           @relation(fields: [targetLecturerId], references: [id])
-  reportType         ReportType          @relation(fields: [reportTypeId], references: [id])
   userReportedReview UserReportedReview?
+  userReportType     UserReportType[]
 }
 
 //유저가 신고한 리뷰 내역
@@ -877,11 +876,19 @@ model UserReportedReview {
   lecturerReview LecturerReview? @relation(fields: [lecturerReviewId], references: [id])
 }
 
+model UserReportType {
+  id           Int @id @default(autoincrement())
+  reportId     Int
+  reportTypeId Int
+
+  report     UserReport @relation(fields: [reportId], references: [id])
+  reportType ReportType @relation(fields: [reportTypeId], references: [id])
+}
+
 //강사가 신고한 내역
 model LecturerReport {
   id                 Int      @id @default(autoincrement())
   reportedLecturerId Int
-  reportTypeId       Int
   targetUserId       Int?
   targetLecturerId   Int?
   reason             String?
@@ -892,8 +899,8 @@ model LecturerReport {
   reportedLecturer       Lecturer                @relation("ReportedLecturer", fields: [reportedLecturerId], references: [id])
   targetUser             Users?                  @relation(fields: [targetUserId], references: [id])
   targetLecturer         Lecturer?               @relation("TargetLecturer", fields: [targetLecturerId], references: [id])
-  reportType             ReportType              @relation(fields: [reportTypeId], references: [id])
   lecturerReportedReview LecturerReportedReview?
+  lecturerReportType     LecturerReportType[]
 }
 
 //강사가 신고한 리뷰 내역
@@ -907,4 +914,13 @@ model LecturerReportedReview {
   report         LecturerReport  @relation(fields: [reportId], references: [id])
   lectureReview  LectureReview?  @relation(fields: [lectureReviewId], references: [id])
   lecturerReview LecturerReview? @relation(fields: [lecturerReviewId], references: [id])
+}
+
+model LecturerReportType {
+  id           Int @id @default(autoincrement())
+  reportId     Int
+  reportTypeId Int
+
+  report     LecturerReport @relation(fields: [reportId], references: [id])
+  reportType ReportType     @relation(fields: [reportTypeId], references: [id])
 }

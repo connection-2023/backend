@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { ReportFilterOptions } from '../eunm/report-enum';
 import { IsNumberType } from '@src/common/validator/custom-validator';
 
