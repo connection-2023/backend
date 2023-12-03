@@ -2,11 +2,13 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  LecturerReportInputData,
   ReportedReviewInputData,
   UserReportInputData,
 } from '../interface/report.interface';
 import {
   LectureReview,
+  LecturerReport,
   LecturerReview,
   ReportType,
   UserReport,
@@ -56,12 +58,15 @@ export class ReportRepository {
     }
   }
 
-  async trxCreateUserReport(
+  async trxCreateReport(
     transaction: PrismaTransaction,
-    userReportInputData: UserReportInputData,
+    targetTable: string,
+    reportInputData: UserReportInputData | LecturerReportInputData,
   ): Promise<UserReport> {
     try {
-      return await transaction.userReport.create({ data: userReportInputData });
+      return await transaction[targetTable].create({
+        data: reportInputData,
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 신고 정보 생성 실패: ${error}`,
@@ -70,12 +75,13 @@ export class ReportRepository {
     }
   }
 
-  async trxCreateUserReportedReview(
+  async trxCreateReportedReview(
     transaction: PrismaTransaction,
+    targetTable: string,
     reportedReviewInputData: ReportedReviewInputData,
   ): Promise<void> {
     try {
-      await transaction.userReportedReview.create({
+      await transaction[targetTable].create({
         data: reportedReviewInputData,
       });
     } catch (error) {

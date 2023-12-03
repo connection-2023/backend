@@ -2,8 +2,9 @@ import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { ReportTypes } from '../eunm/report-enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { IsNumberType } from '@src/common/validator/custom-validator';
 
-export class CreateUserReportDto {
+export class CreateReportDto {
   @ApiProperty({
     example: 'FALSE_INFORMATION',
     enum: ReportTypes,
@@ -18,6 +19,7 @@ export class CreateUserReportDto {
     description: '신고할 유저Id',
     required: false,
   })
+  @IsNumberType()
   @IsOptional()
   targetUserId: number;
 
@@ -26,6 +28,7 @@ export class CreateUserReportDto {
     description: '신고할 강사Id',
     required: false,
   })
+  @IsNumberType()
   @IsOptional()
   targetLecturerId: number;
 
@@ -34,6 +37,7 @@ export class CreateUserReportDto {
     description: '리뷰 신고 시 작성자 userId포함',
     required: false,
   })
+  @IsNumberType()
   @IsOptional()
   lectureReviewId: number;
 
@@ -42,6 +46,7 @@ export class CreateUserReportDto {
     description: '리뷰 신고 시 작성자 userId포함',
     required: false,
   })
+  @IsNumberType()
   @IsOptional()
   lecturerReviewId: number;
 

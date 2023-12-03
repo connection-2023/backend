@@ -3,17 +3,21 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserReportDto } from '../dtos/create-user-report-dto';
-import { ReportRepository } from '../repository/report.repository';
-import { LectureReview, ReportType, UserReport } from '@prisma/client';
+import { CreateReportDto } from '@src/report/dtos/create-report-dto';
+import { ReportRepository } from '@src/report/repository/report.repository';
+import { ReportType, UserReport } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   ICursor,
   PrismaTransaction,
+  ValidateResult,
 } from '@src/common/interface/common-interface';
-import { ReportFilterOptions, ReportTypes } from '../eunm/report-enum';
-import { ReviewData } from '../interface/report.interface';
-import { GetMyReportListDto } from '../dtos/get-my-report-list.dto';
+import { ReportFilterOptions } from '@src/report/eunm/report-enum';
+import {
+  ReportTargetData,
+  ReviewData,
+} from '@src/report/interface/report.interface';
+import { GetMyReportListDto } from '@src/report/dtos/get-my-report-list.dto';
 
 @Injectable()
 export class ReportService {
@@ -22,16 +26,19 @@ export class ReportService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async createUserReport(
-    userId: number,
+  async createReport(
+    authorizedData: ValidateResult,
     {
       lectureReviewId,
       lecturerReviewId,
       reportType,
       targetUserId,
       ...reportInputData
-    }: CreateUserReportDto,
+    }: CreateReportDto,
   ): Promise<void> {
+    const { reportTargetTable, reportTargetReviewTable, reportedTarget } =
+      this.getReportTargetData(authorizedData);
+
     const reportedReviewData: ReviewData = await this.getReportedReviewData(
       targetUserId,
       lectureReviewId,
@@ -43,21 +50,49 @@ export class ReportService {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const createdReport: UserReport =
-          await this.reportRepository.trxCreateUserReport(transaction, {
-            reportedUserId: userId,
-            targetUserId,
-            reportTypeId,
-            ...reportInputData,
-          });
+          await this.reportRepository.trxCreateReport(
+            transaction,
+            reportTargetTable,
+            {
+              targetUserId,
+              reportTypeId,
+              ...reportedTarget,
+              ...reportInputData,
+            },
+          );
 
         if (reportedReviewData) {
-          await this.reportRepository.trxCreateUserReportedReview(transaction, {
-            reportId: createdReport.id,
-            ...reportedReviewData,
-          });
+          await this.reportRepository.trxCreateReportedReview(
+            transaction,
+            reportTargetReviewTable,
+            {
+              reportId: createdReport.id,
+              ...reportedReviewData,
+            },
+          );
         }
       },
     );
+  }
+
+  private getReportTargetData(
+    authorizedData: ValidateResult,
+  ): ReportTargetData {
+    let reportTargetTable: string;
+    let reportTargetReviewTable: string;
+    let reportedTarget;
+
+    if (authorizedData.user) {
+      reportTargetTable = 'userReport';
+      reportTargetReviewTable = 'userReportedReview';
+      reportedTarget = { reportedUserId: authorizedData.user.id };
+    } else {
+      reportTargetTable = 'lecturerReport';
+      reportTargetReviewTable = 'lecturerReportedReview';
+      reportedTarget = { reportedLecturerId: authorizedData.lecturer.id };
+    }
+
+    return { reportTargetTable, reportTargetReviewTable, reportedTarget };
   }
 
   private async getReportTypeId(reportType: string): Promise<number> {
@@ -76,45 +111,46 @@ export class ReportService {
     lectureReviewId: number,
     lecturerReviewId: number,
   ): Promise<ReviewData> {
+    let reviewId: number;
+    let reviewerId: number;
+    let reviewDescription: string;
+
     if (lectureReviewId) {
       const selectedLectureReview =
         await this.reportRepository.getLectureReviewDescription(
           lectureReviewId,
         );
-      if (!selectedLectureReview) {
-        throw new NotFoundException(`리뷰가 존재하지 않습니다.`);
-      }
-      if (selectedLectureReview.userId !== targetUserId) {
-        throw new BadRequestException(
-          `리뷰 작성자와 신고 대상이 일치하지 않습니다.`,
-        );
-      }
 
-      return {
-        lectureReviewId: selectedLectureReview.id,
-        description: selectedLectureReview.description,
-      };
-    }
-
-    if (lecturerReviewId) {
+      reviewId = selectedLectureReview?.id;
+      reviewerId = selectedLectureReview?.userId;
+      reviewDescription = selectedLectureReview?.description;
+    } else if (lecturerReviewId) {
       const selectedLecturerReview =
         await this.reportRepository.getLecturerReviewDescription(
           lecturerReviewId,
         );
-      if (!selectedLecturerReview) {
-        throw new NotFoundException(`리뷰가 존재하지 않습니다.`);
-      }
-      if (selectedLecturerReview.userId !== targetUserId) {
-        throw new BadRequestException(
-          `리뷰 작성자와 신고 대상이 일치하지 않습니다.`,
-        );
-      }
 
-      return {
-        lecturerReviewId: selectedLecturerReview.id,
-        description: selectedLecturerReview.description,
-      };
+      reviewId = selectedLecturerReview?.id;
+      reviewerId = selectedLecturerReview?.userId;
+      reviewDescription = selectedLecturerReview?.description;
+    } else {
+      return;
     }
+
+    if (!reviewId) {
+      throw new NotFoundException(`리뷰가 존재하지 않습니다.`);
+    }
+
+    if (targetUserId !== reviewerId) {
+      throw new BadRequestException(
+        `리뷰 작성자와 신고 대상이 일치하지 않습니다.`,
+      );
+    }
+
+    return {
+      [lectureReviewId ? 'lectureReviewId' : 'lecturerReviewId']: reviewId,
+      description: reviewDescription,
+    };
   }
 
   async getMyReportList(
