@@ -1,6 +1,7 @@
 import { IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { ReportTypes } from '../eunm/report-enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateUserReportDto {
   @ApiProperty({
@@ -8,7 +9,8 @@ export class CreateUserReportDto {
     enum: ReportTypes,
     required: true,
   })
-  @IsEnum(ReportTypes)
+  @Transform(({ value }) => value.toUpperCase())
+  @IsEnum(ReportTypes, { each: true })
   reportType: ReportTypes;
 
   @ApiProperty({

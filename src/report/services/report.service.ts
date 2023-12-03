@@ -7,9 +7,13 @@ import { CreateUserReportDto } from '../dtos/create-user-report-dto';
 import { ReportRepository } from '../repository/report.repository';
 import { LectureReview, ReportType, UserReport } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { ReportTypes } from '../eunm/report-enum';
+import {
+  ICursor,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
+import { ReportFilterOptions, ReportTypes } from '../eunm/report-enum';
 import { ReviewData } from '../interface/report.interface';
+import { GetMyReportListDto } from '../dtos/get-my-report-list.dto';
 
 @Injectable()
 export class ReportService {
@@ -111,5 +115,61 @@ export class ReportService {
         description: selectedLecturerReview.description,
       };
     }
+  }
+
+  async getMyReportList(
+    userId: number,
+    {
+      filterOptions,
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+    }: GetMyReportListDto,
+  ) {
+    let filterOption;
+
+    if (filterOptions === ReportFilterOptions.REVIEW) {
+      filterOption = { NOT: { userReportedReview: null } };
+    } else if (filterOptions === ReportFilterOptions.USER) {
+      filterOption = { userReportedReview: null };
+    }
+
+    let cursor;
+    let skip;
+
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+      take = pageDiff >= 1 ? -take : take;
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    return await this.reportRepository.getUserReportList(
+      userId,
+      filterOption,
+      take,
+      cursor,
+      skip,
+    );
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor: ICursor = { id: itemId };
+    const skip =
+      Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    const invertedTake = pageDiff >= 1 ? -take : take;
+
+    return { cursor, skip, invertedTake };
   }
 }

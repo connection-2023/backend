@@ -5,3 +5,9 @@ export enum ReportTypes {
   INAPPROPRIATE_CONTENT = 'INAPPROPRIATE_CONTENT',
   OTHER = 'OTHER',
 }
+
+export enum ReportFilterOptions {
+  ALL = 'ALL',
+  USER = 'USER',
+  REVIEW = 'REVIEW',
+}

@@ -1,4 +1,7 @@
+import { applyDecorators } from '@nestjs/common';
+import { Type } from 'class-transformer';
 import {
+  IsNumber,
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
@@ -26,4 +29,11 @@ export function IsNotBlank() {
       validator: IsNotBlankConstraint,
     });
   };
+}
+
+export function IsNumberType(): PropertyDecorator {
+  return applyDecorators(
+    Type(() => Number),
+    IsNumber(),
+  );
 }
