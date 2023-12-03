@@ -20,32 +20,101 @@ export function ApiGetMyReportList() {
         data: {
           reportList: [
             {
-              id: 11,
+              id: 26,
+              targetUser: null,
+              targetLecturer: {
+                nickname: '올리버쌤',
+              },
+              reason: '사람이 이상해요',
+              isAnswered: false,
+              createdAt: '2023-12-03T15:22:01.512Z',
+              updatedAt: '2023-12-03T15:22:01.512Z',
+              userReportType: [
+                {
+                  reportType: {
+                    description: '부적절한 내용',
+                  },
+                },
+                {
+                  reportType: {
+                    description: '허위 정보 기재',
+                  },
+                },
+                {
+                  reportType: {
+                    description: '저작권 불법 도용',
+                  },
+                },
+              ],
+            },
+            {
+              id: 25,
+              targetUser: null,
+              targetLecturer: {
+                nickname: '올리버쌤',
+              },
+              reason: '사진이 이상해요',
+              isAnswered: false,
+              createdAt: '2023-12-03T15:21:47.574Z',
+              updatedAt: '2023-12-03T15:21:47.574Z',
+              userReportType: [
+                {
+                  reportType: {
+                    description: '부적절한 내용',
+                  },
+                },
+                {
+                  reportType: {
+                    description: '허위 정보 기재',
+                  },
+                },
+              ],
+            },
+            {
+              id: 24,
               targetUser: null,
               targetLecturer: {
                 nickname: '올리버쌤3',
               },
-              reportType: {
-                description: '허위 정보 기재',
-              },
-              reason: '이 사람 나보다 춤 못춤',
+              reason: '사진이 이상해요',
               isAnswered: false,
-              createdAt: '2023-12-03T09:41:21.574Z',
-              updatedAt: '2023-12-03T09:41:21.574Z',
+              createdAt: '2023-12-03T15:21:01.725Z',
+              updatedAt: '2023-12-03T15:21:01.725Z',
+              userReportType: [
+                {
+                  reportType: {
+                    description: '부적절한 사진 게시',
+                  },
+                },
+                {
+                  reportType: {
+                    description: '허위 정보 기재',
+                  },
+                },
+              ],
             },
             {
-              id: 9,
+              id: 16,
               targetUser: {
                 nickname: '김수ㅜ',
               },
               targetLecturer: null,
-              reportType: {
-                description: '허위 정보 기재',
-              },
-              reason: '처리해줘요오유',
+              reason: '사진이 이상해요',
               isAnswered: false,
-              createdAt: '2023-12-03T09:18:32.929Z',
-              updatedAt: '2023-12-03T09:18:32.929Z',
+              createdAt: '2023-12-03T15:12:14.750Z',
+              updatedAt: '2023-12-03T15:12:14.750Z',
+              userReportType: [
+                {
+                  reportType: {
+                    description: '부적절한 사진 게시',
+                  },
+                },
+                {
+                  reportType: {
+                    description: '허위 정보 기재',
+                  },
+                },
+              ],
             },
             {
               id: 8,
@@ -53,41 +122,17 @@ export function ApiGetMyReportList() {
                 nickname: '김수ㅜ',
               },
               targetLecturer: null,
-              reportType: {
-                description: '허위 정보 기재',
-              },
-              reason: '처리해줘요오유',
+              reason: '계속 연락해요 ㄷㄷ',
               isAnswered: false,
-              createdAt: '2023-12-02T17:03:45.041Z',
-              updatedAt: '2023-12-02T17:03:45.041Z',
-            },
-            {
-              id: 7,
-              targetUser: {
-                nickname: '김수ㅜ',
-              },
-              targetLecturer: null,
-              reportType: {
-                description: '허위 정보 기재',
-              },
-              reason: '테스트입니다',
-              isAnswered: false,
-              createdAt: '2023-12-02T17:03:29.797Z',
-              updatedAt: '2023-12-02T17:03:29.797Z',
-            },
-            {
-              id: 6,
-              targetUser: {
-                nickname: '김수ㅜ',
-              },
-              targetLecturer: null,
-              reportType: {
-                description: '허위 정보 기재',
-              },
-              reason: '테스트입니다',
-              isAnswered: false,
-              createdAt: '2023-12-02T16:33:34.885Z',
-              updatedAt: '2023-12-02T16:33:34.885Z',
+              createdAt: '2023-12-03T15:32:22.982Z',
+              updatedAt: '2023-12-03T15:32:22.982Z',
+              lecturerReportType: [
+                {
+                  reportType: {
+                    description: '기타',
+                  },
+                },
+              ],
             },
           ],
         },
