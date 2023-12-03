@@ -412,7 +412,7 @@ export class CouponService {
   async getMyIssuedCouponList(
     lecturerId: number,
     {
-      issuedCouponStatusOptions,
+      couponStatusOptions: issuedCouponStatusOptions,
       filterOption,
       lectureId,
       take,

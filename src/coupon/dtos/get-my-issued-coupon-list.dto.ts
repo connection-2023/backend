@@ -66,7 +66,7 @@ export class GetMyIssuedCouponListDto {
   @IsEnum(IssuedCouponStatusOptions, { each: true })
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
-  issuedCouponStatusOptions: IssuedCouponStatusOptions;
+  couponStatusOptions: IssuedCouponStatusOptions;
 
   @ApiProperty({
     example: 'LATEST',
