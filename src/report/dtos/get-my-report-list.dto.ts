@@ -58,5 +58,5 @@ export class GetMyReportListDto {
   @IsEnum(ReportFilterOptions, { each: true })
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
-  filterOptions: ReportFilterOptions;
+  filterOption: ReportFilterOptions;
 }

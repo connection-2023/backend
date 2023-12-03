@@ -32,7 +32,7 @@ export class UserReportController {
     @Query() getMyReportListDto: GetMyReportListDto,
   ) {
     const reportList = await this.reportService.getMyReportList(
-      authorizedData.user.id,
+      authorizedData,
       getMyReportListDto,
     );
 

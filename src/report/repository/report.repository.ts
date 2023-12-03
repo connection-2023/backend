@@ -126,4 +126,39 @@ export class ReportRepository {
       );
     }
   }
+
+  async getLecturerReportList(
+    reportedLecturerId: number,
+    filterOption: object,
+    take: number,
+    cursor: ICursor,
+    skip: number,
+  ) {
+    try {
+      return await this.prismaService.lecturerReport.findMany({
+        where: { reportedLecturerId, ...filterOption },
+        take,
+        cursor,
+        skip,
+        select: {
+          id: true,
+          targetUser: { select: { nickname: true } },
+          targetLecturer: { select: { nickname: true } },
+          reportType: { select: { description: true } },
+          reason: true,
+          isAnswered: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 신고 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
 }

@@ -154,9 +154,9 @@ export class ReportService {
   }
 
   async getMyReportList(
-    userId: number,
+    authorizedData: ValidateResult,
     {
-      filterOptions,
+      filterOption,
       take,
       currentPage,
       targetPage,
@@ -164,48 +164,80 @@ export class ReportService {
       lastItemId,
     }: GetMyReportListDto,
   ) {
-    let filterOption;
+    const prismaFilterOption = this.getPrismaFilterOption(
+      filterOption,
+      authorizedData,
+    );
 
-    if (filterOptions === ReportFilterOptions.REVIEW) {
-      filterOption = { NOT: { userReportedReview: null } };
-    } else if (filterOptions === ReportFilterOptions.USER) {
-      filterOption = { userReportedReview: null };
+    const { cursor, skip, updatedTake } = this.getPaginationParams(
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    );
+
+    return authorizedData.user
+      ? await this.reportRepository.getUserReportList(
+          authorizedData.user.id,
+          prismaFilterOption,
+          updatedTake,
+          cursor,
+          skip,
+        )
+      : await this.reportRepository.getLecturerReportList(
+          authorizedData.lecturer.id,
+          prismaFilterOption,
+          updatedTake,
+          cursor,
+          skip,
+        );
+  }
+
+  private getPrismaFilterOption(
+    filterOption: ReportFilterOptions,
+    authorizedData: ValidateResult,
+  ) {
+    const isUser = Boolean(authorizedData.user);
+
+    switch (filterOption) {
+      case ReportFilterOptions.REVIEW:
+        return isUser
+          ? { NOT: { userReportedReview: null } }
+          : { NOT: { lecturerReportedReview: null } };
+      case ReportFilterOptions.USER:
+        return isUser
+          ? { userReportedReview: null }
+          : { lecturerReportedReview: null };
+      default:
+        return {};
     }
+  }
 
+  private getPaginationParams(
+    currentPage: number,
+    targetPage: number,
+    firstItemId: number,
+    lastItemId: number,
+    take: number,
+  ) {
     let cursor;
     let skip;
+    let updatedTake = take;
 
     const isPagination = currentPage && targetPage;
     const isInfiniteScroll = lastItemId && take;
 
     if (isPagination) {
       const pageDiff = currentPage - targetPage;
-      ({ cursor, skip } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-      take = pageDiff >= 1 ? -take : take;
+      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
+      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+      updatedTake = pageDiff >= 1 ? -take : take;
     } else if (isInfiniteScroll) {
       cursor = { id: lastItemId };
       skip = 1;
     }
 
-    return await this.reportRepository.getUserReportList(
-      userId,
-      filterOption,
-      take,
-      cursor,
-      skip,
-    );
-  }
-
-  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
-    const cursor: ICursor = { id: itemId };
-    const skip =
-      Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    const invertedTake = pageDiff >= 1 ? -take : take;
-
-    return { cursor, skip, invertedTake };
+    return { cursor, skip, updatedTake };
   }
 }
