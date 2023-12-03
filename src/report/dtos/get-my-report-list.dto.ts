@@ -59,13 +59,4 @@ export class GetMyReportListDto {
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
   filterOptions: ReportFilterOptions;
-
-  @ApiProperty({
-    example: 1,
-    description: '원하는 클래스 ID',
-    required: false,
-  })
-  @IsNumberType()
-  @IsOptional()
-  lectureId: number;
 }
