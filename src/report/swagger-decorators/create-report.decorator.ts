@@ -1,19 +1,16 @@
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiConsumes,
   ApiCreatedResponse,
   ApiOperation,
-  ApiParam,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiCreateUserReport() {
+export function ApiCreateReport() {
   return applyDecorators(
     ApiOperation({
-      summary: '신고하기 (유저가)',
+      summary: '신고하기',
       description:
         '유저, 강사, 강의 리뷰, 강사 리뷰 신고 가능 / 신고 type은 schema 확인',
     }),

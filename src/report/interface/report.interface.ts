@@ -2,6 +2,10 @@ export interface UserReportInputData extends ReportInputData {
   reportedUserId: number;
 }
 
+export interface LecturerReportInputData extends ReportInputData {
+  reportedLecturerId: number;
+}
+
 export interface ReportInputData {
   reportTypeId: number;
   targetUserId?: number;
@@ -17,4 +21,13 @@ export interface ReviewData {
   description: string;
   lectureReviewId?: number;
   lecturerReviewId?: number;
+}
+
+export interface ReportTargetData {
+  reportTargetTable: string;
+  reportTargetReviewTable: string;
+  reportedTarget: {
+    reportedUserId: number | undefined;
+    reportedLecturerId: number | undefined;
+  };
 }

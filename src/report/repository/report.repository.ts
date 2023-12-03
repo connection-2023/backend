@@ -2,15 +2,18 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  LecturerReportInputData,
   ReportedReviewInputData,
   UserReportInputData,
 } from '../interface/report.interface';
 import {
   LectureReview,
+  LecturerReport,
   LecturerReview,
   ReportType,
   UserReport,
 } from '@prisma/client';
+import { ICursor } from '@src/payments/interface/payments.interface';
 
 @Injectable()
 export class ReportRepository {
@@ -55,12 +58,15 @@ export class ReportRepository {
     }
   }
 
-  async trxCreateUserReport(
+  async trxCreateReport(
     transaction: PrismaTransaction,
-    userReportInputData: UserReportInputData,
+    targetTable: string,
+    reportInputData: UserReportInputData | LecturerReportInputData,
   ): Promise<UserReport> {
     try {
-      return await transaction.userReport.create({ data: userReportInputData });
+      return await transaction[targetTable].create({
+        data: reportInputData,
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 신고 정보 생성 실패: ${error}`,
@@ -69,18 +75,54 @@ export class ReportRepository {
     }
   }
 
-  async trxCreateUserReportedReview(
+  async trxCreateReportedReview(
     transaction: PrismaTransaction,
+    targetTable: string,
     reportedReviewInputData: ReportedReviewInputData,
   ): Promise<void> {
     try {
-      await transaction.userReportedReview.create({
+      await transaction[targetTable].create({
         data: reportedReviewInputData,
       });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 리뷰 신고 정보 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+
+  async getUserReportList(
+    reportedUserId: number,
+    filterOption: object,
+    take: number,
+    cursor: ICursor,
+    skip: number,
+  ) {
+    try {
+      return await this.prismaService.userReport.findMany({
+        where: { reportedUserId, ...filterOption },
+        take,
+        cursor,
+        skip,
+        select: {
+          id: true,
+          targetUser: { select: { nickname: true } },
+          targetLecturer: { select: { nickname: true } },
+          reportType: { select: { description: true } },
+          reason: true,
+          isAnswered: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 신고 조회 실패: ${error}`,
+        'PrismaFindFailed',
       );
     }
   }
