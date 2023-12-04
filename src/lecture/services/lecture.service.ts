@@ -76,15 +76,17 @@ export class LectureService {
           lecture,
         );
 
-        const lectureLocationInputData = {
-          lectureId: newLecture.id,
-          ...location,
-        };
+        if (location) {
+          const lectureLocationInputData = {
+            lectureId: newLecture.id,
+            ...location,
+          };
 
-        await this.lectureRepository.trxCreateLectureLocation(
-          transaction,
-          lectureLocationInputData,
-        );
+          await this.lectureRepository.trxCreateLectureLocation(
+            transaction,
+            lectureLocationInputData,
+          );
+        }
 
         const lectureToRegionInputData: LectureToRegionInputData[] =
           this.createLectureToRegionInputData(newLecture.id, regionIds);

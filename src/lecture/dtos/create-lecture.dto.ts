@@ -145,7 +145,7 @@ export class CreateLectureDto {
   })
   @IsNotEmpty()
   @IsObject()
-  location: LectureLocation;
+  location?: LectureLocation;
 
   @ApiProperty({ example: 2, description: '강의시간', required: true })
   @IsNotEmpty()

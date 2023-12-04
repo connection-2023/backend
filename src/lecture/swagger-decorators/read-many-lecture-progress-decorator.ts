@@ -14,7 +14,7 @@ export function ApiReadManyLectureProgress() {
     }),
     ApiBearerAuth(),
     ApiOkResponse(
-      SwaggerApiResponse.success('진행도 조회 완료', {
+      SwaggerApiResponse.success('진행중 클래스 진행도 조회 완료', {
         statusCode: 200,
         data: {
           lectureProgress: [
