@@ -6,7 +6,7 @@ import { IsNumberType } from '@src/common/validator/custom-validator';
 
 export class CreateReportDto {
   @ApiProperty({
-    example: 'FALSE_INFORMATION',
+    example: ['FALSE_INFORMATION'],
     enum: ReportTypes,
     required: true,
   })
