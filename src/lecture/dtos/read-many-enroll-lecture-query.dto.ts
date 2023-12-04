@@ -1,7 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EnrollLectureType } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class ReadManyEnrollLectureQueryDto {
   @ApiProperty({
@@ -59,7 +65,7 @@ export class ReadManyEnrollLectureQueryDto {
     description: '진행중,수강 완료',
     required: true,
   })
-  @IsString()
   @IsNotEmpty()
+  @IsEnum(EnrollLectureType, { each: true })
   enrollLectureType: EnrollLectureType;
 }

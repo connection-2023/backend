@@ -31,6 +31,7 @@ import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
+import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
 
 @Injectable()
 export class LectureService {
@@ -533,38 +534,48 @@ export class LectureService {
     );
   }
 
-  async readManyLectureProgress(lecturerId: number) {
+  async readManyLectureProgress(
+    lecturerId: number,
+    query: ReadManyLectureProgressQueryDto,
+  ) {
+    const { progressType } = query;
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const lectures =
-          await this.lectureRepository.trxReadManyLectureProgress(
-            transaction,
+        if (progressType === '진행중') {
+          const lectures =
+            await this.lectureRepository.trxReadManyLectureProgress(
+              transaction,
+              lecturerId,
+            );
+          const inprogressLecture = [];
+
+          for (const lecture of lectures) {
+            const currentTime = new Date();
+            const completedLectureSchedule =
+              await this.lectureRepository.trxReadManyCompletedLectureScheduleCount(
+                transaction,
+                lecture.id,
+                currentTime,
+              );
+            const progress = Math.round(
+              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+            );
+            const inprogressLectureData = {
+              ...lecture,
+              progress,
+              allSchedule: lecture._count.lectureSchedule,
+              completedSchedule: completedLectureSchedule,
+            };
+
+            inprogressLecture.push(inprogressLectureData);
+          }
+
+          return inprogressLecture;
+        } else if (progressType === '마감된 클래스') {
+          return await this.lectureRepository.readManyCompletedLectureWithLecturerId(
             lecturerId,
           );
-        const inprogressLecture = [];
-
-        for (const lecture of lectures) {
-          const currentTime = new Date();
-          const completedLectureSchedule =
-            await this.lectureRepository.trxReadManyCompletedLectureScheduleCount(
-              transaction,
-              lecture.id,
-              currentTime,
-            );
-          const progress = Math.round(
-            (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
-          );
-          const inprogressLectureData = {
-            ...lecture,
-            progress,
-            allSchedule: lecture._count.lectureSchedule,
-            completedSchedule: completedLectureSchedule,
-          };
-
-          inprogressLecture.push(inprogressLectureData);
         }
-
-        return inprogressLecture;
       },
     );
   }

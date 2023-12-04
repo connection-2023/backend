@@ -286,7 +286,7 @@ export class LectureRepository {
       take,
       skip,
       cursor,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         orderId: true,
@@ -335,6 +335,16 @@ export class LectureRepository {
   ): Promise<number> {
     return await transaction.lectureSchedule.count({
       where: { lectureId, startDateTime: { lt: currentTime } },
+    });
+  }
+
+  async readManyCompletedLectureWithLecturerId(
+    lecturerId: number,
+  ): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, deletedAt: null, isActive: false },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

@@ -33,6 +33,7 @@ import { ApiReadManyLectureWithLecturer } from '../swagger-decorators/read-many-
 import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
+import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -158,12 +159,14 @@ export class LectureController {
 
   @ApiReadManyLectureProgress()
   @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers/progress')
+  @Get('lecturers/in-progress')
   async readManyLectureProgress(
     @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureProgressQueryDto,
   ) {
     const lectureProgress = await this.lectureService.readManyLectureProgress(
       authorizedData.lecturer.id,
+      query,
     );
 
     return { lectureProgress };
