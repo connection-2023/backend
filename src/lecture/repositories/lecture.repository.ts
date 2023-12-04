@@ -25,6 +25,7 @@ import {
   LectureLocation,
   LectureLocationInputData,
   LectureScheduleInputData,
+  LectureScheduleResponseData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
 } from '@src/lecture/interface/lecture.interface';
@@ -285,7 +286,7 @@ export class LectureRepository {
       take,
       skip,
       cursor,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         orderId: true,
@@ -316,19 +317,34 @@ export class LectureRepository {
     });
   }
 
-  async readManyLectureProgress(lecturerId: number): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({
+  async trxReadManyLectureProgress(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<LectureScheduleResponseData[]> {
+    return await transaction.lecture.findMany({
       where: { lecturerId, isActive: true },
       include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { id: 'desc' },
     });
   }
 
-  async readManyCompletedLectureScheduleCount(
+  async trxReadManyCompletedLectureScheduleCount(
+    transaction: PrismaTransaction,
     lectureId: number,
     currentTime: Date,
-  ): Promise<any> {
-    return await this.prismaService.lectureSchedule.count({
+  ): Promise<number> {
+    return await transaction.lectureSchedule.count({
       where: { lectureId, startDateTime: { lt: currentTime } },
+    });
+  }
+
+  async readManyCompletedLectureWithLecturerId(
+    lecturerId: number,
+  ): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, deletedAt: null, isActive: false },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }
