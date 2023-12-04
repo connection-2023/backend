@@ -14,6 +14,7 @@ import { AuthController } from '@src/auth/controllers/auth.controller';
 import { AuthService } from '@src/auth/services/auth.service';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import { RefreshTokenStrategy } from '@src/auth/strategy/refresh-token.strategy';
+import { AdminAccessTokenStrategy } from './strategy/admin-access-token.startegy';
 
 @Module({
   imports: [CustomJwtModule],
@@ -27,6 +28,7 @@ import { RefreshTokenStrategy } from '@src/auth/strategy/refresh-token.strategy'
     LecturerAccessTokenStrategy,
     LecturerRefreshTokenStrategy,
     RefreshTokenStrategy,
+    AdminAccessTokenStrategy,
     AuthRepository,
   ],
   controllers: [

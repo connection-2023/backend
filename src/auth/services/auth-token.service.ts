@@ -14,6 +14,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { Lecturer, Users } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import {
+  GetAdminResult,
   GetLecturerResult,
   GetUserResult,
   Token,
@@ -58,7 +59,7 @@ export class AuthTokenService implements OnModuleInit {
       expiresIn: this.jwtRefreshTokenExpiresIn,
     });
 
-    const targetId = payload.userId || payload.lecturerId;
+    const targetId = payload.userId || payload.lecturerId || payload.adminId;
     await this.cacheManager.set(
       `${tokenType} ${targetId}`,
       refreshToken,
@@ -80,6 +81,20 @@ export class AuthTokenService implements OnModuleInit {
       );
     }
     return user;
+  }
+
+  async getAdminByPayload(payloadAdminId: number): Promise<GetAdminResult> {
+    const admin = await this.prismaService.users.findFirst({
+      where: { id: payloadAdminId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!admin) {
+      throw new BadRequestException(
+        `유효하지 않은 관리자 정보 요청입니다.`,
+        'InvalidUserInformation',
+      );
+    }
+    return admin;
   }
 
   async getLecturerByPayload(
