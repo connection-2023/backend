@@ -493,7 +493,7 @@ export class LectureService {
     let skip;
     const currentTime = {};
 
-    if (enrollLectureType === '진행중') {
+    if (enrollLectureType === '수강 완료') {
       currentTime['reservation'] = {
         every: {
           lectureSchedule: {
@@ -503,7 +503,7 @@ export class LectureService {
           },
         },
       };
-    } else if (enrollLectureType === '수강 완료') {
+    } else if (enrollLectureType === '진행중') {
       currentTime['reservation'] = {
         some: {
           lectureSchedule: {
