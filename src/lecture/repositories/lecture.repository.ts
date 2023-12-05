@@ -9,6 +9,7 @@ import {
   LectureHoliday,
   Reservation,
   LikedLecture,
+  LectureNotification,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import {
@@ -316,6 +317,18 @@ export class LectureRepository {
           },
         },
       },
+    });
+  }
+
+  async trxUpsertLectureNotification(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    notification: string,
+  ): Promise<LectureNotification> {
+    return await transaction.lectureNotification.upsert({
+      where: { lectureId },
+      create: { lectureId, notification },
+      update: { notification },
     });
   }
 

@@ -387,11 +387,12 @@ export class LectureService {
         }
 
         if (notification) {
-          await transaction.lectureNotification.upsert({
-            where: { lectureId },
-            create: { lectureId, notification },
-            update: { notification },
-          });
+          updatedLecture[notification] =
+            await this.lectureRepository.trxUpsertLectureNotification(
+              transaction,
+              lectureId,
+              notification,
+            );
         }
 
         if (images) {
