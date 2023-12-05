@@ -355,6 +355,9 @@ export class LectureService {
           const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
           const schedule = this.compareHolidays(oldHolidaysArr, holidays);
           const { createNewSchedule, deleteOldSchedule } = schedule;
+
+          await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
+
           const { duration } = await this.prismaService.lecture.findFirst({
             where: { id: lectureId },
             select: { duration: true },
@@ -893,6 +896,27 @@ export class LectureService {
       throw new BadRequestException(
         `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
       );
+    }
+  }
+
+  private async existReservationWithSchedule(
+    lectureId: number,
+    deletedOldSchedules: Date[],
+  ) {
+    const reservation = [];
+    for (const oldSchedule of deletedOldSchedules) {
+      const existReservation =
+        await this.lectureRepository.readScheduleReservation(
+          lectureId,
+          new Date(oldSchedule),
+        );
+      if (existReservation) {
+        reservation.push(oldSchedule);
+      }
+    }
+
+    if (reservation[0]) {
+      throw new BadRequestException(`existReservation ${reservation}`);
     }
   }
 }
