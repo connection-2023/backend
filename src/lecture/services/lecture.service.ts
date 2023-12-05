@@ -329,6 +329,7 @@ export class LectureService {
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
     const { images, coupons, holidays, notification, ...lecture } =
       updateLectureDto;
+    const currentTime = new Date();
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -339,6 +340,18 @@ export class LectureService {
             notification,
           );
         }
+        if (lecture.maxCapacity) {
+          const readLectureParticipant =
+            await this.lectureRepository.trxReadLectureParticipant(
+              transaction,
+              lectureId,
+              lecture.maxCapacity,
+              currentTime,
+            );
+          throw new BadRequestException(
+            `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
+          );
+        }
 
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
           transaction,
@@ -346,7 +359,7 @@ export class LectureService {
           lecture,
         );
 
-        if (holidays) {
+        if (holidays[0]) {
           const oldHolidays =
             await this.lectureRepository.trxReadManyLectureHoliday(
               transaction,
@@ -397,7 +410,7 @@ export class LectureService {
             );
         }
 
-        if (images) {
+        if (images[0]) {
           const lectureImageInputData: LectureImageInputData[] =
             this.createLectureImageInputData(lectureId, images);
 
@@ -411,7 +424,7 @@ export class LectureService {
           );
         }
 
-        if (coupons) {
+        if (coupons[0]) {
           await this.getValidCouponIds(coupons);
 
           const lectureCounponTargetInputData =

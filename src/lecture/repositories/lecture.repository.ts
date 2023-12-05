@@ -388,4 +388,19 @@ export class LectureRepository {
       },
     });
   }
+
+  async trxReadLectureParticipant(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    maxCapacity: number,
+    currentTime: Date,
+  ): Promise<LectureSchedule> {
+    return await transaction.lectureSchedule.findFirst({
+      where: {
+        lectureId,
+        numberOfParticipants: { gte: maxCapacity },
+        startDateTime: { gte: currentTime },
+      },
+    });
+  }
 }
