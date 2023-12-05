@@ -1,7 +1,7 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from '@src/app.module';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
@@ -14,7 +14,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port: number = configService.get<number>('PORT');
 
-  app.useGlobalInterceptors(new SuccessInterceptor());
+  app.useGlobalInterceptors(
+    new SuccessInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
 
   app.enableCors({
     origin: configService.get<string>('FRONT_END_URL'),

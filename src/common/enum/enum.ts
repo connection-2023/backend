@@ -36,3 +36,15 @@ export enum LectureProgressType {
   '진행중' = '진행중',
   '마감된 클래스' = '마감된 클래스',
 }
+
+export enum UserType {
+  USER = 'USER',
+  LECTURER = 'LECTURER',
+}
+
+export enum Tables {
+  UserReport = 'userReport',
+  UserReportResponse = 'userReportResponse',
+  LecturerReport = 'lecturerReport',
+  LecturerReportResponse = 'lecturerReportResponse',
+}

@@ -954,10 +954,11 @@ model UserReportResponse {
 }
 
 model Admin {
-  id       Int    @id @default(autoincrement())
-  name     String @db.VarChar(10)
-  nickname String @unique @db.VarChar(30)
-  email    String @unique
+  id           Int     @id @default(autoincrement())
+  name         String  @db.VarChar(10)
+  nickname     String  @unique @db.VarChar(30)
+  email        String  @unique
+  profileImage String?
 
   // adminAuth              AdminAuth?
   userReportResponse     UserReportResponse[]
