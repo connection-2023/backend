@@ -198,6 +198,7 @@ export class LectureRepository {
   ): Promise<LectureSchedule[]> {
     return await transaction.lectureSchedule.findMany({
       where: { lectureId },
+      orderBy: { startDateTime: 'asc' },
     });
   }
 
