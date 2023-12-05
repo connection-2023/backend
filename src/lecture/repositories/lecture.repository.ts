@@ -371,4 +371,21 @@ export class LectureRepository {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async readScheduleReservation(
+    lectureId: number,
+    holiday: Date,
+  ): Promise<Reservation[]> {
+    return await this.prismaService.reservation.findMany({
+      where: {
+        lectureSchedule: {
+          lectureId,
+          startDateTime: {
+            gte: new Date(holiday),
+            lt: new Date(new Date(holiday).getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+    });
+  }
 }
