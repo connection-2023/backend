@@ -190,6 +190,7 @@ export class LectureRepository {
     return await transaction.lecture.update({
       where: { id: lectureId },
       data: lecture,
+      include: { lectureNotification: true },
     });
   }
 
