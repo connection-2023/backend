@@ -208,6 +208,7 @@ export class LectureRepository {
   ): Promise<LectureHoliday[]> {
     return await transaction.lectureHoliday.findMany({
       where: { lectureId },
+      orderBy: { holiday: 'asc' },
     });
   }
 
