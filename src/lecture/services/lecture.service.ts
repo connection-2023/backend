@@ -485,55 +485,68 @@ export class LectureService {
       enrollLectureType,
     }: ReadManyEnrollLectureQueryDto,
   ) {
-    const existEnrollLecture = await this.prismaService.reservation.findFirst({
-      where: { userId },
-    });
-    if (!existEnrollLecture) {
-      return;
-    }
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const existEnrollLecture =
+          await this.prismaService.reservation.findFirst({
+            where: { userId },
+          });
+        if (!existEnrollLecture) {
+          return;
+        }
 
-    let cursor;
-    let skip;
-    const currentTime = {};
+        let cursor;
+        let skip;
+        const currentTime = {};
 
-    if (enrollLectureType === '수강 완료') {
-      currentTime['reservation'] = {
-        every: {
-          lectureSchedule: {
-            startDateTime: {
-              lt: new Date(),
+        if (enrollLectureType === '수강 완료') {
+          currentTime['reservation'] = {
+            every: {
+              lectureSchedule: {
+                startDateTime: {
+                  lt: new Date(),
+                },
+              },
             },
-          },
-        },
-      };
-    } else if (enrollLectureType === '진행중') {
-      currentTime['reservation'] = {
-        some: {
-          lectureSchedule: {
-            startDateTime: {
-              gt: new Date(),
+          };
+        } else if (enrollLectureType === '진행중') {
+          currentTime['reservation'] = {
+            some: {
+              lectureSchedule: {
+                startDateTime: {
+                  gt: new Date(),
+                },
+              },
             },
-          },
-        },
-      };
-    }
-    const isPagination = currentPage && targetPage;
+          };
+        }
+        const isPagination = currentPage && targetPage;
 
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      ({ cursor, skip, take } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-    }
+        if (isPagination) {
+          const pageDiff = currentPage - targetPage;
+          ({ cursor, skip, take } = this.getPaginationOptions(
+            pageDiff,
+            pageDiff <= -1 ? lastItemId : firstItemId,
+            take,
+          ));
+        }
 
-    return await this.lectureRepository.readManyEnrollLectureWithUserId(
-      userId,
-      take,
-      currentTime,
-      cursor,
-      skip,
+        const enrollLecture =
+          await this.lectureRepository.trxReadManyEnrollLectureWithUserId(
+            transaction,
+            userId,
+            take,
+            currentTime,
+            cursor,
+            skip,
+          );
+        const count = await this.lectureRepository.trxEnrollLectureCount(
+          transaction,
+          userId,
+        );
+
+        return { count, enrollLecture };
+      },
     );
   }
 

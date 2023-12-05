@@ -274,14 +274,15 @@ export class LectureRepository {
     return await this.prismaService.lecture.findMany({ where: { lecturerId } });
   }
 
-  async readManyEnrollLectureWithUserId(
+  async trxReadManyEnrollLectureWithUserId(
+    transaction: PrismaTransaction,
     userId: number,
     take: number,
     currentTime,
     cursor?: ICursor,
     skip?: number,
   ): Promise<any> {
-    return await this.prismaService.payment.findMany({
+    return await transaction.payment.findMany({
       where: {
         userId,
         ...currentTime,
@@ -318,6 +319,13 @@ export class LectureRepository {
         },
       },
     });
+  }
+
+  async trxEnrollLectureCount(
+    transaction: PrismaTransaction,
+    userId: number,
+  ): Promise<number> {
+    return await transaction.payment.count({ where: { userId } });
   }
 
   async trxUpsertLectureNotification(
