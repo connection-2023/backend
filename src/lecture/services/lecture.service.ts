@@ -332,6 +332,14 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        if (notification) {
+          await this.lectureRepository.trxUpsertLectureNotification(
+            transaction,
+            lectureId,
+            notification,
+          );
+        }
+
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
           transaction,
           lectureId,
@@ -383,15 +391,6 @@ export class LectureService {
             await this.lectureRepository.trxCreateLectureHoliday(
               transaction,
               lectureHolidayInputData,
-            );
-        }
-
-        if (notification) {
-          updatedLecture[notification] =
-            await this.lectureRepository.trxUpsertLectureNotification(
-              transaction,
-              lectureId,
-              notification,
             );
         }
 
