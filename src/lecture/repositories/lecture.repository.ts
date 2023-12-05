@@ -148,7 +148,7 @@ export class LectureRepository {
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
         lectureNotification: true,
-        lectureImage: { select: { imageUrl: true } },
+        lectureImage: { select: { imageUrl: true }, orderBy: { id: 'asc' } },
         lectureToRegion: {
           select: {
             region: {
