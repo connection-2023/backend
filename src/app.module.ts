@@ -16,6 +16,8 @@ import { PaymentsModule } from '@src/payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
 import { PassModule } from '@src/pass/pass.module';
 import { ReportModule } from '@src/report/report.module';
+import { AdminModule } from './admin/admin.module';
+import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { ReportModule } from '@src/report/report.module';
     PaymentsModule,
     PassModule,
     ReportModule,
+    AdminModule,
+    SuccessInterceptorModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

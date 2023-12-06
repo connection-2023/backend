@@ -26,6 +26,7 @@ interface AxiosPostResult {
 interface Payload {
   userId?: number;
   lecturerId?: number;
+  adminId?: number;
 }
 
 interface KakaoUserProfile {
