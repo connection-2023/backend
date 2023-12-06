@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { ApiErrorResponse } from '../interface/common-interface';
 
 export const SwaggerApiResponse: any = {
@@ -9,6 +10,17 @@ export const SwaggerApiResponse: any = {
       schema: {
         example,
       },
+    };
+  },
+
+  successWithType: (description: string, type: Type, response?: any) => {
+    const example = response;
+    const a = new type(type);
+    console.log(a);
+
+    return {
+      description,
+      type,
     };
   },
 

@@ -6,8 +6,8 @@ import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
 import { ConfigService } from '@nestjs/config';
-import { SuccessInterceptor } from './common/interceptors/success.interceptor';
-import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
+import { HttpExceptionFilter } from '@src/common/exceptions/http-exception.filter';
+import { SuccessInterceptor } from '@src/common/interceptors/success.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +15,7 @@ async function bootstrap() {
   const port: number = configService.get<number>('PORT');
 
   app.useGlobalInterceptors(
-    new SuccessInterceptor(),
+    app.get<SuccessInterceptor>(SuccessInterceptor),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
 
