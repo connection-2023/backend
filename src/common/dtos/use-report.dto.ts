@@ -9,7 +9,7 @@ import { ReportedReviewDto } from './reported-review.dto';
 
 export class UserReportDto extends BaseReturnDto implements UserReport {
   @ApiProperty({
-    example: 1,
+    description: '신고 id',
     type: Number,
   })
   id: number;
@@ -18,18 +18,28 @@ export class UserReportDto extends BaseReturnDto implements UserReport {
   targetLecturerId: number | null;
 
   @ApiProperty({
-    example: '춤을 못춰요',
     description: '이유',
     nullable: true,
   })
   reason: string | null;
 
   @ApiProperty({
-    example: false,
     description: '답변 여부',
     type: Boolean,
   })
   isAnswered: boolean;
+
+  @ApiProperty({
+    description: '신고 생성일',
+    type: Date,
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '신고 답변일',
+    type: Date,
+  })
+  updatedAt: Date;
 
   @ApiProperty({
     description: '신고 한 유저 정보',

@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UserDto extends BaseReturnDto implements Users {
   @ApiProperty({
-    example: 2,
+    description: '유저 Id',
     type: Number,
   })
   id: number;
@@ -13,7 +13,7 @@ export class UserDto extends BaseReturnDto implements Users {
   name: string;
 
   @ApiProperty({
-    example: '집게리아 사장님',
+    description: '닉네임',
   })
   nickname: string;
   email: string;
@@ -23,7 +23,6 @@ export class UserDto extends BaseReturnDto implements Users {
   deletedAt: Date;
 
   @ApiProperty({
-    example: 1,
     description: '유저 프로필 이미지',
     type: UserProfileImageDto,
   })

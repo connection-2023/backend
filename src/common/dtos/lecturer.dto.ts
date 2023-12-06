@@ -12,7 +12,6 @@ export class LecturerDto extends BaseReturnDto implements Lecturer {
   id: number;
 
   @ApiProperty({
-    example: '강사 닉네임입니다',
     description: '닉네임',
   })
   nickname: string;
@@ -35,7 +34,7 @@ export class LecturerDto extends BaseReturnDto implements Lecturer {
 
   @ApiProperty({
     description: '강사의 프로필 이미지들',
-    type: UserDto,
+    type: LecturerProfileImageDto,
   })
   lecturerProfileImageUrl?: LecturerProfileImageDto[];
 

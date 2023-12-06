@@ -12,7 +12,6 @@ export class ReportTypeDto implements ReportType {
   name: string;
 
   @ApiProperty({
-    example: '저작권 불법 도용',
     description: '신고 유형에 대한 설명',
   })
   description: string;

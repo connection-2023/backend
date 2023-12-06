@@ -6,7 +6,7 @@ export class UserProfileImageDto implements UserProfileImage {
   userId: number;
 
   @ApiProperty({
-    example: 'url입니다람쥐',
+    description: '이미지 url',
   })
   imageUrl: string | null;
 
