@@ -359,7 +359,7 @@ export class LectureService {
           lecture,
         );
 
-        if (holidays[0]) {
+        if (holidays) {
           const oldHolidays =
             await this.lectureRepository.trxReadManyLectureHoliday(
               transaction,
@@ -410,7 +410,7 @@ export class LectureService {
             );
         }
 
-        if (images[0]) {
+        if (images) {
           const lectureImageInputData: LectureImageInputData[] =
             this.createLectureImageInputData(lectureId, images);
 
@@ -424,7 +424,7 @@ export class LectureService {
           );
         }
 
-        if (coupons[0]) {
+        if (coupons) {
           await this.getValidCouponIds(coupons);
 
           const lectureCounponTargetInputData =
