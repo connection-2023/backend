@@ -34,6 +34,7 @@ import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
 import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
+import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -92,7 +93,7 @@ export class LectureController {
     return { lecture: deletedLecture };
   }
 
-  @ApiOperation({ summary: '강의 수정' })
+  @ApiUpdateLecture()
   @Patch(':lectureId')
   async updateLecture(
     @Param('lectureId', ParseIntPipe) lectureId: number,
@@ -171,4 +172,10 @@ export class LectureController {
 
     return { lectureProgress };
   }
+
+  // @ApiOperation({summary:'강의 전체 수강생 조회'})
+  // @Get(':lectureId/participants')
+  // async readManyParticipantsWithLectureId(@Param('lectureId',ParseIntPipe) lectureId:number){
+  //   const participant = await
+  // }
 }

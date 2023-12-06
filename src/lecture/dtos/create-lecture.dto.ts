@@ -141,9 +141,9 @@ export class CreateLectureDto {
       buildingName: '새한아파트',
     },
     description: '위치 주소',
-    required: true,
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsObject()
   location?: LectureLocation;
 

@@ -329,9 +329,30 @@ export class LectureService {
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
     const { images, coupons, holidays, notification, ...lecture } =
       updateLectureDto;
+    const currentTime = new Date();
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        if (notification) {
+          await this.lectureRepository.trxUpsertLectureNotification(
+            transaction,
+            lectureId,
+            notification,
+          );
+        }
+        if (lecture.maxCapacity) {
+          const readLectureParticipant =
+            await this.lectureRepository.trxReadLectureParticipant(
+              transaction,
+              lectureId,
+              lecture.maxCapacity,
+              currentTime,
+            );
+          throw new BadRequestException(
+            `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
+          );
+        }
+
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
           transaction,
           lectureId,
@@ -347,6 +368,9 @@ export class LectureService {
           const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
           const schedule = this.compareHolidays(oldHolidaysArr, holidays);
           const { createNewSchedule, deleteOldSchedule } = schedule;
+
+          await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
+
           const { duration } = await this.prismaService.lecture.findFirst({
             where: { id: lectureId },
             select: { duration: true },
@@ -384,14 +408,6 @@ export class LectureService {
               transaction,
               lectureHolidayInputData,
             );
-        }
-
-        if (notification) {
-          await transaction.lectureNotification.upsert({
-            where: { lectureId },
-            create: { lectureId, notification },
-            update: { notification },
-          });
         }
 
         if (images) {
@@ -484,55 +500,68 @@ export class LectureService {
       enrollLectureType,
     }: ReadManyEnrollLectureQueryDto,
   ) {
-    const existEnrollLecture = await this.prismaService.reservation.findFirst({
-      where: { userId },
-    });
-    if (!existEnrollLecture) {
-      return;
-    }
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const existEnrollLecture =
+          await this.prismaService.reservation.findFirst({
+            where: { userId },
+          });
+        if (!existEnrollLecture) {
+          return;
+        }
 
-    let cursor;
-    let skip;
-    const currentTime = {};
+        let cursor;
+        let skip;
+        const currentTime = {};
 
-    if (enrollLectureType === '수강 완료') {
-      currentTime['reservation'] = {
-        every: {
-          lectureSchedule: {
-            startDateTime: {
-              lt: new Date(),
+        if (enrollLectureType === '수강 완료') {
+          currentTime['reservation'] = {
+            every: {
+              lectureSchedule: {
+                startDateTime: {
+                  lt: new Date(),
+                },
+              },
             },
-          },
-        },
-      };
-    } else if (enrollLectureType === '진행중') {
-      currentTime['reservation'] = {
-        some: {
-          lectureSchedule: {
-            startDateTime: {
-              gt: new Date(),
+          };
+        } else if (enrollLectureType === '진행중') {
+          currentTime['reservation'] = {
+            some: {
+              lectureSchedule: {
+                startDateTime: {
+                  gt: new Date(),
+                },
+              },
             },
-          },
-        },
-      };
-    }
-    const isPagination = currentPage && targetPage;
+          };
+        }
+        const isPagination = currentPage && targetPage;
 
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      ({ cursor, skip, take } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-    }
+        if (isPagination) {
+          const pageDiff = currentPage - targetPage;
+          ({ cursor, skip, take } = this.getPaginationOptions(
+            pageDiff,
+            pageDiff <= -1 ? lastItemId : firstItemId,
+            take,
+          ));
+        }
 
-    return await this.lectureRepository.readManyEnrollLectureWithUserId(
-      userId,
-      take,
-      currentTime,
-      cursor,
-      skip,
+        const enrollLecture =
+          await this.lectureRepository.trxReadManyEnrollLectureWithUserId(
+            transaction,
+            userId,
+            take,
+            currentTime,
+            cursor,
+            skip,
+          );
+        const count = await this.lectureRepository.trxEnrollLectureCount(
+          transaction,
+          userId,
+        );
+
+        return { count, enrollLecture };
+      },
     );
   }
 
@@ -880,6 +909,27 @@ export class LectureService {
       throw new BadRequestException(
         `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
       );
+    }
+  }
+
+  private async existReservationWithSchedule(
+    lectureId: number,
+    deletedOldSchedules: Date[],
+  ) {
+    const reservation = [];
+    for (const oldSchedule of deletedOldSchedules) {
+      const existReservation =
+        await this.lectureRepository.readScheduleReservation(
+          lectureId,
+          new Date(oldSchedule),
+        );
+      if (existReservation) {
+        reservation.push(oldSchedule);
+      }
+    }
+
+    if (reservation[0]) {
+      throw new BadRequestException(`existReservation ${reservation}`);
     }
   }
 }
