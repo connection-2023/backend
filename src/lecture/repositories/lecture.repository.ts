@@ -403,4 +403,23 @@ export class LectureRepository {
       },
     });
   }
+
+  async readManyParticipantWithLectureId(lectureId: number): Promise<Lecture> {
+    return await this.prismaService.lecture.findUnique({
+      where: { id: lectureId },
+      include: {
+        lectureSchedule: {
+          select: {
+            reservation: {
+              select: {
+                user: {
+                  select: { userProfileImage: { select: { imageUrl: true } } },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }

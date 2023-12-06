@@ -172,4 +172,10 @@ export class LectureController {
 
     return { lectureProgress };
   }
+
+  // @ApiOperation({summary:'강의 전체 수강생 조회'})
+  // @Get(':lectureId/participants')
+  // async readManyParticipantsWithLectureId(@Param('lectureId',ParseIntPipe) lectureId:number){
+  //   const participant = await
+  // }
 }
