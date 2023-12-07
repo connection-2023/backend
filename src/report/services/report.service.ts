@@ -37,6 +37,7 @@ export class ReportService {
       lecturerReviewId,
       reportTypes,
       targetUserId,
+      targetLecturerId,
       ...reportInputData
     }: CreateReportDto,
   ): Promise<void> {
@@ -46,6 +47,19 @@ export class ReportService {
       reportTargetTypeTable,
       reportedTarget,
     } = this.getReportTargetData(authorizedData);
+
+    const existsReport = await this.reportRepository.getExistReport(
+      reportTargetTable,
+      reportedTarget,
+      targetUserId,
+      targetLecturerId,
+    );
+    if (existsReport) {
+      throw new BadRequestException(
+        `이미 신고 접수된 사용자입니다.`,
+        'AlreadyReported',
+      );
+    }
 
     const reportedReviewData: ReviewData = await this.getReportedReviewData(
       targetUserId,
@@ -63,6 +77,7 @@ export class ReportService {
             reportTargetTable,
             {
               targetUserId,
+              targetLecturerId,
               ...reportedTarget,
               ...reportInputData,
             },
@@ -127,7 +142,10 @@ export class ReportService {
         await this.reportRepository.getReportType(reportType);
 
       if (!selectedReportType) {
-        throw new BadRequestException(`잘못된 신고 타입입니다.`);
+        throw new BadRequestException(
+          `잘못된 신고 타입입니다.`,
+          'InvalidReportType',
+        );
       }
 
       selectedReportTypeIds.push(selectedReportType.id);
@@ -198,12 +216,16 @@ export class ReportService {
     }
 
     if (!reviewId) {
-      throw new NotFoundException(`리뷰가 존재하지 않습니다.`);
+      throw new NotFoundException(
+        `리뷰가 존재하지 않습니다.`,
+        'ReviewNotFound',
+      );
     }
 
     if (targetUserId !== reviewerId) {
       throw new BadRequestException(
         `리뷰 작성자와 신고 대상이 일치하지 않습니다.`,
+        'ReviewerAndTargetMismatch',
       );
     }
 

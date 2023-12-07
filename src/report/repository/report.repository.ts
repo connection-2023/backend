@@ -8,6 +8,7 @@ import {
   LecturerReportInputData,
   ReportTypeInputData,
   ReportedReviewInputData,
+  ReportedTarget,
   UserReportInputData,
 } from '../interface/report.interface';
 import {
@@ -17,7 +18,6 @@ import {
   ReportType,
   UserReport,
 } from '@prisma/client';
-import { ICursor } from '@src/payments/interface/payments.interface';
 
 @Injectable()
 export class ReportRepository {
@@ -173,6 +173,29 @@ export class ReportRepository {
       throw new InternalServerErrorException(
         `Prisma 신고 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+
+  async getExistReport(
+    targetTable: string,
+    reportedTarget: ReportedTarget,
+    targetUserId: number,
+    targetLecturerId: number,
+  ): Promise<UserReport | LecturerReport> {
+    try {
+      return await this.prismaService[targetTable].findFirst({
+        where: {
+          ...reportedTarget,
+          isAnswered: false,
+          targetUserId,
+          targetLecturerId,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 신고 조회 실패: ${error}`,
+        'PrismaFindFailed',
       );
     }
   }

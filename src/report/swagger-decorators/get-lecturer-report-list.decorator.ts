@@ -1,5 +1,7 @@
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
@@ -24,6 +26,30 @@ export function ApiGetLecturerReportList() {
       {
         isArray: true,
       },
+    ),
+    ApiBadRequestResponse(
+      SwaggerApiResponse.exception([
+        {
+          name: 'ReviewerAndTargetMismatch',
+          example: { message: '리뷰 작성자와 신고 대상이 일치하지 않습니다.' },
+        },
+        {
+          name: 'InvalidReportType',
+          example: { message: '잘못된 신고 타입입니다.' },
+        },
+        {
+          name: 'AlreadyReported',
+          example: { message: '이미 신고 접수된 사용자입니다.' },
+        },
+      ]),
+    ),
+    ApiNotFoundResponse(
+      SwaggerApiResponse.exception([
+        {
+          name: 'ReviewNotFound',
+          example: { message: '리뷰가 존재하지 않습니다.' },
+        },
+      ]),
     ),
     ApiUnauthorizedResponse(
       SwaggerApiResponse.exception([
