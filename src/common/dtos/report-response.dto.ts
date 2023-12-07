@@ -1,14 +1,13 @@
-import { LecturerReportResponse, UserReportResponse } from '@prisma/client';
 import { BaseReturnDto } from '@src/common/dtos/base-return.dto';
 import { AdminDto } from './admin.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { LecturerReportResponse, UserReportResponse } from '@prisma/client';
 
 export class ReportResponseDto
   extends BaseReturnDto
   implements UserReportResponse, LecturerReportResponse
 {
   @ApiProperty({
-    example: 2,
     type: Number,
   })
   id: number;
@@ -16,11 +15,15 @@ export class ReportResponseDto
   adminId: number;
 
   @ApiProperty({
-    example: '처리 했어요',
     description: '답변 내용',
   })
   description: string;
   deletedAt: Date;
+
+  @ApiProperty({
+    description: '관리자 정보',
+    type: AdminDto,
+  })
   admin: AdminDto;
 
   constructor(reportResponse: ReportResponseDto) {

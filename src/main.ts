@@ -42,10 +42,15 @@ async function bootstrap() {
       },
     }),
   );
-
+  const JSON_PATH = 'api-docs-json';
+  const YAML_PATH = 'api-docs-yaml';
   const config = new DocumentBuilder()
     .setTitle('connection')
-    .setDescription('Connection api description')
+    .setDescription(
+      'Connection api description</br>' +
+        `<strong><a target="_black" href="${JSON_PATH}">JSON document</a></strong></br>` +
+        `<strong><a target="_black" href="${YAML_PATH}">YAML document</a></strong></br>`,
+    )
     .setVersion('1.0.0')
     .addBearerAuth({
       type: 'http',
@@ -56,7 +61,13 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    jsonDocumentUrl: JSON_PATH,
+    yamlDocumentUrl: YAML_PATH,
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
   app.use(cookieParser());
 
   const prisma: PrismaService = app.get(PrismaService);

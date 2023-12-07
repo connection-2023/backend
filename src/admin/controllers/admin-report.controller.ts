@@ -8,6 +8,7 @@ import { UserReportDto } from '@src/common/dtos/use-report.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiGetUserReportList } from '../swagger-decorators/get-user-report-list.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { ApiCreateUserReportResponse } from '../swagger-decorators/create-user-report-response.decorator';
 
 @ApiTags('관리자 - 신고')
 @UseGuards(AdminAccessTokenGuard)
@@ -22,6 +23,7 @@ export class AdminReportController {
     return await this.adminReportService.getUserReportList();
   }
 
+  @ApiCreateUserReportResponse()
   @SetResponseKey('userReport')
   @Post()
   async createUserReportResponse(

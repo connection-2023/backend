@@ -1,14 +1,16 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { LecturerProfileImageUrl, Users } from '@prisma/client';
-import { BaseReturnDto } from './base-return.dto';
-import { UserProfileImageDto } from './user-profile-image.dto';
 
 export class LecturerProfileImageDto implements LecturerProfileImageUrl {
   id: number;
   lecturerId: number;
+
+  @ApiProperty({
+    description: '프로필 이미지 url',
+  })
   url: string;
 
   constructor(lecturerProfileImage: Partial<LecturerProfileImageUrl>) {
-    this.id = lecturerProfileImage.id;
     this.url = lecturerProfileImage.url;
 
     Object.seal(this);
