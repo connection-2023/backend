@@ -12,7 +12,6 @@ import {
   CouponFilterOptions,
   UserCouponStatusOptions,
 } from '@src/coupon/enum/coupon.enum.ts';
-import { number } from 'joi';
 
 export class GetMyCouponListDto {
   @ApiProperty({

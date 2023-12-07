@@ -861,6 +861,7 @@ model UserReport {
   targetLecturer     Lecturer?           @relation(fields: [targetLecturerId], references: [id])
   userReportedReview UserReportedReview?
   userReportType     UserReportType[]
+  userReportResponse UserReportResponse?
 }
 
 //유저가 신고한 리뷰 내역
@@ -901,6 +902,7 @@ model LecturerReport {
   targetLecturer         Lecturer?               @relation("TargetLecturer", fields: [targetLecturerId], references: [id])
   lecturerReportedReview LecturerReportedReview?
   lecturerReportType     LecturerReportType[]
+  lecturerReportResponse LecturerReportResponse?
 }
 
 //강사가 신고한 리뷰 내역
@@ -924,3 +926,52 @@ model LecturerReportType {
   report     LecturerReport @relation(fields: [reportId], references: [id])
   reportType ReportType     @relation(fields: [reportTypeId], references: [id])
 }
+
+model LecturerReportResponse {
+  id          Int       @id @default(autoincrement())
+  reportId    Int       @unique()
+  adminId     Int
+  description String
+  createdAt   DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt   DateTime? @db.Timestamp(6)
+
+  report LecturerReport @relation(fields: [reportId], references: [id])
+  admin  Admin          @relation(fields: [adminId], references: [id])
+}
+
+model UserReportResponse {
+  id          Int       @id @default(autoincrement())
+  reportId    Int       @unique()
+  adminId     Int
+  description String
+  createdAt   DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt   DateTime? @db.Timestamp(6)
+
+  report UserReport @relation(fields: [reportId], references: [id])
+  admin  Admin      @relation(fields: [adminId], references: [id])
+}
+
+model Admin {
+  id           Int     @id @default(autoincrement())
+  name         String  @db.VarChar(10)
+  nickname     String  @unique @db.VarChar(30)
+  email        String  @unique
+  profileImage String?
+
+  // adminAuth              AdminAuth?
+  userReportResponse     UserReportResponse[]
+  lecturerReportResponse LecturerReportResponse[]
+}
+
+// model AdminAuth {
+//   id         Int       @id @default(autoincrement())
+//   userId     Int       @unique
+//   email      String    @unique
+//   signUpType Int
+//   createdAt  DateTime  @default(now()) @db.Timestamp(6)
+//   deletedAt  DateTime? @db.Timestamp(6)
+
+//   admin      Admin     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// }

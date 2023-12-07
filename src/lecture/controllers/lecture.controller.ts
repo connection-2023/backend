@@ -32,6 +32,9 @@ import { ApiReadOneLectureByNonMember } from '../swagger-decorators/read-one-lec
 import { ApiReadManyLectureWithLecturer } from '../swagger-decorators/read-many-lecture-with-lecturers-decorator';
 import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
+import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
+import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
+import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -90,7 +93,7 @@ export class LectureController {
     return { lecture: deletedLecture };
   }
 
-  @ApiOperation({ summary: '강의 수정' })
+  @ApiUpdateLecture()
   @Patch(':lectureId')
   async updateLecture(
     @Param('lectureId', ParseIntPipe) lectureId: number,
@@ -155,15 +158,24 @@ export class LectureController {
     );
   }
 
-  @ApiOperation({ summary: '강사 내 클래스 진행도 조회' })
-  @ApiBearerAuth()
+  @ApiReadManyLectureProgress()
   @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers/progress')
+  @Get('lecturers/in-progress')
   async readManyLectureProgress(
     @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureProgressQueryDto,
   ) {
-    const progress = await this.lectureService.readManyLectureProgress(
+    const lectureProgress = await this.lectureService.readManyLectureProgress(
       authorizedData.lecturer.id,
+      query,
     );
+
+    return { lectureProgress };
   }
+
+  // @ApiOperation({summary:'강의 전체 수강생 조회'})
+  // @Get(':lectureId/participants')
+  // async readManyParticipantsWithLectureId(@Param('lectureId',ParseIntPipe) lectureId:number){
+  //   const participant = await
+  // }
 }

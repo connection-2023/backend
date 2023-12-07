@@ -4,7 +4,6 @@ import { IsEnum, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import {
   IssuedCouponStatusOptions,
   CouponFilterOptions,
-  UserCouponStatusOptions,
 } from '@src/coupon/enum/coupon.enum.ts';
 
 export class GetMyIssuedCouponListDto {
@@ -66,7 +65,7 @@ export class GetMyIssuedCouponListDto {
   @IsEnum(IssuedCouponStatusOptions, { each: true })
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
-  couponStatusOptions: IssuedCouponStatusOptions;
+  couponStatusOption: IssuedCouponStatusOptions;
 
   @ApiProperty({
     example: 'LATEST',

@@ -107,6 +107,35 @@ interface EnrollLectureReservationResponseData {
   };
 }
 
+interface LectureScheduleResponseData {
+  id: number;
+  lecturerId: number;
+  lectureTypeId: number;
+  lectureMethodId: number;
+  isGroup: boolean;
+  startDate: Date;
+  endDate: Date;
+  title: string;
+  introduction: string;
+  curriculum: string;
+  duration: number;
+  difficultyLevel: string;
+  minCapacity: number;
+  maxCapacity: number;
+  reservationDeadline: number;
+  reservationComment: string;
+  price: number;
+  noShowDeposit: number;
+  reviewCount: number;
+  stars: number;
+  isActive: boolean;
+  locationDescription: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  _count: { lectureSchedule: number };
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -123,4 +152,5 @@ export {
   LectureLikeInputData,
   LikedLectureReviewWhereData,
   EnrollLectureReservationResponseData,
+  LectureScheduleResponseData,
 };

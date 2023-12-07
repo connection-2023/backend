@@ -31,3 +31,8 @@ export enum EnrollLectureType {
   '진행중' = '진행중',
   '수강 완료' = '수강 완료',
 }
+
+export enum LectureProgressType {
+  '진행중' = '진행중',
+  '마감된 클래스' = '마감된 클래스',
+}
