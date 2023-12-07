@@ -4,7 +4,7 @@ import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { UserDto } from '@src/common/dtos/user.dto';
 import { ReportResponseDto } from './report-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserReportTypeDto } from './user-report-type.dto';
+import { ReportedTypeDto } from './user-report-type.dto';
 import { ReportedReviewDto } from './reported-review.dto';
 
 export class UserReportDto extends BaseReturnDto implements UserReport {
@@ -70,10 +70,10 @@ export class UserReportDto extends BaseReturnDto implements UserReport {
 
   @ApiProperty({
     description: '신고 유형',
-    type: UserReportTypeDto,
+    type: ReportedTypeDto,
     isArray: true,
   })
-  userReportType?: UserReportTypeDto[];
+  userReportType?: ReportedTypeDto[];
 
   @ApiProperty({
     description: '신고한 댓글 정보',
@@ -108,7 +108,7 @@ export class UserReportDto extends BaseReturnDto implements UserReport {
 
     this.userReportType = userReport.userReportType
       ? userReport.userReportType.map(
-          (reportType) => new UserReportTypeDto(reportType),
+          (reportType) => new ReportedTypeDto(reportType),
         )
       : null;
 

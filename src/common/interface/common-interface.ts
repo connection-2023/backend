@@ -78,3 +78,9 @@ export interface GetLecturerResult {
 export interface ICursor {
   id: number;
 }
+
+export interface IPaginationParams {
+  cursor: ICursor | null;
+  skip: number | null;
+  take: number | null;
+}

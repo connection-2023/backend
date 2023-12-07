@@ -9,6 +9,7 @@ import { ReportType, UserReport } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   ICursor,
+  IPaginationParams,
   PrismaTransaction,
   ValidateResult,
 } from '@src/common/interface/common-interface';
@@ -19,6 +20,8 @@ import {
   ReviewData,
 } from '@src/report/interface/report.interface';
 import { GetMyReportListDto } from '@src/report/dtos/get-my-report-list.dto';
+import { UserReportDto } from '@src/common/dtos/use-report.dto';
+import { LecturerReportDto } from '@src/common/dtos/lecturer-report.dto';
 
 @Injectable()
 export class ReportService {
@@ -220,13 +223,12 @@ export class ReportService {
       firstItemId,
       lastItemId,
     }: GetMyReportListDto,
-  ) {
+  ): Promise<UserReportDto[] | LecturerReportDto[]> {
     const prismaFilterOption = this.getPrismaFilterOption(
       filterOption,
       authorizedData,
     );
-
-    const { cursor, skip, updatedTake } = this.getPaginationParams(
+    const paginationParams: IPaginationParams = this.getPaginationParams(
       currentPage,
       targetPage,
       firstItemId,
@@ -234,21 +236,26 @@ export class ReportService {
       take,
     );
 
-    return authorizedData.user
-      ? await this.reportRepository.getUserReportList(
-          authorizedData.user.id,
-          prismaFilterOption,
-          updatedTake,
-          cursor,
-          skip,
-        )
-      : await this.reportRepository.getLecturerReportList(
+    if (authorizedData.user) {
+      const userReportList = await this.reportRepository.getUserReportList(
+        authorizedData.user.id,
+        prismaFilterOption,
+        paginationParams,
+      );
+      return userReportList.map((userReport) => new UserReportDto(userReport));
+    }
+
+    if (authorizedData.lecturer) {
+      const lecturerReportList =
+        await this.reportRepository.getLecturerReportList(
           authorizedData.lecturer.id,
           prismaFilterOption,
-          updatedTake,
-          cursor,
-          skip,
+          paginationParams,
         );
+      return lecturerReportList.map(
+        (lecturerReport) => new LecturerReportDto(lecturerReport),
+      );
+    }
   }
 
   private getPrismaFilterOption(
@@ -277,7 +284,7 @@ export class ReportService {
     firstItemId: number,
     lastItemId: number,
     take: number,
-  ) {
+  ): IPaginationParams {
     let cursor;
     let skip;
     let updatedTake = take;
@@ -295,6 +302,6 @@ export class ReportService {
       skip = 1;
     }
 
-    return { cursor, skip, updatedTake };
+    return { cursor, skip, take: updatedTake };
   }
 }

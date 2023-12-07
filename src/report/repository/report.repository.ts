@@ -1,5 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  IPaginationParams,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerReportInputData,
@@ -96,9 +99,7 @@ export class ReportRepository {
   async getUserReportList(
     reportedUserId: number,
     filterOption: object,
-    take: number,
-    cursor: ICursor,
-    skip: number,
+    { cursor, skip, take }: IPaginationParams,
   ) {
     try {
       return await this.prismaService.userReport.findMany({
@@ -106,17 +107,14 @@ export class ReportRepository {
         take,
         cursor,
         skip,
-        select: {
-          id: true,
-          targetUser: { select: { nickname: true } },
-          targetLecturer: { select: { nickname: true } },
-          reason: true,
-          isAnswered: true,
-          createdAt: true,
-          updatedAt: true,
+        include: {
+          reportedUser: true,
+          targetUser: true,
+          targetLecturer: true,
           userReportType: {
-            select: { reportType: { select: { description: true } } },
+            include: { reportType: true },
           },
+          userReportResponse: { include: { admin: true } },
         },
         orderBy: {
           id: 'desc',
@@ -133,9 +131,7 @@ export class ReportRepository {
   async getLecturerReportList(
     reportedLecturerId: number,
     filterOption: object,
-    take: number,
-    cursor: ICursor,
-    skip: number,
+    { cursor, skip, take }: IPaginationParams,
   ) {
     try {
       return await this.prismaService.lecturerReport.findMany({
@@ -143,17 +139,14 @@ export class ReportRepository {
         take,
         cursor,
         skip,
-        select: {
-          id: true,
-          targetUser: { select: { nickname: true } },
-          targetLecturer: { select: { nickname: true } },
-          reason: true,
-          isAnswered: true,
-          createdAt: true,
-          updatedAt: true,
+        include: {
+          reportedLecturer: true,
+          targetUser: true,
+          targetLecturer: true,
           lecturerReportType: {
-            select: { reportType: { select: { description: true } } },
+            include: { reportType: true },
           },
+          lecturerReportResponse: { include: { admin: true } },
         },
         orderBy: {
           id: 'desc',

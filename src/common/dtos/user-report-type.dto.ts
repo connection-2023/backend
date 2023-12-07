@@ -1,8 +1,8 @@
-import { ReportType, UserReportType } from '@prisma/client';
+import { UserReportType } from '@prisma/client';
 import { ReportTypeDto } from './report-type.dot';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UserReportTypeDto implements UserReportType {
+export class ReportedTypeDto implements UserReportType {
   id: number;
   reportId: number;
   reportTypeId: number;
@@ -12,7 +12,7 @@ export class UserReportTypeDto implements UserReportType {
     type: ReportTypeDto,
   })
   reportType: ReportTypeDto;
-  constructor(reportType: Partial<UserReportTypeDto>) {
+  constructor(reportType: Partial<ReportedTypeDto>) {
     this.reportType = reportType.reportType
       ? new ReportTypeDto(reportType.reportType)
       : null;
