@@ -6,8 +6,11 @@ import { ApiCreateReport } from '@src/report/swagger-decorators/create-report.de
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
-import { ApiGetMyReportList } from '../swagger-decorators/get-my-report-list.decorator';
+import { ApiGetUserReportList } from '../swagger-decorators/get-user-report-list.decorator';
 import { GetMyReportListDto } from '../dtos/get-my-report-list.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { LecturerReportDto } from '@src/common/dtos/lecturer-report.dto';
+import { UserReportDto } from '@src/common/dtos/use-report.dto';
 
 @ApiTags('강사-신고')
 @Controller('lecturer-reports')
@@ -20,22 +23,21 @@ export class LecturerReportController {
   async createUserReport(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createReportDto: CreateReportDto,
-  ) {
+  ): Promise<void> {
     await this.reportService.createReport(authorizedData, createReportDto);
   }
 
-  @ApiGetMyReportList()
+  @ApiGetUserReportList()
+  @SetResponseKey('reportList')
   @Get()
   @UseGuards(LecturerAccessTokenGuard)
   async getMyReportList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() getMyReportListDto: GetMyReportListDto,
-  ) {
-    const reportList = await this.reportService.getMyReportList(
+  ): Promise<UserReportDto[] | LecturerReportDto[]> {
+    return await this.reportService.getMyReportList(
       authorizedData,
       getMyReportListDto,
     );
-
-    return { reportList };
   }
 }

@@ -7,7 +7,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 
-export class ApiResponseDto {
+export class DetailResponseDto {
   [key: string]: unknown;
 
   static swaggerBuilder(
@@ -41,6 +41,10 @@ export class ApiResponseDto {
 
     Object.defineProperty(Temp, 'name', {
       value: `${key[0].toUpperCase()}${key.slice(1)}Dto`,
+    });
+
+    Object.defineProperty(Data, 'name', {
+      value: `${key[0].toUpperCase()}${key.slice(1)}DataDto`,
     });
 
     return applyDecorators(

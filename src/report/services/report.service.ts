@@ -9,6 +9,7 @@ import { ReportType, UserReport } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   ICursor,
+  IPaginationParams,
   PrismaTransaction,
   ValidateResult,
 } from '@src/common/interface/common-interface';
@@ -19,6 +20,8 @@ import {
   ReviewData,
 } from '@src/report/interface/report.interface';
 import { GetMyReportListDto } from '@src/report/dtos/get-my-report-list.dto';
+import { UserReportDto } from '@src/common/dtos/use-report.dto';
+import { LecturerReportDto } from '@src/common/dtos/lecturer-report.dto';
 
 @Injectable()
 export class ReportService {
@@ -34,6 +37,7 @@ export class ReportService {
       lecturerReviewId,
       reportTypes,
       targetUserId,
+      targetLecturerId,
       ...reportInputData
     }: CreateReportDto,
   ): Promise<void> {
@@ -43,6 +47,19 @@ export class ReportService {
       reportTargetTypeTable,
       reportedTarget,
     } = this.getReportTargetData(authorizedData);
+
+    const existsReport = await this.reportRepository.getExistReport(
+      reportTargetTable,
+      reportedTarget,
+      targetUserId,
+      targetLecturerId,
+    );
+    if (existsReport) {
+      throw new BadRequestException(
+        `이미 신고 접수된 사용자입니다.`,
+        'AlreadyReported',
+      );
+    }
 
     const reportedReviewData: ReviewData = await this.getReportedReviewData(
       targetUserId,
@@ -60,6 +77,7 @@ export class ReportService {
             reportTargetTable,
             {
               targetUserId,
+              targetLecturerId,
               ...reportedTarget,
               ...reportInputData,
             },
@@ -124,7 +142,10 @@ export class ReportService {
         await this.reportRepository.getReportType(reportType);
 
       if (!selectedReportType) {
-        throw new BadRequestException(`잘못된 신고 타입입니다.`);
+        throw new BadRequestException(
+          `잘못된 신고 타입입니다.`,
+          'InvalidReportType',
+        );
       }
 
       selectedReportTypeIds.push(selectedReportType.id);
@@ -195,12 +216,16 @@ export class ReportService {
     }
 
     if (!reviewId) {
-      throw new NotFoundException(`리뷰가 존재하지 않습니다.`);
+      throw new NotFoundException(
+        `리뷰가 존재하지 않습니다.`,
+        'ReviewNotFound',
+      );
     }
 
     if (targetUserId !== reviewerId) {
       throw new BadRequestException(
         `리뷰 작성자와 신고 대상이 일치하지 않습니다.`,
+        'ReviewerAndTargetMismatch',
       );
     }
 
@@ -220,13 +245,12 @@ export class ReportService {
       firstItemId,
       lastItemId,
     }: GetMyReportListDto,
-  ) {
+  ): Promise<UserReportDto[] | LecturerReportDto[]> {
     const prismaFilterOption = this.getPrismaFilterOption(
       filterOption,
       authorizedData,
     );
-
-    const { cursor, skip, updatedTake } = this.getPaginationParams(
+    const paginationParams: IPaginationParams = this.getPaginationParams(
       currentPage,
       targetPage,
       firstItemId,
@@ -234,21 +258,26 @@ export class ReportService {
       take,
     );
 
-    return authorizedData.user
-      ? await this.reportRepository.getUserReportList(
-          authorizedData.user.id,
-          prismaFilterOption,
-          updatedTake,
-          cursor,
-          skip,
-        )
-      : await this.reportRepository.getLecturerReportList(
+    if (authorizedData.user) {
+      const userReportList = await this.reportRepository.getUserReportList(
+        authorizedData.user.id,
+        prismaFilterOption,
+        paginationParams,
+      );
+      return userReportList.map((userReport) => new UserReportDto(userReport));
+    }
+
+    if (authorizedData.lecturer) {
+      const lecturerReportList =
+        await this.reportRepository.getLecturerReportList(
           authorizedData.lecturer.id,
           prismaFilterOption,
-          updatedTake,
-          cursor,
-          skip,
+          paginationParams,
         );
+      return lecturerReportList.map(
+        (lecturerReport) => new LecturerReportDto(lecturerReport),
+      );
+    }
   }
 
   private getPrismaFilterOption(
@@ -277,7 +306,7 @@ export class ReportService {
     firstItemId: number,
     lastItemId: number,
     take: number,
-  ) {
+  ): IPaginationParams {
     let cursor;
     let skip;
     let updatedTake = take;
@@ -295,6 +324,6 @@ export class ReportService {
       skip = 1;
     }
 
-    return { cursor, skip, updatedTake };
+    return { cursor, skip, take: updatedTake };
   }
 }

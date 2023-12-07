@@ -6,7 +6,6 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class LecturerDto extends BaseReturnDto implements Lecturer {
   @ApiProperty({
-    example: 1,
     type: Number,
   })
   id: number;
@@ -45,7 +44,8 @@ export class LecturerDto extends BaseReturnDto implements Lecturer {
     this.nickname = lecturer.nickname;
     this.profileCardImageUrl = lecturer.profileCardImageUrl;
 
-    this.user = lecturer.user ? new UserDto(lecturer.user) : null;
+    this.user = lecturer.user ? new UserDto(lecturer.user) : undefined;
+
     this.lecturerProfileImageUrl = lecturer.lecturerProfileImageUrl
       ? lecturer.lecturerProfileImageUrl.map(
           (lecturerProfile) => new LecturerProfileImageDto(lecturerProfile),

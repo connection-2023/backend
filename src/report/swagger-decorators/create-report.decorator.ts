@@ -1,11 +1,11 @@
 import {
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { applyDecorators } from '@nestjs/common';
+import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
+import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto';
 
 export function ApiCreateReport() {
   return applyDecorators(
@@ -15,11 +15,7 @@ export function ApiCreateReport() {
         '유저, 강사, 강의 리뷰, 강사 리뷰 신고 가능 / 신고 type은 schema 확인',
     }),
     ApiBearerAuth(),
-    ApiCreatedResponse(
-      SwaggerApiResponse.success('신고 완료 반환값 없음', {
-        statusCode: 201,
-      }),
-    ),
+    StatusResponseDto.swaggerBuilder(HttpStatus.CREATED),
     ApiUnauthorizedResponse(
       SwaggerApiResponse.exception([
         {

@@ -6,7 +6,7 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import { UserReportDto } from '@src/common/dtos/use-report.dto';
-import { ApiResponseDto } from '@src/common/swagger/swagger-api-response-dto';
+import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 
 export function ApiCreateUserReportResponse() {
   return applyDecorators(
@@ -14,7 +14,7 @@ export function ApiCreateUserReportResponse() {
       summary: '신고 답변',
     }),
     ApiBearerAuth(),
-    ApiResponseDto.swaggerBuilder(
+    DetailResponseDto.swaggerBuilder(
       HttpStatus.OK,
       'userReportResponse',
       UserReportDto,

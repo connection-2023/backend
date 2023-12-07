@@ -26,10 +26,12 @@ export interface ReportTargetData {
   reportTargetTable: string;
   reportTargetReviewTable: string;
   reportTargetTypeTable: string;
-  reportedTarget: {
-    reportedUserId: number | undefined;
-    reportedLecturerId: number | undefined;
-  };
+  reportedTarget: ReportedTarget;
+}
+
+export interface ReportedTarget {
+  reportedUserId: number | undefined;
+  reportedLecturerId: number | undefined;
 }
 
 export interface ReportTypeInputData {
