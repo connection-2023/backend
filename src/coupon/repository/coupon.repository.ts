@@ -1,6 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { CouponInputData, CouponTargetInputData } from '../interface/interface';
+import {
+  CouponInputData,
+  CouponTargetInputData,
+  CouponUpdateData,
+} from '../interface/interface';
 import { LectureCoupon, UserCoupon } from '@prisma/client';
 import {
   ICursor,
@@ -47,11 +51,11 @@ export class CouponRepository {
 
   async trxCreateLectureCouponTarget(
     transaction: PrismaTransaction,
-    couponInputData: CouponTargetInputData[],
+    couponTargetInputData: CouponTargetInputData[],
   ) {
     try {
-      await transaction.lectureCouponTarget.createMany({
-        data: couponInputData,
+      return await transaction.lectureCouponTarget.createMany({
+        data: couponTargetInputData,
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -342,6 +346,41 @@ export class CouponRepository {
       throw new InternalServerErrorException(
         `Prisma 쿠폰 조회 실패: ${error}`,
         'PrismaFindFailed',
+      );
+    }
+  }
+  async trxUpdateLectureCoupon(
+    transaction: PrismaTransaction,
+    couponId: number,
+    couponUpdateData: CouponUpdateData,
+  ) {
+    try {
+      return await transaction.lectureCoupon.update({
+        where: { id: couponId },
+        data: couponUpdateData,
+        include: {
+          lectureCouponTarget: { include: { lecture: true } },
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
+  }
+  async trxDeleteLectureCouponTarget(
+    transaction: PrismaTransaction,
+    couponId: number,
+  ) {
+    try {
+      await transaction.lectureCouponTarget.deleteMany({
+        where: { lectureCouponId: couponId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 삭제 실패: ${error}`,
+        'PrismaDeleteFailed',
       );
     }
   }

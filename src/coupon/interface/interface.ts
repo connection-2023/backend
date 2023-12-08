@@ -29,4 +29,20 @@ interface CouponTargetInputData {
   lectureCouponId: number;
 }
 
-export { CouponInputData, LectureData, CouponTargetInputData };
+interface CouponUpdateData {
+  title: string;
+  percentage: number;
+  discountPrice: number;
+  maxDiscountPrice: number;
+  maxUsageCount: number;
+  endAt: Date;
+  isStackable: boolean;
+  isPrivate: boolean;
+}
+
+export {
+  CouponInputData,
+  LectureData,
+  CouponTargetInputData,
+  CouponUpdateData,
+};

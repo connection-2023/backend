@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsNumber,
   ValidationArguments,
+  ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
   registerDecorator,
@@ -36,4 +37,23 @@ export function IsNumberType(): PropertyDecorator {
     Type(() => Number),
     IsNumber(),
   );
+}
+
+export function IsFutureDate(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isFutureDate',
+      target: object.constructor,
+      propertyName: propertyName,
+      constraints: [],
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          return (
+            value instanceof Date && value.getTime() > new Date().getTime()
+          );
+        },
+      },
+    });
+  };
 }

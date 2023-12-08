@@ -21,8 +21,10 @@ import {
   IssuedCouponStatusOptions,
   UserCouponStatusOptions,
 } from '../enum/coupon.enum.ts';
-import { GetMyIssuedCouponListDto } from '../dtos/get-my-issued-coupon-list.dto.js';
-import { ICursor } from '@src/payments/interface/payments.interface.js';
+import { GetMyIssuedCouponListDto } from '../dtos/get-my-issued-coupon-list.dto';
+import { ICursor } from '@src/payments/interface/payments.interface';
+import { UpdateCouponDto } from '../dtos/update-coupon.dto';
+import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
 
 @Injectable()
 export class CouponService {
@@ -412,7 +414,7 @@ export class CouponService {
   async getMyIssuedCouponList(
     lecturerId: number,
     {
-      couponStatusOption: issuedCouponStatusOptions,
+      couponStatusOption,
       filterOption,
       lectureId,
       take,
@@ -424,7 +426,7 @@ export class CouponService {
   ) {
     const { OR, orderBy, endAt, lectureCouponTarget } =
       this.getIssuedCouponFilterOptions(
-        issuedCouponStatusOptions,
+        couponStatusOption,
         filterOption,
         lectureId,
       );
@@ -472,7 +474,7 @@ export class CouponService {
   }
 
   private getIssuedCouponFilterOptions(
-    issuedCouponStatusOptions: IssuedCouponStatusOptions,
+    couponStatusOption: IssuedCouponStatusOptions,
     filterOption: CouponFilterOptions,
     lectureId: number,
   ) {
@@ -483,7 +485,7 @@ export class CouponService {
 
     const lectureCouponTarget = lectureId ? { some: { lectureId } } : undefined;
 
-    if (issuedCouponStatusOptions === IssuedCouponStatusOptions.AVAILABLE) {
+    if (couponStatusOption === IssuedCouponStatusOptions.AVAILABLE) {
       OR = [{ isDisabled: false }];
       endAt = { gt: currentTime };
       orderBy =
@@ -494,7 +496,7 @@ export class CouponService {
       return { OR, orderBy, endAt, lectureCouponTarget };
     }
 
-    if (issuedCouponStatusOptions === IssuedCouponStatusOptions.DISABLED) {
+    if (couponStatusOption === IssuedCouponStatusOptions.DISABLED) {
       endAt = { lt: currentTime };
       OR = [{ isDisabled: true }, { endAt }];
       orderBy = [{ endAt: 'desc' }, { id: 'desc' }];
@@ -562,5 +564,74 @@ export class CouponService {
     decodedCouponCode += decipher.final('utf8');
 
     return parseInt(decodedCouponCode);
+  }
+
+  async updateLectureCoupon(
+    lecturerId: number,
+    couponId: number,
+    updateCouponDto: UpdateCouponDto,
+  ): Promise<LectureCouponDto> {
+    const { lectureIds, ...couponInfo } = updateCouponDto;
+
+    await this.checkCouponUpdatable(lecturerId, couponId, updateCouponDto);
+
+    if (lectureIds) {
+      await this.validateLectureIds(lecturerId, lectureIds);
+    }
+
+    const updatedLectureCoupon = await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (lectureIds) {
+          await this.trxUpdateCouponTarget(transaction, couponId, lectureIds);
+        }
+
+        return await this.couponRepository.trxUpdateLectureCoupon(
+          transaction,
+          couponId,
+          couponInfo,
+        );
+      },
+    );
+
+    return new LectureCouponDto(updatedLectureCoupon);
+  }
+
+  private async checkCouponUpdatable(
+    lecturerId: number,
+    couponId: number,
+    updateCouponDto: UpdateCouponDto,
+  ) {
+    const { maxUsageCount } = updateCouponDto;
+    const coupon: LectureCoupon = await this.couponRepository.getLecturerCoupon(
+      lecturerId,
+      couponId,
+    );
+
+    if (
+      maxUsageCount !== null &&
+      coupon.usageCount > updateCouponDto.maxUsageCount
+    ) {
+      throw new BadRequestException(
+        `현재 배포된 쿠폰 개수 보다 최대 개수가 적을 수 없습니다.`,
+      );
+    }
+  }
+
+  private async trxUpdateCouponTarget(
+    transaction: PrismaTransaction,
+    couponId: number,
+    lectureIds: number[],
+  ) {
+    const couponTargetInputData: CouponTargetInputData[] =
+      this.createCouponTargetInputData(couponId, lectureIds);
+
+    await this.couponRepository.trxDeleteLectureCouponTarget(
+      transaction,
+      couponId,
+    );
+    await this.couponRepository.trxCreateLectureCouponTarget(
+      transaction,
+      couponTargetInputData,
+    );
   }
 }

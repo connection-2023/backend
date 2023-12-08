@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -26,11 +27,31 @@ import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.d
 import { ApiIssuePrivateCouponToUser } from '@src/coupon/swagger-decorators/issue-private-coupon-to-user.decorator';
 import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
 import { GetMyIssuedCouponListDto } from '@src/coupon/dtos/get-my-issued-coupon-list.dto';
+import { UpdateCouponDto } from '@src/coupon/dtos/update-coupon.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
+import { ApiUpdateLectureCoupon } from '@src/coupon/swagger-decorators/update-lecture-coupon.decorator';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
 export class CouponController {
   constructor(private couponService: CouponService) {}
+
+  @ApiUpdateLectureCoupon()
+  @Patch('/:couponId')
+  @SetResponseKey('updatedCoupon')
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateCoupon(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Param('couponId', ParseIntPipe) couponId: number,
+    @Body() updateCouponDto: UpdateCouponDto,
+  ): Promise<LectureCouponDto> {
+    return await this.couponService.updateLectureCoupon(
+      AuthorizedData.lecturer.id,
+      couponId,
+      updateCouponDto,
+    );
+  }
 
   @ApiGetMyCouponList()
   @Get('/user')
