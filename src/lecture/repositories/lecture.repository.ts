@@ -404,8 +404,8 @@ export class LectureRepository {
     });
   }
 
-  async readManyParticipantWithLectureId(lectureId: number): Promise<Lecture> {
-    return await this.prismaService.lecture.findUnique({
+  async readManyParticipantWithLectureId(lectureId: number): Promise<any> {
+    return await this.prismaService.lecture.findFirst({
       where: { id: lectureId },
       include: {
         lectureSchedule: {
@@ -413,10 +413,23 @@ export class LectureRepository {
             reservation: {
               select: {
                 user: {
-                  select: { userProfileImage: { select: { imageUrl: true } } },
+                  include: { userProfileImage: { select: { imageUrl: true } } },
                 },
               },
             },
+          },
+        },
+      },
+    });
+  }
+
+  async readManyParticipantWithScheduleId(scheduleId: number): Promise<any> {
+    return await this.prismaService.lectureSchedule.findFirst({
+      where: { id: scheduleId },
+      select: {
+        reservation: {
+          select: {
+            user: { select: { nickname: true, userProfileImage: true } },
           },
         },
       },
