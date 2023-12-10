@@ -26,6 +26,7 @@ import {
   LectureLocation,
   LectureLocationInputData,
   LectureScheduleInputData,
+  LectureScheduleParticipantResponseData,
   LectureScheduleResponseData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
@@ -423,7 +424,9 @@ export class LectureRepository {
     });
   }
 
-  async readManyParticipantWithScheduleId(scheduleId: number): Promise<any> {
+  async readManyParticipantWithScheduleId(
+    scheduleId: number,
+  ): Promise<LectureScheduleParticipantResponseData> {
     return await this.prismaService.lectureSchedule.findFirst({
       where: { id: scheduleId },
       select: {
