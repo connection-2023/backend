@@ -208,4 +208,10 @@ export class LectureReviewService {
 
     return await this.lectureReviewRespository.readManyMyReview(userId, order);
   }
+
+  async readManyReservationThatCanBeCreated(userId: number) {
+    return await this.lectureReviewRespository.readManyReservationThatCanBeCreated(
+      userId,
+    );
+  }
 }
