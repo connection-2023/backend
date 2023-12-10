@@ -213,6 +213,7 @@ export class CouponRepository {
           lectureCoupon: {
             endAt,
             lectureCouponTarget,
+            isDisabled: false,
           },
           isUsed,
         },
@@ -268,6 +269,7 @@ export class CouponRepository {
           lectureCoupon: {
             endAt,
             lectureCouponTarget,
+            isDisabled: false,
           },
           isUsed,
         },
@@ -386,13 +388,15 @@ export class CouponRepository {
     }
   }
 
-  async softDeleteLectureCoupon(couponId: number): Promise<void> {
+  async softDeleteLectureCoupon(
+    couponId: number,
+    currentDate: Date,
+    isDisabled: boolean,
+  ): Promise<void> {
     try {
-      const currentDate = new Date();
-
       await this.prismaService.lectureCoupon.update({
         where: { id: couponId },
-        data: { deletedAt: currentDate },
+        data: { deletedAt: currentDate, isDisabled },
       });
     } catch (error) {
       throw new InternalServerErrorException(
