@@ -26,6 +26,7 @@ import {
   PaymentMethods,
 } from '../enum/payment.enum';
 import {
+  LectureLearner,
   LecturePass,
   Payment,
   PaymentProductType,
@@ -985,6 +986,42 @@ export class PaymentsRepository {
       throw new InternalServerErrorException(
         `Prisma 패스권 사용내역 생성 실패: ${error}`,
         'PrismaCreateFailed',
+      );
+    }
+  }
+
+  async getLectureLearner(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LectureLearner> {
+    try {
+      return await this.prismaService.lectureLearner.findFirst({
+        where: { userId, lecturerId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 수강생 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxUpsertLectureLearner(
+    transaction: PrismaTransaction,
+    userId: number,
+    lecturerId: number,
+    enrollmentCount: number,
+  ): Promise<void> {
+    try {
+      await transaction.lectureLearner.upsert({
+        where: { userId_lecturerId: { userId, lecturerId } },
+        create: { userId, lecturerId, enrollmentCount },
+        update: { enrollmentCount: { increment: enrollmentCount } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 수강생 생성/수정 실패: ${error}`,
+        'PrismaUpsertFailed',
       );
     }
   }

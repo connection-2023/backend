@@ -975,12 +975,14 @@ model Admin {
 // }
 
 model LectureLearner {
-  id              Int       @id @default(autoincrement())
+  id              Int     @id @default(autoincrement())
   userId          Int
   lecturerId      Int
-  enrollmentCount Int       @default(0)
+  enrollmentCount Int     @default(0)
   memo            String?
-  
-  user            Users?    @relation(fields: [userId], references: [id])
-  lecturer        Lecturer? @relation(fields: [lecturerId], references: [id])
+
+  user     Users    @relation(fields: [userId], references: [id])
+  lecturer Lecturer @relation(fields: [lecturerId], references: [id])
+
+  @@unique([userId, lecturerId])
 }
