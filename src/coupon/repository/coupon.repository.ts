@@ -401,4 +401,17 @@ export class CouponRepository {
       );
     }
   }
+
+  async deleteUserCoupon(userId: number, couponId: number): Promise<void> {
+    try {
+      await this.prismaService.userCoupon.deleteMany({
+        where: { userId, lectureCouponId: couponId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 삭제 실패: ${error}`,
+        'PrismaDeleteFailed',
+      );
+    }
+  }
 }

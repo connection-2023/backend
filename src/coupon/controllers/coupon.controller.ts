@@ -65,6 +65,7 @@ export class CouponController {
     @Param('couponId', ParseIntPipe) couponId: number,
   ) {
     if (user) {
+      await this.couponService.deleteUserCoupon(user.id, couponId);
     }
 
     if (lecturer) {

@@ -649,4 +649,8 @@ export class CouponService {
 
     await this.couponRepository.softDeleteLectureCoupon(couponId);
   }
+
+  async deleteUserCoupon(userId, couponId): Promise<void> {
+    await this.couponRepository.deleteUserCoupon(userId, couponId);
+  }
 }
