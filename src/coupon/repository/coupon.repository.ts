@@ -369,6 +369,7 @@ export class CouponRepository {
       );
     }
   }
+
   async trxDeleteLectureCouponTarget(
     transaction: PrismaTransaction,
     couponId: number,
@@ -381,6 +382,22 @@ export class CouponRepository {
       throw new InternalServerErrorException(
         `Prisma 쿠폰 삭제 실패: ${error}`,
         'PrismaDeleteFailed',
+      );
+    }
+  }
+
+  async softDeleteLectureCoupon(couponId: number): Promise<void> {
+    try {
+      const currentDate = new Date();
+
+      await this.prismaService.lectureCoupon.update({
+        where: { id: couponId },
+        data: { deletedAt: currentDate },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
       );
     }
   }

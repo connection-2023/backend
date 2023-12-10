@@ -341,16 +341,14 @@ model LectureCoupon {
   lectureCouponTarget          LectureCouponTarget[]
   temporaryLectureCouponTarget TemporaryLectureCouponTarget[]
   userCoupon                   UserCoupon[]
-  paymentCouponUsages          PaymentCouponUsage[]           @relation("Coupon")
-  stackableCouponUsages        PaymentCouponUsage[]           @relation("StackableCoupon")
 }
 
 model LectureCouponTarget {
   id              Int           @id @default(autoincrement())
   lectureCouponId Int
   lectureId       Int
-  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
-  lecture         Lecture       @relation(fields: [lectureId], references: [id])
+  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id],  onDelete: Cascade)
+  lecture         Lecture       @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   @@unique([lectureId, lectureCouponId])
 }
@@ -364,8 +362,8 @@ model UserCoupon {
   createdAt       DateTime      @default(now()) @db.Timestamp(6)
   updatedAt       DateTime      @default(now()) @updatedAt @db.Timestamp(6)
   deletedAt       DateTime?     @db.Timestamp(6)
-  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
-  users           Users         @relation(fields: [userId], references: [id])
+  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id], onDelete: Cascade)
+  users           Users         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lectureCouponId])
 }
@@ -541,7 +539,7 @@ model TemporaryLectureCouponTarget {
   id               Int              @id @default(autoincrement())
   lectureCouponId  Int?
   lectureId        Int
-  lectureCoupon    LectureCoupon?   @relation(fields: [lectureCouponId], references: [id])
+  lectureCoupon    LectureCoupon?   @relation(fields: [lectureCouponId], references: [id], onDelete: Cascade)
   temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
@@ -626,8 +624,6 @@ model PaymentCouponUsage {
   stackableCouponDiscountPrice    Int?
   stackableCouponMaxDiscountPrice Int?
   payment                         Payment        @relation(fields: [paymentId], references: [id])
-  coupon                          LectureCoupon? @relation("Coupon", fields: [couponId], references: [id])
-  stackableCoupon                 LectureCoupon? @relation("StackableCoupon", fields: [stackableCouponId], references: [id])
 }
 
 model PaymentProductType {

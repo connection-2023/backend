@@ -15,7 +15,7 @@ export function ApiCreateReport() {
         '유저, 강사, 강의 리뷰, 강사 리뷰 신고 가능 / 신고 type은 schema 확인',
     }),
     ApiBearerAuth(),
-    StatusResponseDto.swaggerBuilder(HttpStatus.CREATED),
+    StatusResponseDto.swaggerBuilder(HttpStatus.CREATED, 'createReport'),
     ApiUnauthorizedResponse(
       SwaggerApiResponse.exception([
         {

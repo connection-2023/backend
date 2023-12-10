@@ -634,4 +634,19 @@ export class CouponService {
       couponTargetInputData,
     );
   }
+
+  async deleteLectureCoupon(
+    lecturerId: number,
+    couponId: number,
+  ): Promise<void> {
+    const coupon: LectureCoupon = await this.couponRepository.getLecturerCoupon(
+      lecturerId,
+      couponId,
+    );
+    if (!coupon) {
+      throw new NotFoundException(`쿠폰이 존재하지 않습니다.`);
+    }
+
+    await this.couponRepository.softDeleteLectureCoupon(couponId);
+  }
 }
