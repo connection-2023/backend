@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LectureReview, LikedLectureReview } from '@prisma/client';
+import { LectureReview, LikedLectureReview, Reservation } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
@@ -134,6 +134,22 @@ export class LectureReviewRepository {
         _count: { select: { likedLectureReview: true } },
       },
       orderBy,
+    });
+  }
+
+  async readManyReservationThatCanBeCreated(
+    userId: number,
+  ): Promise<Reservation[]> {
+    return await this.prismaService.reservation.findMany({
+      where: {
+        userId: userId,
+        lectureReview: null,
+      },
+      include: {
+        lectureSchedule: {
+          select: { lecture: { select: { title: true } }, startDateTime: true },
+        },
+      },
     });
   }
 }

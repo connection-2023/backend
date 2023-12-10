@@ -22,6 +22,7 @@ import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
 import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
+import { ApiReadManyReservationThatCanBeCreated } from '../swagger-decorators/read-many-reservation-that-can-be-created-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -119,5 +120,19 @@ export class LectureReviewController {
     );
 
     return { review };
+  }
+
+  @ApiReadManyReservationThatCanBeCreated()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('reservations')
+  async readManyReservationThatCanBeCreated(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const reservation =
+      await this.lectureReviewService.readManyReservationThatCanBeCreated(
+        authorizedData.user.id,
+      );
+
+    return { reservation };
   }
 }
