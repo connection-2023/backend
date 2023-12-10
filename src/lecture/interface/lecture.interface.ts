@@ -1,3 +1,5 @@
+import { Users } from '@prisma/client';
+
 interface LectureInputData {
   isGroup: boolean;
   startDate: Date;
@@ -136,6 +138,19 @@ interface LectureScheduleResponseData {
   _count: { lectureSchedule: number };
 }
 
+interface LectureScheduleParticipantResponseData {
+  reservation: {
+    user: {
+      nickname: string;
+      userProfileImage: {
+        id: number;
+        userId: number;
+        imageUrl: string;
+      };
+    };
+  }[];
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -153,4 +168,5 @@ export {
   LikedLectureReviewWhereData,
   EnrollLectureReservationResponseData,
   LectureScheduleResponseData,
+  LectureScheduleParticipantResponseData,
 };

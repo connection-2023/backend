@@ -35,6 +35,7 @@ import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-
 import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
 import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
 import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
+import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -173,9 +174,29 @@ export class LectureController {
     return { lectureProgress };
   }
 
-  // @ApiOperation({summary:'강의 전체 수강생 조회'})
-  // @Get(':lectureId/participants')
-  // async readManyParticipantsWithLectureId(@Param('lectureId',ParseIntPipe) lectureId:number){
-  //   const participant = await
-  // }
+  @ApiOperation({ summary: '강의 전체 수강생 조회' })
+  @Get(':lectureId/participants')
+  async readManyParticipantWithLectureId(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const participant =
+      await this.lectureService.readManyParticipantWithLectureId(lectureId);
+
+    return { participant };
+  }
+
+  @ApiReadManyParticipantWithScheduleId()
+  @Get(':lectureId/schedules/:scheduleId/participants')
+  async readManyParticipantWithScheduleId(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+    @Param('scheduleId', ParseIntPipe) scheduleId: number,
+  ) {
+    const participant =
+      await this.lectureService.readManyParticipantWithScheduleId(
+        lectureId,
+        scheduleId,
+      );
+
+    return { participant };
+  }
 }
