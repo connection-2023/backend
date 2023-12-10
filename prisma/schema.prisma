@@ -45,6 +45,7 @@ model Users {
   reportedUserReports      UserReport[]               @relation("ReportedUser")
   targetUserReports        UserReport[]               @relation("TargetUser")
   targetLecturerReports    LecturerReport[]
+  lectureLearner           LectureLearner[]
 }
 
 model UserProfileImage {
@@ -116,6 +117,7 @@ model Lecturer {
   userReport               UserReport[]
   reportedLecturerReports  LecturerReport[]           @relation("ReportedLecturer")
   targetLecturerReports    LecturerReport[]           @relation("TargetLecturer")
+  lectureLearner           LectureLearner[]
 }
 
 model Lecture {
@@ -347,7 +349,7 @@ model LectureCouponTarget {
   id              Int           @id @default(autoincrement())
   lectureCouponId Int
   lectureId       Int
-  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id],  onDelete: Cascade)
+  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id], onDelete: Cascade)
   lecture         Lecture       @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   @@unique([lectureId, lectureCouponId])
@@ -611,8 +613,8 @@ model PaymentStatus {
 
 //쿠폰 사용 내역 쿠폰 수정 대비
 model PaymentCouponUsage {
-  id                              Int            @id @default(autoincrement())
-  paymentId                       Int            @unique
+  id                              Int     @id @default(autoincrement())
+  paymentId                       Int     @unique
   couponId                        Int?
   couponTitle                     String?
   couponPercentage                Int?
@@ -623,7 +625,7 @@ model PaymentCouponUsage {
   stackableCouponPercentage       Int?
   stackableCouponDiscountPrice    Int?
   stackableCouponMaxDiscountPrice Int?
-  payment                         Payment        @relation(fields: [paymentId], references: [id])
+  payment                         Payment @relation(fields: [paymentId], references: [id])
 }
 
 model PaymentProductType {
@@ -971,3 +973,14 @@ model Admin {
 
 //   admin      Admin     @relation(fields: [userId], references: [id], onDelete: Cascade)
 // }
+
+model LectureLearner {
+  id              Int       @id @default(autoincrement())
+  userId          Int
+  lecturerId      Int
+  enrollmentCount Int       @default(0)
+  memo            String?
+  
+  user            Users?    @relation(fields: [userId], references: [id])
+  lecturer        Lecturer? @relation(fields: [lecturerId], references: [id])
+}
