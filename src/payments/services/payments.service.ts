@@ -100,6 +100,7 @@ export class PaymentsService implements OnModuleInit {
       lectureId,
       lectureSchedules,
     );
+
     await this.checkUserPaymentValidity(
       userId,
       createLecturePaymentDto.orderId,
@@ -159,6 +160,12 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             createLecturePaymentDto,
+          ),
+          this.trxCreateOrUpdateLectureLearner(
+            transaction,
+            userId,
+            lecturerId,
+            createLecturePaymentDto.lectureSchedules.length,
           ),
         ]);
       },
@@ -1076,7 +1083,7 @@ export class PaymentsService implements OnModuleInit {
     paymentId: number,
     { passId, lectureSchedules }: CreateLecturePaymentWithPassDto,
     userPass: ISelectedUserPass,
-  ) {
+  ): Promise<void> {
     const totalParticipants: number = lectureSchedules.reduce(
       (total, item) => total + item.participants,
       0,
@@ -1105,6 +1112,20 @@ export class PaymentsService implements OnModuleInit {
       startAt,
       endAt,
       totalParticipants,
+    );
+  }
+
+  private async trxCreateOrUpdateLectureLearner(
+    transaction: PrismaTransaction,
+    userId: number,
+    lecturerId: number,
+    enrollmentCount: number,
+  ): Promise<void> {
+    await this.paymentsRepository.trxUpsertLectureLearner(
+      transaction,
+      userId,
+      lecturerId,
+      enrollmentCount,
     );
   }
 }
