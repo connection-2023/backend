@@ -562,6 +562,7 @@ export class PaymentsService implements OnModuleInit {
           transaction,
           userId,
           couponIds,
+          true,
         ),
       ]);
     }
@@ -819,7 +820,13 @@ export class PaymentsService implements OnModuleInit {
 
     return receipt;
   }
-
+  /**
+   *
+   * @todo 쿠폰 취소
+   *  예약 취소
+   *  수강생 취소
+   *
+   */
   async cancelPayment(orderId: string): Promise<void> {
     const paymentInfo = await this.getPaymentInfo(orderId);
 
@@ -833,16 +840,47 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async cancelReservationTransaction(paymentInfo) {
-    const { id: paymentId, reservation: reservations } = paymentInfo;
+    const {
+      id: paymentId,
+      reservation: reservations,
+      userId,
+      lecturerId,
+      paymentCouponUsage,
+    } = paymentInfo;
+    const couponIds: number[] = [];
+
+    if (paymentCouponUsage) {
+      paymentCouponUsage.couponId !== null &&
+        couponIds.push(paymentCouponUsage.couponId);
+      paymentCouponUsage.stackableCouponId !== null &&
+        couponIds.push(paymentCouponUsage.stackableCouponId);
+    }
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        await Promise.all([]);
         for (const reservation of reservations) {
           await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
             transaction,
             reservation,
           );
         }
+        await this.paymentsRepository.trxDecrementLectureLearner(
+          transaction,
+          userId,
+          lecturerId,
+          reservations.length,
+        );
+
+        if (couponIds.length) {
+          await this.paymentsRepository.trxUpdateUserCouponUsage(
+            transaction,
+            userId,
+            couponIds,
+            false,
+          );
+        }
+
         await this.paymentsRepository.trxUpdateLecturePaymentStatus(
           transaction,
           paymentId,
