@@ -1,18 +1,17 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ReadManyEnrollLectureQueryDto } from './read-many-enroll-lecture-query.dto';
+import { ReadManyLecturerMyReviewQueryDto } from './read-many-lecturer-my-review-query.dto';
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { LecturerMyReviewType } from '@src/common/enum/enum';
+import { LecturerReviewType } from '@src/common/enum/enum';
 
-export class ReadManyLecturerMyReviewQueryDto extends OmitType(
-  ReadManyEnrollLectureQueryDto,
-  ['enrollLectureType'] as const,
+export class ReadManyLecturerReviewQueryDto extends OmitType(
+  ReadManyLecturerMyReviewQueryDto,
+  ['lecturerMyReviewType', 'lectureId'] as const,
 ) {
   @ApiProperty({
-    example: '전체',
-    description: '전체,진행중인 클래스, 종료된 클래스',
-    required: true,
+    example: '최신순',
+    description: '최신순, 좋아요순, 평점 높은순, 평점 낮은순',
   })
   @IsNotEmpty()
-  @IsEnum(LecturerMyReviewType, { each: true })
-  lecturerMyReviewType: LecturerMyReviewType;
+  @IsEnum(LecturerReviewType, { each: true })
+  lecturerReviewType: LecturerReviewType;
 }

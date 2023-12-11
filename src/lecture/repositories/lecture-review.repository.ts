@@ -167,6 +167,7 @@ export class LectureReviewRepository {
 
   async readManyMyReviewWithLecturerId(
     where,
+    orderBy,
     take: number,
     cursor?: ICursor,
     skip?: number,
@@ -194,7 +195,7 @@ export class LectureReviewRepository {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
     });
   }
 
