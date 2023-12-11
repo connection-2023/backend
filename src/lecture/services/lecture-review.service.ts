@@ -8,8 +8,8 @@ import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
-import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
-import { ReadManyLecturerReviewQueryDto } from '../dtos/read-may-lecturer-review-query.dto';
+import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';
+import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -232,6 +232,8 @@ export class LectureReviewService {
       firstItemId,
       lastItemId,
       lecturerMyReviewType,
+      orderBy,
+      lectureId,
     }: ReadManyLecturerMyReviewQueryDto,
   ) {
     const existMyReviewWithLecturerId =
@@ -252,6 +254,29 @@ export class LectureReviewService {
     } else if (lecturerMyReviewType === '종료된 클래스') {
       where.lecture['isActive'] = false;
     }
+
+    if (lectureId) {
+      where['lectureId'] = lectureId;
+    }
+
+    const order = {};
+
+    if (orderBy === '최신순') {
+      order['reservation'] = {
+        lectureSchedule: {
+          startDateTime: 'desc',
+        },
+      };
+    } else if (orderBy === '좋아요순') {
+      order['likedLectureReview'] = {
+        _count: 'desc',
+      };
+    } else if (orderBy === '평점 높은순') {
+      order['stars'] = 'desc';
+    } else if (orderBy === '평점 낮은순') {
+      order['stars'] = 'asc';
+    }
+
     const isPagination = currentPage && targetPage;
 
     if (isPagination) {
@@ -265,6 +290,7 @@ export class LectureReviewService {
 
     return await this.lectureReviewRepository.readManyMyReviewWithLecturerId(
       where,
+      order,
       take,
       cursor,
       skip,

@@ -141,10 +141,9 @@ interface LectureScheduleResponseData {
 interface LectureScheduleParticipantResponseData {
   reservation: {
     user: {
+      id: number;
       nickname: string;
       userProfileImage: {
-        id: number;
-        userId: number;
         imageUrl: string;
       };
     };

@@ -432,7 +432,13 @@ export class LectureRepository {
       select: {
         reservation: {
           select: {
-            user: { select: { nickname: true, userProfileImage: true } },
+            user: {
+              select: {
+                id: true,
+                nickname: true,
+                userProfileImage: { select: { imageUrl: true } },
+              },
+            },
           },
         },
       },
