@@ -23,8 +23,10 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
 import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
 import { ApiReadManyReservationThatCanBeCreated } from '../swagger-decorators/read-many-reservation-that-can-be-created-decorator';
-import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
+import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { ApiReadManyLecturerMyReview } from '../swagger-decorators/read-many-lecturer-my-reivew-decorator';
+import { ReadManyLecturerReviewQueryDto } from '../dtos/read-may-lecturer-review-query.dto';
+import { ApiReadManyLecturerReviewWithUserId } from '../swagger-decorators/read-many-lecturer-review-with-user-id-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -143,7 +145,7 @@ export class LectureReviewController {
   @Get('my-reviews/lecturers')
   async readManyMyReviewWithLecturerId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() query: ReadManyLecturerReviewQueryDto,
+    @Query() query: ReadManyLecturerMyReviewQueryDto,
   ) {
     const review =
       await this.lectureReviewService.readManyMyReviewWithLecturerId(
@@ -152,5 +154,20 @@ export class LectureReviewController {
       );
 
     return { review };
+  }
+
+  @ApiReadManyLecturerReviewWithUserId()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('lecturers/:lecturerId/users')
+  async readManyLecturerReviewWithUserId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLecturerReviewQueryDto,
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+  ) {
+    return await this.lectureReviewService.readManyLecturerReviewWithUserId(
+      lecturerId,
+      authorizedData.user.id,
+      query,
+    );
   }
 }

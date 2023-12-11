@@ -47,3 +47,10 @@ export enum LecturerMyReviewType {
   '진행중인 클래스' = '진행중인 클래스',
   '종료된 클래스' = '종료된 클래스',
 }
+
+export enum LecturerReviewType {
+  '최신순' = '최신순',
+  '좋아요순' = '좋아요순',
+  '평점 높은순' = '평점 높은순',
+  '평점 낮은순' = '평점 낮은순',
+}

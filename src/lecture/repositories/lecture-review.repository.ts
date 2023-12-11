@@ -9,6 +9,7 @@ import {
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
 import { LectureReviewResponseDto } from '../dtos/read-many-lecture-review-response.dto';
+import { title } from 'process';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -177,10 +178,60 @@ export class LectureReviewRepository {
       cursor,
       include: {
         reservation: {
-          select: { lectureSchedule: { select: { startDateTime: true } } },
+          select: {
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: { select: { title: true } },
+              },
+            },
+          },
+        },
+        users: {
+          select: {
+            nickname: true,
+            userProfileImage: { select: { imageUrl: true } },
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async readManyLecturerReviewWithUserId(
+    lecturerId: number,
+    userId: number,
+    take: number,
+    orderBy,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { lecture: { lecturerId } },
+      take,
+      skip,
+      cursor,
+      include: {
+        reservation: {
+          select: {
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: { select: { title: true } },
+              },
+            },
+          },
+        },
+        users: {
+          select: {
+            nickname: true,
+            userProfileImage: { select: { imageUrl: true } },
+          },
+        },
+        likedLectureReview: { where: { userId } },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
     });
   }
 }
