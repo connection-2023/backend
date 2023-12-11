@@ -213,6 +213,7 @@ export class CouponRepository {
           lectureCoupon: {
             endAt,
             lectureCouponTarget,
+            isDisabled: false,
           },
           isUsed,
         },
@@ -268,6 +269,7 @@ export class CouponRepository {
           lectureCoupon: {
             endAt,
             lectureCouponTarget,
+            isDisabled: false,
           },
           isUsed,
         },
@@ -369,6 +371,7 @@ export class CouponRepository {
       );
     }
   }
+
   async trxDeleteLectureCouponTarget(
     transaction: PrismaTransaction,
     couponId: number,
@@ -376,6 +379,37 @@ export class CouponRepository {
     try {
       await transaction.lectureCouponTarget.deleteMany({
         where: { lectureCouponId: couponId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 삭제 실패: ${error}`,
+        'PrismaDeleteFailed',
+      );
+    }
+  }
+
+  async softDeleteLectureCoupon(
+    couponId: number,
+    currentDate: Date,
+    isDisabled: boolean,
+  ): Promise<void> {
+    try {
+      await this.prismaService.lectureCoupon.update({
+        where: { id: couponId },
+        data: { deletedAt: currentDate, isDisabled },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 쿠폰 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
+  }
+
+  async deleteUserCoupon(userId: number, couponId: number): Promise<void> {
+    try {
+      await this.prismaService.userCoupon.deleteMany({
+        where: { userId, lectureCouponId: couponId },
       });
     } catch (error) {
       throw new InternalServerErrorException(

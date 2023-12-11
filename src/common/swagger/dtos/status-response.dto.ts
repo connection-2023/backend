@@ -10,7 +10,10 @@ import {
 export class StatusResponseDto {
   [key: string]: unknown;
 
-  static swaggerBuilder(status: Exclude<HttpStatus, ErrorHttpStatusCode>) {
+  static swaggerBuilder(
+    status: Exclude<HttpStatus, ErrorHttpStatusCode>,
+    key: string,
+  ) {
     class Temp extends this {
       @ApiProperty({
         name: 'status',
@@ -21,7 +24,7 @@ export class StatusResponseDto {
     }
 
     Object.defineProperty(Temp, 'name', {
-      value: `StatusDto`,
+      value: `${key[0].toUpperCase()}${key.slice(1)}StatusDto`,
     });
 
     return applyDecorators(ApiResponse({ status, type: Temp }));

@@ -634,4 +634,32 @@ export class CouponService {
       couponTargetInputData,
     );
   }
+
+  async deleteLectureCoupon(
+    lecturerId: number,
+    couponId: number,
+  ): Promise<void> {
+    const currentDate = new Date();
+
+    const coupon: LectureCoupon = await this.couponRepository.getLecturerCoupon(
+      lecturerId,
+      couponId,
+    );
+    if (!coupon) {
+      throw new NotFoundException(`쿠폰이 존재하지 않습니다.`);
+    }
+
+    //쿠폰이 활성화 상태에서 삭제하면 유저에게도 비활성화 되어야기 위한 설정
+    const isDisabled = coupon.endAt > currentDate ? true : false;
+
+    await this.couponRepository.softDeleteLectureCoupon(
+      couponId,
+      currentDate,
+      isDisabled,
+    );
+  }
+
+  async deleteUserCoupon(userId, couponId): Promise<void> {
+    await this.couponRepository.deleteUserCoupon(userId, couponId);
+  }
 }
