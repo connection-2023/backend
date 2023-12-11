@@ -3,7 +3,7 @@ import { ReadManyEnrollLectureQueryDto } from './read-many-enroll-lecture-query.
 import { IsEnum, IsNotEmpty } from 'class-validator';
 import { LecturerMyReviewType } from '@src/common/enum/enum';
 
-export class ReadManyLecturerReviewQueryDto extends OmitType(
+export class ReadManyLecturerMyReviewQueryDto extends OmitType(
   ReadManyEnrollLectureQueryDto,
   ['enrollLectureType'] as const,
 ) {
