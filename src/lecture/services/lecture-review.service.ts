@@ -8,11 +8,12 @@ import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
+import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 
 @Injectable()
 export class LectureReviewService {
   constructor(
-    private readonly lectureReviewRespository: LectureReviewRepository,
+    private readonly lectureReviewRepository: LectureReviewRepository,
     private readonly prismaService: PrismaService,
   ) {}
 
@@ -33,12 +34,12 @@ export class LectureReviewService {
         }
 
         const createdLectureReview =
-          await this.lectureReviewRespository.trxCreateLectureReview(
+          await this.lectureReviewRepository.trxCreateLectureReview(
             transaction,
             userId,
             createLectureReviewDto,
           );
-        await this.lectureReviewRespository.trxIncreaseLectureReviewCount(
+        await this.lectureReviewRepository.trxIncreaseLectureReviewCount(
           transaction,
           lectureId,
         );
@@ -72,7 +73,7 @@ export class LectureReviewService {
     }
 
     const readedReviews =
-      await this.lectureReviewRespository.readManyLectureReviewByLectureWithUserId(
+      await this.lectureReviewRepository.readManyLectureReviewByLectureWithUserId(
         lectureId,
         userId,
         order,
@@ -129,7 +130,7 @@ export class LectureReviewService {
     }
 
     const readedReviews =
-      await this.lectureReviewRespository.readManyLectureReviewByLecture(
+      await this.lectureReviewRepository.readManyLectureReviewByLecture(
         lectureId,
         order,
       );
@@ -157,7 +158,7 @@ export class LectureReviewService {
     lectureReviewId: number,
     review: UpdateLectureReviewDto,
   ) {
-    return await this.lectureReviewRespository.updateLectureReview(
+    return await this.lectureReviewRepository.updateLectureReview(
       lectureReviewId,
       review,
     );
@@ -167,17 +168,17 @@ export class LectureReviewService {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const lectureId =
-          await this.lectureReviewRespository.trxGetLectureIdByReview(
+          await this.lectureReviewRepository.trxGetLectureIdByReview(
             transaction,
             lectureReviewId,
           );
         const deletedLectureReview =
-          await this.lectureReviewRespository.trxDeleteLectureReview(
+          await this.lectureReviewRepository.trxDeleteLectureReview(
             transaction,
             lectureReviewId,
           );
 
-        await this.lectureReviewRespository.trxDecreaseLectureReviewCount(
+        await this.lectureReviewRepository.trxDecreaseLectureReviewCount(
           transaction,
           lectureId,
         );
@@ -187,7 +188,10 @@ export class LectureReviewService {
     );
   }
 
-  async readManyMyReview(userId: number, query: ReadManyLectureReviewQueryDto) {
+  async readManyMyReviewWithUserId(
+    userId: number,
+    query: ReadManyLectureReviewQueryDto,
+  ) {
     const order = {};
     const { orderBy } = query;
     if (orderBy === '최신순') {
@@ -206,12 +210,78 @@ export class LectureReviewService {
       order['stars'] = 'asc';
     }
 
-    return await this.lectureReviewRespository.readManyMyReview(userId, order);
+    return await this.lectureReviewRepository.readManyMyReviewWithUserId(
+      userId,
+      order,
+    );
   }
 
   async readManyReservationThatCanBeCreated(userId: number) {
-    return await this.lectureReviewRespository.readManyReservationThatCanBeCreated(
+    return await this.lectureReviewRepository.readManyReservationThatCanBeCreated(
       userId,
     );
+  }
+
+  async readManyMyReviewWithLecturerId(
+    lecturerId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      lecturerMyReviewType,
+    }: ReadManyLecturerReviewQueryDto,
+  ) {
+    const existMyReviewWithLecturerId =
+      await this.prismaService.lectureReview.findFirst({
+        where: { lecture: { lecturerId } },
+      });
+
+    if (!existMyReviewWithLecturerId) {
+      return;
+    }
+
+    let cursor;
+    let skip;
+    const where = { lecture: { lecturerId } };
+
+    if (lecturerMyReviewType === '진행중인 클래스') {
+      where.lecture['isActive'] = true;
+    } else if (lecturerMyReviewType === '종료된 클래스') {
+      where.lecture['isActive'] = false;
+    }
+    const isPagination = currentPage && targetPage;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip, take } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+    }
+
+    const enrollLecture =
+      await this.lectureReviewRepository.readManyMyReviewWithLecturerId(
+        where,
+        take,
+        cursor,
+        skip,
+      );
+
+    return enrollLecture;
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor = { id: itemId };
+
+    const calculateSkipValue = (pageDiff: number) => {
+      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    };
+
+    const skip = calculateSkipValue(pageDiff);
+
+    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
   }
 }

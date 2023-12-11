@@ -3,7 +3,11 @@ import { LectureReview, LikedLectureReview, Reservation } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
-import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  ICursor,
+  Id,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 import { LectureReviewResponseDto } from '../dtos/read-many-lecture-review-response.dto';
 
 @Injectable()
@@ -123,7 +127,10 @@ export class LectureReviewRepository {
     });
   }
 
-  async readManyMyReview(userId: number, orderBy): Promise<LectureReview[]> {
+  async readManyMyReviewWithUserId(
+    userId: number,
+    orderBy,
+  ): Promise<LectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
       where: { userId },
       include: {
@@ -153,6 +160,27 @@ export class LectureReviewRepository {
           },
         },
       },
+      orderBy: { lectureSchedule: { startDateTime: 'desc' } },
+    });
+  }
+
+  async readManyMyReviewWithLecturerId(
+    where,
+    take: number,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where,
+      take,
+      skip,
+      cursor,
+      include: {
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }
