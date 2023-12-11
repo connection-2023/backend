@@ -5,7 +5,7 @@ import { LecturerReviewType } from '@src/common/enum/enum';
 
 export class ReadManyLecturerReviewQueryDto extends OmitType(
   ReadManyLecturerMyReviewQueryDto,
-  ['lecturerMyReviewType', 'lectureId'] as const,
+  ['lecturerMyReviewType', 'lectureId', 'orderBy'] as const,
 ) {
   @ApiProperty({
     example: '최신순',
