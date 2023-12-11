@@ -41,3 +41,9 @@ export enum UserType {
   USER = 'user',
   LECTURER = 'lecturer',
 }
+
+export enum LecturerMyReviewType {
+  '전체' = '전체',
+  '진행중인 클래스' = '진행중인 클래스',
+  '종료된 클래스' = '종료된 클래스',
+}

@@ -23,6 +23,8 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
 import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
 import { ApiReadManyReservationThatCanBeCreated } from '../swagger-decorators/read-many-reservation-that-can-be-created-decorator';
+import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
+import { ApiReadManyLecturerMyReview } from '../swagger-decorators/read-many-lecturer-my-reivew-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -63,7 +65,7 @@ export class LectureReviewController {
 
   @ApiReadManyLectureReview()
   @UseGuards(UserAccessTokenGuard)
-  @Get(':lectureId/users')
+  @Get('lectures/:lectureId/users')
   async readManyLectureReviewWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureReviewQueryDto,
@@ -81,7 +83,7 @@ export class LectureReviewController {
   }
 
   @ApiReadManyLectureReviewNonMember()
-  @Get(':lectureId/non-members')
+  @Get('lectures/:lectureId/non-members')
   async readManyLectureReviewWithNonMember(
     @Query() query: ReadManyLectureReviewQueryDto,
     @Param('lectureId', ParseIntPipe) lectureId: number,
@@ -109,12 +111,12 @@ export class LectureReviewController {
 
   @ApiReadManyLectureMyReview()
   @UseGuards(UserAccessTokenGuard)
-  @Get('my-reviews')
-  async readManyMyReview(
+  @Get('my-reviews/users')
+  async readManyMyReviewWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureReviewQueryDto,
   ) {
-    const review = await this.lectureReviewService.readManyMyReview(
+    const review = await this.lectureReviewService.readManyMyReviewWithUserId(
       authorizedData.user.id,
       query,
     );
@@ -134,5 +136,21 @@ export class LectureReviewController {
       );
 
     return { reservation };
+  }
+
+  @ApiReadManyLecturerMyReview()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('my-reviews/lecturers')
+  async readManyMyReviewWithLecturerId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLecturerReviewQueryDto,
+  ) {
+    const review =
+      await this.lectureReviewService.readManyMyReviewWithLecturerId(
+        authorizedData.lecturer.id,
+        query,
+      );
+
+    return { review };
   }
 }
