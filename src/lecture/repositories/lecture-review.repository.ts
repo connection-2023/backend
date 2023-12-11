@@ -147,7 +147,10 @@ export class LectureReviewRepository {
       },
       include: {
         lectureSchedule: {
-          select: { lecture: { select: { title: true } }, startDateTime: true },
+          select: {
+            lecture: { select: { id: true, title: true } },
+            startDateTime: true,
+          },
         },
       },
     });
