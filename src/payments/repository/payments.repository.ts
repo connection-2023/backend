@@ -273,11 +273,12 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     couponIds: number[],
+    isUsed: boolean,
   ) {
     try {
       await transaction.userCoupon.updateMany({
         where: { userId, lectureCouponId: { in: couponIds } },
-        data: { isUsed: true },
+        data: { isUsed },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -296,6 +297,8 @@ export class PaymentsRepository {
           orderId: true,
           originalPrice: true,
           finalPrice: true,
+          lecturerId: true,
+          userId: true,
           paymentProductType: { select: { id: true, name: true } },
           paymentStatus: {
             select: {
@@ -310,6 +313,7 @@ export class PaymentsRepository {
               lectureScheduleId: true,
             },
           },
+          paymentCouponUsage: true,
         },
       });
     } catch (error) {
@@ -1024,5 +1028,24 @@ export class PaymentsRepository {
         'PrismaUpsertFailed',
       );
     }
+  }
+
+  async trxUpdateReservationEnabled(transaction: PrismaTransaction, paymentId) {
+    await transaction.reservation.updateMany({
+      where: { paymentId },
+      data: { isEnabled: true },
+    });
+  }
+
+  async trxDecrementLectureLearner(
+    transaction: PrismaTransaction,
+    userId,
+    lecturerId,
+    enrollmentCount,
+  ) {
+    await transaction.lectureLearner.update({
+      where: { userId_lecturerId: { userId, lecturerId } },
+      data: { enrollmentCount: { decrement: enrollmentCount } },
+    });
   }
 }
