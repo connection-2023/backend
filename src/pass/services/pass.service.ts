@@ -202,8 +202,14 @@ export class PassService {
     );
   }
 
-  async getLecturePasses(lectureId: number): Promise<LecturePassDto[]> {
-    return (await this.passRepository.getLecturePasses(lectureId)).map(
+  async getLecturePassList(lectureId: number): Promise<LecturePassDto[]> {
+    return (await this.passRepository.getLecturePassList(lectureId)).map(
+      (lecturePass) => new LecturePassDto(lecturePass),
+    );
+  }
+
+  async getLecturerPassList(lecturerId: number): Promise<LecturePassDto[]> {
+    return (await this.passRepository.getLecturerPassList(lecturerId)).map(
       (lecturePass) => new LecturePassDto(lecturePass),
     );
   }

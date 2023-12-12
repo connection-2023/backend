@@ -118,10 +118,24 @@ export class PassRepository {
     }
   }
 
-  async getLecturePasses(lectureId): Promise<LecturePass[]> {
+  async getLecturePassList(lectureId): Promise<LecturePass[]> {
     try {
       return await this.prismaService.lecturePass.findMany({
         where: { lecturePassTarget: { some: { lectureId } } },
+        include: { lecturePassTarget: { include: { lecture: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 패스권 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getLecturerPassList(lecturerId): Promise<LecturePass[]> {
+    try {
+      return await this.prismaService.lecturePass.findMany({
+        where: { lecturerId },
         include: { lecturePassTarget: { include: { lecture: true } } },
       });
     } catch (error) {
