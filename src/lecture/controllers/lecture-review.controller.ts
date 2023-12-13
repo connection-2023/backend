@@ -27,6 +27,7 @@ import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-
 import { ApiReadManyLecturerMyReview } from '../swagger-decorators/read-many-lecturer-my-reivew-decorator';
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { ApiReadManyLecturerReviewWithUserId } from '../swagger-decorators/read-many-lecturer-review-with-user-id-decorator';
+import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-reivew-decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -167,6 +168,18 @@ export class LectureReviewController {
     return await this.lectureReviewService.readManyLecturerReviewWithUserId(
       lecturerId,
       authorizedData.user.id,
+      query,
+    );
+  }
+
+  @ApiReadManyLecturerReview()
+  @Get('lecturers/:lecturerId/non-members')
+  async readManyLecturerReview(
+    @Query() query: ReadManyLecturerReviewQueryDto,
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+  ) {
+    return await this.lectureReviewService.readManyLecturerReview(
+      lecturerId,
       query,
     );
   }

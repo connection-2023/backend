@@ -364,6 +364,70 @@ export class LectureReviewService {
     return { count, review };
   }
 
+  async readManyLecturerReview(
+    lecturerId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      lecturerReviewType,
+    }: ReadManyLecturerReviewQueryDto,
+  ) {
+    const existReview = await this.prismaService.lectureReview.findFirst({
+      where: { lecture: { lecturerId } },
+    });
+
+    if (!existReview) {
+      return;
+    }
+
+    let cursor;
+    let skip;
+    const orderBy = {};
+
+    if (lecturerReviewType === '최신순') {
+      orderBy['reservation'] = {
+        lectureSchedule: {
+          startDateTime: 'desc',
+        },
+      };
+    } else if (lecturerReviewType === '좋아요순') {
+      orderBy['likedLectureReview'] = {
+        _count: 'desc',
+      };
+    } else if (lecturerReviewType === '평점 높은순') {
+      orderBy['stars'] = 'desc';
+    } else if (lecturerReviewType === '평점 낮은순') {
+      orderBy['stars'] = 'asc';
+    }
+
+    const isPagination = currentPage && targetPage;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip, take } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+    }
+
+    const reviews = await this.lectureReviewRepository.readManyLecturerReview(
+      lecturerId,
+      take,
+      orderBy,
+      cursor,
+      skip,
+    );
+    const count = await this.prismaService.lectureReview.count({
+      where: { lecture: { lecturerId } },
+    });
+
+    return { count, reviews };
+  }
+
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
 
