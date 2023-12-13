@@ -235,4 +235,39 @@ export class LectureReviewRepository {
       orderBy,
     });
   }
+
+  async readManyLecturerReview(
+    lecturerId: number,
+    take: number,
+    orderBy,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { lecture: { lecturerId } },
+      take,
+      skip,
+      cursor,
+      include: {
+        reservation: {
+          select: {
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: { select: { title: true } },
+              },
+            },
+          },
+        },
+        users: {
+          select: {
+            nickname: true,
+            userProfileImage: { select: { imageUrl: true } },
+          },
+        },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
+    });
+  }
 }
