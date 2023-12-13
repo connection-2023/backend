@@ -25,6 +25,10 @@ export class LecturerDetailProfileDto
     description: '이메일',
   })
   email: string;
+
+  @ApiProperty({
+    description: '전화번호',
+  })
   phoneNumber: string;
 
   @ApiProperty({
