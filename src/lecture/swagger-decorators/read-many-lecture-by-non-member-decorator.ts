@@ -11,7 +11,6 @@ export function ApiReadManyLectureByNonMemeber() {
     ApiOperation({
       summary: '비회원용 강사 id로 강의 조회',
     }),
-    ApiBearerAuth(),
     ApiCreatedResponse(
       SwaggerApiResponse.success('강의 조회 성공', {
         statusCode: 200,
