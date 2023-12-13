@@ -484,10 +484,11 @@ export class LectureReviewService {
       transaction,
       lectureId,
     );
-    await transaction.lecture.update({
-      where: { id: lectureId },
-      data: { stars: roundLectureStars },
-    });
+    await this.lectureReviewRepository.trxIncreaseLectureStars(
+      transaction,
+      lectureId,
+      roundLectureStars,
+    );
   }
 
   private async increaseLecturerStars(
@@ -508,12 +509,13 @@ export class LectureReviewService {
 
     await this.lectureReviewRepository.trxIncreaseLecturerReviewCount(
       transaction,
-      lecturer.id,
+      lecturerId,
     );
-    await transaction.lecturer.update({
-      where: { id: lecturerId },
-      data: { stars: roundLecturerStars },
-    });
+    await this.lectureReviewRepository.trxIncreaseLecturerStars(
+      transaction,
+      lecturerId,
+      roundLecturerStars,
+    );
   }
 
   private async decreaseLectureStars(
@@ -537,10 +539,11 @@ export class LectureReviewService {
       transaction,
       lectureId,
     );
-    await transaction.lecture.update({
-      where: { id: lectureId },
-      data: { stars: roundLectureStars },
-    });
+    await this.lectureReviewRepository.trxDecreaseLectureStars(
+      transaction,
+      lectureId,
+      roundLectureStars,
+    );
   }
 
   private async decreaseLecturerStars(
@@ -561,11 +564,12 @@ export class LectureReviewService {
 
     await this.lectureReviewRepository.trxDecreaseLecturerReviewCount(
       transaction,
-      lecturer.id,
+      lecturerId,
     );
-    await transaction.lecturer.update({
-      where: { id: lecturerId },
-      data: { stars: roundLecturerStars },
-    });
+    await this.lectureReviewRepository.trxDecreaseLecturerStars(
+      transaction,
+      lecturerId,
+      roundLecturerStars,
+    );
   }
 }

@@ -25,6 +25,28 @@ export class LectureReviewRepository {
     });
   }
 
+  async trxIncreaseLectureStars(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecture.update({
+      where: { id: lectureId },
+      data: { stars },
+    });
+  }
+
+  async trxIncreaseLecturerStars(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { stars },
+    });
+  }
+
   async trxIncreaseLectureReviewCount(
     transaction: PrismaTransaction,
     lectureId: number,
@@ -42,6 +64,28 @@ export class LectureReviewRepository {
     await transaction.lecturer.update({
       where: { id: lecturerId },
       data: { reviewCount: { increment: 1 } },
+    });
+  }
+
+  async trxDecreaseLectureStars(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecture.update({
+      where: { id: lectureId },
+      data: { stars },
+    });
+  }
+
+  async trxDecreaseLecturerStars(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { stars },
     });
   }
 
