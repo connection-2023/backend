@@ -35,12 +35,32 @@ export class LectureReviewRepository {
     });
   }
 
+  async trxIncreaseLecturerReviewCount(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { reviewCount: { increment: 1 } },
+    });
+  }
+
   async trxDecreaseLectureReviewCount(
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {
     await transaction.lecture.update({
       where: { id: lectureId },
+      data: { reviewCount: { decrement: 1 } },
+    });
+  }
+
+  async trxDecreaseLecturerReviewCount(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
       data: { reviewCount: { decrement: 1 } },
     });
   }

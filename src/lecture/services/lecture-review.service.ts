@@ -37,28 +37,23 @@ export class LectureReviewService {
         const lecture = await transaction.lecture.findFirst({
           where: { id: lectureId },
         });
-        const prevReviewCount = lecture.reviewCount;
-        const prevStars = lecture.stars;
-        const nextReviewCount = prevReviewCount + 1;
-        const nextStars =
-          (prevStars * prevReviewCount + createLectureReviewDto.stars) /
-          nextReviewCount;
-        const roundStars = Math.round(nextStars * 100) / 100;
-
         const createdLectureReview =
           await this.lectureReviewRepository.trxCreateLectureReview(
             transaction,
             userId,
             createLectureReviewDto,
           );
-        await this.lectureReviewRepository.trxIncreaseLectureReviewCount(
+
+        await this.increaseLectureStars(
           transaction,
           lectureId,
+          createLectureReviewDto.stars,
         );
-        await transaction.lecture.update({
-          where: { id: lectureId },
-          data: { stars: roundStars },
-        });
+        await this.increaseLecturerStars(
+          transaction,
+          lecture.lecturerId,
+          createLectureReviewDto.stars,
+        );
 
         return createdLectureReview;
       },
@@ -188,15 +183,28 @@ export class LectureReviewService {
             transaction,
             lectureReviewId,
           );
+        const lecture = await this.prismaService.lecture.findFirst({
+          where: { id: lectureId },
+        });
+        const lectureReview = await transaction.lectureReview.findFirst({
+          where: { id: lectureReviewId },
+        });
+
         const deletedLectureReview =
           await this.lectureReviewRepository.trxDeleteLectureReview(
             transaction,
             lectureReviewId,
           );
 
-        await this.lectureReviewRepository.trxDecreaseLectureReviewCount(
+        await this.decreaseLectureStars(
           transaction,
           lectureId,
+          lectureReview.stars,
+        );
+        await this.decreaseLecturerStars(
+          transaction,
+          lecture.lecturerId,
+          lectureReview.stars,
         );
 
         return deletedLectureReview;
@@ -453,5 +461,111 @@ export class LectureReviewService {
     const skip = calculateSkipValue(pageDiff);
 
     return { cursor, skip, take: pageDiff >= 1 ? -take : take };
+  }
+
+  private async increaseLectureStars(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    stars: number,
+  ) {
+    const lecture = await transaction.lecture.findFirst({
+      where: { id: lectureId },
+    });
+
+    const prevLectureReviewCount = lecture.reviewCount;
+    const prevLectureStars = lecture.stars;
+    const nextLectureReviewCount = prevLectureReviewCount + 1;
+    const nextLectureStars =
+      (prevLectureStars * prevLectureReviewCount + stars) /
+      nextLectureReviewCount;
+    const roundLectureStars = Math.round(nextLectureStars * 100) / 100;
+
+    await this.lectureReviewRepository.trxIncreaseLectureReviewCount(
+      transaction,
+      lectureId,
+    );
+    await transaction.lecture.update({
+      where: { id: lectureId },
+      data: { stars: roundLectureStars },
+    });
+  }
+
+  private async increaseLecturerStars(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    stars: number,
+  ) {
+    const lecturer = await transaction.lecturer.findFirst({
+      where: { id: lecturerId },
+    });
+    const prevLecturerReviewCount = lecturer.reviewCount;
+    const prevLecturerStars = lecturer.stars;
+    const nextLecturerReviewCount = prevLecturerReviewCount + 1;
+    const nextLecturerStars =
+      (prevLecturerStars * prevLecturerReviewCount + stars) /
+      nextLecturerReviewCount;
+    const roundLecturerStars = Math.round(nextLecturerStars * 100) / 100;
+
+    await this.lectureReviewRepository.trxIncreaseLecturerReviewCount(
+      transaction,
+      lecturer.id,
+    );
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { stars: roundLecturerStars },
+    });
+  }
+
+  private async decreaseLectureStars(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    stars: number,
+  ) {
+    const lecture = await transaction.lecture.findFirst({
+      where: { id: lectureId },
+    });
+
+    const prevLectureReviewCount = lecture.reviewCount;
+    const prevLectureStars = lecture.stars;
+    const nextLectureReviewCount = prevLectureReviewCount - 1;
+    const nextLectureStars =
+      (prevLectureStars * prevLectureReviewCount - stars) /
+      nextLectureReviewCount;
+    const roundLectureStars = Math.round(nextLectureStars * 100) / 100;
+
+    await this.lectureReviewRepository.trxDecreaseLectureReviewCount(
+      transaction,
+      lectureId,
+    );
+    await transaction.lecture.update({
+      where: { id: lectureId },
+      data: { stars: roundLectureStars },
+    });
+  }
+
+  private async decreaseLecturerStars(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    stars: number,
+  ) {
+    const lecturer = await transaction.lecturer.findFirst({
+      where: { id: lecturerId },
+    });
+    const prevLecturerReviewCount = lecturer.reviewCount;
+    const prevLecturerStars = lecturer.stars;
+    const nextLecturerReviewCount = prevLecturerReviewCount - 1;
+    const nextLecturerStars =
+      (prevLecturerStars * prevLecturerReviewCount - stars) /
+      nextLecturerReviewCount;
+    const roundLecturerStars = Math.round(nextLecturerStars * 100) / 100;
+
+    await this.lectureReviewRepository.trxDecreaseLecturerReviewCount(
+      transaction,
+      lecturer.id,
+    );
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { stars: roundLecturerStars },
+    });
   }
 }
