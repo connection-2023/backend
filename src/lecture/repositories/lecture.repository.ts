@@ -273,7 +273,16 @@ export class LectureRepository {
   }
 
   async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({ where: { lecturerId } });
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId },
+      include: {
+        lectureImage: { select: { imageUrl: true } },
+        lectureToDanceGenre: {
+          select: { danceCategory: { select: { genre: true } } },
+        },
+        lectureToRegion: { select: { region: true } },
+      },
+    });
   }
 
   async trxReadManyEnrollLectureWithUserId(
