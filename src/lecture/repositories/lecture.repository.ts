@@ -281,6 +281,7 @@ export class LectureRepository {
           select: { danceCategory: { select: { genre: true } } },
         },
         lectureToRegion: { select: { region: true } },
+        lectureMethod: { select: { name: true } },
       },
     });
   }
