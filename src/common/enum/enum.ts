@@ -26,3 +26,31 @@ export enum DanceCapacity {
 export enum LectureType {
   'dance' = 'dance',
 }
+
+export enum EnrollLectureType {
+  '진행중' = '진행중',
+  '수강 완료' = '수강 완료',
+}
+
+export enum LectureProgressType {
+  '진행중' = '진행중',
+  '마감된 클래스' = '마감된 클래스',
+}
+
+export enum UserType {
+  USER = 'user',
+  LECTURER = 'lecturer',
+}
+
+export enum LecturerMyReviewType {
+  '전체' = '전체',
+  '진행중인 클래스' = '진행중인 클래스',
+  '종료된 클래스' = '종료된 클래스',
+}
+
+export enum LecturerReviewType {
+  '최신순' = '최신순',
+  '좋아요순' = '좋아요순',
+  '평점 높은순' = '평점 높은순',
+  '평점 낮은순' = '평점 낮은순',
+}

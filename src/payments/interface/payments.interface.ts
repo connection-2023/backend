@@ -1,9 +1,12 @@
+import { UserPass } from '@prisma/client';
 import {
   PaymentMethods,
   VirtualAccountRefundStatus,
 } from '@src/payments/enum/payment.enum';
+import { extend } from 'joi';
 
 interface LectureSchedule {
+  id?: number;
   lectureScheduleId: number;
   participants: number;
 }
@@ -14,6 +17,7 @@ interface LectureCoupon {
 
 interface Coupon {
   id: number;
+  title: string;
   percentage: number | null;
   discountPrice: number | null;
   maxDiscountPrice: number | null;
@@ -29,10 +33,11 @@ interface PaymentInputData {
   userId?: number;
   orderId: string;
   orderName: string;
-  paymentMethodId: number;
   statusId: number;
-  price: number;
+  originalPrice: number;
+  finalPrice: number;
   paymentProductTypeId: number;
+  paymentMethodId?: number;
 }
 
 interface ReservationInputData {
@@ -59,7 +64,8 @@ interface PaymentInfo {
   orderName?: string;
   method?: PaymentMethods;
   value?: number;
-  price?: number;
+  originalPrice?: number;
+  finalPrice?: number;
 }
 
 interface TossPaymentsConfirmResponse {
@@ -109,7 +115,8 @@ interface LecturePaymentUpdateData {
 interface IPaymentResult {
   orderId: string;
   orderName: string;
-  price: number;
+  originalPrice: number;
+  finalPrice: number;
   createdAt: Date;
   updatedAt: Date;
   paymentProductType: {
@@ -120,20 +127,14 @@ interface IPaymentResult {
   };
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
+  reservation: IReservationInfo[];
+  userPass: IUserPass[];
 }
 
 interface ICardPaymentInfo {
   number: string;
   installmentPlanMonths: number;
   approveNo: string;
-  issuer: {
-    code: string;
-    name: string;
-  };
-  acquirer?: {
-    code: string;
-    name: string;
-  };
 }
 
 interface IVirtualAccountPaymentInfo {
@@ -156,6 +157,50 @@ interface VirtualAccountPaymentInfoInputData {
   expired: boolean;
 }
 
+interface IReservationInfo {
+  lectureSchedule: ILectureSchedule;
+  participants: number;
+}
+
+interface IUserPass {
+  lecturePass: ILecturePass;
+}
+
+interface ILecturePass {
+  id: number;
+  availableMonths: number;
+}
+
+interface ILectureSchedule {
+  lectureId: number;
+  startDateTime: Date;
+}
+
+interface ICursor {
+  id: number;
+}
+
+interface UserPassInputData {
+  userId: number;
+  paymentId: number;
+  lecturePassId: number;
+  remainingUses: number;
+}
+interface IPaymentPassUsageInputData {
+  paymentId: number;
+  lecturePassId: number;
+  usedCount: number;
+}
+
+interface ISelectedUserPass extends UserPass {
+  lecturePass: {
+    availableMonths: number;
+    lecturePassTarget: {
+      lectureId: number;
+    }[];
+  };
+}
+
 export {
   LectureSchedule,
   LectureCoupon,
@@ -173,4 +218,8 @@ export {
   CardPaymentInfoInputData,
   VirtualAccountPaymentInfoInputData,
   IPaymentResult,
+  ICursor,
+  UserPassInputData,
+  IPaymentPassUsageInputData,
+  ISelectedUserPass,
 };

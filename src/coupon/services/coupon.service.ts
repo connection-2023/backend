@@ -15,6 +15,16 @@ import { LectureCoupon, LectureCouponTarget, UserCoupon } from '@prisma/client';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { createCipheriv, Cipher, createDecipheriv } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
+import {
+  CouponFilterOptions,
+  IssuedCouponStatusOptions,
+  UserCouponStatusOptions,
+} from '../enum/coupon.enum.ts';
+import { GetMyIssuedCouponListDto } from '../dtos/get-my-issued-coupon-list.dto';
+import { ICursor } from '@src/payments/interface/payments.interface';
+import { UpdateCouponDto } from '../dtos/update-coupon.dto';
+import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
 
 @Injectable()
 export class CouponService {
@@ -37,7 +47,7 @@ export class CouponService {
   async createLectureCoupon(
     lecturerId: number,
     createLectureCouponDto: CreateLectureCouponDto,
-  ): Promise<void> {
+  ): Promise<LectureCoupon> {
     const { lectureIds, ...couponInfo } = createLectureCouponDto;
     const couponInputData: CouponInputData = {
       lecturerId,
@@ -48,7 +58,7 @@ export class CouponService {
       await this.validateLectureIds(lecturerId, lectureIds);
     }
 
-    await this.prismaService.$transaction(
+    const coupon: LectureCoupon = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const createdCoupon: LectureCoupon =
           await this.couponRepository.trxCreateLectureCoupon(
@@ -64,8 +74,10 @@ export class CouponService {
             createCouponTargetInputData,
           );
         }
+        return createdCoupon;
       },
     );
+    return coupon;
   }
 
   private async validateLectureIds(
@@ -271,12 +283,248 @@ export class CouponService {
     }
   }
 
-  async getMyCouponList(userId: number) {
-    return await this.couponRepository.getUserCouponList(userId);
+  async getMyCouponList(
+    userId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      couponStatusOption,
+      filterOption,
+      lectureIds,
+    }: GetMyCouponListDto,
+  ) {
+    const { isUsed, orderBy, endAt, lectureCouponTarget } =
+      this.getCouponFilterOptions(couponStatusOption, filterOption, lectureIds);
+
+    const totalItemCount = await this.couponRepository.countUserCoupons(
+      userId,
+      isUsed,
+      endAt,
+      lectureCouponTarget,
+    );
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
+
+    let cursor;
+    let skip;
+
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip, take } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    const couponList = await this.getUserCouponList(
+      userId,
+      take,
+      endAt,
+      orderBy,
+      isUsed,
+      lectureCouponTarget,
+      cursor,
+      skip,
+    );
+
+    return { totalItemCount, couponList };
   }
 
-  async getMyIssuedCouponList(lecturerId: number) {
-    return await this.couponRepository.getLecturerIssuedCouponList(lecturerId);
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor: ICursor = { id: itemId };
+    const skip =
+      Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+
+    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
+  }
+
+  private getCouponFilterOptions(
+    couponStatusOption: UserCouponStatusOptions,
+    filterOption: CouponFilterOptions,
+    lectureIds: number[],
+  ) {
+    const currentTime = new Date();
+    let isUsed;
+    let orderBy;
+    let endAt;
+
+    const lectureCouponTarget = lectureIds
+      ? { some: { lectureId: { in: lectureIds } } }
+      : undefined;
+
+    switch (couponStatusOption) {
+      case UserCouponStatusOptions.AVAILABLE:
+        isUsed = false;
+        orderBy =
+          filterOption === CouponFilterOptions.LATEST
+            ? { id: 'desc' }
+            : [{ lectureCoupon: { endAt: 'asc' } }, { id: 'asc' }];
+        endAt =
+          filterOption === CouponFilterOptions.LATEST
+            ? undefined
+            : { gt: currentTime };
+        break;
+
+      case UserCouponStatusOptions.USED:
+        isUsed = true;
+        orderBy = [{ updatedAt: 'desc' }, { id: 'desc' }];
+        break;
+
+      case UserCouponStatusOptions.EXPIRED:
+        endAt = { lt: currentTime };
+        orderBy = [{ lectureCoupon: { endAt: 'asc' } }, { id: 'asc' }];
+        break;
+    }
+    return { isUsed, orderBy, endAt, lectureCouponTarget };
+  }
+
+  private async getUserCouponList(
+    userId: number,
+    take: number,
+    endAt: object,
+    orderBy: object,
+    isUsed: boolean,
+    lectureCouponTarget,
+    cursor?: ICursor,
+    skip?: number,
+  ) {
+    return await this.couponRepository.getUserCouponList(
+      userId,
+      take,
+      endAt,
+      orderBy,
+      isUsed,
+      lectureCouponTarget,
+      cursor,
+      skip,
+    );
+  }
+
+  async getMyIssuedCouponList(
+    lecturerId: number,
+    {
+      couponStatusOption,
+      filterOption,
+      lectureId,
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+    }: GetMyIssuedCouponListDto,
+  ) {
+    const { OR, orderBy, endAt, lectureCouponTarget } =
+      this.getIssuedCouponFilterOptions(
+        couponStatusOption,
+        filterOption,
+        lectureId,
+      );
+
+    const totalItemCount: number =
+      await this.couponRepository.countIssuedCoupons(
+        lecturerId,
+        endAt,
+        lectureCouponTarget,
+        OR,
+      );
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
+
+    let cursor;
+    let skip;
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      ({ cursor, skip, take } = this.getPaginationOptions(
+        pageDiff,
+        pageDiff <= -1 ? lastItemId : firstItemId,
+        take,
+      ));
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    const couponList = await this.getIssuedCouponList(
+      lecturerId,
+      OR,
+      orderBy,
+      endAt,
+      lectureCouponTarget,
+      take,
+      cursor,
+      skip,
+    );
+
+    return { totalItemCount, couponList };
+  }
+
+  private getIssuedCouponFilterOptions(
+    couponStatusOption: IssuedCouponStatusOptions,
+    filterOption: CouponFilterOptions,
+    lectureId: number,
+  ) {
+    const currentTime = new Date();
+    let OR;
+    let orderBy;
+    let endAt;
+
+    const lectureCouponTarget = lectureId ? { some: { lectureId } } : undefined;
+
+    if (couponStatusOption === IssuedCouponStatusOptions.AVAILABLE) {
+      OR = [{ isDisabled: false }];
+      endAt = { gt: currentTime };
+      orderBy =
+        filterOption === CouponFilterOptions.LATEST
+          ? { id: 'desc' }
+          : [{ endAt: 'asc' }, { id: 'asc' }];
+
+      return { OR, orderBy, endAt, lectureCouponTarget };
+    }
+
+    if (couponStatusOption === IssuedCouponStatusOptions.DISABLED) {
+      endAt = { lt: currentTime };
+      OR = [{ isDisabled: true }, { endAt }];
+      orderBy = [{ endAt: 'desc' }, { id: 'desc' }];
+
+      return { OR, orderBy, lectureCouponTarget };
+    }
+  }
+
+  private async getIssuedCouponList(
+    lecturerId: number,
+    OR: Array<object>,
+    orderBy: Array<object> | object,
+    endAt: object,
+    lectureCouponTarget: object,
+    take: number,
+    cursor?: ICursor,
+    skip?: number,
+  ) {
+    return await this.couponRepository.getLecturerIssuedCouponList(
+      lecturerId,
+      OR,
+      orderBy,
+      endAt,
+      lectureCouponTarget,
+      take,
+      cursor,
+      skip,
+    );
   }
 
   async getApplicableCouponsForLecture(lectureId: number) {
@@ -316,5 +564,102 @@ export class CouponService {
     decodedCouponCode += decipher.final('utf8');
 
     return parseInt(decodedCouponCode);
+  }
+
+  async updateLectureCoupon(
+    lecturerId: number,
+    couponId: number,
+    updateCouponDto: UpdateCouponDto,
+  ): Promise<LectureCouponDto> {
+    const { lectureIds, ...couponInfo } = updateCouponDto;
+
+    await this.checkCouponUpdatable(lecturerId, couponId, updateCouponDto);
+
+    if (lectureIds) {
+      await this.validateLectureIds(lecturerId, lectureIds);
+    }
+
+    const updatedLectureCoupon = await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (lectureIds) {
+          await this.trxUpdateCouponTarget(transaction, couponId, lectureIds);
+        }
+
+        return await this.couponRepository.trxUpdateLectureCoupon(
+          transaction,
+          couponId,
+          couponInfo,
+        );
+      },
+    );
+
+    return new LectureCouponDto(updatedLectureCoupon);
+  }
+
+  private async checkCouponUpdatable(
+    lecturerId: number,
+    couponId: number,
+    updateCouponDto: UpdateCouponDto,
+  ) {
+    const { maxUsageCount } = updateCouponDto;
+    const coupon: LectureCoupon = await this.couponRepository.getLecturerCoupon(
+      lecturerId,
+      couponId,
+    );
+
+    if (
+      maxUsageCount !== null &&
+      coupon.usageCount > updateCouponDto.maxUsageCount
+    ) {
+      throw new BadRequestException(
+        `현재 배포된 쿠폰 개수 보다 최대 개수가 적을 수 없습니다.`,
+      );
+    }
+  }
+
+  private async trxUpdateCouponTarget(
+    transaction: PrismaTransaction,
+    couponId: number,
+    lectureIds: number[],
+  ) {
+    const couponTargetInputData: CouponTargetInputData[] =
+      this.createCouponTargetInputData(couponId, lectureIds);
+
+    await this.couponRepository.trxDeleteLectureCouponTarget(
+      transaction,
+      couponId,
+    );
+    await this.couponRepository.trxCreateLectureCouponTarget(
+      transaction,
+      couponTargetInputData,
+    );
+  }
+
+  async deleteLectureCoupon(
+    lecturerId: number,
+    couponId: number,
+  ): Promise<void> {
+    const currentDate = new Date();
+
+    const coupon: LectureCoupon = await this.couponRepository.getLecturerCoupon(
+      lecturerId,
+      couponId,
+    );
+    if (!coupon) {
+      throw new NotFoundException(`쿠폰이 존재하지 않습니다.`);
+    }
+
+    //쿠폰이 활성화 상태에서 삭제하면 유저에게도 비활성화 되어야기 위한 설정
+    const isDisabled = coupon.endAt > currentDate ? true : false;
+
+    await this.couponRepository.softDeleteLectureCoupon(
+      couponId,
+      currentDate,
+      isDisabled,
+    );
+  }
+
+  async deleteUserCoupon(userId, couponId): Promise<void> {
+    await this.couponRepository.deleteUserCoupon(userId, couponId);
   }
 }

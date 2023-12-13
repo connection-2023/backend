@@ -1,13 +1,22 @@
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { Lecture, LectureHoliday, Region } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  Id,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   LectureCouponTargetInputData,
@@ -16,12 +25,13 @@ import {
   LectureScheduleInputData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
-  RegularLectureScheduleInputData,
   RegularLectureSchedules,
 } from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
+import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
+import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
 
 @Injectable()
 export class LectureService {
@@ -66,15 +76,17 @@ export class LectureService {
           lecture,
         );
 
-        const lectureLocationInputData = {
-          lectureId: newLecture.id,
-          ...location,
-        };
+        if (location) {
+          const lectureLocationInputData = {
+            lectureId: newLecture.id,
+            ...location,
+          };
 
-        await this.lectureRepository.trxCreateLectureLocation(
-          transaction,
-          lectureLocationInputData,
-        );
+          await this.lectureRepository.trxCreateLectureLocation(
+            transaction,
+            lectureLocationInputData,
+          );
+        }
 
         const lectureToRegionInputData: LectureToRegionInputData[] =
           this.createLectureToRegionInputData(newLecture.id, regionIds);
@@ -102,16 +114,19 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          const regularLectureScheduleInputData: RegularLectureScheduleInputData[] =
-            this.createRegularLectureScheduleInputData(
-              newLecture.id,
-              regularSchedules,
-              lecture.duration,
+          for (const schedule of regularSchedules) {
+            const regularDayScheduleInputData =
+              this.createRegularLectureScheduleInputData(
+                newLecture.id,
+                schedule,
+                lecture.duration,
+              );
+
+            await this.lectureRepository.trxCreateLectureSchedule(
+              transaction,
+              regularDayScheduleInputData,
             );
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            regularLectureScheduleInputData,
-          );
+          }
         }
 
         if (holidays) {
@@ -160,6 +175,27 @@ export class LectureService {
         };
       },
     );
+  }
+
+  async readLectureWithUserId(userId: number, lectureId: number) {
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecture.lecturerId,
+    );
+    const location = await this.lectureRepository.readLectureLocation(
+      lectureId,
+    );
+
+    const isLike = await this.prismaService.likedLecture.findFirst({
+      where: { userId, lectureId },
+    });
+
+    if (isLike) {
+      lecture['isLike'] = true;
+    } else {
+      lecture['isLike'] = false;
+    }
+    return { lecture, lecturer, location };
   }
 
   async readLecture(lectureId: number) {
@@ -293,9 +329,30 @@ export class LectureService {
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
     const { images, coupons, holidays, notification, ...lecture } =
       updateLectureDto;
+    const currentTime = new Date();
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        if (notification) {
+          await this.lectureRepository.trxUpsertLectureNotification(
+            transaction,
+            lectureId,
+            notification,
+          );
+        }
+        if (lecture.maxCapacity) {
+          const readLectureParticipant =
+            await this.lectureRepository.trxReadLectureParticipant(
+              transaction,
+              lectureId,
+              lecture.maxCapacity,
+              currentTime,
+            );
+          throw new BadRequestException(
+            `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
+          );
+        }
+
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
           transaction,
           lectureId,
@@ -311,6 +368,9 @@ export class LectureService {
           const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
           const schedule = this.compareHolidays(oldHolidaysArr, holidays);
           const { createNewSchedule, deleteOldSchedule } = schedule;
+
+          await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
+
           const { duration } = await this.prismaService.lecture.findFirst({
             where: { id: lectureId },
             select: { duration: true },
@@ -348,14 +408,6 @@ export class LectureService {
               transaction,
               lectureHolidayInputData,
             );
-        }
-
-        if (notification) {
-          await transaction.lectureNotification.upsert({
-            where: { lectureId },
-            create: { lectureId, notification },
-            update: { notification },
-          });
         }
 
         if (images) {
@@ -415,6 +467,180 @@ export class LectureService {
     const holidayArr = this.createLectureHolidayArr(holiday);
 
     return { schedule, holidayArr };
+  }
+
+  async readLectureReservationWithUser(userId: number, lectureId: number) {
+    const reservation =
+      await this.lectureRepository.readLectureReservationWithUser(
+        userId,
+        lectureId,
+      );
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation Not Found');
+    }
+
+    return reservation;
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number) {
+    return await this.lectureRepository.readManyLectureWithLectruerId(
+      lecturerId,
+    );
+  }
+
+  async readManyEnrollLectureWithUserId(
+    userId: number,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      enrollLectureType,
+    }: ReadManyEnrollLectureQueryDto,
+  ) {
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const existEnrollLecture =
+          await this.prismaService.reservation.findFirst({
+            where: { userId },
+          });
+        if (!existEnrollLecture) {
+          return;
+        }
+
+        let cursor;
+        let skip;
+        const currentTime = {};
+
+        if (enrollLectureType === '수강 완료') {
+          currentTime['reservation'] = {
+            every: {
+              lectureSchedule: {
+                startDateTime: {
+                  lt: new Date(),
+                },
+              },
+            },
+          };
+        } else if (enrollLectureType === '진행중') {
+          currentTime['reservation'] = {
+            some: {
+              lectureSchedule: {
+                startDateTime: {
+                  gt: new Date(),
+                },
+              },
+            },
+          };
+        }
+        const isPagination = currentPage && targetPage;
+
+        if (isPagination) {
+          const pageDiff = currentPage - targetPage;
+          ({ cursor, skip, take } = this.getPaginationOptions(
+            pageDiff,
+            pageDiff <= -1 ? lastItemId : firstItemId,
+            take,
+          ));
+        }
+
+        const enrollLecture =
+          await this.lectureRepository.trxReadManyEnrollLectureWithUserId(
+            transaction,
+            userId,
+            take,
+            currentTime,
+            cursor,
+            skip,
+          );
+        const count = await this.lectureRepository.trxEnrollLectureCount(
+          transaction,
+          userId,
+        );
+
+        return { count, enrollLecture };
+      },
+    );
+  }
+
+  async readManyLectureProgress(
+    lecturerId: number,
+    query: ReadManyLectureProgressQueryDto,
+  ) {
+    const { progressType } = query;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (progressType === '진행중') {
+          const lectures =
+            await this.lectureRepository.trxReadManyLectureProgress(
+              transaction,
+              lecturerId,
+            );
+          const inprogressLecture = [];
+
+          for (const lecture of lectures) {
+            const currentTime = new Date();
+            const completedLectureSchedule =
+              await this.lectureRepository.trxReadManyCompletedLectureScheduleCount(
+                transaction,
+                lecture.id,
+                currentTime,
+              );
+            const progress = Math.round(
+              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+            );
+            const inprogressLectureData = {
+              ...lecture,
+              progress,
+              allSchedule: lecture._count.lectureSchedule,
+              completedSchedule: completedLectureSchedule,
+            };
+
+            inprogressLecture.push(inprogressLectureData);
+          }
+
+          return inprogressLecture;
+        } else if (progressType === '마감된 클래스') {
+          return await this.lectureRepository.readManyCompletedLectureWithLecturerId(
+            lecturerId,
+          );
+        }
+      },
+    );
+  }
+
+  async readManyParticipantWithLectureId(lectureId: number) {
+    return await this.lectureRepository.readManyParticipantWithLectureId(
+      lectureId,
+    );
+  }
+
+  async readManyParticipantWithScheduleId(
+    lectureId: number,
+    scheduleId: number,
+  ) {
+    await this.validateScheduleId(lectureId, scheduleId);
+
+    const participant =
+      await this.lectureRepository.readManyParticipantWithScheduleId(
+        scheduleId,
+      );
+
+    return participant.reservation;
+  }
+
+  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
+    const cursor = { id: itemId };
+
+    const calculateSkipValue = (pageDiff: number) => {
+      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+    };
+
+    const skip = calculateSkipValue(pageDiff);
+
+    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {
@@ -624,27 +850,23 @@ export class LectureService {
 
   private createRegularLectureScheduleInputData(
     lectureId: number,
-    regularSchedules: RegularLectureSchedules,
+    regularSchedule: RegularLectureSchedules,
     duration: number,
   ) {
-    const regularScheduleInputData = [];
-    for (const team in regularSchedules) {
-      regularSchedules[team].map((date) => {
-        const startDateTime = new Date(date);
-        const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
-        );
-        const regularSchedule = {
+    const regularScheduleInputData = regularSchedule.startDateTime.map(
+      (time) => {
+        const startTime = new Date(time);
+        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+
+        return {
           lectureId,
-          team,
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
+          day: regularSchedule.day,
+          startDateTime: startTime,
+          endDateTime: endTime,
           numberOfParticipants: 0,
         };
-        regularScheduleInputData.push(regularSchedule);
-      });
-    }
-
+      },
+    );
     return regularScheduleInputData;
   }
 
@@ -703,9 +925,43 @@ export class LectureService {
         couponDoesNotExist.push(coupon);
       }
     }
-    if (couponDoesNotExist) {
+    if (couponDoesNotExist[0]) {
       throw new BadRequestException(
         `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
+      );
+    }
+  }
+
+  private async existReservationWithSchedule(
+    lectureId: number,
+    deletedOldSchedules: Date[],
+  ) {
+    const reservation = [];
+    for (const oldSchedule of deletedOldSchedules) {
+      const existReservation =
+        await this.lectureRepository.readScheduleReservation(
+          lectureId,
+          new Date(oldSchedule),
+        );
+      if (existReservation) {
+        reservation.push(oldSchedule);
+      }
+    }
+
+    if (reservation[0]) {
+      throw new BadRequestException(`existReservation ${reservation}`);
+    }
+  }
+
+  private async validateScheduleId(lectureId: number, scheduleId: number) {
+    const schedule = await this.prismaService.lectureSchedule.findFirst({
+      where: { lectureId, id: scheduleId },
+    });
+
+    if (!schedule) {
+      throw new BadRequestException(
+        '해당 강의에 존재하지 않는 scheduleId입니다.',
+        'InvalidScheduleId',
       );
     }
   }

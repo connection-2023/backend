@@ -9,8 +9,9 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 export function ApiReadOneLecture() {
   return applyDecorators(
     ApiOperation({
-      summary: '강의 상세조회',
+      summary: '유저 강의 상세조회',
     }),
+    ApiBearerAuth(),
     ApiCreatedResponse(
       SwaggerApiResponse.success('강의 상세조회 완료', {
         statusCode: 200,
@@ -37,6 +38,7 @@ export function ApiReadOneLecture() {
             reviewCount: 0,
             stars: 0,
             isActive: true,
+            isLike: true,
             locationDescription: '버스타고 한번에',
             createdAt: '2023-11-09T13:40:40.476Z',
             updatedAt: '2023-11-09T13:40:40.476Z',

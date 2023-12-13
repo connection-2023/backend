@@ -141,11 +141,11 @@ export class CreateLectureDto {
       buildingName: '새한아파트',
     },
     description: '위치 주소',
-    required: true,
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsObject()
-  location: LectureLocation;
+  location?: LectureLocation;
 
   @ApiProperty({ example: 2, description: '강의시간', required: true })
   @IsNotEmpty()
@@ -224,24 +224,38 @@ export class CreateLectureDto {
   schedules?: Date[];
 
   @ApiProperty({
-    example: {
-      A: [
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-      ],
-      B: [
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-        'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
-      ],
-    },
+    example: [
+      {
+        day: ['월', '화'],
+        startDateTime: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+      {
+        day: ['월', '수'],
+        startDateTime: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+      {
+        day: ['수', '금'],
+        startDateTime: [
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+          'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+        ],
+      },
+    ],
     description: '정기 클래스일 때 일정',
     required: false,
   })
-  @IsObject()
+  @IsArray()
   @IsOptional()
-  regularSchedules?: RegularLectureSchedules;
+  regularSchedules?: RegularLectureSchedules[];
 
   @ApiProperty({
     example: [

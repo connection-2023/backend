@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { LectureReview } from '@prisma/client';
+import { LectureReview, LikedLectureReview, Reservation } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
-import { Id, PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  ICursor,
+  Id,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
+import { LectureReviewResponseDto } from '../dtos/read-many-lecture-review-response.dto';
+import { title } from 'process';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -19,6 +25,28 @@ export class LectureReviewRepository {
     });
   }
 
+  async trxIncreaseLectureStars(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecture.update({
+      where: { id: lectureId },
+      data: { stars },
+    });
+  }
+
+  async trxIncreaseLecturerStars(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { stars },
+    });
+  }
+
   async trxIncreaseLectureReviewCount(
     transaction: PrismaTransaction,
     lectureId: number,
@@ -26,6 +54,38 @@ export class LectureReviewRepository {
     await transaction.lecture.update({
       where: { id: lectureId },
       data: { reviewCount: { increment: 1 } },
+    });
+  }
+
+  async trxIncreaseLecturerReviewCount(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { reviewCount: { increment: 1 } },
+    });
+  }
+
+  async trxDecreaseLectureStars(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecture.update({
+      where: { id: lectureId },
+      data: { stars },
+    });
+  }
+
+  async trxDecreaseLecturerStars(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+    stars: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { stars },
     });
   }
 
@@ -39,10 +99,21 @@ export class LectureReviewRepository {
     });
   }
 
-  async readManyLectureReviewByLecture(
+  async trxDecreaseLecturerReviewCount(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<void> {
+    await transaction.lecturer.update({
+      where: { id: lecturerId },
+      data: { reviewCount: { decrement: 1 } },
+    });
+  }
+
+  async readManyLectureReviewByLectureWithUserId(
     lectureId: number,
+    userId: number,
     order,
-  ): Promise<LectureReview[]> {
+  ): Promise<LectureReviewResponseDto[]> {
     return await this.prismaService.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
       include: {
@@ -52,7 +123,29 @@ export class LectureReviewRepository {
         users: {
           include: { userProfileImage: { select: { imageUrl: true } } },
         },
-        lecture: true,
+        lecture: { select: { title: true } },
+        likedLectureReview: { where: { userId } },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy: order,
+    });
+  }
+
+  async readManyLectureReviewByLecture(
+    lectureId: number,
+    order,
+  ): Promise<LectureReviewResponseDto[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { lectureId, deletedAt: null },
+      include: {
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
+        users: {
+          include: { userProfileImage: { select: { imageUrl: true } } },
+        },
+        lecture: { select: { title: true } },
+        _count: { select: { likedLectureReview: true } },
       },
       orderBy: order,
     });
@@ -88,5 +181,157 @@ export class LectureReviewRepository {
     });
 
     return lectureId;
+  }
+
+  async trxGetLectureReviewLike(
+    transaction: PrismaTransaction,
+    lectureReviewId: number,
+  ): Promise<LikedLectureReview> {
+    return await transaction.likedLectureReview.findFirst({
+      where: { lectureReviewId },
+    });
+  }
+
+  async readManyMyReviewWithUserId(
+    userId: number,
+    orderBy,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { userId },
+      include: {
+        lecture: true,
+        reservation: {
+          select: { lectureSchedule: { select: { startDateTime: true } } },
+        },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
+    });
+  }
+
+  async readManyReservationThatCanBeCreated(
+    userId: number,
+  ): Promise<Reservation[]> {
+    return await this.prismaService.reservation.findMany({
+      where: {
+        userId: userId,
+        lectureReview: null,
+      },
+      include: {
+        lectureSchedule: {
+          select: {
+            lecture: { select: { id: true, title: true } },
+            startDateTime: true,
+          },
+        },
+      },
+      orderBy: { lectureSchedule: { startDateTime: 'desc' } },
+    });
+  }
+
+  async readManyMyReviewWithLecturerId(
+    where,
+    orderBy,
+    take: number,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where,
+      take,
+      skip,
+      cursor,
+      include: {
+        reservation: {
+          select: {
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: { select: { title: true } },
+              },
+            },
+          },
+        },
+        users: {
+          select: {
+            nickname: true,
+            userProfileImage: { select: { imageUrl: true } },
+          },
+        },
+      },
+      orderBy,
+    });
+  }
+
+  async readManyLecturerReviewWithUserId(
+    lecturerId: number,
+    userId: number,
+    take: number,
+    orderBy,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { lecture: { lecturerId } },
+      take,
+      skip,
+      cursor,
+      include: {
+        reservation: {
+          select: {
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: { select: { title: true } },
+              },
+            },
+          },
+        },
+        users: {
+          select: {
+            nickname: true,
+            userProfileImage: { select: { imageUrl: true } },
+          },
+        },
+        likedLectureReview: { where: { userId } },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
+    });
+  }
+
+  async readManyLecturerReview(
+    lecturerId: number,
+    take: number,
+    orderBy,
+    cursor?: ICursor,
+    skip?: number,
+  ): Promise<LectureReview[]> {
+    return await this.prismaService.lectureReview.findMany({
+      where: { lecture: { lecturerId } },
+      take,
+      skip,
+      cursor,
+      include: {
+        reservation: {
+          select: {
+            lectureSchedule: {
+              select: {
+                startDateTime: true,
+                lecture: { select: { title: true } },
+              },
+            },
+          },
+        },
+        users: {
+          select: {
+            nickname: true,
+            userProfileImage: { select: { imageUrl: true } },
+          },
+        },
+        _count: { select: { likedLectureReview: true } },
+      },
+      orderBy,
+    });
   }
 }

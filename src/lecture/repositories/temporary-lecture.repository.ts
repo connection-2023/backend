@@ -206,10 +206,10 @@ export class LectureTemporarilySaveRepository {
 
   async trxDeleteTemporaryLectureDaySchedule(
     transaction: PrismaTransaction,
-    lectureDayId: number,
+    lectureId: number,
   ): Promise<void> {
     await transaction.temporaryLectureDaySchedule.deleteMany({
-      where: { lectureDayId },
+      where: { temporaryLectureDay: { lectureId } },
     });
   }
 
