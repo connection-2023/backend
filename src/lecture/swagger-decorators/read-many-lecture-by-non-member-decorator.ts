@@ -6,7 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
-export function ApiReadManyLectureWithLecturer() {
+export function ApiReadManyLectureByNonMemeber() {
   return applyDecorators(
     ApiOperation({
       summary: '비회원용 강사 id로 강의 조회',
