@@ -146,6 +146,18 @@ export class LectureController {
     return { lecture };
   }
 
+  @ApiOperation({ summary: '비회원용 강사 id로 강의 조회' })
+  @Get('lecturers/:lecturerId')
+  async readManyLectureByNonMember(
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+  ) {
+    const lecture = await this.lectureService.readManyLectureWithLecturerId(
+      lecturerId,
+    );
+
+    return { lecture };
+  }
+
   @ApiReadManyEnrollLecture()
   @UseGuards(UserAccessTokenGuard)
   @Get('users')
