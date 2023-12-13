@@ -36,6 +36,7 @@ import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lect
 import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
 import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
 import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
+import { ApiReadManyLectureByNonMemeber } from '../swagger-decorators/read-many-lecture-by-non-member-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -141,6 +142,18 @@ export class LectureController {
   ) {
     const lecture = await this.lectureService.readManyLectureWithLecturerId(
       authorizedData.lecturer.id,
+    );
+
+    return { lecture };
+  }
+
+  @ApiReadManyLectureByNonMemeber()
+  @Get('lecturers/:lecturerId')
+  async readManyLectureByNonMember(
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+  ) {
+    const lecture = await this.lectureService.readManyLectureWithLecturerId(
+      lecturerId,
     );
 
     return { lecture };
