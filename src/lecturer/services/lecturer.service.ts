@@ -29,6 +29,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
+import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -262,8 +263,13 @@ export class LecturerService implements OnModuleInit {
     await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
   }
 
-  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
-    return await this.lecturerRepository.getLecturerProfile(lecturerId);
+  async getLecturerProfile(
+    lecturerId: number,
+  ): Promise<LecturerDetailProfileDto> {
+    const lecturerProfile: LecturerDetailProfileDto =
+      await this.lecturerRepository.getLecturerProfile(lecturerId);
+
+    return new LecturerDetailProfileDto(lecturerProfile);
   }
 
   async getLecturerBasicProfile(
