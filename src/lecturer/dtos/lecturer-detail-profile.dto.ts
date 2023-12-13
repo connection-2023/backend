@@ -115,6 +115,7 @@ export class LecturerDetailProfileDto
     this.id = lecturer.id;
     this.nickname = lecturer.nickname;
     this.email = lecturer.email;
+    this.phoneNumber = lecturer.phoneNumber;
     this.profileCardImageUrl = lecturer.profileCardImageUrl;
     this.youtubeUrl = lecturer.youtubeUrl;
     this.instagramUrl = lecturer.instagramUrl;
