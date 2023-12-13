@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -31,6 +32,9 @@ import { UpdateCouponDto } from '@src/coupon/dtos/update-coupon.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
 import { ApiUpdateLectureCoupon } from '@src/coupon/swagger-decorators/update-lecture-coupon.decorator';
+import { AccessTokenStrategy } from '@src/auth/strategy/access-token.startegy';
+import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
+import { ApiDeleteLectureCoupon } from '../swagger-decorators/delete-coupon.decorator';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
@@ -51,6 +55,22 @@ export class CouponController {
       couponId,
       updateCouponDto,
     );
+  }
+
+  @ApiDeleteLectureCoupon()
+  @Delete('/:couponId')
+  @UseGuards(AccessTokenGuard)
+  async deleteCoupon(
+    @GetAuthorizedUser() { user, lecturer }: ValidateResult,
+    @Param('couponId', ParseIntPipe) couponId: number,
+  ) {
+    if (user) {
+      await this.couponService.deleteUserCoupon(user.id, couponId);
+    }
+
+    if (lecturer) {
+      await this.couponService.deleteLectureCoupon(lecturer.id, couponId);
+    }
   }
 
   @ApiGetMyCouponList()

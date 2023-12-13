@@ -100,6 +100,7 @@ export class PaymentsService implements OnModuleInit {
       lectureId,
       lectureSchedules,
     );
+
     await this.checkUserPaymentValidity(
       userId,
       createLecturePaymentDto.orderId,
@@ -159,6 +160,12 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             createLecturePaymentDto,
+          ),
+          this.trxCreateOrUpdateLectureLearner(
+            transaction,
+            userId,
+            lecturerId,
+            createLecturePaymentDto.lectureSchedules.length,
           ),
         ]);
       },
@@ -555,6 +562,7 @@ export class PaymentsService implements OnModuleInit {
           transaction,
           userId,
           couponIds,
+          true,
         ),
       ]);
     }
@@ -812,7 +820,13 @@ export class PaymentsService implements OnModuleInit {
 
     return receipt;
   }
-
+  /**
+   *
+   * @todo 쿠폰 취소
+   *  예약 취소
+   *  수강생 취소
+   *
+   */
   async cancelPayment(orderId: string): Promise<void> {
     const paymentInfo = await this.getPaymentInfo(orderId);
 
@@ -826,16 +840,47 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async cancelReservationTransaction(paymentInfo) {
-    const { id: paymentId, reservation: reservations } = paymentInfo;
+    const {
+      id: paymentId,
+      reservation: reservations,
+      userId,
+      lecturerId,
+      paymentCouponUsage,
+    } = paymentInfo;
+    const couponIds: number[] = [];
+
+    if (paymentCouponUsage) {
+      paymentCouponUsage.couponId !== null &&
+        couponIds.push(paymentCouponUsage.couponId);
+      paymentCouponUsage.stackableCouponId !== null &&
+        couponIds.push(paymentCouponUsage.stackableCouponId);
+    }
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        await Promise.all([]);
         for (const reservation of reservations) {
           await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
             transaction,
             reservation,
           );
         }
+        await this.paymentsRepository.trxDecrementLectureLearner(
+          transaction,
+          userId,
+          lecturerId,
+          reservations.length,
+        );
+
+        if (couponIds.length) {
+          await this.paymentsRepository.trxUpdateUserCouponUsage(
+            transaction,
+            userId,
+            couponIds,
+            false,
+          );
+        }
+
         await this.paymentsRepository.trxUpdateLecturePaymentStatus(
           transaction,
           paymentId,
@@ -1076,7 +1121,7 @@ export class PaymentsService implements OnModuleInit {
     paymentId: number,
     { passId, lectureSchedules }: CreateLecturePaymentWithPassDto,
     userPass: ISelectedUserPass,
-  ) {
+  ): Promise<void> {
     const totalParticipants: number = lectureSchedules.reduce(
       (total, item) => total + item.participants,
       0,
@@ -1105,6 +1150,20 @@ export class PaymentsService implements OnModuleInit {
       startAt,
       endAt,
       totalParticipants,
+    );
+  }
+
+  private async trxCreateOrUpdateLectureLearner(
+    transaction: PrismaTransaction,
+    userId: number,
+    lecturerId: number,
+    enrollmentCount: number,
+  ): Promise<void> {
+    await this.paymentsRepository.trxUpsertLectureLearner(
+      transaction,
+      userId,
+      lecturerId,
+      enrollmentCount,
     );
   }
 }

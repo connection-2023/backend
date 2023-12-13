@@ -15,6 +15,7 @@ import { AuthService } from '@src/auth/services/auth.service';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
 import { RefreshTokenStrategy } from '@src/auth/strategy/refresh-token.strategy';
 import { AdminAccessTokenStrategy } from './strategy/admin-access-token.startegy';
+import { AccessTokenStrategy } from './strategy/access-token.startegy';
 
 @Module({
   imports: [CustomJwtModule],
@@ -30,6 +31,7 @@ import { AdminAccessTokenStrategy } from './strategy/admin-access-token.startegy
     RefreshTokenStrategy,
     AdminAccessTokenStrategy,
     AuthRepository,
+    AccessTokenStrategy,
   ],
   controllers: [
     AuthController,
