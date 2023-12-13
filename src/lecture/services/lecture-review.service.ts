@@ -34,6 +34,17 @@ export class LectureReviewService {
           throw new BadRequestException('Exist Lecture Review');
         }
 
+        const lecture = await transaction.lecture.findFirst({
+          where: { id: lectureId },
+        });
+        const prevReviewCount = lecture.reviewCount;
+        const prevStars = lecture.stars;
+        const nextReviewCount = prevReviewCount + 1;
+        const nextStars =
+          (prevStars * prevReviewCount + createLectureReviewDto.stars) /
+          nextReviewCount;
+        const roundStars = Math.round(nextStars * 100) / 100;
+
         const createdLectureReview =
           await this.lectureReviewRepository.trxCreateLectureReview(
             transaction,
@@ -44,6 +55,10 @@ export class LectureReviewService {
           transaction,
           lectureId,
         );
+        await transaction.lecture.update({
+          where: { id: lectureId },
+          data: { stars: roundStars },
+        });
 
         return createdLectureReview;
       },
