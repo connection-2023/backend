@@ -124,39 +124,24 @@ export class LecturerRepository {
     });
   }
 
-  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
+  async getLecturerProfile(lecturerId: number) {
     return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId, deletedAt: null },
-      select: {
-        profileCardImageUrl: true,
-        nickname: true,
-        email: true,
-        phoneNumber: true,
-        youtubeUrl: true,
-        instagramUrl: true,
-        homepageUrl: true,
-        affiliation: true,
-        introduction: true,
-        experience: true,
+      include: {
         lecturerRegion: {
-          select: {
-            region: {
-              select: { administrativeDistrict: true, district: true },
-            },
+          include: {
+            region: true,
           },
         },
         lecturerDanceGenre: {
-          select: {
-            name: true,
-            danceCategory: { select: { genre: true } },
+          include: {
+            danceCategory: true,
           },
         },
         lecturerInstagramPostUrl: {
-          select: { url: true },
           orderBy: { id: 'asc' },
         },
         lecturerProfileImageUrl: {
-          select: { url: true },
           orderBy: { id: 'asc' },
         },
       },
@@ -170,6 +155,7 @@ export class LecturerRepository {
         id: true,
         profileCardImageUrl: true,
         nickname: true,
+        phoneNumber: true,
       },
     });
   }
