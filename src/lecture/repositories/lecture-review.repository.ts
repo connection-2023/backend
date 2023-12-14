@@ -263,6 +263,14 @@ export class LectureReviewRepository {
     });
   }
 
+  async readManyMyReviewCountWithLecturerId(
+    lecturerId: number,
+  ): Promise<number> {
+    return await this.prismaService.lectureReview.count({
+      where: { lecture: { lecturerId } },
+    });
+  }
+
   async readManyLecturerReviewWithUserId(
     lecturerId: number,
     userId: number,

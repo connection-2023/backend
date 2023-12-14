@@ -65,7 +65,7 @@ export class LectureReviewService {
     lectureId: number,
     orderBy: string,
   ) {
-    const order = {};
+    const order = { id: 'desc' };
 
     if (orderBy === '최신순') {
       order['reservation'] = {
@@ -122,7 +122,7 @@ export class LectureReviewService {
   }
 
   async readManyLectureReviewNonMember(lectureId: number, orderBy: string) {
-    const order = {};
+    const order = { id: 'desc' };
 
     if (orderBy === '최신순') {
       order['reservation'] = {
@@ -216,7 +216,7 @@ export class LectureReviewService {
     userId: number,
     query: ReadManyLectureReviewQueryDto,
   ) {
-    const order = {};
+    const order = { id: 'desc' };
     const { orderBy } = query;
     if (orderBy === '최신순') {
       order['reservation'] = {
@@ -282,7 +282,7 @@ export class LectureReviewService {
       where['lectureId'] = lectureId;
     }
 
-    const order = {};
+    const order = { id: 'desc' };
 
     if (orderBy === '최신순') {
       order['reservation'] = {
@@ -311,13 +311,20 @@ export class LectureReviewService {
       ));
     }
 
-    return await this.lectureReviewRepository.readManyMyReviewWithLecturerId(
-      where,
-      order,
-      take,
-      cursor,
-      skip,
-    );
+    const review =
+      await this.lectureReviewRepository.readManyMyReviewWithLecturerId(
+        where,
+        order,
+        take,
+        cursor,
+        skip,
+      );
+    const count =
+      await this.lectureReviewRepository.readManyMyReviewCountWithLecturerId(
+        lecturerId,
+      );
+
+    return { count, review };
   }
 
   async readManyLecturerReviewWithUserId(
@@ -342,7 +349,7 @@ export class LectureReviewService {
 
     let cursor;
     let skip;
-    const orderBy = {};
+    const orderBy = { id: 'desc' };
 
     if (lecturerReviewType === '최신순') {
       orderBy['reservation'] = {
@@ -408,7 +415,7 @@ export class LectureReviewService {
 
     let cursor;
     let skip;
-    const orderBy = {};
+    const orderBy = { id: 'desc' };
 
     if (lecturerReviewType === '최신순') {
       orderBy['reservation'] = {
