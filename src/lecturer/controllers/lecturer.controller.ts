@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { LecturerService } from '@src/lecturer/services/lecturer.service';
@@ -34,6 +35,11 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 @Controller('lecturers')
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
+
+  // @Get()
+  // async getLecturers(@Query('value') value: string) {
+  //   await this.lecturerService.getLecturers(value);
+  // }
 
   @ApiCreateLecturer()
   @Post()
