@@ -25,6 +25,7 @@ import { GetMyIssuedCouponListDto } from '../dtos/get-my-issued-coupon-list.dto'
 import { ICursor } from '@src/payments/interface/payments.interface';
 import { UpdateCouponDto } from '../dtos/update-coupon.dto';
 import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
+import { ApplicableCouponDto } from '../dtos/applicable-coupon.dto.js';
 
 @Injectable()
 export class CouponService {
@@ -527,22 +528,54 @@ export class CouponService {
     );
   }
 
-  async getApplicableCouponsForLecture(lectureId: number) {
-    const coupons = await this.couponRepository.getApplicableCouponsForLecture(
+  async getApplicableCouponsForLecture(lectureId: number, userId?: number) {
+    const lectureCouponList: LectureCoupon[] = await this.getCouponsForLecture(
       lectureId,
     );
 
-    const applicableCoupons = coupons.map((coupon) => {
-      if (
-        coupon.lectureCoupon.maxUsageCount !== coupon.lectureCoupon.usageCount
-      ) {
-        delete coupon.lectureCoupon.usageCount;
-      }
+    if (userId) {
+      const userCouponList = await this.getUserLectureCouponList(
+        userId,
+        lectureId,
+      );
 
+      const couponList = lectureCouponList.map((coupon) => {
+        const isOwned = userCouponList.some(
+          (userCoupon) => userCoupon.lectureCoupon.id === coupon.id,
+        )
+          ? true
+          : false;
+        return { ...coupon, isOwned };
+      });
+
+      return couponList;
+    }
+    return lectureCouponList.map((coupon) => new ApplicableCouponDto(coupon));
+  }
+
+  private async getCouponsForLecture(
+    lectureId: number,
+  ): Promise<LectureCoupon[]> {
+    const coupons: LectureCoupon[] =
+      await this.couponRepository.getApplicableCouponsForLecture(lectureId);
+
+    if (!coupons) {
+      return [];
+    }
+
+    return coupons.map((coupon) => {
+      if (coupon.maxUsageCount !== coupon.usageCount) {
+        delete coupon.usageCount;
+      }
       return coupon;
     });
+  }
 
-    return applicableCoupons;
+  private async getUserLectureCouponList(userId: number, lectureId: number) {
+    return await this.couponRepository.getUsersLectureCouponList(
+      userId,
+      lectureId,
+    );
   }
 
   async issuePrivateCouponToUser(

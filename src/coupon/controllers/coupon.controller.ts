@@ -35,11 +35,29 @@ import { ApiUpdateLectureCoupon } from '@src/coupon/swagger-decorators/update-le
 import { AccessTokenStrategy } from '@src/auth/strategy/access-token.startegy';
 import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
 import { ApiDeleteLectureCoupon } from '../swagger-decorators/delete-coupon.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
 export class CouponController {
   constructor(private couponService: CouponService) {}
+
+  @SetResponseKey('applicableCouponList')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('/lectures/:lectureId')
+  async getLectureCoupons(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    if (authorizedData) {
+      return await this.couponService.getApplicableCouponsForLecture(
+        lectureId,
+        authorizedData.user.id,
+      );
+    } else {
+      return await this.couponService.getApplicableCouponsForLecture(lectureId);
+    }
+  }
 
   @ApiUpdateLectureCoupon()
   @Patch('/:couponId')
@@ -112,17 +130,6 @@ export class CouponController {
     );
 
     return { coupon };
-  }
-
-  @ApiGetApplicableCouponsForLecture()
-  @Get('/lectures/:lectureId')
-  async getApplicableCouponsForLecture(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-  ) {
-    const applicableCoupons =
-      await this.couponService.getApplicableCouponsForLecture(lectureId);
-
-    return { applicableCoupons };
   }
 
   @ApiApplyLectureCoupon()
