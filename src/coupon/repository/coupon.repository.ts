@@ -172,6 +172,7 @@ export class CouponRepository {
         where: {
           isPrivate: false,
           isDisabled: false,
+          deletedAt: null,
           lectureCouponTarget: { some: { lectureId } },
         },
       });
@@ -338,6 +339,7 @@ export class CouponRepository {
       );
     }
   }
+
   async trxUpdateLectureCoupon(
     transaction: PrismaTransaction,
     couponId: number,

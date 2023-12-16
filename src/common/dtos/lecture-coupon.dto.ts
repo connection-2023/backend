@@ -94,6 +94,7 @@ export class LectureCouponDto extends BaseReturnDto implements LectureCoupon {
   })
   lectureCouponTarget?: LectureCouponTargetDto[];
 
+  isOwned?: boolean;
   constructor(lectureCoupon: Partial<LectureCouponDto>) {
     super();
     this.id = lectureCoupon.id;
@@ -103,12 +104,13 @@ export class LectureCouponDto extends BaseReturnDto implements LectureCoupon {
     this.maxDiscountPrice = lectureCoupon.maxDiscountPrice;
     this.maxUsageCount = lectureCoupon.maxUsageCount;
     this.usageCount = lectureCoupon.usageCount;
+
     this.isDisabled = lectureCoupon.isDisabled;
     this.isStackable = lectureCoupon.isStackable;
     this.isPrivate = lectureCoupon.isPrivate;
     this.startAt = lectureCoupon.startAt;
     this.endAt = lectureCoupon.endAt;
-    this.createdAt;
+    this.createdAt = lectureCoupon.createdAt;
 
     this.lecturer = lectureCoupon.lecturer
       ? new LecturerDto(lectureCoupon.lecturer)
@@ -119,6 +121,8 @@ export class LectureCouponDto extends BaseReturnDto implements LectureCoupon {
           return new LectureCouponTargetDto(couponTarget);
         })
       : null;
+
+    this.isOwned = lectureCoupon.isOwned;
 
     Object.seal(this);
   }

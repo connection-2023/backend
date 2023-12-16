@@ -528,29 +528,30 @@ export class CouponService {
     );
   }
 
-  async getApplicableCouponsForLecture(lectureId: number, userId?: number) {
+  async getCouponListByLectureId(
+    lectureId: number,
+    userId?: number,
+  ): Promise<ApplicableCouponDto[]> {
     const lectureCouponList: LectureCoupon[] = await this.getCouponsForLecture(
       lectureId,
     );
 
+    let userCouponList = [];
     if (userId) {
-      const userCouponList = await this.getUserLectureCouponList(
+      userCouponList = await this.couponRepository.getUsersLectureCouponList(
         userId,
         lectureId,
       );
-
-      const couponList = lectureCouponList.map((coupon) => {
-        const isOwned = userCouponList.some(
-          (userCoupon) => userCoupon.lectureCoupon.id === coupon.id,
-        )
-          ? true
-          : false;
-        return { ...coupon, isOwned };
-      });
-
-      return couponList;
     }
-    return lectureCouponList.map((coupon) => new ApplicableCouponDto(coupon));
+
+    const couponList = lectureCouponList.map((coupon) => {
+      const isOwned = userCouponList.some(
+        (userCoupon) => userCoupon.lectureCoupon.id === coupon.id,
+      );
+      return { ...coupon, isOwned };
+    });
+
+    return couponList.map((coupon) => new ApplicableCouponDto(coupon));
   }
 
   private async getCouponsForLecture(
@@ -559,23 +560,12 @@ export class CouponService {
     const coupons: LectureCoupon[] =
       await this.couponRepository.getApplicableCouponsForLecture(lectureId);
 
-    if (!coupons) {
-      return [];
-    }
-
     return coupons.map((coupon) => {
       if (coupon.maxUsageCount !== coupon.usageCount) {
         delete coupon.usageCount;
       }
       return coupon;
     });
-  }
-
-  private async getUserLectureCouponList(userId: number, lectureId: number) {
-    return await this.couponRepository.getUsersLectureCouponList(
-      userId,
-      lectureId,
-    );
   }
 
   async issuePrivateCouponToUser(
@@ -639,6 +629,10 @@ export class CouponService {
       lecturerId,
       couponId,
     );
+
+    if (!coupon) {
+      throw new NotFoundException(`쿠폰이 존재하지 않습니다.`);
+    }
 
     if (
       maxUsageCount !== null &&
