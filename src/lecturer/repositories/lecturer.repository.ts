@@ -241,4 +241,33 @@ export class LecturerRepository {
       );
     }
   }
+
+  async getLecturerLeaners(lecturerId: number) {
+    try {
+      return await this.prismaService.lecturerLearner.findMany({
+        where: { lecturerId },
+        include: { user: { include: { userProfileImage: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `수강생 조회 실패: ${error}`,
+        'LecturerLearnerFindFailed',
+      );
+    }
+  }
+
+  async getUserReservation(userId: number) {
+    try {
+      return await this.prismaService.reservation.findFirst({
+        where: { userId },
+        orderBy: { id: 'desc' },
+        include: { lectureSchedule: { include: { lecture: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `예약 정보 조회 실패: ${error}`,
+        'ReservationLearnerFindFailed',
+      );
+    }
+  }
 }

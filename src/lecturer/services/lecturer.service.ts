@@ -30,6 +30,7 @@ import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
+import { LecturerLearnerDto } from '@src/common/dtos/lecturer-leaner.dto';
 // import { ElasticsearchService } from '@nestjs/elasticsearch';
 
 @Injectable()
@@ -531,5 +532,27 @@ export class LecturerService implements OnModuleInit {
     } catch (error) {
       throw error;
     }
+  }
+
+  async getLecturerLearners(lecturerId: number): Promise<LecturerLearnerDto[]> {
+    const selectedLearners = await this.lecturerRepository.getLecturerLeaners(
+      lecturerId,
+    );
+    if (!selectedLearners) {
+      return;
+    }
+
+    const lecturerLearnerList = await Promise.all(
+      selectedLearners.map(async (selectedLearner) => {
+        const reservation = await this.lecturerRepository.getUserReservation(
+          selectedLearner.userId,
+        );
+        return { ...selectedLearner, reservation };
+      }),
+    );
+
+    return lecturerLearnerList.map(
+      (lecturerLearner) => new LecturerLearnerDto(lecturerLearner),
+    );
   }
 }

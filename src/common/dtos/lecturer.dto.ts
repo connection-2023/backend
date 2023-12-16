@@ -51,5 +51,7 @@ export class LecturerDto extends BaseReturnDto implements Lecturer {
           (lecturerProfile) => new LecturerProfileImageDto(lecturerProfile),
         )
       : null;
+
+    Object.seal(this);
   }
 }

@@ -30,6 +30,7 @@ import { ApiUpdateLecturerProfile } from '@src/lecturer/swagger-decorators/updat
 import { ApiGetLecturerBasicProfile } from '@src/lecturer/swagger-decorators/get-lecturer-profile-card-decorater';
 import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { LecturerLearnerDto } from '@src/common/dtos/lecturer-leaner.dto';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -120,6 +121,17 @@ export class LecturerController {
     await this.lecturerService.updateLecturerNickname(
       authorizedData.lecturer.id,
       nickname,
+    );
+  }
+
+  @Get('/learners')
+  @SetResponseKey('lecturerLearnerList')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearners(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LecturerLearnerDto[]> {
+    return await this.lecturerService.getLecturerLearners(
+      authorizedData.lecturer.id,
     );
   }
 }
