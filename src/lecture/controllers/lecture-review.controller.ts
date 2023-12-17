@@ -148,10 +148,12 @@ export class LectureReviewController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLecturerMyReviewQueryDto,
   ) {
-    return await this.lectureReviewService.readManyMyReviewWithLecturerId(
-      authorizedData.lecturer.id,
-      query,
-    );
+    const review =
+      await this.lectureReviewService.readManyMyReviewWithLecturerId(
+        authorizedData.lecturer.id,
+        query,
+      );
+    return { review };
   }
 
   @ApiReadManyLecturerReviewWithUserId()
