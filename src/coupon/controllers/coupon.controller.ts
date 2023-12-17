@@ -22,7 +22,7 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lecture-coupon.decorator';
-import { ApiGetApplicableCouponsForLecture } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
+import { ApiGetCouponListByLectureId } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
 import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/get-private-lecture-coupon-code.decorator';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
 import { ApiIssuePrivateCouponToUser } from '@src/coupon/swagger-decorators/issue-private-coupon-to-user.decorator';
@@ -32,14 +32,28 @@ import { UpdateCouponDto } from '@src/coupon/dtos/update-coupon.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
 import { ApiUpdateLectureCoupon } from '@src/coupon/swagger-decorators/update-lecture-coupon.decorator';
-import { AccessTokenStrategy } from '@src/auth/strategy/access-token.startegy';
 import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
 import { ApiDeleteLectureCoupon } from '../swagger-decorators/delete-coupon.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApplicableCouponDto } from '../dtos/applicable-coupon.dto';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
 export class CouponController {
   constructor(private couponService: CouponService) {}
+
+  @ApiGetCouponListByLectureId()
+  @SetResponseKey('couponList')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('/lectures/:lectureId')
+  async getCouponListByLectureId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ): Promise<ApplicableCouponDto[]> {
+    const userId = authorizedData?.user?.id;
+
+    return await this.couponService.getCouponListByLectureId(lectureId, userId);
+  }
 
   @ApiUpdateLectureCoupon()
   @Patch('/:couponId')
@@ -112,17 +126,6 @@ export class CouponController {
     );
 
     return { coupon };
-  }
-
-  @ApiGetApplicableCouponsForLecture()
-  @Get('/lectures/:lectureId')
-  async getApplicableCouponsForLecture(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-  ) {
-    const applicableCoupons =
-      await this.couponService.getApplicableCouponsForLecture(lectureId);
-
-    return { applicableCoupons };
   }
 
   @ApiApplyLectureCoupon()

@@ -25,6 +25,7 @@ import { GetMyIssuedCouponListDto } from '../dtos/get-my-issued-coupon-list.dto'
 import { ICursor } from '@src/payments/interface/payments.interface';
 import { UpdateCouponDto } from '../dtos/update-coupon.dto';
 import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
+import { ApplicableCouponDto } from '../dtos/applicable-coupon.dto.js';
 
 @Injectable()
 export class CouponService {
@@ -527,22 +528,44 @@ export class CouponService {
     );
   }
 
-  async getApplicableCouponsForLecture(lectureId: number) {
-    const coupons = await this.couponRepository.getApplicableCouponsForLecture(
+  async getCouponListByLectureId(
+    lectureId: number,
+    userId?: number,
+  ): Promise<ApplicableCouponDto[]> {
+    const lectureCouponList: LectureCoupon[] = await this.getCouponsForLecture(
       lectureId,
     );
 
-    const applicableCoupons = coupons.map((coupon) => {
-      if (
-        coupon.lectureCoupon.maxUsageCount !== coupon.lectureCoupon.usageCount
-      ) {
-        delete coupon.lectureCoupon.usageCount;
-      }
+    let userCouponList = [];
+    if (userId) {
+      userCouponList = await this.couponRepository.getUsersLectureCouponList(
+        userId,
+        lectureId,
+      );
+    }
 
-      return coupon;
+    const couponList = lectureCouponList.map((coupon) => {
+      const isOwned = userCouponList.some(
+        (userCoupon) => userCoupon.lectureCoupon.id === coupon.id,
+      );
+      return { ...coupon, isOwned };
     });
 
-    return applicableCoupons;
+    return couponList.map((coupon) => new ApplicableCouponDto(coupon));
+  }
+
+  private async getCouponsForLecture(
+    lectureId: number,
+  ): Promise<LectureCoupon[]> {
+    const coupons: LectureCoupon[] =
+      await this.couponRepository.getApplicableCouponsForLecture(lectureId);
+
+    return coupons.map((coupon) => {
+      if (coupon.maxUsageCount !== coupon.usageCount) {
+        delete coupon.usageCount;
+      }
+      return coupon;
+    });
   }
 
   async issuePrivateCouponToUser(
@@ -606,6 +629,10 @@ export class CouponService {
       lecturerId,
       couponId,
     );
+
+    if (!coupon) {
+      throw new NotFoundException(`쿠폰이 존재하지 않습니다.`);
+    }
 
     if (
       maxUsageCount !== null &&
