@@ -8,10 +8,23 @@ export class LecturerLearnerDto
   extends BaseReturnDto
   implements LecturerLearner
 {
+  @ApiProperty({
+    description: '수강생 목록 Id',
+    type: Number,
+  })
   id: number;
   userId: number;
   lecturerId: number;
+
+  @ApiProperty({
+    description: '수강 횟수 Id',
+    type: Number,
+  })
   enrollmentCount: number;
+
+  @ApiProperty({
+    description: '강사가 작성한 메모',
+  })
   memo: string;
 
   @ApiProperty({
@@ -22,7 +35,7 @@ export class LecturerLearnerDto
 
   @ApiProperty({
     description: '예약 정보',
-    type: UserDto,
+    type: ReservationDto,
   })
   reservation?: ReservationDto;
 
