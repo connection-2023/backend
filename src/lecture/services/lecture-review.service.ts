@@ -324,8 +324,12 @@ export class LectureReviewService {
         cursor,
         skip,
       );
+    const count =
+      await this.lectureReviewRepository.readManyMyReviewCountWithLecturerId(
+        lecturerId,
+      );
 
-    return review;
+    return { count, review };
   }
 
   async readManyLecturerReviewWithUserId(
