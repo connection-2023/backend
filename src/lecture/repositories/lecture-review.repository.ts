@@ -203,6 +203,7 @@ export class LectureReviewRepository {
         reservation: {
           select: { lectureSchedule: { select: { startDateTime: true } } },
         },
+        likedLectureReview: { where: { userId } },
         _count: { select: { likedLectureReview: true } },
       },
       orderBy,

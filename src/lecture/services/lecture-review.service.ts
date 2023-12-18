@@ -216,22 +216,29 @@ export class LectureReviewService {
     userId: number,
     query: ReadManyLectureReviewQueryDto,
   ) {
-    const order = { id: 'desc' };
     const { orderBy } = query;
+    const order = [];
+
+    order.push({ id: 'desc' });
+
     if (orderBy === '최신순') {
-      order['reservation'] = {
-        lectureSchedule: {
-          startDateTime: 'desc',
+      order.push({
+        reservation: {
+          lectureSchedule: {
+            startDateTime: 'desc',
+          },
         },
-      };
+      });
     } else if (orderBy === '좋아요순') {
-      order['likedLectureReview'] = {
-        _count: 'desc',
-      };
+      order.push({
+        likedLectureReview: {
+          _count: 'desc',
+        },
+      });
     } else if (orderBy === '평점 높은순') {
-      order['stars'] = 'desc';
+      order.push({ stars: 'desc' });
     } else if (orderBy === '평점 낮은순') {
-      order['stars'] = 'asc';
+      order.push({ stars: 'asc' });
     }
 
     return await this.lectureReviewRepository.readManyMyReviewWithUserId(
