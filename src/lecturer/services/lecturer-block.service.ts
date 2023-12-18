@@ -20,4 +20,14 @@ export class LecturerBlockService {
       userId,
     );
   }
+
+  async readManyLecturerBlock(userId: number) {
+    const lecturerBlock =
+      await this.lecturerBlockRepository.readManyLecturerBlock(userId);
+    const count = await this.lecturerBlockRepository.getCountLecturerBlock(
+      userId,
+    );
+
+    return { count, lecturerBlock };
+  }
 }
