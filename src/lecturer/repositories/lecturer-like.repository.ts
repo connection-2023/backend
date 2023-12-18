@@ -20,4 +20,29 @@ export class LecturerLikeRepository {
       where: { lecturerId_userId: { lecturerId, userId } },
     });
   }
+
+  async readManyLecturerLike(userId: number): Promise<LikedLecturer[]> {
+    return await this.prismaService.likedLecturer.findMany({
+      where: { userId },
+      include: {
+        lecturer: {
+          select: {
+            nickname: true,
+            affiliation: true,
+            stars: true,
+            lecturerRegion: { select: { region: true } },
+            lecturerDanceGenre: {
+              include: { danceCategory: { select: { genre: true } } },
+            },
+            lecturerProfileImageUrl: { select: { url: true }, take: 1 },
+          },
+        },
+      },
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async getCountLecturerLike(userId: number): Promise<number> {
+    return await this.prismaService.likedLecturer.count({ where: { userId } });
+  }
 }

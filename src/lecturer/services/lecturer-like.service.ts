@@ -20,4 +20,15 @@ export class LecturerLikeService {
       userId,
     );
   }
+
+  async readManyLecturerLike(userId: number) {
+    const lecturerLike = await this.lecturerLikeRepository.readManyLecturerLike(
+      userId,
+    );
+    const count = await this.lecturerLikeRepository.getCountLecturerLike(
+      userId,
+    );
+
+    return { count, lecturerLike };
+  }
 }
