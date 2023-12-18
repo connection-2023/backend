@@ -32,6 +32,10 @@ import { DanceCategory } from '@src/common/enum/enum';
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
+import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
+import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
+import { PaginationDto } from '@src/common/dtos/pagination.dto';
+import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 
 @Injectable()
 export class LectureService {
@@ -964,5 +968,25 @@ export class LectureService {
         'InvalidScheduleId',
       );
     }
+  }
+
+  async getLectureLearnerList(
+    lecturerId: number,
+    { take, lastItemId }: GetLectureLearnerListDto,
+    lectureId: number,
+  ): Promise<LectureLearnerDto[]> {
+    const cursor = lastItemId ? { id: lastItemId } : undefined;
+
+    const lecturerLearnerList =
+      await this.lectureRepository.getLectureLearnerList(
+        lecturerId,
+        lectureId,
+        take,
+        cursor,
+      );
+
+    return lecturerLearnerList.map(
+      (lecturerLearner) => new LectureLearnerDto(lecturerLearner),
+    );
   }
 }
