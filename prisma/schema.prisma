@@ -46,6 +46,7 @@ model Users {
   targetUserReports        UserReport[]               @relation("TargetUser")
   targetLecturerReports    LecturerReport[]
   lectureLearner           LectureLearner[]
+  likedLecturer            LikedLecturer[]
 }
 
 model UserProfileImage {
@@ -118,6 +119,7 @@ model Lecturer {
   reportedLecturerReports  LecturerReport[]           @relation("ReportedLecturer")
   targetLecturerReports    LecturerReport[]           @relation("TargetLecturer")
   lectureLearner           LectureLearner[]
+  likedLecturer            LikedLecturer[]
 }
 
 model Lecture {
@@ -288,6 +290,19 @@ model LikedLecture {
   user      Users   @relation(fields: [userId], references: [id])
 
   @@unique([lectureId, userId])
+}
+
+model LikedLecturer {
+  //고유 id
+  id         Int      @id @default(autoincrement())
+  //강의 id
+  lecturerId Int
+  //유저 id
+  userId     Int
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  user       Users    @relation(fields: [userId], references: [id])
+
+  @@unique([lecturerId, userId])
 }
 
 model LectureNotification {

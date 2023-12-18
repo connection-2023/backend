@@ -4,11 +4,19 @@ import { LecturerRepository } from '@src/lecturer/repositories/lecturer.reposito
 import { LecturerController } from '@src/lecturer/controllers/lecturer.controller';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 // import { CustomElasticSearchModule } from '@src/common/config/search-module.config';
+import { LecturerLikeController } from './controllers/lecturer-like.controller';
+import { LecturerLikeService } from './services/lecturer-like.service';
+import { LecturerLikeRepository } from './repositories/lecturer-like.repository';
 
 @Module({
   // imports: [CustomElasticSearchModule],
-  providers: [LecturerService, LecturerRepository],
+  providers: [
+    LecturerService,
+    LecturerRepository,
+    LecturerLikeService,
+    LecturerLikeRepository,
+  ],
   exports: [LecturerRepository],
-  controllers: [LecturerController],
+  controllers: [LecturerController, LecturerLikeController],
 })
 export class LecturerModule {}
