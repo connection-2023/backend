@@ -10,13 +10,13 @@ export class LecturerBlockRepository {
     lecturerId: number,
     userId: number,
   ): Promise<LikedLecturer> {
-    return await this.prismaService.likedLecturer.create({
+    return await this.prismaService.blockedLecturer.create({
       data: { lecturerId, userId },
     });
   }
 
   async deleteLecturerBlock(lecturerId: number, userId: number): Promise<void> {
-    await this.prismaService.likedLecturer.delete({
+    await this.prismaService.blockedLecturer.delete({
       where: { lecturerId_userId: { lecturerId, userId } },
     });
   }
