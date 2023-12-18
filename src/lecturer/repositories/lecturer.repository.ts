@@ -12,6 +12,8 @@ import {
   LecturerBasicProfile,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
+  ICursor,
+  IPaginationParams,
   Id,
   PrismaTransaction,
   Region,
@@ -238,6 +240,62 @@ export class LecturerRepository {
       throw new InternalServerErrorException(
         `강사정보 업데이트 실패: ${error}`,
         'LecturerUpdateFailed',
+      );
+    }
+  }
+
+  async getLecturerLeaners(
+    lecturerId: number,
+    { cursor, skip, take }: IPaginationParams,
+    orderBy: Array<object> | object,
+    user?: object,
+  ) {
+    try {
+      return await this.prismaService.lecturerLearner.findMany({
+        where: {
+          lecturerId,
+          user,
+        },
+        orderBy,
+        take,
+        cursor,
+        skip,
+        include: { user: { include: { userProfileImage: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `수강생 조회 실패: ${error}`,
+        'LecturerLearnerFindFailed',
+      );
+    }
+  }
+
+  async getUserReservation(userId: number) {
+    try {
+      return await this.prismaService.reservation.findFirst({
+        where: { userId },
+        orderBy: { id: 'desc' },
+        include: { lectureSchedule: { include: { lecture: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `예약 정보 조회 실패: ${error}`,
+        'ReservationLearnerFindFailed',
+      );
+    }
+  }
+  async getLecturerLearnerCount(lecturerId: number, user?: object) {
+    try {
+      return await this.prismaService.lecturerLearner.count({
+        where: {
+          lecturerId,
+          user,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `수강생 조회 실패: ${error}`,
+        'LecturerLearnerFindFailed',
       );
     }
   }

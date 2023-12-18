@@ -454,4 +454,21 @@ export class LectureRepository {
       },
     });
   }
+
+  async getLectureLearnerList(
+    lecturerId: number,
+    lectureId: number,
+    take: number,
+    cursor?: object,
+  ) {
+    return await this.prismaService.lecturerLearner.findMany({
+      where: {
+        lecturerId,
+        user: { reservation: { some: { lectureSchedule: { lectureId } } } },
+      },
+      take,
+      cursor,
+      include: { user: true },
+    });
+  }
 }

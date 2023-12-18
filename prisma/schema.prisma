@@ -45,7 +45,7 @@ model Users {
   reportedUserReports      UserReport[]               @relation("ReportedUser")
   targetUserReports        UserReport[]               @relation("TargetUser")
   targetLecturerReports    LecturerReport[]
-  lectureLearner           LectureLearner[]
+  lecturerLearner           LecturerLearner[]
   likedLecturer            LikedLecturer[]
   blockedLecturer          BlockedLecturer[]
 }
@@ -119,7 +119,7 @@ model Lecturer {
   userReport               UserReport[]
   reportedLecturerReports  LecturerReport[]           @relation("ReportedLecturer")
   targetLecturerReports    LecturerReport[]           @relation("TargetLecturer")
-  lectureLearner           LectureLearner[]
+  lecturerLearner           LecturerLearner[]
   likedLecturer            LikedLecturer[]
   blockedLecturer          BlockedLecturer[]
 }
@@ -1004,12 +1004,14 @@ model Admin {
 //   admin      Admin     @relation(fields: [userId], references: [id], onDelete: Cascade)
 // }
 
-model LectureLearner {
+model LecturerLearner {
   id              Int     @id @default(autoincrement())
   userId          Int
   lecturerId      Int
   enrollmentCount Int     @default(0)
   memo            String?
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   user     Users    @relation(fields: [userId], references: [id])
   lecturer Lecturer @relation(fields: [lecturerId], references: [id])

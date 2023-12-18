@@ -26,8 +26,8 @@ import {
   PaymentMethods,
 } from '../enum/payment.enum';
 import {
-  LectureLearner,
   LecturePass,
+  LecturerLearner,
   Payment,
   PaymentProductType,
   PaymentStatus,
@@ -997,9 +997,9 @@ export class PaymentsRepository {
   async getLectureLearner(
     userId: number,
     lecturerId: number,
-  ): Promise<LectureLearner> {
+  ): Promise<LecturerLearner> {
     try {
-      return await this.prismaService.lectureLearner.findFirst({
+      return await this.prismaService.lecturerLearner.findFirst({
         where: { userId, lecturerId },
       });
     } catch (error) {
@@ -1017,7 +1017,7 @@ export class PaymentsRepository {
     enrollmentCount: number,
   ): Promise<void> {
     try {
-      await transaction.lectureLearner.upsert({
+      await transaction.lecturerLearner.upsert({
         where: { userId_lecturerId: { userId, lecturerId } },
         create: { userId, lecturerId, enrollmentCount },
         update: { enrollmentCount: { increment: enrollmentCount } },
@@ -1043,7 +1043,7 @@ export class PaymentsRepository {
     lecturerId,
     enrollmentCount,
   ) {
-    await transaction.lectureLearner.update({
+    await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
       data: { enrollmentCount: { decrement: enrollmentCount } },
     });

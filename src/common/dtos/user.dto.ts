@@ -30,7 +30,6 @@ export class UserDto extends BaseReturnDto implements Users {
 
   constructor(user: Partial<UserDto>) {
     super();
-
     this.id = user.id;
     this.nickname = user.nickname;
 

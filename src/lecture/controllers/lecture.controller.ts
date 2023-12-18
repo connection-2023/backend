@@ -37,6 +37,11 @@ import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progr
 import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
 import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
 import { ApiReadManyLectureByNonMemeber } from '../swagger-decorators/read-many-lecture-by-non-member-decorator';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { ApiGetLectureLearnerList } from '../swagger-decorators/get-lecture-learner-list.decorator';
+import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
+import { PaginationDto } from '@src/common/dtos/pagination.dto';
+import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -130,6 +135,22 @@ export class LectureController {
   ) {
     await this.lectureService.readLectureReservationWithUser(
       authorizedData.user.id,
+      lectureId,
+    );
+  }
+
+  @ApiGetLectureLearnerList()
+  @SetResponseKey('lectureLearnerList')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get(':lectureId/learners')
+  async getLectureLearnerList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() paginationOptions: GetLectureLearnerListDto,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ): Promise<LectureLearnerDto[]> {
+    return await this.lectureService.getLectureLearnerList(
+      authorizedData.lecturer.id,
+      paginationOptions,
       lectureId,
     );
   }
