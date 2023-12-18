@@ -201,8 +201,11 @@ export class LectureReviewRepository {
       include: {
         lecture: true,
         reservation: {
-          select: { lectureSchedule: { select: { startDateTime: true } } },
+          select: {
+            lectureSchedule: { select: { startDateTime: true } },
+          },
         },
+        likedLectureReview: { where: { userId } },
         _count: { select: { likedLectureReview: true } },
       },
       orderBy,
@@ -260,6 +263,14 @@ export class LectureReviewRepository {
         },
       },
       orderBy,
+    });
+  }
+
+  async readManyMyReviewCountWithLecturerId(
+    lecturerId: number,
+  ): Promise<number> {
+    return await this.prismaService.lectureReview.count({
+      where: { lecture: { lecturerId } },
     });
   }
 
