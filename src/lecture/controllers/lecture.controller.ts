@@ -169,7 +169,7 @@ export class LectureController {
   }
 
   @ApiReadManyLectureByNonMemeber()
-  @Get('lecturers/:lecturerId')
+  @Get('lecturers/:lecturerId/non-members')
   async readManyLectureByNonMember(
     @Param('lecturerId', ParseIntPipe) lecturerId: number,
   ) {
