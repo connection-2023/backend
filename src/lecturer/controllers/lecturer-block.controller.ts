@@ -8,40 +8,38 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
-import { LecturerLikeService } from '../services/lecturer-like.service';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiCreateLecturerLike } from '../swagger-decorators/create-lecturer-like-decorator';
+import { LecturerBlockService } from '../services/lecturer-block.service';
 
-@ApiTags('강사 좋아요')
-@Controller('lecturer-likes')
-export class LecturerLikeController {
-  constructor(private readonly lecturerLikeService: LecturerLikeService) {}
+@ApiTags('강사 차단')
+@Controller('lecturer-block')
+export class LecturerBlockController {
+  constructor(private readonly lecturerBlockService: LecturerBlockService) {}
 
-  @ApiCreateLecturerLike()
+  @ApiBearerAuth()
   @UseGuards(UserAccessTokenGuard)
   @Post(':lecturerId')
-  async createLecturerLike(
+  async createLecturerBlock(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lecturerId', ParseIntPipe) lecturerId: number,
   ) {
-    const lecturerLike = await this.lecturerLikeService.createLecturerLike(
+    const lecturerBlock = await this.lecturerBlockService.createLecturerBlock(
       lecturerId,
       authorizedData.user.id,
     );
 
-    return { lecturerLike };
+    return { lecturerBlock };
   }
 
-  @ApiOperation({ summary: '강사 좋아요 삭제' })
   @ApiBearerAuth()
   @UseGuards(UserAccessTokenGuard)
   @Delete(':lecturerId')
-  async deleteLecturerLike(
+  async deleteLecturerBlock(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lecturerId', ParseIntPipe) lecturerId: number,
   ) {
-    return await this.lecturerLikeService.deleteLecturerLike(
+    return await this.lecturerBlockService.deleteLecturerBlock(
       lecturerId,
       authorizedData.user.id,
     );
