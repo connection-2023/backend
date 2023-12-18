@@ -1,6 +1,7 @@
 import {
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Post,
@@ -12,6 +13,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { LecturerBlockService } from '../services/lecturer-block.service';
 import { ApiCreateLecturerBlock } from '../swagger-decorators/create-lecturer-block-decorator';
+import { ApiReadManyLecturerBlock } from '../swagger-decorators/get-lecturer-block-decorator';
 
 @ApiTags('강사 차단')
 @Controller('lecturer-block')
@@ -43,6 +45,17 @@ export class LecturerBlockController {
   ) {
     return await this.lecturerBlockService.deleteLecturerBlock(
       lecturerId,
+      authorizedData.user.id,
+    );
+  }
+
+  @ApiReadManyLecturerBlock()
+  @UseGuards(UserAccessTokenGuard)
+  @Get()
+  async readManyLecturerBlock(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.lecturerBlockService.readManyLecturerBlock(
       authorizedData.user.id,
     );
   }
