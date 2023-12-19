@@ -373,24 +373,28 @@ export class LectureReviewService {
 
     let cursor;
     let skip;
-    const orderBy = { id: 'desc' };
+    const orderBy = [];
+    orderBy.push({ id: 'desc' });
 
     if (lecturerReviewType === '최신순') {
-      orderBy['reservation'] = {
-        lectureSchedule: {
-          startDateTime: 'desc',
+      orderBy.push({
+        reservation: {
+          lectureSchedule: {
+            startDateTime: 'desc',
+          },
         },
-      };
+      });
     } else if (lecturerReviewType === '좋아요순') {
-      orderBy['likedLectureReview'] = {
-        _count: 'desc',
-      };
+      orderBy.push({
+        likedLectureReview: {
+          _count: 'desc',
+        },
+      });
     } else if (lecturerReviewType === '평점 높은순') {
-      orderBy['stars'] = 'desc';
+      orderBy.push({ stars: 'desc' });
     } else if (lecturerReviewType === '평점 낮은순') {
-      orderBy['stars'] = 'asc';
+      orderBy.push({ stars: 'asc' });
     }
-
     const isPagination = currentPage && targetPage;
 
     if (isPagination) {
@@ -439,22 +443,27 @@ export class LectureReviewService {
 
     let cursor;
     let skip;
-    const orderBy = { id: 'desc' };
+    const orderBy = [];
+    orderBy.push({ id: 'desc' });
 
     if (lecturerReviewType === '최신순') {
-      orderBy['reservation'] = {
-        lectureSchedule: {
-          startDateTime: 'desc',
+      orderBy.push({
+        reservation: {
+          lectureSchedule: {
+            startDateTime: 'desc',
+          },
         },
-      };
+      });
     } else if (lecturerReviewType === '좋아요순') {
-      orderBy['likedLectureReview'] = {
-        _count: 'desc',
-      };
+      orderBy.push({
+        likedLectureReview: {
+          _count: 'desc',
+        },
+      });
     } else if (lecturerReviewType === '평점 높은순') {
-      orderBy['stars'] = 'desc';
+      orderBy.push({ stars: 'desc' });
     } else if (lecturerReviewType === '평점 낮은순') {
-      orderBy['stars'] = 'asc';
+      orderBy.push({ stars: 'asc' });
     }
 
     const isPagination = currentPage && targetPage;
