@@ -40,10 +40,10 @@ import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-le
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
-  // @Get()
-  // async getLecturers(@Query('value') value: string) {
-  //   await this.lecturerService.getLecturers(value);
-  // }
+  @Get('/search')
+  async getLecturers(@Query('value') value: string) {
+    return await this.lecturerService.getLecturers(value);
+  }
 
   @ApiCreateLecturer()
   @Post()
