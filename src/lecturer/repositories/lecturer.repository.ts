@@ -299,4 +299,10 @@ export class LecturerRepository {
       );
     }
   }
+
+  async getUserLikedLecturerList(userId) {
+    return await this.prismaService.likedLecturer.findMany({
+      where: { userId },
+    });
+  }
 }

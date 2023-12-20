@@ -13,7 +13,7 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { Lecturer } from '@prisma/client';
+import { Lecturer, LikedLecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerBasicProfile,
@@ -49,13 +49,33 @@ export class LecturerService implements OnModuleInit {
 
   onModuleInit() {}
 
-  async getLecturers(value) {
-    const lecturer = await this.elasticsearchGetLecturer(value);
+  async getLecturers(userId, value) {
+    const searchedLecturers = await this.searchLecturers(value);
+    if (!searchedLecturers) {
+      return;
+    }
+    if (!userId) {
+      return searchedLecturers;
+    }
 
-    return lecturer;
+    const userLikedLecturerList: LikedLecturer[] =
+      await this.lecturerRepository.getUserLikedLecturerList(userId);
+
+    const likedLecturerIds = userLikedLecturerList.map(
+      (like) => like.lecturerId,
+    );
+
+    const lecturersWithLikeStatus = searchedLecturers.map(
+      (lecturer: LikedLecturer) => ({
+        ...lecturer,
+        isLiked: likedLecturerIds.includes(lecturer.id),
+      }),
+    );
+
+    return lecturersWithLikeStatus;
   }
 
-  private async elasticsearchGetLecturer(value) {
+  private async searchLecturers(value) {
     const { hits } = await this.esService.search({
       index: 'lecturer',
       query: {
