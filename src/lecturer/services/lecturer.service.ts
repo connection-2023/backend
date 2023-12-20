@@ -13,7 +13,7 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { Lecturer, LikedLecturer } from '@prisma/client';
+import { BlockedLecturer, Lecturer, LikedLecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerBasicProfile,
@@ -51,11 +51,21 @@ export class LecturerService implements OnModuleInit {
 
   async getLecturers(userId, value) {
     const searchedLecturers = await this.searchLecturers(value);
-    if (!searchedLecturers) {
-      return;
-    }
-    if (!userId) {
+    if (!searchedLecturers || !userId) {
       return searchedLecturers;
+    }
+
+    const userBlockedLecturer =
+      await this.lecturerRepository.getUserblockedLecturerList(userId);
+    const lecturersWithoutBlocked = searchedLecturers.filter(
+      (lecturer: BlockedLecturer) =>
+        !userBlockedLecturer.some(
+          (blocked) => blocked.lecturerId === lecturer.id,
+        ),
+    );
+
+    if (!lecturersWithoutBlocked) {
+      return;
     }
 
     const userLikedLecturerList: LikedLecturer[] =
@@ -65,7 +75,8 @@ export class LecturerService implements OnModuleInit {
       (like) => like.lecturerId,
     );
 
-    const lecturersWithLikeStatus = searchedLecturers.map(
+    // 좋아요한 강사들에 isLiked 속성 추가
+    const lecturersWithLikeStatus = lecturersWithoutBlocked.map(
       (lecturer: LikedLecturer) => ({
         ...lecturer,
         isLiked: likedLecturerIds.includes(lecturer.id),
