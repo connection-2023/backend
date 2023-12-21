@@ -42,6 +42,7 @@ import { ApiGetLectureLearnerList } from '../swagger-decorators/get-lecture-lear
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
+import { ApiReadManyLectureSchedulesWithLecturerId } from '../swagger-decorators/read-many-lecture-schedules-with-lecturer-id-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -232,5 +233,19 @@ export class LectureController {
       );
 
     return { participant };
+  }
+
+  @ApiReadManyLectureSchedulesWithLecturerId()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('schedules')
+  async readManyLectureSchedules(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const schedules =
+      await this.lectureService.readManyLectureSchedulesWithLecturerId(
+        authorizedData.lecturer.id,
+      );
+
+    return { schedules };
   }
 }

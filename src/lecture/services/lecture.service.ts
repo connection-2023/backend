@@ -635,6 +635,11 @@ export class LectureService {
     return participant.reservation;
   }
 
+  async readManyLectureSchedulesWithLecturerId(lecturerId: number) {
+    return await this.lectureRepository.readManyLectureSchedulesWithLecturerId(
+      lecturerId,
+    );
+  }
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
 

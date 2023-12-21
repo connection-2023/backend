@@ -471,4 +471,22 @@ export class LectureRepository {
       include: { user: true },
     });
   }
+
+  async readManyLectureSchedulesWithLecturerId(
+    lecturerId: number,
+  ): Promise<LectureSchedule[]> {
+    return await this.prismaService.lectureSchedule.findMany({
+      where: { lecture: { lecturerId } },
+      include: {
+        lecture: {
+          select: {
+            title: true,
+            isGroup: true,
+            maxCapacity: true,
+          },
+        },
+      },
+      orderBy: [{ startDateTime: 'asc' }, { id: 'desc' }],
+    });
+  }
 }
