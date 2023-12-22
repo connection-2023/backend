@@ -62,6 +62,7 @@ export class LectureService {
       lectureMethod,
       lectureType,
       coupons,
+      daySchedules,
       ...lecture
     } = createLectureDto;
 
@@ -131,6 +132,17 @@ export class LectureService {
               regularDayScheduleInputData,
             );
           }
+        }
+
+        if (daySchedules[0]) {
+          const daySchedulesInputData = daySchedules.map((daySchedule) => ({
+            lectureId: newLecture.id,
+            ...daySchedule,
+          }));
+          await this.lectureRepository.trxCreateLectureDay(
+            transaction,
+            daySchedulesInputData,
+          );
         }
 
         if (holidays) {

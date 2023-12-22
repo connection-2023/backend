@@ -150,6 +150,17 @@ interface LectureScheduleParticipantResponseData {
   }[];
 }
 
+interface DaySchedule {
+  day: string[];
+  dateTime: string[];
+}
+
+interface DayScheduleInputData {
+  lectureId: number;
+  day: string[];
+  dateTime: string[];
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -168,4 +179,6 @@ export {
   EnrollLectureReservationResponseData,
   LectureScheduleResponseData,
   LectureScheduleParticipantResponseData,
+  DaySchedule,
+  DayScheduleInputData,
 };
