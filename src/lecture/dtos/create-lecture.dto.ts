@@ -13,6 +13,7 @@ import {
   IsString,
 } from 'class-validator';
 import {
+  DaySchedule,
   LectureLocation,
   RegularLectureSchedules,
 } from '../interface/lecture.interface';
@@ -222,6 +223,17 @@ export class CreateLectureDto {
   @IsOptional()
   @Type(() => Array)
   schedules?: Date[];
+
+  @ApiProperty({
+    example: [
+      { day: ['월', '수', '금'], dateTime: ['13:00:00', '14:00:00'] },
+      { day: ['수'], dateTime: ['13:00:00'] },
+    ],
+  })
+  @IsArray()
+  @IsOptional()
+  @Type(() => Array)
+  daySchedules?: DaySchedule[];
 
   @ApiProperty({
     example: [

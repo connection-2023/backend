@@ -18,6 +18,8 @@ import {
   ICursor,
 } from '@src/common/interface/common-interface';
 import {
+  DaySchedule,
+  DayScheduleInputData,
   EnrollLectureReservationResponseData,
   LectureCouponTargetInputData,
   LectureHolidayInputData,
@@ -488,5 +490,12 @@ export class LectureRepository {
       },
       orderBy: [{ startDateTime: 'asc' }, { id: 'desc' }],
     });
+  }
+
+  async trxCreateLectureDay(
+    transaction: PrismaTransaction,
+    daySchedules: DayScheduleInputData[],
+  ): Promise<void> {
+    await transaction.lectureDay.createMany({ data: daySchedules });
   }
 }
