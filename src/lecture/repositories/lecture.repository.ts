@@ -18,6 +18,8 @@ import {
   ICursor,
 } from '@src/common/interface/common-interface';
 import {
+  DaySchedule,
+  DayScheduleInputData,
   EnrollLectureReservationResponseData,
   LectureCouponTargetInputData,
   LectureHolidayInputData,
@@ -470,5 +472,30 @@ export class LectureRepository {
       cursor,
       include: { user: true },
     });
+  }
+
+  async readManyLectureSchedulesWithLecturerId(
+    lecturerId: number,
+  ): Promise<LectureSchedule[]> {
+    return await this.prismaService.lectureSchedule.findMany({
+      where: { lecture: { lecturerId } },
+      include: {
+        lecture: {
+          select: {
+            title: true,
+            isGroup: true,
+            maxCapacity: true,
+          },
+        },
+      },
+      orderBy: [{ startDateTime: 'asc' }, { id: 'desc' }],
+    });
+  }
+
+  async trxCreateLectureDay(
+    transaction: PrismaTransaction,
+    daySchedules: DayScheduleInputData[],
+  ): Promise<void> {
+    await transaction.lectureDay.createMany({ data: daySchedules });
   }
 }
