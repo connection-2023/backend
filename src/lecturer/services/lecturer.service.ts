@@ -13,14 +13,13 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { BlockedLecturer, Lecturer, LikedLecturer } from '@prisma/client';
+import { Lecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerBasicProfile,
   LecturerCoupon,
   LecturerDanceGenreInputData,
   LecturerInstagramPostInputData,
-  LecturerProfile,
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
 } from '@src/lecturer/interface/lecturer.interface';
@@ -33,7 +32,6 @@ import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
 import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
 import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
-import { ElasticsearchService } from '@nestjs/elasticsearch';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -44,68 +42,9 @@ export class LecturerService implements OnModuleInit {
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
     private readonly configService: ConfigService,
-    private readonly esService: ElasticsearchService,
   ) {}
 
   onModuleInit() {}
-
-  async getLecturers(userId, value) {
-    const searchedLecturers = await this.searchLecturers(value);
-    if (!searchedLecturers || !userId) {
-      return searchedLecturers;
-    }
-
-    const userBlockedLecturer =
-      await this.lecturerRepository.getUserblockedLecturerList(userId);
-    const lecturersWithoutBlocked = searchedLecturers.filter(
-      (lecturer: BlockedLecturer) =>
-        !userBlockedLecturer.some(
-          (blocked) => blocked.lecturerId === lecturer.id,
-        ),
-    );
-
-    if (!lecturersWithoutBlocked) {
-      return;
-    }
-
-    const userLikedLecturerList: LikedLecturer[] =
-      await this.lecturerRepository.getUserLikedLecturerList(userId);
-
-    const likedLecturerIds = userLikedLecturerList.map(
-      (like) => like.lecturerId,
-    );
-
-    // 좋아요한 강사들에 isLiked 속성 추가
-    const lecturersWithLikeStatus = lecturersWithoutBlocked.map(
-      (lecturer: LikedLecturer) => ({
-        ...lecturer,
-        isLiked: likedLecturerIds.includes(lecturer.id),
-      }),
-    );
-
-    return lecturersWithLikeStatus;
-  }
-
-  private async searchLecturers(value) {
-    const { hits } = await this.esService.search({
-      index: 'lecturer',
-      query: {
-        bool: {
-          should: [
-            { match: { 'genres.genre': value } },
-            { match: { nickname: value } },
-            { match: { affiliation: value } },
-            { match: { 'regions.administrativeDistrict': value } },
-            { match: { 'regions.district': value } },
-          ],
-        },
-      },
-    });
-
-    if (typeof hits.total === 'object' && hits.total.value > 0) {
-      return hits.hits.map((hit) => hit._source);
-    }
-  }
 
   async createLecturer(
     userId: number,

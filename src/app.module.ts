@@ -18,6 +18,7 @@ import { PassModule } from '@src/pass/pass.module';
 import { ReportModule } from '@src/report/report.module';
 import { AdminModule } from './admin/admin.module';
 import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { SuccessInterceptorModule } from './common/interceptors/success-intercep
     ReportModule,
     AdminModule,
     SuccessInterceptorModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

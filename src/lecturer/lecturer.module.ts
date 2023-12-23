@@ -11,7 +11,6 @@ import { LecturerBlockRepository } from './repositories/lecturer-block.repositor
 import { LecturerBlockController } from './controllers/lecturer-block.controller';
 
 @Module({
-  imports: [CustomElasticSearchModule],
   providers: [
     LecturerService,
     LecturerRepository,

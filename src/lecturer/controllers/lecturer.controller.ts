@@ -41,17 +41,6 @@ import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guar
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
 
-  @Get('/search')
-  @UseGuards(AllowUserAndGuestGuard)
-  async getLecturers(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query('value') value: string,
-  ) {
-    const userId: number = authorizedData?.user?.id;
-
-    return await this.lecturerService.getLecturers(userId, value);
-  }
-
   @ApiCreateLecturer()
   @Post()
   @UseGuards(UserAccessTokenGuard)
