@@ -16,4 +16,10 @@ export class SearchRepository {
       where: { userId },
     });
   }
+
+  async getUserLikedLectureList(userId: number) {
+    return await this.prismaService.likedLecture.findMany({
+      where: { userId },
+    });
+  }
 }
