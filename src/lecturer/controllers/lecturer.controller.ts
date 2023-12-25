@@ -34,16 +34,12 @@ import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
 import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-learner-list.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 
 @ApiTags('강사')
 @Controller('lecturers')
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
-
-  // @Get()
-  // async getLecturers(@Query('value') value: string) {
-  //   await this.lecturerService.getLecturers(value);
-  // }
 
   @ApiCreateLecturer()
   @Post()

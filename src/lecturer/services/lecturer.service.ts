@@ -2,14 +2,12 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
-  ICursor,
   IPaginationParams,
   Id,
   PrismaTransaction,
@@ -22,7 +20,6 @@ import {
   LecturerCoupon,
   LecturerDanceGenreInputData,
   LecturerInstagramPostInputData,
-  LecturerProfile,
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
 } from '@src/lecturer/interface/lecturer.interface';
@@ -32,12 +29,9 @@ import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
-import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
 import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
 import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
-import { any } from 'joi';
-// import { ElasticsearchService } from '@nestjs/elasticsearch';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -47,37 +41,10 @@ export class LecturerService implements OnModuleInit {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
     private readonly lecturerRepository: LecturerRepository,
-    private readonly configService: ConfigService, // private readonly esService: ElasticsearchService,
+    private readonly configService: ConfigService,
   ) {}
 
   onModuleInit() {}
-
-  // async getLecturers(a) {
-  //   const lecturers = await this.elasticsearchGetLecturer(a);
-  // }
-
-  // private async elasticsearchGetLecturer(a) {
-  //   const { hits } = await this.esService.search({
-  //     index: 'lecturer',
-  //     query: {
-  //       bool: {
-  //         should: [
-  //           {
-  //             match: {
-  //               'genre.ngram': a,
-  //             },
-  //           },
-  //           {
-  //             match: {
-  //               'genre.keyword': a,
-  //             },
-  //           },
-  //         ],
-  //       },
-  //     },
-  //   });
-  //   return hits.hits[0]._source;
-  // }
 
   async createLecturer(
     userId: number,
