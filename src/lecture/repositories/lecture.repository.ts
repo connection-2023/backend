@@ -475,10 +475,10 @@ export class LectureRepository {
   }
 
   async readManyLectureSchedulesWithLecturerId(
-    lecturerId: number,
+    where,
   ): Promise<LectureSchedule[]> {
     return await this.prismaService.lectureSchedule.findMany({
-      where: { lecture: { lecturerId } },
+      where,
       include: {
         lecture: {
           select: {
