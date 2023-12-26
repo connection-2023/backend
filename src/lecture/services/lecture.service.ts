@@ -224,10 +224,10 @@ export class LectureService {
     );
     const daySchedule = await this.lectureRepository.readDaySchedule(lectureId);
 
-    if (daySchedule[0]) {
-      return { lecture, lecturer, location, daySchedule };
+    if (!daySchedule[0]) {
+      return { lecture, lecturer, location };
     }
-    return { lecture, lecturer, location };
+    return { lecture, lecturer, location, daySchedule };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
