@@ -6,16 +6,10 @@ import {
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { SearchRepository } from '@src/search/repository/search.repository';
-import {
-  BlockedLecturer,
-  Lecture,
-  Lecturer,
-  LikedLecture,
-  LikedLecturer,
-} from '@prisma/client';
+import { BlockedLecturer, LikedLecture, LikedLecturer } from '@prisma/client';
 import { ESLecture, EsLecturer } from '../interface/search.interface';
-import { EsLecturerDto } from '../dtos/es-lecturer.dto';
 import { CombinedSearchResultDto } from '../dtos/combined-search-result.dto';
+import { GetCombinedSearchResultDto } from '../dtos/get-combined-search-result.dto';
 
 @Injectable()
 export class SearchService {
@@ -29,28 +23,38 @@ export class SearchService {
     this.logger.log('SearchService Init');
   }
 
-  /**
-   * @todo - 페이지네이션 구현
-   */
   async getCombinedSearchResult(
     userId: number,
-    value: string,
+    getCombinedSearchResultDto: GetCombinedSearchResultDto,
   ): Promise<CombinedSearchResultDto> {
     const searchedLecturers: EsLecturer[] = await this.searchLecturers(
       userId,
-      value,
+      getCombinedSearchResultDto,
     );
     const searchedLectures: ESLecture[] = await this.searchLectures(
       userId,
-      value,
+      getCombinedSearchResultDto,
     );
 
-    return new CombinedSearchResultDto({ searchedLecturers, searchedLectures });
+    const slicedLecturers = searchedLecturers
+      ? searchedLecturers.slice(0, getCombinedSearchResultDto.take)
+      : null;
+    const slicedLectures = searchedLectures
+      ? searchedLectures.slice(0, getCombinedSearchResultDto.take)
+      : null;
+
+    return new CombinedSearchResultDto({
+      searchedLecturers: slicedLecturers,
+      searchedLectures: slicedLectures,
+    });
   }
 
-  private async searchLecturers(userId: number, value: string) {
+  private async searchLecturers(
+    userId: number,
+    getCombinedSearchResultDto: GetCombinedSearchResultDto,
+  ) {
     const searchedLecturers: EsLecturer[] =
-      await this.searchLecturersWithElasticsearch(value);
+      await this.searchLecturersWithElasticsearch(getCombinedSearchResultDto);
     if (!searchedLecturers || !userId) {
       return searchedLecturers;
     }
@@ -88,11 +92,14 @@ export class SearchService {
     return lecturersWithLikeStatus;
   }
 
-  private async searchLecturersWithElasticsearch(
-    value: string,
-  ): Promise<EsLecturer[]> {
+  private async searchLecturersWithElasticsearch({
+    value,
+    take,
+    lecturerSearchAfter,
+  }: GetCombinedSearchResultDto): Promise<EsLecturer[]> {
     const { hits } = await this.esService.search({
       index: 'lecturer',
+      size: take,
       query: {
         bool: {
           should: [
@@ -104,8 +111,12 @@ export class SearchService {
           ],
         },
       },
+      search_after: lecturerSearchAfter,
       sort: [
         {
+          updatedat: {
+            order: 'desc',
+          },
           id: {
             order: 'desc',
           },
@@ -114,15 +125,22 @@ export class SearchService {
     });
 
     if (typeof hits.total === 'object' && hits.total.value > 0) {
-      return hits.hits.map((hit: any): EsLecturer => hit._source);
+      return hits.hits.map(
+        (hit: any): EsLecturer => ({
+          ...hit._source,
+          searchAfter: hit.sort,
+        }),
+      );
     }
   }
 
   private async searchLectures(
     userId: number,
-    value: string,
+    getCombinedSearchResultDto: GetCombinedSearchResultDto,
   ): Promise<ESLecture[]> {
-    const searchedLectures = await this.searchLecturesWithElasticsearch(value);
+    const searchedLectures = await this.searchLecturesWithElasticsearch(
+      getCombinedSearchResultDto,
+    );
 
     if (!searchedLectures || !userId) {
       return searchedLectures;
@@ -161,12 +179,15 @@ export class SearchService {
     return lecturersWithLikeStatus;
   }
 
-  private async searchLecturesWithElasticsearch(
-    value: string,
-  ): Promise<ESLecture[]> {
+  private async searchLecturesWithElasticsearch({
+    value,
+    take,
+    lectureSearchAfter,
+  }: GetCombinedSearchResultDto): Promise<ESLecture[]> {
     try {
       const { hits } = await this.esService.search({
         index: 'lecture',
+        size: take * 2,
         query: {
           bool: {
             should: [
@@ -188,12 +209,21 @@ export class SearchService {
             updatedat: {
               order: 'desc',
             },
+            id: {
+              order: 'desc',
+            },
           },
         ],
+        search_after: lectureSearchAfter,
       });
 
       if (typeof hits.total === 'object' && hits.total.value > 0) {
-        return hits.hits.map((hit: any): ESLecture => hit._source);
+        return hits.hits.map(
+          (hit: any): ESLecture => ({
+            ...hit._source,
+            searchAfter: hit.sort,
+          }),
+        );
       }
     } catch (error) {
       throw new InternalServerErrorException(

@@ -12,6 +12,13 @@ import { EsSimpleLecturerDto } from './es-simple-lecturer.dto';
 export class EsLectureDto {
   @ApiProperty({
     type: Number,
+    isArray: true,
+    description: '페이지네이션 타겟 배열',
+  })
+  searchAfter: number[];
+
+  @ApiProperty({
+    type: Number,
     description: '강의 Id',
   })
   id: number;
@@ -102,6 +109,7 @@ export class EsLectureDto {
   genres: EsGenreDto[];
 
   constructor(lecture: Partial<ESLecture>) {
+    this.searchAfter = lecture.searchAfter;
     this.id = lecture.id;
     this.title = lecture.title;
     this.price = lecture.price;

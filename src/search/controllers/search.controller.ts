@@ -6,6 +6,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { CombinedSearchResultDto } from '../dtos/combined-search-result.dto';
 import { ApiGetCombinedSearchResult } from '../swagger-decorators/get-combined-search-result.decorator';
 import { ApiTags } from '@nestjs/swagger';
+import { GetCombinedSearchResultDto } from '../dtos/get-combined-search-result.dto';
 
 @ApiTags('검색')
 @Controller('search')
@@ -17,10 +18,13 @@ export class SearchController {
   @UseGuards(AllowUserAndGuestGuard)
   async getCombinedSearchResult(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query('value') value: string,
+    @Query() getCombinedSearchResultDto: GetCombinedSearchResultDto,
   ): Promise<CombinedSearchResultDto> {
     const userId: number = authorizedData?.user?.id;
 
-    return await this.searchService.getCombinedSearchResult(userId, value);
+    return await this.searchService.getCombinedSearchResult(
+      userId,
+      getCombinedSearchResultDto,
+    );
   }
 }

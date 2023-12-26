@@ -6,6 +6,13 @@ import { EsGenreDto } from './es-genre.dto';
 export class EsLecturerDto {
   @ApiProperty({
     type: Number,
+    isArray: true,
+    description: '페이지네이션 타겟 배열',
+  })
+  searchAfter: number[];
+
+  @ApiProperty({
+    type: Number,
     description: '강사 Id',
   })
   id: number;
@@ -62,6 +69,7 @@ export class EsLecturerDto {
   updatedat: Date;
 
   constructor(lecturer: Partial<EsLecturer>) {
+    this.searchAfter = lecturer.searchAfter;
     this.id = lecturer.id;
     this.nickname = lecturer.nickname;
     this.profileCardImageUrl = lecturer.profilecardimageurl;
