@@ -222,7 +222,11 @@ export class LectureService {
     const location = await this.lectureRepository.readLectureLocation(
       lectureId,
     );
+    const daySchedule = await this.lectureRepository.readDaySchedule(lectureId);
 
+    if (daySchedule[0]) {
+      return { lecture, lecturer, location, daySchedule };
+    }
     return { lecture, lecturer, location };
   }
 
