@@ -34,7 +34,10 @@ export class LecturerLikeRepository {
             lecturerDanceGenre: {
               include: { danceCategory: { select: { genre: true } } },
             },
-            lecturerProfileImageUrl: { select: { url: true }, take: 1 },
+            lecturerProfileImageUrl: {
+              select: { url: true },
+              orderBy: { id: 'asc' },
+            },
           },
         },
       },
