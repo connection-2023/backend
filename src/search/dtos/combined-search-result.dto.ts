@@ -14,6 +14,7 @@ export class CombinedSearchResultDto {
   @ApiProperty({
     description: '검색된 강사 정보',
     type: EsLectureDto,
+    isArray: true,
   })
   searchedLectures: EsLectureDto[];
 
