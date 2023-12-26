@@ -69,11 +69,15 @@ export class LecturerController {
 
   @ApiGetLecturerProfile()
   @SetResponseKey('lecturerProfile')
+  @UseGuards(AllowUserAndGuestGuard)
   @Get('/profile/:lecturerId')
   async getLecturerProfile(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lecturerId') lecturerId: number,
   ): Promise<LecturerDetailProfileDto> {
-    return await this.lecturerService.getLecturerProfile(lecturerId);
+    const userId: number = authorizedData?.user?.id;
+
+    return await this.lecturerService.getLecturerProfile(userId, lecturerId);
   }
 
   @ApiGetLecturerBasicProfile()

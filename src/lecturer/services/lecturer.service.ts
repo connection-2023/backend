@@ -13,7 +13,7 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { Lecturer } from '@prisma/client';
+import { Lecturer, LikedLecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerBasicProfile,
@@ -264,12 +264,22 @@ export class LecturerService implements OnModuleInit {
   }
 
   async getLecturerProfile(
+    userId: number,
     lecturerId: number,
   ): Promise<LecturerDetailProfileDto> {
-    const lecturerProfile: LecturerDetailProfileDto =
-      await this.lecturerRepository.getLecturerProfile(lecturerId);
+    const lecturerProfile = await this.lecturerRepository.getLecturerProfile(
+      lecturerId,
+    );
 
-    return new LecturerDetailProfileDto(lecturerProfile);
+    //userId가 있으면서 좋아요가 있을때 true
+    const isLiked = userId
+      ? !!(await this.lecturerRepository.getUserLikedLecturerByLecturerId(
+          userId,
+          lecturerId,
+        ))
+      : false;
+
+    return new LecturerDetailProfileDto({ ...lecturerProfile, isLiked });
   }
 
   async getLecturerBasicProfile(

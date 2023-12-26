@@ -79,6 +79,12 @@ export class LecturerDetailProfileDto
   deletedAt: Date;
 
   @ApiProperty({
+    type: Boolean,
+    description: '좋아요 여부',
+  })
+  isLiked: boolean;
+
+  @ApiProperty({
     description: '강사 춤 장르',
     type: LecturerDanceGenreDto,
     isArray: true,
@@ -127,6 +133,7 @@ export class LecturerDetailProfileDto
     this.reviewCount = lecturer.reviewCount;
     this.createdAt = lecturer.createdAt;
     this.updatedAt = lecturer.updatedAt;
+    this.isLiked = lecturer.isLiked;
 
     this.lecturerDanceGenre = lecturer.lecturerDanceGenre
       ? lecturer.lecturerDanceGenre.map(

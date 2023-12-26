@@ -18,8 +18,9 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { LectureLocation, Lecturer } from '@prisma/client';
+import { LectureLocation, Lecturer, LikedLecturer } from '@prisma/client';
 import { PrismaClientValidationError } from '@prisma/client/runtime';
+import { when } from 'joi';
 
 @Injectable()
 export class LecturerRepository {
@@ -296,6 +297,22 @@ export class LecturerRepository {
       throw new InternalServerErrorException(
         `수강생 조회 실패: ${error}`,
         'LecturerLearnerFindFailed',
+      );
+    }
+  }
+
+  async getUserLikedLecturerByLecturerId(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LikedLecturer> {
+    try {
+      return await this.prismaService.likedLecturer.findUnique({
+        where: { lecturerId_userId: { userId, lecturerId } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `종아요 목록 조회 실패: ${error}`,
+        'LikedLecturerFindFailed',
       );
     }
   }
