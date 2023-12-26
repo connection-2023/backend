@@ -29,6 +29,9 @@ export class SearchService {
     this.logger.log('SearchService Init');
   }
 
+  /**
+   * @todo - 페이지네이션 구현
+   */
   async getCombinedSearchResult(
     userId: number,
     value: string,
@@ -182,7 +185,7 @@ export class SearchService {
         },
         sort: [
           {
-            id: {
+            updatedat: {
               order: 'desc',
             },
           },
