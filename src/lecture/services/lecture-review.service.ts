@@ -67,8 +67,6 @@ export class LectureReviewService {
   ) {
     const order = [];
 
-    order.push({ id: 'desc' });
-
     if (orderBy === '최신순') {
       order.push({
         reservation: {
@@ -88,6 +86,8 @@ export class LectureReviewService {
     } else if (orderBy === '평점 낮은순') {
       order.push({ stars: 'asc' });
     }
+
+    order.push({ id: 'desc' });
 
     const readedReviews =
       await this.lectureReviewRepository.readManyLectureReviewByLectureWithUserId(
@@ -130,8 +130,6 @@ export class LectureReviewService {
   async readManyLectureReviewNonMember(lectureId: number, orderBy: string) {
     const order = [];
 
-    order.push({ id: 'desc' });
-
     if (orderBy === '최신순') {
       order.push({
         reservation: {
@@ -151,6 +149,8 @@ export class LectureReviewService {
     } else if (orderBy === '평점 낮은순') {
       order.push({ stars: 'asc' });
     }
+
+    order.push({ id: 'desc' });
 
     const readedReviews =
       await this.lectureReviewRepository.readManyLectureReviewByLecture(
@@ -231,8 +231,6 @@ export class LectureReviewService {
     const { orderBy } = query;
     const order = [];
 
-    order.push({ id: 'desc' });
-
     if (orderBy === '최신순') {
       order.push({
         reservation: {
@@ -252,6 +250,8 @@ export class LectureReviewService {
     } else if (orderBy === '평점 낮은순') {
       order.push({ stars: 'asc' });
     }
+
+    order.push({ id: 'desc' });
 
     return await this.lectureReviewRepository.readManyMyReviewWithUserId(
       userId,
@@ -289,12 +289,23 @@ export class LectureReviewService {
 
     let cursor;
     let skip;
+    let count: number;
     const where = { lecture: { lecturerId } };
 
     if (lecturerMyReviewType === '진행중인 클래스') {
       where.lecture['isActive'] = true;
+      count = await this.prismaService.lectureReview.count({
+        where: { lecture: { isActive: true, lecturerId } },
+      });
     } else if (lecturerMyReviewType === '종료된 클래스') {
       where.lecture['isActive'] = false;
+      count = await this.prismaService.lectureReview.count({
+        where: { lecture: { isActive: false, lecturerId } },
+      });
+    } else if (lecturerMyReviewType === '전체') {
+      count = await this.prismaService.lectureReview.count({
+        where: { lecture: { lecturerId } },
+      });
     }
 
     if (lectureId) {
@@ -302,7 +313,6 @@ export class LectureReviewService {
     }
 
     const order = [];
-    order.push({ id: 'desc' });
 
     if (orderBy === '최신순') {
       order.push({
@@ -324,6 +334,8 @@ export class LectureReviewService {
       order.push({ stars: 'asc' });
     }
 
+    order.push({ id: 'desc' });
+
     const isPagination = currentPage && targetPage;
 
     if (isPagination) {
@@ -342,10 +354,6 @@ export class LectureReviewService {
         take,
         cursor,
         skip,
-      );
-    const count =
-      await this.lectureReviewRepository.readManyMyReviewCountWithLecturerId(
-        lecturerId,
       );
 
     return { count, review };
@@ -374,7 +382,6 @@ export class LectureReviewService {
     let cursor;
     let skip;
     const orderBy = [];
-    orderBy.push({ id: 'desc' });
 
     if (lecturerReviewType === '최신순') {
       orderBy.push({
@@ -395,6 +402,9 @@ export class LectureReviewService {
     } else if (lecturerReviewType === '평점 낮은순') {
       orderBy.push({ stars: 'asc' });
     }
+
+    orderBy.push({ id: 'desc' });
+
     const isPagination = currentPage && targetPage;
 
     if (isPagination) {
@@ -444,7 +454,6 @@ export class LectureReviewService {
     let cursor;
     let skip;
     const orderBy = [];
-    orderBy.push({ id: 'desc' });
 
     if (lecturerReviewType === '최신순') {
       orderBy.push({
@@ -465,6 +474,8 @@ export class LectureReviewService {
     } else if (lecturerReviewType === '평점 낮은순') {
       orderBy.push({ stars: 'asc' });
     }
+
+    orderBy.push({ id: 'desc' });
 
     const isPagination = currentPage && targetPage;
 
