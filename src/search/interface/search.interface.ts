@@ -15,6 +15,7 @@ export interface ESLecture {
   genres: EsGenre[];
   regions: EsRegion[];
   isLiked: boolean | undefined;
+  searchAfter: number[];
 }
 
 export interface EsLecturer {
@@ -29,6 +30,7 @@ export interface EsLecturer {
   reviewcount: number;
   isLiked: boolean | undefined;
   lecturerImages: string[];
+  searchAfter: number[];
 }
 
 export interface EsSimpleLecturer {
