@@ -289,12 +289,23 @@ export class LectureReviewService {
 
     let cursor;
     let skip;
+    let count: number;
     const where = { lecture: { lecturerId } };
 
     if (lecturerMyReviewType === '진행중인 클래스') {
       where.lecture['isActive'] = true;
+      count = await this.prismaService.lectureReview.count({
+        where: { lecture: { isActive: true, lecturerId } },
+      });
     } else if (lecturerMyReviewType === '종료된 클래스') {
       where.lecture['isActive'] = false;
+      count = await this.prismaService.lectureReview.count({
+        where: { lecture: { isActive: false, lecturerId } },
+      });
+    } else if (lecturerMyReviewType === '전체') {
+      count = await this.prismaService.lectureReview.count({
+        where: { lecture: { lecturerId } },
+      });
     }
 
     if (lectureId) {
@@ -343,10 +354,6 @@ export class LectureReviewService {
         take,
         cursor,
         skip,
-      );
-    const count =
-      await this.lectureReviewRepository.readManyMyReviewCountWithLecturerId(
-        lecturerId,
       );
 
     return { count, review };
