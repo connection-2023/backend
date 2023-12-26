@@ -28,16 +28,18 @@ import { ApiGetLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-l
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 import { ApiUpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
 import { ApiGetLecturerBasicProfile } from '@src/lecturer/swagger-decorators/get-lecturer-profile-card-decorater';
+import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
+import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
+import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-learner-list.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 
 @ApiTags('강사')
 @Controller('lecturers')
 export class LecturerController {
   constructor(private readonly lecturerService: LecturerService) {}
-
-  @Get()
-  async getLecturers(@Query('value') value: string) {
-    await this.lecturerService.getLecturers(value);
-  }
 
   @ApiCreateLecturer()
   @Post()
@@ -66,12 +68,12 @@ export class LecturerController {
   }
 
   @ApiGetLecturerProfile()
+  @SetResponseKey('lecturerProfile')
   @Get('/profile/:lecturerId')
-  async getLecturerProfile(@Param('lecturerId') lecturerId: number) {
-    const lecturerProfile: LecturerProfile =
-      await this.lecturerService.getLecturerProfile(lecturerId);
-
-    return { lecturerProfile };
+  async getLecturerProfile(
+    @Param('lecturerId') lecturerId: number,
+  ): Promise<LecturerDetailProfileDto> {
+    return await this.lecturerService.getLecturerProfile(lecturerId);
   }
 
   @ApiGetLecturerBasicProfile()
@@ -118,6 +120,19 @@ export class LecturerController {
     await this.lecturerService.updateLecturerNickname(
       authorizedData.lecturer.id,
       nickname,
+    );
+  }
+
+  @ApiGetLecturerLearnerList()
+  @Get('/learners')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerList(
+    @Query() getLecturerLearnerListDto: GetLecturerLearnerListDto,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LecturerLearnerListDto> {
+    return await this.lecturerService.getLecturerLearners(
+      authorizedData.lecturer.id,
+      getLecturerLearnerListDto,
     );
   }
 }

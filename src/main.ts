@@ -1,20 +1,23 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from '@src/app.module';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as expressBasicAuth from 'express-basic-auth';
 import { ConfigService } from '@nestjs/config';
-import { SuccessInterceptor } from './common/interceptors/success.interceptor';
-import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
+import { HttpExceptionFilter } from '@src/common/exceptions/http-exception.filter';
+import { SuccessInterceptor } from '@src/common/interceptors/success.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port: number = configService.get<number>('PORT');
 
-  app.useGlobalInterceptors(new SuccessInterceptor());
+  app.useGlobalInterceptors(
+    app.get<SuccessInterceptor>(SuccessInterceptor),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
 
   app.enableCors({
     origin: configService.get<string>('FRONT_END_URL'),
@@ -39,10 +42,15 @@ async function bootstrap() {
       },
     }),
   );
-
+  const JSON_PATH = 'api-docs-json';
+  const YAML_PATH = 'api-docs-yaml';
   const config = new DocumentBuilder()
     .setTitle('connection')
-    .setDescription('Connection api description')
+    .setDescription(
+      'Connection api description</br>' +
+        `<strong><a target="_black" href="${JSON_PATH}">JSON document</a></strong></br>` +
+        `<strong><a target="_black" href="${YAML_PATH}">YAML document</a></strong></br>`,
+    )
     .setVersion('1.0.0')
     .addBearerAuth({
       type: 'http',
@@ -53,7 +61,13 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    jsonDocumentUrl: JSON_PATH,
+    yamlDocumentUrl: YAML_PATH,
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
   app.use(cookieParser());
 
   const prisma: PrismaService = app.get(PrismaService);

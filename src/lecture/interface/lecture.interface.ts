@@ -1,3 +1,5 @@
+import { Users } from '@prisma/client';
+
 interface LectureInputData {
   isGroup: boolean;
   startDate: Date;
@@ -88,6 +90,77 @@ interface LikedLectureReviewWhereData {
   lecturerId?: number;
 }
 
+interface EnrollLectureReservationResponseData {
+  id: number;
+  userId: number;
+  paymentId: number;
+  lectureScheduleId: number;
+  representative: string;
+  phoneNumber: string;
+  participants: number;
+  requests: string | null;
+  lectureSchedule: {
+    startDateTime: Date;
+    lecture: {
+      id: number;
+      lecturerId: number;
+      title: string;
+    };
+  };
+}
+
+interface LectureScheduleResponseData {
+  id: number;
+  lecturerId: number;
+  lectureTypeId: number;
+  lectureMethodId: number;
+  isGroup: boolean;
+  startDate: Date;
+  endDate: Date;
+  title: string;
+  introduction: string;
+  curriculum: string;
+  duration: number;
+  difficultyLevel: string;
+  minCapacity: number;
+  maxCapacity: number;
+  reservationDeadline: number;
+  reservationComment: string;
+  price: number;
+  noShowDeposit: number;
+  reviewCount: number;
+  stars: number;
+  isActive: boolean;
+  locationDescription: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  _count: { lectureSchedule: number };
+}
+
+interface LectureScheduleParticipantResponseData {
+  reservation: {
+    user: {
+      id: number;
+      nickname: string;
+      userProfileImage: {
+        imageUrl: string;
+      };
+    };
+  }[];
+}
+
+interface DaySchedule {
+  day: string[];
+  dateTime: string[];
+}
+
+interface DayScheduleInputData {
+  lectureId: number;
+  day: string[];
+  dateTime: string[];
+}
+
 export {
   LectureInputData,
   LectureToRegionInputData,
@@ -103,4 +176,9 @@ export {
   LectureLocationInputData,
   LectureLikeInputData,
   LikedLectureReviewWhereData,
+  EnrollLectureReservationResponseData,
+  LectureScheduleResponseData,
+  LectureScheduleParticipantResponseData,
+  DaySchedule,
+  DayScheduleInputData,
 };

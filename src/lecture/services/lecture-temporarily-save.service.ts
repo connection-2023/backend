@@ -107,69 +107,71 @@ export class LectureTemporarilySaveService {
           );
         }
 
-        if (schedules[0].date) {
-          if (dayLecture) {
-            await this.temporaryLectureRepository.trxDeleteTemporaryLectureDay(
-              transaction,
-              lectureId,
-            );
-          }
-          if (dateLecture) {
-            await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
-              transaction,
-              lectureId,
-            );
-          }
-          for (const schedule of schedules) {
-            const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
-              this.createLectureScheduleInputData(
-                lectureId,
-                schedule.date,
-                schedule.startDateTime,
-              );
-
-            await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
-              transaction,
-              temporaryLectureScheduleInputData,
-            );
-          }
-        } else if (schedules[0].day) {
-          if (dayLecture) {
-            await this.temporaryLectureRepository.trxDeleteTemporaryLectureDay(
-              transaction,
-              lectureId,
-            );
-          }
-          if (dateLecture) {
-            await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
-              transaction,
-              lectureId,
-            );
-          }
-          for (const daySchedule of schedules) {
-            const { day } = daySchedule;
-            const { startDateTime } = daySchedule;
-            const temporaryLectureDayInputData = {
-              lectureId,
-              day,
-            };
-
-            const createdTemporaryLectureDay =
-              await this.temporaryLectureRepository.trxCreateTemporaryLectureDay(
+        if (schedules) {
+          if (schedules[0].date) {
+            if (dayLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureDay(
                 transaction,
-                temporaryLectureDayInputData,
+                lectureId,
               );
-            const lectureDayId = createdTemporaryLectureDay.id;
-            const temporaryLectureDayScheduleInputData =
-              this.createLectureDayScheduleInputData(
-                lectureDayId,
-                startDateTime,
+            }
+            if (dateLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
+                transaction,
+                lectureId,
               );
+            }
+            for (const schedule of schedules) {
+              const temporaryLectureScheduleInputData: TemporaryLectureScheduleInputData[] =
+                this.createLectureScheduleInputData(
+                  lectureId,
+                  schedule.date,
+                  schedule.startDateTime,
+                );
 
-            await this.temporaryLectureRepository.trxCreateTemporaryLectureDaySchedule(
-              transaction,
-              temporaryLectureDayScheduleInputData,
-            );
+              await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
+                transaction,
+                temporaryLectureScheduleInputData,
+              );
+            }
+          } else if (schedules[0].day) {
+            if (dayLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureDay(
+                transaction,
+                lectureId,
+              );
+            }
+            if (dateLecture) {
+              await this.temporaryLectureRepository.trxDeleteTemporaryLectureSchedule(
+                transaction,
+                lectureId,
+              );
+            }
+            for (const daySchedule of schedules) {
+              const { day } = daySchedule;
+              const { startDateTime } = daySchedule;
+              const temporaryLectureDayInputData = {
+                lectureId,
+                day,
+              };
+
+              const createdTemporaryLectureDay =
+                await this.temporaryLectureRepository.trxCreateTemporaryLectureDay(
+                  transaction,
+                  temporaryLectureDayInputData,
+                );
+              const lectureDayId = createdTemporaryLectureDay.id;
+              const temporaryLectureDayScheduleInputData =
+                this.createLectureDayScheduleInputData(
+                  lectureDayId,
+                  startDateTime,
+                );
+
+              await this.temporaryLectureRepository.trxCreateTemporaryLectureDaySchedule(
+                transaction,
+                temporaryLectureDayScheduleInputData,
+              );
+            }
           }
         }
 
@@ -363,7 +365,7 @@ export class LectureTemporarilySaveService {
         couponDoesNotExist.push(coupon);
       }
     }
-    if (couponDoesNotExist) {
+    if (couponDoesNotExist[0]) {
       throw new BadRequestException(
         `존재하지 않는 쿠폰 ${couponDoesNotExist} 포함되어 있습니다.`,
       );

@@ -9,37 +9,45 @@ datasource db {
 
 model Users {
   //고유 id
-  id                 Int                  @id @default(autoincrement())
-  uuid               String               @default(uuid())
+  id                       Int                        @id @default(autoincrement())
+  uuid                     String                     @default(uuid())
   //이름
-  name               String               @db.VarChar(10)
+  name                     String                     @db.VarChar(10)
   //사용자 닉네임
-  nickname           String               @unique @db.VarChar(30)
+  nickname                 String                     @unique @db.VarChar(30)
   //사용 이메일
-  email              String               @unique
+  email                    String                     @unique
   //프로필 공개 여부(open: true, close: false)
-  isProfileOpen      Boolean              @default(false) @db.Boolean
+  isProfileOpen            Boolean                    @default(false) @db.Boolean
   //핸드폰 번호
-  phoneNumber        String?              @unique @db.VarChar(11)
+  phoneNumber              String?                    @unique @db.VarChar(11)
   //성별
-  gender             Int?                 @db.SmallInt
+  gender                   Int?                       @db.SmallInt
   //생성일자
-  createdAt          DateTime             @default(now()) @db.Timestamp(6)
+  createdAt                DateTime                   @default(now()) @db.Timestamp(6)
   //수정일자
-  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt                DateTime                   @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt          DateTime?            @db.Timestamp(6)
-  auth               Auth?
-  userProfileImage   UserProfileImage?
-  lecturer           Lecturer?
-  lectureReview      LectureReview[]
-  lecturerReview     LecturerReview[]
-  likedLecture       LikedLecture[]
-  dailySmsUsage      DailySmsUsage?
-  userCoupon         UserCoupon[]
-  payment            Payment[]
-  reservation        Reservation[]
-  likedLectureReview LikedLectureReview[]
+  deletedAt                DateTime?                  @db.Timestamp(6)
+  auth                     Auth?
+  userProfileImage         UserProfileImage?
+  lecturer                 Lecturer?
+  lectureReview            LectureReview[]
+  lecturerReview           LecturerReview[]
+  likedLecture             LikedLecture[]
+  dailySmsUsage            DailySmsUsage?
+  userCoupon               UserCoupon[]
+  payment                  Payment[]
+  reservation              Reservation[]
+  likedLectureReview       LikedLectureReview[]
+  registerConsentAgreement RegisterConsentAgreement[]
+  userPass                 UserPass[]
+  reportedUserReports      UserReport[]               @relation("ReportedUser")
+  targetUserReports        UserReport[]               @relation("TargetUser")
+  targetLecturerReports    LecturerReport[]
+  lecturerLearner          LecturerLearner[]
+  likedLecturer            LikedLecturer[]
+  blockedLecturer          BlockedLecturer[]
 }
 
 model UserProfileImage {
@@ -107,6 +115,13 @@ model Lecturer {
   lecturerInstagramPostUrl LecturerInstagramPostUrl[]
   lecturerProfileImageUrl  LecturerProfileImageUrl[]
   payment                  Payment[]
+  lecturePass              LecturePass[]
+  userReport               UserReport[]
+  reportedLecturerReports  LecturerReport[]           @relation("ReportedLecturer")
+  targetLecturerReports    LecturerReport[]           @relation("TargetLecturer")
+  lecturerLearner          LecturerLearner[]
+  likedLecturer            LikedLecturer[]
+  blockedLecturer          BlockedLecturer[]
 }
 
 model Lecture {
@@ -170,6 +185,8 @@ model Lecture {
   lectureToDanceGenre LectureToDanceGenre[]
   lectureHoliday      LectureHoliday[]
   lectureLocation     LectureLocation?
+  lecturePassTarget   LecturePassTarget[]
+  lectureDay          LectureDay[]
 }
 
 model DanceCategory {
@@ -193,27 +210,29 @@ model LectureType {
 
 model LectureReview {
   //고유 id
-  id                 Int                  @id @default(autoincrement())
+  id                     Int                      @id @default(autoincrement())
   //강의 id
-  lectureId          Int
+  lectureId              Int
   //유저 id
-  userId             Int
+  userId                 Int
   //예약 id
-  reservationId      Int                  @unique
+  reservationId          Int                      @unique
   //별점
-  stars              Int                  @db.Integer
+  stars                  Int                      @db.Integer
   //후기
-  description        String?              @db.VarChar(255)
+  description            String?                  @db.VarChar(255)
   //생성일자
-  createdAt          DateTime             @default(now()) @db.Timestamp(6)
+  createdAt              DateTime                 @default(now()) @db.Timestamp(6)
   //수정일자
-  updatedAt          DateTime             @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt              DateTime                 @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt          DateTime?            @db.Timestamp(6)
-  lecture            Lecture              @relation(fields: [lectureId], references: [id])
-  users              Users                @relation(fields: [userId], references: [id])
-  reservation        Reservation          @relation(fields: [reservationId], references: [id])
-  likedLectureReview LikedLectureReview[]
+  deletedAt              DateTime?                @db.Timestamp(6)
+  lecture                Lecture                  @relation(fields: [lectureId], references: [id])
+  users                  Users                    @relation(fields: [userId], references: [id])
+  reservation            Reservation              @relation(fields: [reservationId], references: [id])
+  likedLectureReview     LikedLectureReview[]
+  userReportedReview     UserReportedReview[]
+  lecturerReportedReview LecturerReportedReview[]
 }
 
 model LikedLectureReview {
@@ -231,17 +250,19 @@ model LikedLectureReview {
 
 model LecturerReview {
   //고유 id
-  id          Int      @id @default(autoincrement())
+  id                     Int                      @id @default(autoincrement())
   //강사 id
-  lecturerId  Int
+  lecturerId             Int
   //유저 id
-  userId      Int
+  userId                 Int
   //별점
-  stars       Int      @db.Integer
+  stars                  Int                      @db.Integer
   //후기
-  description String?  @db.VarChar(255)
-  lecturer    Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
-  users       Users    @relation(fields: [userId], references: [id])
+  description            String?                  @db.VarChar(255)
+  lecturer               Lecturer                 @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  users                  Users                    @relation(fields: [userId], references: [id])
+  userReportedReview     UserReportedReview[]
+  lecturerReportedReview LecturerReportedReview[]
 }
 
 model DailySmsUsage {
@@ -272,6 +293,32 @@ model LikedLecture {
   user      Users   @relation(fields: [userId], references: [id])
 
   @@unique([lectureId, userId])
+}
+
+model LikedLecturer {
+  //고유 id
+  id         Int      @id @default(autoincrement())
+  //강의 id
+  lecturerId Int
+  //유저 id
+  userId     Int
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  user       Users    @relation(fields: [userId], references: [id])
+
+  @@unique([lecturerId, userId])
+}
+
+model BlockedLecturer {
+  //고유 id
+  id         Int      @id @default(autoincrement())
+  //강의 id
+  lecturerId Int
+  //유저 id
+  userId     Int
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id])
+  user       Users    @relation(fields: [userId], references: [id])
+
+  @@unique([lecturerId, userId])
 }
 
 model LectureNotification {
@@ -327,16 +374,14 @@ model LectureCoupon {
   lectureCouponTarget          LectureCouponTarget[]
   temporaryLectureCouponTarget TemporaryLectureCouponTarget[]
   userCoupon                   UserCoupon[]
-  paymentCouponUsages          PaymentCouponUsage[]           @relation("Coupon")
-  stackableCouponUsages        PaymentCouponUsage[]           @relation("StackableCoupon")
 }
 
 model LectureCouponTarget {
   id              Int           @id @default(autoincrement())
   lectureCouponId Int
   lectureId       Int
-  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
-  lecture         Lecture       @relation(fields: [lectureId], references: [id])
+  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id], onDelete: Cascade)
+  lecture         Lecture       @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 
   @@unique([lectureId, lectureCouponId])
 }
@@ -350,8 +395,8 @@ model UserCoupon {
   createdAt       DateTime      @default(now()) @db.Timestamp(6)
   updatedAt       DateTime      @default(now()) @updatedAt @db.Timestamp(6)
   deletedAt       DateTime?     @db.Timestamp(6)
-  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id])
-  users           Users         @relation(fields: [userId], references: [id])
+  lectureCoupon   LectureCoupon @relation(fields: [lectureCouponId], references: [id], onDelete: Cascade)
+  users           Users         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lectureCouponId])
 }
@@ -400,12 +445,19 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
-  day                  String[]      @default([])
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
   reservation          Reservation[]
+}
+
+model LectureDay {
+  id        Int      @id @default(autoincrement())
+  lectureId Int
+  day       String[] @default([])
+  dateTime  String[] @default([])
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
 model LectureToRegion {
@@ -527,7 +579,7 @@ model TemporaryLectureCouponTarget {
   id               Int              @id @default(autoincrement())
   lectureCouponId  Int?
   lectureId        Int
-  lectureCoupon    LectureCoupon?   @relation(fields: [lectureCouponId], references: [id])
+  lectureCoupon    LectureCoupon?   @relation(fields: [lectureCouponId], references: [id], onDelete: Cascade)
   temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
 
@@ -558,12 +610,12 @@ model TemporaryLectureImage {
 //강의 결제내역
 model Payment {
   id                        Int                        @id @default(autoincrement())
-  paymentKey                String?
+  paymentKey                String?                    @unique
   paymentProductTypeId      Int
   orderId                   String                     @unique
   orderName                 String
-  //가격
-  price                     Int                        @db.Integer
+  originalPrice             Int
+  finalPrice                Int
   userId                    Int?
   lecturerId                Int?
   paymentMethodId           Int?
@@ -579,6 +631,8 @@ model Payment {
   paymentCouponUsage        PaymentCouponUsage?
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
+  paymentPassUsage          PaymentPassUsage?
+  userPass                  UserPass[]
 }
 
 //결제 방식
@@ -597,8 +651,8 @@ model PaymentStatus {
 
 //쿠폰 사용 내역 쿠폰 수정 대비
 model PaymentCouponUsage {
-  id                              Int            @id @default(autoincrement())
-  paymentId                       Int            @unique
+  id                              Int     @id @default(autoincrement())
+  paymentId                       Int     @unique
   couponId                        Int?
   couponTitle                     String?
   couponPercentage                Int?
@@ -609,9 +663,7 @@ model PaymentCouponUsage {
   stackableCouponPercentage       Int?
   stackableCouponDiscountPrice    Int?
   stackableCouponMaxDiscountPrice Int?
-  payment                         Payment        @relation(fields: [paymentId], references: [id])
-  coupon                          LectureCoupon? @relation("Coupon", fields: [couponId], references: [id])
-  stackableCoupon                 LectureCoupon? @relation("StackableCoupon", fields: [stackableCouponId], references: [id])
+  payment                         Payment @relation(fields: [paymentId], references: [id])
 }
 
 model PaymentProductType {
@@ -633,6 +685,7 @@ model Reservation {
   participants      Int
   //예약 요청사항
   requests          String?
+  isEnabled         Boolean         @default(false)
   user              Users           @relation(fields: [userId], references: [id])
   lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
   payment           Payment         @relation(fields: [paymentId], references: [id])
@@ -745,4 +798,231 @@ model TemporaryLectureLocation {
   //건물명
   buildingName     String?
   temporaryLecture TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+}
+
+model RegisterConsent {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  description              String
+  required                 Boolean
+  registerConsentAgreement RegisterConsentAgreement[]
+}
+
+model RegisterConsentAgreement {
+  id                Int             @id @default(autoincrement())
+  registerConsentId Int
+  userId            Int
+  registerConsent   RegisterConsent @relation(fields: [registerConsentId], references: [id])
+  user              Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([registerConsentId, userId])
+}
+
+model LecturePass {
+  id                Int                 @id @default(autoincrement())
+  lecturerId        Int
+  title             String
+  price             Int
+  maxUsageCount     Int
+  availableMonths   Int
+  salesCount        Int                 @default(0)
+  isDisabled        Boolean             @default(false)
+  createdAt         DateTime            @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime            @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt         DateTime?           @db.Timestamp(6)
+  lecturer          Lecturer            @relation(fields: [lecturerId], references: [id])
+  lecturePassTarget LecturePassTarget[]
+  userPass          UserPass[]
+  paymentPassUsage  PaymentPassUsage[]
+}
+
+model LecturePassTarget {
+  id            Int         @id @default(autoincrement())
+  lectureId     Int
+  lecturePassId Int
+  lecture       Lecture     @relation(fields: [lectureId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+
+  @@unique([lectureId, lecturePassId])
+}
+
+model UserPass {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  paymentId     Int         @unique
+  remainingUses Int
+  lecturePassId Int
+  isEnabled     Boolean     @default(false)
+  startAt       DateTime?   @db.Timestamp(6)
+  endAt         DateTime?   @db.Timestamp(6)
+  createdAt     DateTime    @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime    @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt     DateTime?   @db.Timestamp(6)
+  users         Users       @relation(fields: [userId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+  payment       Payment     @relation(fields: [paymentId], references: [id])
+}
+
+model PaymentPassUsage {
+  id            Int         @id @default(autoincrement())
+  paymentId     Int         @unique
+  lecturePassId Int
+  usedCount     Int
+  payment       Payment     @relation(fields: [paymentId], references: [id])
+  lecturePass   LecturePass @relation(fields: [lecturePassId], references: [id])
+}
+
+//신고 유형 
+model ReportType {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  description        String
+  userReportType     UserReportType[]
+  lecturerReportType LecturerReportType[]
+}
+
+//유저가 신고한 내역
+model UserReport {
+  id               Int      @id @default(autoincrement())
+  reportedUserId   Int
+  targetUserId     Int?
+  targetLecturerId Int?
+  reason           String?
+  isAnswered       Boolean  @default(false)
+  createdAt        DateTime @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  reportedUser       Users               @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  targetUser         Users?              @relation("TargetUser", fields: [targetUserId], references: [id])
+  targetLecturer     Lecturer?           @relation(fields: [targetLecturerId], references: [id])
+  userReportedReview UserReportedReview?
+  userReportType     UserReportType[]
+  userReportResponse UserReportResponse?
+}
+
+//유저가 신고한 리뷰 내역
+model UserReportedReview {
+  id               Int     @id @default(autoincrement())
+  reportId         Int     @unique()
+  lectureReviewId  Int?
+  lecturerReviewId Int?
+  description      String?
+
+  report         UserReport      @relation(fields: [reportId], references: [id])
+  lectureReview  LectureReview?  @relation(fields: [lectureReviewId], references: [id])
+  lecturerReview LecturerReview? @relation(fields: [lecturerReviewId], references: [id])
+}
+
+model UserReportType {
+  id           Int @id @default(autoincrement())
+  reportId     Int
+  reportTypeId Int
+
+  report     UserReport @relation(fields: [reportId], references: [id])
+  reportType ReportType @relation(fields: [reportTypeId], references: [id])
+}
+
+//강사가 신고한 내역
+model LecturerReport {
+  id                 Int      @id @default(autoincrement())
+  reportedLecturerId Int
+  targetUserId       Int?
+  targetLecturerId   Int?
+  reason             String?
+  isAnswered         Boolean  @default(false)
+  createdAt          DateTime @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  reportedLecturer       Lecturer                @relation("ReportedLecturer", fields: [reportedLecturerId], references: [id])
+  targetUser             Users?                  @relation(fields: [targetUserId], references: [id])
+  targetLecturer         Lecturer?               @relation("TargetLecturer", fields: [targetLecturerId], references: [id])
+  lecturerReportedReview LecturerReportedReview?
+  lecturerReportType     LecturerReportType[]
+  lecturerReportResponse LecturerReportResponse?
+}
+
+//강사가 신고한 리뷰 내역
+model LecturerReportedReview {
+  id               Int     @id @default(autoincrement())
+  reportId         Int     @unique()
+  lectureReviewId  Int?
+  lecturerReviewId Int?
+  description      String?
+
+  report         LecturerReport  @relation(fields: [reportId], references: [id])
+  lectureReview  LectureReview?  @relation(fields: [lectureReviewId], references: [id])
+  lecturerReview LecturerReview? @relation(fields: [lecturerReviewId], references: [id])
+}
+
+model LecturerReportType {
+  id           Int @id @default(autoincrement())
+  reportId     Int
+  reportTypeId Int
+
+  report     LecturerReport @relation(fields: [reportId], references: [id])
+  reportType ReportType     @relation(fields: [reportTypeId], references: [id])
+}
+
+model LecturerReportResponse {
+  id          Int       @id @default(autoincrement())
+  reportId    Int       @unique()
+  adminId     Int
+  description String
+  createdAt   DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt   DateTime? @db.Timestamp(6)
+
+  report LecturerReport @relation(fields: [reportId], references: [id])
+  admin  Admin          @relation(fields: [adminId], references: [id])
+}
+
+model UserReportResponse {
+  id          Int       @id @default(autoincrement())
+  reportId    Int       @unique()
+  adminId     Int
+  description String
+  createdAt   DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @db.Timestamp(6)
+  deletedAt   DateTime? @db.Timestamp(6)
+
+  report UserReport @relation(fields: [reportId], references: [id])
+  admin  Admin      @relation(fields: [adminId], references: [id])
+}
+
+model Admin {
+  id           Int     @id @default(autoincrement())
+  name         String  @db.VarChar(10)
+  nickname     String  @unique @db.VarChar(30)
+  email        String  @unique
+  profileImage String?
+
+  // adminAuth              AdminAuth?
+  userReportResponse     UserReportResponse[]
+  lecturerReportResponse LecturerReportResponse[]
+}
+
+// model AdminAuth {
+//   id         Int       @id @default(autoincrement())
+//   userId     Int       @unique
+//   email      String    @unique
+//   signUpType Int
+//   createdAt  DateTime  @default(now()) @db.Timestamp(6)
+//   deletedAt  DateTime? @db.Timestamp(6)
+
+//   admin      Admin     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// }
+
+model LecturerLearner {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  lecturerId      Int
+  enrollmentCount Int      @default(0)
+  memo            String?
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  user     Users    @relation(fields: [userId], references: [id])
+  lecturer Lecturer @relation(fields: [lecturerId], references: [id])
+
+  @@unique([userId, lecturerId])
 }

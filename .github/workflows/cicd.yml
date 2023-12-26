@@ -75,6 +75,11 @@ jobs:
           echo "COUPON_SECRET_KEY=${{ secrets.COUPON_SECRET_KEY }}" >> .env
           echo "HEX_STRING=${{ secrets.HEX_STRING }}" >> .env
 
+          echo "SEARCH_SERVER_URL=${{ secrets.SEARCH_SERVER_URL }}" >> .env
+          echo "ES_USERNAME=${{ secrets.ES_USERNAME }}" >> .env
+          echo "ES_PASSWORD=${{ secrets.ES_PASSWORD }}" >> .env
+
+
 
           cat .env
 

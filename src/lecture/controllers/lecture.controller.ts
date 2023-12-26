@@ -29,6 +29,20 @@ import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lect
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
 import { ApiReadOneLectureByNonMember } from '../swagger-decorators/read-one-lecture-by-lecturer-non-member-decorator';
+import { ApiReadManyLectureWithLecturer } from '../swagger-decorators/read-many-lecture-with-lecturers-decorator';
+import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
+import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
+import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
+import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
+import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
+import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
+import { ApiReadManyLectureByNonMemeber } from '../swagger-decorators/read-many-lecture-by-non-member-decorator';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { ApiGetLectureLearnerList } from '../swagger-decorators/get-lecture-learner-list.decorator';
+import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
+import { PaginationDto } from '@src/common/dtos/pagination.dto';
+import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
+import { ApiReadManyLectureSchedulesWithLecturerId } from '../swagger-decorators/read-many-lecture-schedules-with-lecturer-id-decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -50,7 +64,7 @@ export class LectureController {
 
   @ApiReadOneLecture()
   @UseGuards(UserAccessTokenGuard)
-  @Get(':lectureId')
+  @Get(':lectureId/users')
   async readLectureWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
@@ -64,7 +78,7 @@ export class LectureController {
   }
 
   @ApiReadOneLectureByNonMember()
-  @Get(':lectureId')
+  @Get(':lectureId/non-members')
   async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
     const lecture = await this.lectureService.readLecture(lectureId);
 
@@ -87,7 +101,7 @@ export class LectureController {
     return { lecture: deletedLecture };
   }
 
-  @ApiOperation({ summary: '강의 수정' })
+  @ApiUpdateLecture()
   @Patch(':lectureId')
   async updateLecture(
     @Param('lectureId', ParseIntPipe) lectureId: number,
@@ -102,7 +116,7 @@ export class LectureController {
   }
 
   @ApiReadManyLectureSchedule()
-  @Get('schedules/:lectureId')
+  @Get(':lectureId/schedules')
   async readLectureSchedule(
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
@@ -124,5 +138,114 @@ export class LectureController {
       authorizedData.user.id,
       lectureId,
     );
+  }
+
+  @ApiGetLectureLearnerList()
+  @SetResponseKey('lectureLearnerList')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get(':lectureId/learners')
+  async getLectureLearnerList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() paginationOptions: GetLectureLearnerListDto,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ): Promise<LectureLearnerDto[]> {
+    return await this.lectureService.getLectureLearnerList(
+      authorizedData.lecturer.id,
+      paginationOptions,
+      lectureId,
+    );
+  }
+
+  @ApiReadManyLectureWithLecturer()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('lecturers')
+  async readManyLectureWithLecturerId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const lecture = await this.lectureService.readManyLectureWithLecturerId(
+      authorizedData.lecturer.id,
+    );
+
+    return { lecture };
+  }
+
+  @ApiReadManyLectureByNonMemeber()
+  @Get('lecturers/:lecturerId/non-members')
+  async readManyLectureByNonMember(
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+  ) {
+    const lecture = await this.lectureService.readManyLectureWithLecturerId(
+      lecturerId,
+    );
+
+    return { lecture };
+  }
+
+  @ApiReadManyEnrollLecture()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('users')
+  async readManyEnrollLectureWithUserId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyEnrollLectureQueryDto,
+  ) {
+    return await this.lectureService.readManyEnrollLectureWithUserId(
+      authorizedData.user.id,
+      query,
+    );
+  }
+
+  @ApiReadManyLectureProgress()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('lecturers/in-progress')
+  async readManyLectureProgress(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureProgressQueryDto,
+  ) {
+    const lectureProgress = await this.lectureService.readManyLectureProgress(
+      authorizedData.lecturer.id,
+      query,
+    );
+
+    return { lectureProgress };
+  }
+
+  @ApiOperation({ summary: '강의 전체 수강생 조회' })
+  @Get(':lectureId/participants')
+  async readManyParticipantWithLectureId(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const participant =
+      await this.lectureService.readManyParticipantWithLectureId(lectureId);
+
+    return { participant };
+  }
+
+  @ApiReadManyParticipantWithScheduleId()
+  @Get(':lectureId/schedules/:scheduleId/participants')
+  async readManyParticipantWithScheduleId(
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+    @Param('scheduleId', ParseIntPipe) scheduleId: number,
+  ) {
+    const participant =
+      await this.lectureService.readManyParticipantWithScheduleId(
+        lectureId,
+        scheduleId,
+      );
+
+    return { participant };
+  }
+
+  @ApiReadManyLectureSchedulesWithLecturerId()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('schedules')
+  async readManyLectureSchedules(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const schedules =
+      await this.lectureService.readManyLectureSchedulesWithLecturerId(
+        authorizedData.lecturer.id,
+      );
+
+    return { schedules };
   }
 }

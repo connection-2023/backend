@@ -1,55 +1,24 @@
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { applyDecorators } from '@nestjs/common';
+import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
+import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
+import { ApplicableCouponDto } from '../dtos/applicable-coupon.dto';
 
-export function ApiGetApplicableCouponsForLecture() {
+export function ApiGetCouponListByLectureId() {
   return applyDecorators(
     ApiOperation({
-      summary: '강의에 적용 가능한 공개 쿠폰 조회',
+      summary: '[회원/비회원] 강의에 적용 가능한 공개 쿠폰 조회',
     }),
     ApiBearerAuth(),
-    ApiOkResponse(
-      SwaggerApiResponse.success('클래스에 적용 가능한 쿠폰 목록 반환', {
-        statusCode: 200,
-        data: {
-          applicableCoupons: [
-            {
-              lectureCoupon: {
-                id: 1,
-                title: '지금까지 이런 쿠폰은 없었다.',
-                maxUsageCount: null,
-                percentage: null,
-                discountPrice: 5000,
-                maxDiscountPrice: null,
-                isStackable: false,
-                startAt: '2023-01-19T00:00:00.000Z',
-                endAt: '2024-01-19T00:00:00.000Z',
-              },
-            },
-            {
-              lectureCoupon: {
-                id: 2,
-                title: '지금까지 이런 쿠폰은 없었다.',
-                maxUsageCount: 100,
-                percentage: 10,
-                discountPrice: null,
-                maxDiscountPrice: null,
-                isStackable: true,
-                startAt: '2023-01-19T00:00:00.000Z',
-                endAt: '2024-01-19T00:00:00.000Z',
-              },
-            },
-          ],
-        },
-      }),
+    DetailResponseDto.swaggerBuilder(
+      HttpStatus.OK,
+      'couponList',
+      ApplicableCouponDto,
+      { isArray: true },
     ),
     ApiUnauthorizedResponse(
       SwaggerApiResponse.exception([
