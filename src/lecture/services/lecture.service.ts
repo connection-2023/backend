@@ -36,6 +36,7 @@ import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
+import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 
 @Injectable()
 export class LectureService {
@@ -651,9 +652,22 @@ export class LectureService {
     return participant.reservation;
   }
 
-  async readManyLectureSchedulesWithLecturerId(lecturerId: number) {
+  async readManyLectureSchedulesWithLecturerId(
+    lecturerId: number,
+    query: ReadManyLectureScheduleQueryDto,
+  ) {
+    const where = { lecture: { lecturerId } };
+    const { year, month } = query;
+    const startDate = new Date(year, month - 1, 2, -15);
+    const endDate = new Date(year, month, 1, 8, 59, 59, 999);
+
+    where['startDateTime'] = {
+      gte: startDate,
+      lte: endDate,
+    };
+
     return await this.lectureRepository.readManyLectureSchedulesWithLecturerId(
-      lecturerId,
+      where,
     );
   }
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {

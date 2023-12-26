@@ -12,6 +12,7 @@ export function ApiReadManyLectureSchedulesWithLecturerId() {
     ApiOperation({
       summary: '강사 강의 스케쥴 조회',
     }),
+    ApiBearerAuth(),
     ApiOkResponse(
       SwaggerApiResponse.success('조회 완료', {
         statusCode: 200,
