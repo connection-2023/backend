@@ -111,4 +111,13 @@ export class UpdateLectureDto {
   @IsArray()
   @Type(() => Array)
   holidays?: Date[];
+
+  @ApiProperty({
+    example: '2층 복도 끝',
+    description: '지역 상세설명',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  locationDescription?: string;
 }
