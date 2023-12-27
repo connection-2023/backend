@@ -21,21 +21,23 @@ export class GetCombinedSearchResultDto {
   @IsNumberType()
   take: number;
 
-  @ApiProperty({
-    description: '강의 마지막 아이템의 searchAfter',
-  })
-  @ArrayMinSize(1)
-  @Transform(({ value }) => value.map(Number))
-  @IsArray()
-  @IsOptional()
-  lectureSearchAfter: number[];
+  // @ApiProperty({
+  //   description: '강의 마지막 아이템의 searchAfter',
+  //   required: false,
+  // })
+  // @ArrayMinSize(1)
+  // @Transform(({ value }) => value.map(Number))
+  // @IsArray()
+  // @IsOptional()
+  // lectureSearchAfter: number[];
 
-  @ApiProperty({
-    description: '강사 마지막 아이템의 searchAfter',
-  })
-  @ArrayMinSize(1)
-  @Transform(({ value }) => value.map(Number))
-  @IsArray()
-  @IsOptional()
-  lecturerSearchAfter: number[];
+  // @ApiProperty({
+  //   description: '강사 마지막 아이템의 searchAfter',
+  //   required: false,
+  // })
+  // @ArrayMinSize(1)
+  // @Transform(({ value }) => value.map(Number))
+  // @IsArray()
+  // @IsOptional()
+  // lecturerSearchAfter: number[];
 }

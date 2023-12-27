@@ -95,8 +95,8 @@ export class SearchService {
   private async searchLecturersWithElasticsearch({
     value,
     take,
-    lecturerSearchAfter,
-  }: GetCombinedSearchResultDto): Promise<EsLecturer[]> {
+  }: // lecturerSearchAfter,
+  GetCombinedSearchResultDto): Promise<EsLecturer[]> {
     const { hits } = await this.esService.search({
       index: 'lecturer',
       size: take,
@@ -111,7 +111,7 @@ export class SearchService {
           ],
         },
       },
-      search_after: lecturerSearchAfter,
+      // search_after: lecturerSearchAfter,
       sort: [
         {
           updatedat: {
@@ -182,8 +182,8 @@ export class SearchService {
   private async searchLecturesWithElasticsearch({
     value,
     take,
-    lectureSearchAfter,
-  }: GetCombinedSearchResultDto): Promise<ESLecture[]> {
+  }: // lectureSearchAfter,
+  GetCombinedSearchResultDto): Promise<ESLecture[]> {
     try {
       const { hits } = await this.esService.search({
         index: 'lecture',
@@ -214,7 +214,7 @@ export class SearchService {
             },
           },
         ],
-        search_after: lectureSearchAfter,
+        // search_after: lectureSearchAfter,
       });
 
       if (typeof hits.total === 'object' && hits.total.value > 0) {
