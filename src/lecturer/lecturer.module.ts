@@ -9,6 +9,9 @@ import { LecturerLikeRepository } from './repositories/lecturer-like.repository'
 import { LecturerBlockService } from './services/lecturer-block.service';
 import { LecturerBlockRepository } from './repositories/lecturer-block.repository';
 import { LecturerBlockController } from './controllers/lecturer-block.controller';
+import { PopularLecturerService } from './services/popular-lecturer.service';
+import { PopularLecturerRepository } from './repositories/popular-lecturer.repository';
+import { PopularLecturerController } from './controllers/popular-lecturer.controller';
 
 @Module({
   providers: [
@@ -18,12 +21,15 @@ import { LecturerBlockController } from './controllers/lecturer-block.controller
     LecturerLikeRepository,
     LecturerBlockService,
     LecturerBlockRepository,
+    PopularLecturerService,
+    PopularLecturerRepository,
   ],
   exports: [LecturerRepository],
   controllers: [
     LecturerController,
     LecturerLikeController,
     LecturerBlockController,
+    PopularLecturerController,
   ],
 })
 export class LecturerModule {}
