@@ -1,7 +1,8 @@
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
-import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
+import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dto';
+import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 
 export function ApiGetPopularLecturer() {
   return applyDecorators(
@@ -9,10 +10,6 @@ export function ApiGetPopularLecturer() {
       summary: '인기 강사 조회',
     }),
     ApiBearerAuth(),
-    PaginationResponseDto.swaggerBuilder(
-      HttpStatus.OK,
-      'popularLecturers',
-      LecturerDto,
-    ),
+    DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'lecturers', LecturerDto),
   );
 }

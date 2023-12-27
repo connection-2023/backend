@@ -19,10 +19,8 @@ export class PopularLecturerController {
   async readManyPopularLecturer(
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
-    const lecturers = await this.popularLecturerService.readManyPopularLecturer(
+    return await this.popularLecturerService.readManyPopularLecturer(
       authorizedData.user.id,
     );
-
-    return { lecturers };
   }
 }
