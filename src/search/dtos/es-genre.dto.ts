@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EsGenre } from '../interface/search.interface';
+import { IEsGenre } from '../interface/search.interface';
 
 export class EsGenreDto {
   @ApiProperty({
@@ -13,7 +13,7 @@ export class EsGenreDto {
   })
   genre: string;
 
-  constructor(genre: Partial<EsGenre>) {
+  constructor(genre: Partial<IEsGenre>) {
     this.id = genre.categoryId;
     this.genre = genre.genre;
 

@@ -1,4 +1,6 @@
-export interface ESLecture {
+import { LecturerSortOptions } from '../enum/search.enum';
+
+export interface IESLecture {
   id: number;
   price: number;
   enddate: Date;
@@ -11,18 +13,18 @@ export interface ESLecture {
   updatedat: Date;
   reviewcount: number;
   difficultylevel: string;
-  lecturer: EsSimpleLecturer;
-  genres: EsGenre[];
-  regions: EsRegion[];
+  lecturer: IEsSimpleLecturer;
+  genres: IEsGenre[];
+  regions: IEsRegion[];
   isLiked: boolean | undefined;
   searchAfter: number[];
 }
 
-export interface EsLecturer {
+export interface IEsLecturer {
   id: number;
   stars: number;
-  regions: EsRegion[];
-  genres: EsGenre[];
+  regions: IEsRegion[];
+  genres: IEsGenre[];
   nickname: string;
   affiliation: string;
   profilecardimageurl: string;
@@ -33,19 +35,29 @@ export interface EsLecturer {
   searchAfter: number[];
 }
 
-export interface EsSimpleLecturer {
+export interface IEsSimpleLecturer {
   lecturerId: number;
   nickname: string;
   profileCardImageUrl: string;
 }
 
-export interface EsGenre {
+export interface IEsGenre {
   categoryId: number;
   genre: string;
 }
 
-export interface EsRegion {
-  regionId: number;
+export interface IEsRegion {
+  regionId?: number;
   administrativeDistrict: string;
   district: string;
+}
+
+export interface ILecturerSearchParams {
+  take: number;
+  value?: string;
+  searchAfter?: number[];
+  regions?: string[];
+  genres?: string[];
+  stars?: number;
+  sortOption?: LecturerSortOptions;
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ESLecture, EsLecturer } from '../interface/search.interface';
+import { IESLecture, IEsLecturer } from '../interface/search.interface';
 import { EsLectureDto } from './es-lecture.dto';
 import { EsLecturerDto } from './es-lecturer.dto';
 
@@ -19,8 +19,8 @@ export class CombinedSearchResultDto {
   searchedLectures: EsLectureDto[];
 
   constructor(combinedSearchResult: {
-    searchedLecturers?: EsLecturer[];
-    searchedLectures?: ESLecture[];
+    searchedLecturers?: IEsLecturer[];
+    searchedLectures?: IESLecture[];
   }) {
     this.searchedLecturers = combinedSearchResult.searchedLecturers
       ? combinedSearchResult.searchedLecturers.map(

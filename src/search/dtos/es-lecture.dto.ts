@@ -1,10 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  ESLecture,
-  EsGenre,
-  EsRegion,
-  EsSimpleLecturer,
-} from '../interface/search.interface';
+import { IESLecture } from '../interface/search.interface';
 import { EsGenreDto } from './es-genre.dto';
 import { EsRegionDto } from './es-region.dto';
 import { EsSimpleLecturerDto } from './es-simple-lecturer.dto';
@@ -108,7 +103,7 @@ export class EsLectureDto {
   })
   genres: EsGenreDto[];
 
-  constructor(lecture: Partial<ESLecture>) {
+  constructor(lecture: Partial<IESLecture>) {
     this.searchAfter = lecture.searchAfter;
     this.id = lecture.id;
     this.title = lecture.title;
