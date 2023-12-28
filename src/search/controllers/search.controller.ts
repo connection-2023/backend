@@ -10,6 +10,7 @@ import { GetCombinedSearchResultDto } from '../dtos/get-combined-search-result.d
 import { GetLecturerSearchResultDto } from '../dtos/get-lecturer-search-result.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiSearchLecturerList } from '../swagger-decorators/search-lecturer-list.decorator';
+import { EsLecturerDto } from '../dtos/es-lecturer.dto';
 
 @ApiTags('검색')
 @Controller('search')
@@ -21,14 +22,11 @@ export class SearchController {
   @UseGuards(AllowUserAndGuestGuard)
   async getCombinedSearchResult(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() getCombinedSearchResultDto: GetCombinedSearchResultDto,
+    @Query() dto: GetCombinedSearchResultDto,
   ): Promise<CombinedSearchResultDto> {
     const userId: number = authorizedData?.user?.id;
 
-    return await this.searchService.getCombinedSearchResult(
-      userId,
-      getCombinedSearchResultDto,
-    );
+    return await this.searchService.getCombinedSearchResult(userId, dto);
   }
 
   @ApiSearchLecturerList()
@@ -37,13 +35,12 @@ export class SearchController {
   @UseGuards(AllowUserAndGuestGuard)
   async searchLecturerList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() getLecturerSearchResultDto: GetLecturerSearchResultDto,
-  ) {
+    @Query() dto: GetLecturerSearchResultDto,
+  ): Promise<EsLecturerDto[]> {
     const userId: number = authorizedData?.user?.id;
 
-    return await this.searchService.getLecturerList(
-      userId,
-      getLecturerSearchResultDto,
-    );
+    console.log(dto);
+
+    return await this.searchService.getLecturerList(userId, dto);
   }
 }

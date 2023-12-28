@@ -40,6 +40,12 @@ export class EsLecturerDto {
   reviewCount: number;
 
   @ApiProperty({
+    isArray: true,
+    description: '소속',
+  })
+  affiliation: string;
+
+  @ApiProperty({
     type: Boolean,
     description: '좋아요 여부',
   })
@@ -65,7 +71,6 @@ export class EsLecturerDto {
   })
   genres: EsGenreDto[];
 
-  affiliation: string;
   updatedat: Date;
 
   constructor(lecturer: Partial<IEsLecturer>) {
@@ -75,6 +80,7 @@ export class EsLecturerDto {
     this.profileCardImageUrl = lecturer.profilecardimageurl;
     this.stars = lecturer.stars;
     this.reviewCount = lecturer.reviewcount;
+    this.affiliation = lecturer.affiliation;
     this.isLiked = lecturer.isLiked;
     this.lecturerImages = lecturer.lecturerImages;
 

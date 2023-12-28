@@ -1,3 +1,4 @@
+import { DanceCategory } from '@src/common/enum/enum';
 import { LecturerSortOptions } from '../enum/search.enum';
 
 export interface IESLecture {
@@ -57,7 +58,7 @@ export interface ILecturerSearchParams {
   value?: string;
   searchAfter?: number[];
   regions?: string[];
-  genres?: string[];
+  genres?: DanceCategory[];
   stars?: number;
   sortOption?: LecturerSortOptions;
 }

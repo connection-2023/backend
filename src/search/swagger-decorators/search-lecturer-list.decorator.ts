@@ -1,7 +1,5 @@
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dto';
-import { CombinedSearchResultDto } from '../dtos/combined-search-result.dto';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { EsLecturerDto } from '../dtos/es-lecturer.dto';
 

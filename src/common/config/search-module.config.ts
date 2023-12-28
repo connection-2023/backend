@@ -3,7 +3,7 @@ import { ElasticsearchModule } from '@nestjs/elasticsearch';
 
 export const CustomElasticSearchModule = ElasticsearchModule.registerAsync({
   useFactory: (configService: ConfigService) => ({
-    node: 'http://localhost:9200',
+    node: configService.get<string>('SEARCH_SERVER_URL'),
     maxRetries: 10,
     requestTimeout: 1200,
     pingTimeout: 1200,
