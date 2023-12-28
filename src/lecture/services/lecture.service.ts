@@ -369,9 +369,11 @@ export class LectureService {
               lecture.maxCapacity,
               currentTime,
             );
-          throw new BadRequestException(
-            `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
-          );
+          if (readLectureParticipant) {
+            throw new BadRequestException(
+              `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
+            );
+          }
         }
 
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
