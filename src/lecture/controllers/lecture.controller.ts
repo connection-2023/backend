@@ -251,4 +251,20 @@ export class LectureController {
 
     return { schedules };
   }
+
+  @ApiBearerAuth()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('daily-schedules/:date')
+  async readManyLectureDailySchedules(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('date') date: Date,
+  ) {
+    const schedules =
+      await this.lectureService.readManyDailySchedulesWithLecturerId(
+        authorizedData.lecturer.id,
+        date,
+      );
+
+    return { schedules };
+  }
 }
