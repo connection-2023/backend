@@ -482,6 +482,7 @@ export class LectureRepository {
       include: {
         lecture: {
           select: {
+            id: true,
             title: true,
             isGroup: true,
             maxCapacity: true,
