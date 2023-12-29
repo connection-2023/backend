@@ -7,9 +7,18 @@ import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { SearchRepository } from '@src/search/repository/search.repository';
 import { BlockedLecturer, LikedLecture, LikedLecturer } from '@prisma/client';
-import { ESLecture, EsLecturer } from '../interface/search.interface';
+import {
+  IESLecture,
+  IEsLecturer,
+  ILecturerSearchParams,
+} from '../interface/search.interface';
 import { CombinedSearchResultDto } from '../dtos/combined-search-result.dto';
 import { GetCombinedSearchResultDto } from '../dtos/get-combined-search-result.dto';
+import { GetLecturerSearchResultDto } from '../dtos/get-lecturer-search-result.dto';
+import { LecturerSortOptions } from '../enum/search.enum';
+import { EsLectureDto } from '../dtos/es-lecture.dto';
+import { EsLecturerDto } from '../dtos/es-lecturer.dto';
+import { DanceCategory } from '@src/common/enum/enum';
 
 @Injectable()
 export class SearchService {
@@ -25,23 +34,19 @@ export class SearchService {
 
   async getCombinedSearchResult(
     userId: number,
-    getCombinedSearchResultDto: GetCombinedSearchResultDto,
+    dto: GetCombinedSearchResultDto,
   ): Promise<CombinedSearchResultDto> {
-    const searchedLecturers: EsLecturer[] = await this.searchLecturers(
+    const searchedLecturers: IEsLecturer[] = await this.searchLecturers(
       userId,
-      getCombinedSearchResultDto,
+      dto,
     );
-    const searchedLectures: ESLecture[] = await this.searchLectures(
+    const searchedLectures: IESLecture[] = await this.searchLectures(
       userId,
-      getCombinedSearchResultDto,
+      dto,
     );
 
-    const slicedLecturers = searchedLecturers
-      ? searchedLecturers.slice(0, getCombinedSearchResultDto.take)
-      : null;
-    const slicedLectures = searchedLectures
-      ? searchedLectures.slice(0, getCombinedSearchResultDto.take)
-      : null;
+    const slicedLecturers = this.sliceResults(searchedLecturers, dto.take);
+    const slicedLectures = this.sliceResults(searchedLectures, dto.take);
 
     return new CombinedSearchResultDto({
       searchedLecturers: slicedLecturers,
@@ -51,43 +56,68 @@ export class SearchService {
 
   private async searchLecturers(
     userId: number,
-    getCombinedSearchResultDto: GetCombinedSearchResultDto,
-  ) {
-    const searchedLecturers: EsLecturer[] =
-      await this.searchLecturersWithElasticsearch(getCombinedSearchResultDto);
+    dto: GetCombinedSearchResultDto,
+  ): Promise<IEsLecturer[]> {
+    const { value, take } = dto;
+    const searchedLecturers = await this.searchLecturersWithElasticsearch({
+      value,
+      take,
+    });
+
     if (!searchedLecturers || !userId) {
       return searchedLecturers;
     }
 
-    //유저가 차단한 강사 필터링
+    //차단한 강사 제외
+    const lecturersWithoutBlocked: IEsLecturer[] =
+      await this.filterBlockedLecturers(userId, searchedLecturers);
+    if (!lecturersWithoutBlocked) {
+      return;
+    }
+
+    //isLiked 속성 추가
+    const lecturersWithLikeStatus: IEsLecturer[] = await this.addLikeStatus(
+      userId,
+      lecturersWithoutBlocked,
+    );
+
+    //검색결과 개수를 맞추기 위한 slice
+    return lecturersWithLikeStatus;
+  }
+
+  private async filterBlockedLecturers(
+    userId: number,
+    lecturers: IEsLecturer[],
+  ): Promise<IEsLecturer[]> {
     const userBlockedLecturer: BlockedLecturer[] =
       await this.searchRepository.getUserblockedLecturerList(userId);
-    const lecturersWithoutBlocked = searchedLecturers.filter(
-      (lecturer: EsLecturer) =>
+
+    // 유저가 차단한 강사 필터링
+    const lecturersWithoutBlocked = lecturers.filter(
+      (lecturer: IEsLecturer) =>
         !userBlockedLecturer.some(
           (blocked) => blocked.lecturerId === lecturer.id,
         ),
     );
 
-    if (!lecturersWithoutBlocked) {
-      return;
-    }
+    return lecturersWithoutBlocked;
+  }
 
-    //유저가 좋아요 누른 강사 조회
+  private async addLikeStatus(
+    userId: number,
+    lecturers: IEsLecturer[],
+  ): Promise<IEsLecturer[]> {
     const userLikedLecturerList: LikedLecturer[] =
       await this.searchRepository.getUserLikedLecturerList(userId);
-
     const likedLecturerIds = userLikedLecturerList.map(
       (like) => like.lecturerId,
     );
 
     // 좋아요한 강사들에 isLiked 속성 추가
-    const lecturersWithLikeStatus = lecturersWithoutBlocked.map(
-      (lecturer: EsLecturer) => ({
-        ...lecturer,
-        isLiked: likedLecturerIds.includes(lecturer.id),
-      }),
-    );
+    const lecturersWithLikeStatus = lecturers.map((lecturer: IEsLecturer) => ({
+      ...lecturer,
+      isLiked: likedLecturerIds.includes(lecturer.id),
+    }));
 
     return lecturersWithLikeStatus;
   }
@@ -95,38 +125,33 @@ export class SearchService {
   private async searchLecturersWithElasticsearch({
     value,
     take,
-  }: // lecturerSearchAfter,
-  GetCombinedSearchResultDto): Promise<EsLecturer[]> {
+  }: ILecturerSearchParams): Promise<IEsLecturer[]> {
     const { hits } = await this.esService.search({
       index: 'lecturer',
-      size: take,
+      size: take * 2,
       query: {
         bool: {
           should: [
-            { match: { 'genres.genre': value } },
-            { match: { nickname: value } },
-            { match: { affiliation: value } },
-            { match: { 'regions.administrativeDistrict': value } },
-            { match: { 'regions.district': value } },
+            { match: { 'nickname.nori': value } },
+            { match: { 'nickname.ngram': value } },
+            { match: { 'affiliation.nori': value } },
+            { match: { 'affiliation.ngram': value } },
+            { match: { 'genres.genre.nori': value } },
+            { match: { 'genres.genre.ngram': value } },
+            { match: { 'regions.administrativeDistrict.nori': value } },
+            { match: { 'regions.administrativeDistrict.ngram': value } },
+            { match: { 'regions.district.nori': value } },
+            { match: { 'regions.district.ngram': value } },
           ],
         },
       },
       // search_after: lecturerSearchAfter,
-      sort: [
-        {
-          updatedat: {
-            order: 'desc',
-          },
-          id: {
-            order: 'desc',
-          },
-        },
-      ],
+      sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
     });
 
     if (typeof hits.total === 'object' && hits.total.value > 0) {
       return hits.hits.map(
-        (hit: any): EsLecturer => ({
+        (hit: any): IEsLecturer => ({
           ...hit._source,
           searchAfter: hit.sort,
         }),
@@ -136,11 +161,9 @@ export class SearchService {
 
   private async searchLectures(
     userId: number,
-    getCombinedSearchResultDto: GetCombinedSearchResultDto,
-  ): Promise<ESLecture[]> {
-    const searchedLectures = await this.searchLecturesWithElasticsearch(
-      getCombinedSearchResultDto,
-    );
+    dto: GetCombinedSearchResultDto,
+  ): Promise<IESLecture[]> {
+    const searchedLectures = await this.searchLecturesWithElasticsearch(dto);
 
     if (!searchedLectures || !userId) {
       return searchedLectures;
@@ -151,7 +174,7 @@ export class SearchService {
 
     //차단한 강사 필터링
     const lecturesWithoutBlocked = searchedLectures.filter(
-      (lecture: ESLecture) =>
+      (lecture: IESLecture) =>
         !userBlockedLecturer.some(
           (blocked) => blocked.lecturerId === lecture.lecturer.lecturerId,
         ),
@@ -167,8 +190,8 @@ export class SearchService {
     const likedLectureIds = userLikedLectureList.map((like) => like.lectureId);
 
     // 좋아요한 강의들에 isLiked 속성 추가
-    const lecturersWithLikeStatus = lecturesWithoutBlocked.map(
-      (lecture: ESLecture) => {
+    const lecturesWithLikeStatus = lecturesWithoutBlocked.map(
+      (lecture: IESLecture) => {
         return {
           ...lecture,
           isLiked: likedLectureIds.includes(lecture.id),
@@ -176,14 +199,13 @@ export class SearchService {
       },
     );
 
-    return lecturersWithLikeStatus;
+    return lecturesWithLikeStatus;
   }
 
   private async searchLecturesWithElasticsearch({
     value,
     take,
-  }: // lectureSearchAfter,
-  GetCombinedSearchResultDto): Promise<ESLecture[]> {
+  }: GetCombinedSearchResultDto): Promise<IESLecture[]> {
     try {
       const { hits } = await this.esService.search({
         index: 'lecture',
@@ -204,22 +226,12 @@ export class SearchService {
             ],
           },
         },
-        sort: [
-          {
-            updatedat: {
-              order: 'desc',
-            },
-            id: {
-              order: 'desc',
-            },
-          },
-        ],
-        // search_after: lectureSearchAfter,
+        sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
       });
 
       if (typeof hits.total === 'object' && hits.total.value > 0) {
         return hits.hits.map(
-          (hit: any): ESLecture => ({
+          (hit: any): IESLecture => ({
             ...hit._source,
             searchAfter: hit.sort,
           }),
@@ -231,5 +243,183 @@ export class SearchService {
         'ElasticSearchServer',
       );
     }
+  }
+
+  async getLecturerList(
+    userId: number,
+    dto: GetLecturerSearchResultDto,
+  ): Promise<EsLecturerDto[]> {
+    const searchedLecturers: IEsLecturer[] =
+      await this.detailSearchLecturersWithElasticsearch(dto);
+    if (!searchedLecturers) {
+      return;
+    }
+    if (!userId) {
+      const slicedLecturers = this.sliceResults(searchedLecturers, dto.take);
+
+      return slicedLecturers.map((lecturer) => new EsLecturerDto(lecturer));
+    }
+
+    //차단한 강사 제외
+    const lecturersWithoutBlocked: IEsLecturer[] =
+      await this.filterBlockedLecturers(userId, searchedLecturers);
+    if (!lecturersWithoutBlocked) {
+      return;
+    }
+
+    //isLiked 속성 추가
+    const lecturersWithLikeStatus: IEsLecturer[] = await this.addLikeStatus(
+      userId,
+      lecturersWithoutBlocked,
+    );
+
+    //검색결과 개수를 맞추기 위한 slice
+    const slicedLecturers = this.sliceResults(
+      lecturersWithLikeStatus,
+      dto.take,
+    );
+
+    return slicedLecturers.map((lecturer) => new EsLecturerDto(lecturer));
+  }
+
+  private async detailSearchLecturersWithElasticsearch({
+    value,
+    take,
+    genres,
+    regions,
+    searchAfter,
+    stars,
+    sortOption,
+  }: ILecturerSearchParams): Promise<IEsLecturer[]> {
+    const searchQuery = this.buildSearchQuery(value);
+    const genreQuery = this.buildGenreQuery(genres);
+    const starQuery = this.buildStarQuery(stars);
+    const regionQuery = this.buildRegionQuery(regions);
+    const sortQuery: any[] = this.buildSortQuery(sortOption);
+
+    const { hits } = await this.esService.search({
+      index: 'lecturer',
+      size: take,
+      query: {
+        bool: {
+          // undefined면 에러가 발생하기 떄문에 값이 있는 쿼리만 담을 수 있도록 필터링
+          must: [searchQuery, genreQuery, regionQuery, starQuery].filter(
+            Boolean,
+          ),
+        },
+      },
+      search_after: searchAfter,
+      sort: sortQuery,
+    });
+
+    if (typeof hits.total === 'object' && hits.total.value > 0) {
+      return hits.hits.map(
+        (hit: any): IEsLecturer => ({
+          ...hit._source,
+          searchAfter: hit.sort,
+        }),
+      );
+    }
+  }
+
+  private buildSearchQuery(value: string) {
+    return value
+      ? {
+          bool: {
+            should: [
+              { match: { 'nickname.nori': value } },
+              { match: { 'nickname.ngram': value } },
+              { match: { 'affiliation.nori': value } },
+              { match: { 'affiliation.ngram': value } },
+              { match: { 'genres.genre.nori': value } },
+              { match: { 'genres.genre.ngram': value } },
+              { match: { 'regions.administrativeDistrict.nori': value } },
+              { match: { 'regions.administrativeDistrict.ngram': value } },
+              { match: { 'regions.district.nori': value } },
+              { match: { 'regions.district.ngram': value } },
+            ],
+          },
+        }
+      : undefined;
+  }
+
+  private buildGenreQuery(genres: DanceCategory[]) {
+    let genreQuery;
+
+    if (genres && genres.length > 0) {
+      const query = genres.map((genre) => [
+        {
+          bool: {
+            must: [{ match: { 'genres.genre.nori': genre } }],
+          },
+        },
+      ]);
+
+      genreQuery = {
+        bool: {
+          should: query.flat(),
+        },
+      };
+    }
+    return genreQuery;
+  }
+
+  private buildStarQuery(stars: number) {
+    return stars ? { range: { stars: { gte: stars } } } : undefined;
+  }
+
+  private buildSortQuery(sortOption: LecturerSortOptions) {
+    return sortOption === LecturerSortOptions.LATEST
+      ? [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }]
+      : [{ stars: { order: 'desc' } }, { _score: { order: 'desc' } }];
+  }
+
+  private buildRegionQuery(regions: string[]) {
+    let regionQuery;
+
+    if (regions && regions.length > 0) {
+      const query = regions.map((region) => {
+        const [administrativeDistrict, district] = region.split(' ');
+
+        const administrativeDistrictQuery =
+          administrativeDistrict.toLowerCase() === '온라인'
+            ? { match: { 'regions.administrativeDistrict.nori': '온라인' } }
+            : {
+                match: {
+                  'regions.administrativeDistrict.nori': administrativeDistrict,
+                },
+              };
+
+        //온라인, 전 지역에 따라 districtQuery설정
+        const districtQuery =
+          district === '전'
+            ? { match: { 'regions.district.nori': '전 지역' } }
+            : administrativeDistrict === '온라인'
+            ? undefined
+            : { match: { 'regions.district.nori': district } };
+
+        return [
+          {
+            bool: {
+              must: [administrativeDistrictQuery, districtQuery].filter(
+                Boolean,
+              ),
+            },
+          },
+        ];
+      });
+
+      regionQuery = {
+        bool: {
+          should: query.flat(),
+        },
+      };
+    }
+
+    return regionQuery;
+  }
+
+  private sliceResults(results: any[], take: number): any[] {
+    return results ? results.slice(0, take) : null;
   }
 }

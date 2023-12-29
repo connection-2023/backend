@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EsLecturer } from '../interface/search.interface';
+import { IEsLecturer } from '../interface/search.interface';
 import { EsRegionDto } from './es-region.dto';
 import { EsGenreDto } from './es-genre.dto';
 
@@ -40,6 +40,12 @@ export class EsLecturerDto {
   reviewCount: number;
 
   @ApiProperty({
+    isArray: true,
+    description: '소속',
+  })
+  affiliation: string;
+
+  @ApiProperty({
     type: Boolean,
     description: '좋아요 여부',
   })
@@ -65,16 +71,16 @@ export class EsLecturerDto {
   })
   genres: EsGenreDto[];
 
-  affiliation: string;
   updatedat: Date;
 
-  constructor(lecturer: Partial<EsLecturer>) {
+  constructor(lecturer: Partial<IEsLecturer>) {
     this.searchAfter = lecturer.searchAfter;
     this.id = lecturer.id;
     this.nickname = lecturer.nickname;
     this.profileCardImageUrl = lecturer.profilecardimageurl;
     this.stars = lecturer.stars;
     this.reviewCount = lecturer.reviewcount;
+    this.affiliation = lecturer.affiliation;
     this.isLiked = lecturer.isLiked;
     this.lecturerImages = lecturer.lecturerImages;
 

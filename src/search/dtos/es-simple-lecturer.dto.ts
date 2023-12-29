@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EsSimpleLecturer } from '../interface/search.interface';
+import { IEsSimpleLecturer } from '../interface/search.interface';
 
 export class EsSimpleLecturerDto {
   @ApiProperty({
@@ -18,7 +18,7 @@ export class EsSimpleLecturerDto {
   })
   profileCardImageUrl: string;
 
-  constructor(lecturer: Partial<EsSimpleLecturer>) {
+  constructor(lecturer: Partial<IEsSimpleLecturer>) {
     this.id = lecturer.lecturerId;
     this.nickname = lecturer.nickname;
     this.profileCardImageUrl = lecturer.profileCardImageUrl;
