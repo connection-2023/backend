@@ -482,6 +482,7 @@ export class LectureRepository {
       include: {
         lecture: {
           select: {
+            id: true,
             title: true,
             isGroup: true,
             maxCapacity: true,
@@ -502,6 +503,18 @@ export class LectureRepository {
   async readDaySchedule(lectureId: number): Promise<DaySchedule[]> {
     return await this.prismaService.lectureDay.findMany({
       where: { lectureId },
+    });
+  }
+
+  async readManyDailySchedulesWithLecturerId(
+    where,
+  ): Promise<LectureSchedule[]> {
+    return await this.prismaService.lectureSchedule.findMany({
+      where,
+      orderBy: { startDateTime: 'asc' },
+      include: {
+        lecture: { select: { id: true, title: true } },
+      },
     });
   }
 }

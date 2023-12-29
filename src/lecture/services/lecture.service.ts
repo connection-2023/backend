@@ -672,6 +672,21 @@ export class LectureService {
       where,
     );
   }
+
+  async readManyDailySchedulesWithLecturerId(lecturerId: number, date: Date) {
+    const startDate = new Date(date);
+    const endDate = new Date(date);
+    endDate.setHours(32, 59, 59, 999);
+
+    const where = {
+      lecture: { lecturerId, deletedAt: null },
+      startDateTime: { gte: startDate, lte: endDate.toISOString() },
+    };
+
+    return await this.lectureRepository.readManyDailySchedulesWithLecturerId(
+      where,
+    );
+  }
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
 
