@@ -1,4 +1,4 @@
-import { DanceCategory } from '@src/common/enum/enum';
+import { DanceCategory, Week } from '@src/common/enum/enum';
 import { LecturerSortOptions } from '../enum/search.enum';
 
 export interface IESLecture {
@@ -55,6 +55,18 @@ export interface IEsRegion {
 
 export interface ILecturerSearchParams {
   take: number;
+  value?: string;
+  searchAfter?: number[];
+  regions?: string[];
+  genres?: DanceCategory[];
+  stars?: number;
+  sortOption?: LecturerSortOptions;
+}
+
+export interface ILectureSearchParams {
+  take: number;
+  days?: Week[];
+  times?: string[];
   value?: string;
   searchAfter?: number[];
   regions?: string[];

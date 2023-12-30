@@ -11,6 +11,7 @@ import { GetLecturerSearchResultDto } from '../dtos/get-lecturer-search-result.d
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiSearchLecturerList } from '../swagger-decorators/search-lecturer-list.decorator';
 import { EsLecturerDto } from '../dtos/es-lecturer.dto';
+import { GetLectureSearchResultDto } from '../dtos/get-lecture-search-result.dto';
 
 @ApiTags('검색')
 @Controller('search')
@@ -39,8 +40,17 @@ export class SearchController {
   ): Promise<EsLecturerDto[]> {
     const userId: number = authorizedData?.user?.id;
 
-    console.log(dto);
-
     return await this.searchService.getLecturerList(userId, dto);
+  }
+
+  @Get('/lecture')
+  @UseGuards(AllowUserAndGuestGuard)
+  async searchLectureList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() dto: GetLectureSearchResultDto,
+  ) {
+    const userId: number = authorizedData?.user?.id;
+
+    return await this.searchService.getLectureList(userId, dto);
   }
 }

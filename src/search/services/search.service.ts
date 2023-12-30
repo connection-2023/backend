@@ -10,15 +10,17 @@ import { BlockedLecturer, LikedLecture, LikedLecturer } from '@prisma/client';
 import {
   IESLecture,
   IEsLecturer,
+  ILectureSearchParams,
   ILecturerSearchParams,
 } from '../interface/search.interface';
 import { CombinedSearchResultDto } from '../dtos/combined-search-result.dto';
 import { GetCombinedSearchResultDto } from '../dtos/get-combined-search-result.dto';
 import { GetLecturerSearchResultDto } from '../dtos/get-lecturer-search-result.dto';
-import { LecturerSortOptions } from '../enum/search.enum';
+import { LecturerSortOptions, SearchTypes } from '../enum/search.enum';
 import { EsLectureDto } from '../dtos/es-lecture.dto';
 import { EsLecturerDto } from '../dtos/es-lecturer.dto';
-import { DanceCategory } from '@src/common/enum/enum';
+import { DanceCategory, Week } from '@src/common/enum/enum';
+import { GetLectureSearchResultDto } from '../dtos/get-lecture-search-result.dto';
 
 @Injectable()
 export class SearchService {
@@ -291,7 +293,7 @@ export class SearchService {
     stars,
     sortOption,
   }: ILecturerSearchParams): Promise<IEsLecturer[]> {
-    const searchQuery = this.buildSearchQuery(value);
+    const searchQuery = this.buildSearchQuery(SearchTypes.LECTURER, value);
     const genreQuery = this.buildGenreQuery(genres);
     const starQuery = this.buildStarQuery(stars);
     const regionQuery = this.buildRegionQuery(regions);
@@ -322,25 +324,48 @@ export class SearchService {
     }
   }
 
-  private buildSearchQuery(value: string) {
-    return value
-      ? {
-          bool: {
-            should: [
-              { match: { 'nickname.nori': value } },
-              { match: { 'nickname.ngram': value } },
-              { match: { 'affiliation.nori': value } },
-              { match: { 'affiliation.ngram': value } },
-              { match: { 'genres.genre.nori': value } },
-              { match: { 'genres.genre.ngram': value } },
-              { match: { 'regions.administrativeDistrict.nori': value } },
-              { match: { 'regions.administrativeDistrict.ngram': value } },
-              { match: { 'regions.district.nori': value } },
-              { match: { 'regions.district.ngram': value } },
-            ],
-          },
-        }
-      : undefined;
+  private buildSearchQuery(searchType: SearchTypes, value: string) {
+    if (searchType === SearchTypes.LECTURER) {
+      return value
+        ? {
+            bool: {
+              should: [
+                { match: { 'nickname.nori': value } },
+                { match: { 'nickname.ngram': value } },
+                { match: { 'affiliation.nori': value } },
+                { match: { 'affiliation.ngram': value } },
+                { match: { 'genres.genre.nori': value } },
+                { match: { 'genres.genre.ngram': value } },
+                { match: { 'regions.administrativeDistrict.nori': value } },
+                { match: { 'regions.administrativeDistrict.ngram': value } },
+                { match: { 'regions.district.nori': value } },
+                { match: { 'regions.district.ngram': value } },
+              ],
+            },
+          }
+        : undefined;
+    }
+
+    if (searchType === SearchTypes.LECTURE) {
+      return value
+        ? {
+            bool: {
+              should: [
+                { match: { 'title.nori': value } },
+                { match: { 'title.ngram': value } },
+                { match: { 'genres.genre.nori': value } },
+                { match: { 'genres.genre.ngram': value } },
+                { match: { 'regions.administrativeDistrict.nori': value } },
+                { match: { 'regions.administrativeDistrict.ngram': value } },
+                { match: { 'regions.district.nori': value } },
+                { match: { 'regions.district.ngram': value } },
+                { match: { 'lecturer.nickname.nori': value } },
+                { match: { 'lecturer.nickname.ngram': value } },
+              ],
+            },
+          }
+        : undefined;
+    }
   }
 
   private buildGenreQuery(genres: DanceCategory[]) {
@@ -398,15 +423,11 @@ export class SearchService {
             ? undefined
             : { match: { 'regions.district.nori': district } };
 
-        return [
-          {
-            bool: {
-              must: [administrativeDistrictQuery, districtQuery].filter(
-                Boolean,
-              ),
-            },
+        return {
+          bool: {
+            must: [administrativeDistrictQuery, districtQuery].filter(Boolean),
           },
-        ];
+        };
       });
 
       regionQuery = {
@@ -421,5 +442,86 @@ export class SearchService {
 
   private sliceResults(results: any[], take: number): any[] {
     return results ? results.slice(0, take) : null;
+  }
+
+  async getLectureList(userId: number, dto: GetLectureSearchResultDto) {
+    const searchedLectures = await this.detailSearchLecturesWithElasticsearch(
+      dto,
+    );
+
+    return searchedLectures;
+  }
+
+  private async detailSearchLecturesWithElasticsearch({
+    value,
+    take,
+    days,
+    times,
+    stars,
+    regions,
+    genres,
+  }: ILectureSearchParams) {
+    const searchQuery = this.buildSearchQuery(SearchTypes.LECTURE, value);
+    const dayQuery = this.buildDayQuery(days);
+    const timeQuery = this.buildTimeQuery(times);
+    const starQuery = this.buildStarQuery(stars);
+    const regionQuery = this.buildRegionQuery(regions);
+    const genreQuery = this.buildGenreQuery(genres);
+
+    const { hits } = await this.esService.search({
+      index: 'lecture',
+      size: take * 2,
+      query: {
+        bool: {
+          must: [
+            searchQuery,
+            dayQuery,
+            timeQuery,
+            starQuery,
+            regionQuery,
+            genreQuery,
+          ].filter(Boolean),
+        },
+      },
+    });
+
+    if (typeof hits.total === 'object' && hits.total.value > 0) {
+      return hits.hits.map(
+        (hit: any): IEsLecturer => ({
+          ...hit._source,
+          searchAfter: hit.sort,
+        }),
+      );
+    }
+  }
+
+  private buildDayQuery(days: Week[]) {
+    const dayQuery =
+      days && days.length > 0
+        ? days.map((day) => ({ match: { 'days.day': day } }))
+        : undefined;
+
+    return (
+      dayQuery && {
+        bool: {
+          should: dayQuery,
+        },
+      }
+    );
+  }
+
+  private buildTimeQuery(times: string[]) {
+    const timeQuery =
+      times && times.length > 0
+        ? times.map((time) => ({ range: { 'days.dateTime': { gte: time } } }))
+        : undefined;
+
+    return (
+      timeQuery && {
+        bool: {
+          should: timeQuery,
+        },
+      }
+    );
   }
 }
