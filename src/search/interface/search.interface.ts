@@ -1,7 +1,7 @@
-import { DanceCategory, Week } from '@src/common/enum/enum';
-import { LecturerSortOptions } from '../enum/search.enum';
+import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
+import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
 
-export interface IESLecture {
+export interface IEsLecture {
   id: number;
   price: number;
   enddate: Date;
@@ -19,6 +19,7 @@ export interface IESLecture {
   regions: IEsRegion[];
   isLiked: boolean | undefined;
   searchAfter: number[];
+  days: IEsEsLectureDay[];
 }
 
 export interface IEsLecturer {
@@ -53,6 +54,11 @@ export interface IEsRegion {
   district: string;
 }
 
+export interface IEsEsLectureDay {
+  day: string[];
+  dateTime: string[];
+}
+
 export interface ILecturerSearchParams {
   take: number;
   value?: string;
@@ -66,11 +72,15 @@ export interface ILecturerSearchParams {
 export interface ILectureSearchParams {
   take: number;
   days?: Week[];
-  times?: string[];
+  timeOfDay?: TimeOfDay[];
   value?: string;
   searchAfter?: number[];
   regions?: string[];
   genres?: DanceCategory[];
   stars?: number;
   sortOption?: LecturerSortOptions;
+  ltePrice?: number;
+  gtePrice?: number;
+  lectureMethod?: DanceMethod;
+  isGroup: Boolean;
 }

@@ -1,20 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotBlank,
-  IsNumberType,
-  IsHourMinSecFormat,
-} from '@src/common/validator/custom-validator';
-import { Transform } from 'class-transformer';
+import { IsNumberType } from '@src/common/validator/custom-validator';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { LecturerSortOptions } from '../enum/search.enum';
-import { DanceCategory, Week } from '@src/common/enum/enum';
+import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
+import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
 
 export class GetLectureSearchResultDto {
   @ApiProperty({
@@ -35,6 +33,16 @@ export class GetLectureSearchResultDto {
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
   sortOption: LecturerSortOptions;
+
+  @ApiProperty({
+    type: Boolean,
+    description: '강의 인원 형식',
+    required: true,
+  })
+  @IsBoolean()
+  @Type(() => Boolean)
+  @IsNotEmpty()
+  isGroup: Boolean;
 
   @ApiProperty({
     description: '검색어',
@@ -101,13 +109,61 @@ export class GetLectureSearchResultDto {
   days: Week[];
 
   @ApiProperty({
-    description: '시간',
-    example: ['HH:mm:ss'],
+    enum: TimeOfDay,
+    description: '시간 / 전체일때는 다른 요소 포함 x',
     isArray: true,
     required: false,
   })
-  @IsHourMinSecFormat()
+  @IsEnum(TimeOfDay, { each: true })
+  @Transform(({ value }) => value.map((time) => time.toUpperCase()))
   @ArrayMinSize(1)
   @IsOptional()
-  times: string[];
+  timeOfDay: TimeOfDay[];
+
+  @ApiProperty({
+    type: Number,
+    description: '최소 가격',
+    required: false,
+  })
+  @IsNumberType()
+  @IsOptional()
+  gtePrice: number;
+
+  @ApiProperty({
+    type: Number,
+    description: '최대 가격',
+    required: false,
+  })
+  @IsNumberType()
+  @IsOptional()
+  ltePrice: number;
+
+  @ApiProperty({
+    enum: DanceMethod,
+    description: '진행 방식',
+    required: false,
+  })
+  @IsEnum(DanceMethod)
+  @IsOptional()
+  lectureMethod: DanceMethod;
+
+  @ApiProperty({
+    type: Date,
+    description: '지정 날짜 / 지정 날짜 최소 범위',
+    required: false,
+  })
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  gteDate: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: '지정 날짜일때 undefined / 지정 날짜 최대 범위',
+    required: false,
+  })
+  @IsDate()
+  @Type(() => Date)
+  @IsOptional()
+  lteDate: Date;
 }
