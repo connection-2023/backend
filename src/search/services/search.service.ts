@@ -399,9 +399,7 @@ export class SearchService {
 
         //온라인, 전 지역에 따라 districtQuery설정
         const districtQuery =
-          district === '전'
-            ? { match: { 'regions.district.nori': '전 지역' } }
-            : administrativeDistrict === '온라인'
+          district === '전' || administrativeDistrict === '온라인'
             ? undefined
             : { match: { 'regions.district.nori': district } };
 

@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumberType } from '@src/common/validator/custom-validator';
 import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
@@ -85,6 +86,7 @@ export class GetLectureSearchResultDto {
     isArray: true,
     required: false,
   })
+  @ArrayMaxSize(30, { message: '지역은 최대 30개 까지 검색 할 수 있습니다' })
   @ArrayMinSize(1)
   @IsArray()
   @IsOptional()
