@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Length,
 } from 'class-validator';
 import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
 import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
@@ -48,6 +49,7 @@ export class GetLectureSearchResultDto {
     description: '검색어',
     required: false,
   })
+  @Length(1, 50, { message: '값의 길이는 1에서 50 사이여야 합니다.' })
   @IsString()
   @IsOptional()
   value: string;
