@@ -57,3 +57,35 @@ export function IsFutureDate(validationOptions?: ValidationOptions) {
     });
   };
 }
+
+//시간 중 HH:mm:ss 형태를 검증하기 위한 validator
+@ValidatorConstraint({ name: 'isHMSTimeFormatArray', async: false })
+class IsHourMinSecFormatConstraint implements ValidatorConstraintInterface {
+  validate(value: any, args: ValidationArguments) {
+    if (!Array.isArray(value)) {
+      return false;
+    }
+
+    const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+
+    return value.every(
+      (time: string) => typeof time === 'string' && timeRegex.test(time),
+    );
+  }
+
+  defaultMessage(args: ValidationArguments) {
+    return `${args.property} must be an array of strings in the format HH:mm:ss`;
+  }
+}
+
+export function IsHourMinSecFormat(options?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName,
+      constraints: [],
+      options,
+      validator: IsHourMinSecFormatConstraint,
+    });
+  };
+}
