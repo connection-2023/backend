@@ -8,16 +8,11 @@ import {
   Patch,
   Post,
   Query,
-  UploadedFiles,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { UploadsService } from '@src/uploads/services/uploads.service';
-import { Lecture, Lecturer, Users } from '@prisma/client';
 import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
@@ -40,12 +35,10 @@ import { ApiReadManyLectureByNonMemeber } from '../swagger-decorators/read-many-
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiGetLectureLearnerList } from '../swagger-decorators/get-lecture-learner-list.decorator';
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
-import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ApiReadManyLectureSchedulesWithLecturerId } from '../swagger-decorators/read-many-lecture-schedules-with-lecturer-id-decorator';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { ApiReadManyDailySchedules } from '../swagger-decorators/read-many-daily-schedules.decorator';
-import { ApiReadManylatestLectures } from '../swagger-decorators/read-many-latest-lectures.decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -268,17 +261,5 @@ export class LectureController {
       );
 
     return { schedules };
-  }
-
-  @ApiReadManylatestLectures()
-  @SetResponseKey('lectures')
-  @UseGuards(UserAccessTokenGuard)
-  @Get('latest')
-  async readManyLatestLecture(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    return await this.lectureService.readManyLatestLectureWithUserId(
-      authorizedData.user.id,
-    );
   }
 }

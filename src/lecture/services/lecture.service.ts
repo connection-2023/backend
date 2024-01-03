@@ -699,12 +699,6 @@ export class LectureService {
     );
   }
 
-  async readManyLatestLectureWithUserId(userId: number) {
-    const lectures =
-      await this.lectureRepository.readManyLatestLecturesWithUserId(userId);
-
-    return lectures.map((lecture) => new LectureDto(lecture));
-  }
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
 
