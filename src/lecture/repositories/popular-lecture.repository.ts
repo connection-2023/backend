@@ -34,7 +34,7 @@ export class PopularLectureRepository {
         lecturer: {
           select: {
             nickname: true,
-            lecturerProfileImageUrl: { select: { url: true } },
+            profileCardImageUrl: true,
           },
         },
         lectureToDanceGenre: {
