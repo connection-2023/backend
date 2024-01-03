@@ -159,6 +159,7 @@ export class LectureRepository {
             },
           },
         },
+        lectureImage: true,
         lectureToDanceGenre: {
           select: { name: true, danceCategory: { select: { genre: true } } },
         },
