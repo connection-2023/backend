@@ -223,12 +223,8 @@ export class LectureService {
     const location = await this.lectureRepository.readLectureLocation(
       lectureId,
     );
-    const daySchedule = await this.lectureRepository.readDaySchedule(lectureId);
 
-    if (!daySchedule[0]) {
-      return { lecture, lecturer, location };
-    }
-    return { lecture, lecturer, location, daySchedule };
+    return { lecture, lecturer, location };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
@@ -481,15 +477,28 @@ export class LectureService {
           transaction,
           lectureId,
         );
+        const daySchedule = await this.lectureRepository.trxReadDaySchedule(
+          transaction,
+          lectureId,
+        );
 
-        return { schedule, holiday };
+        if (!daySchedule[0]) {
+          return { schedule, holiday };
+        }
+        return { schedule, holiday, daySchedule };
       },
     );
     const { schedule } = calendar;
     const { holiday } = calendar;
     const holidayArr = this.createLectureHolidayArr(holiday);
 
-    return { schedule, holidayArr };
+    if (!calendar.daySchedule) {
+      return { schedule, holidayArr };
+    }
+
+    const { daySchedule } = calendar;
+
+    return { schedule, holidayArr, daySchedule };
   }
 
   async readLectureReservationWithUser(userId: number, lectureId: number) {

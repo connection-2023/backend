@@ -499,8 +499,11 @@ export class LectureRepository {
     await transaction.lectureDay.createMany({ data: daySchedules });
   }
 
-  async readDaySchedule(lectureId: number): Promise<DaySchedule[]> {
-    return await this.prismaService.lectureDay.findMany({
+  async trxReadDaySchedule(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<DaySchedule[]> {
+    return await transaction.lectureDay.findMany({
       where: { lectureId },
     });
   }
