@@ -23,7 +23,7 @@ export class PopularLecturerRepository {
     return await trasaction.likedLecturer.count({ where: { lecturerId } });
   }
 
-  async trxReadLecturerWithUserId(
+  async trxReadLecturerWithLecturerId(
     transaction: PrismaTransaction,
     lecturerId: number,
   ): Promise<Lecturer> {
