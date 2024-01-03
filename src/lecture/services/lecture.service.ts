@@ -346,8 +346,15 @@ export class LectureService {
   }
 
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
-    const { images, coupons, holidays, notification, ...lecture } =
-      updateLectureDto;
+    const {
+      images,
+      coupons,
+      holidays,
+      notification,
+      endDate,
+      schedules,
+      ...lecture
+    } = updateLectureDto;
     const currentTime = new Date();
 
     return await this.prismaService.$transaction(
@@ -372,6 +379,31 @@ export class LectureService {
               `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
             );
           }
+        }
+        if (endDate) {
+          const isUpdatePossible = transaction.lecture.findFirst({
+            where: { id: lectureId, endDate: { lt: new Date(endDate) } },
+          });
+
+          if (isUpdatePossible) {
+            lecture['endDate'] = endDate;
+          } else {
+            throw new BadRequestException(
+              '현재 마감일이 수정 마감일보다 큽니다.',
+            );
+          }
+          const { duration } = await this.prismaService.lecture.findFirst({
+            where: { id: lectureId },
+            select: { duration: true },
+          });
+
+          const createNewScheduleInputData =
+            this.createLectureScheduleInputData(lectureId, schedules, duration);
+
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            createNewScheduleInputData,
+          );
         }
 
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
