@@ -152,7 +152,6 @@ export class LectureRepository {
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
         lectureNotification: true,
-        lectureImage: { select: { imageUrl: true }, orderBy: { id: 'asc' } },
         lectureToRegion: {
           select: {
             region: {
@@ -179,7 +178,7 @@ export class LectureRepository {
       skip,
       take,
       include: {
-        lecturer: { include: { lecturerProfileImageUrl: true } },
+        lecturer: true,
         lectureToRegion: { include: { region: true } },
         lectureToDanceGenre: { include: { danceCategory: true } },
       },
@@ -328,7 +327,7 @@ export class LectureRepository {
         lecturer: {
           select: {
             nickname: true,
-            lecturerProfileImageUrl: { select: { url: true }, take: 1 },
+            profileCardImageUrl: true,
           },
         },
       },
