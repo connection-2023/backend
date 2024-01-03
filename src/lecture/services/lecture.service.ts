@@ -1,3 +1,4 @@
+import { ReadManyLatestLecturesResponseDto } from './../dtos/read-many-latest-lectures-response.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import {
@@ -37,6 +38,7 @@ import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
 
 @Injectable()
 export class LectureService {
@@ -135,7 +137,7 @@ export class LectureService {
           }
         }
 
-        if (daySchedules[0]) {
+        if (daySchedules) {
           const daySchedulesInputData = daySchedules.map((daySchedule) => ({
             lectureId: newLecture.id,
             ...daySchedule,
@@ -695,6 +697,13 @@ export class LectureService {
     return await this.lectureRepository.readManyDailySchedulesWithLecturerId(
       where,
     );
+  }
+
+  async readManyLatestLectureWithUserId(userId: number) {
+    const lectures =
+      await this.lectureRepository.readManyLatestLecturesWithUserId(userId);
+
+    return lectures.map((lecture) => new LectureDto(lecture));
   }
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
