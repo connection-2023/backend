@@ -11,12 +11,18 @@ export class PopularLecturerService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async readManyPopularLecturer(userId: number): Promise<LecturerDto[]> {
+  async readManyPopularLecturer(userId?: number): Promise<LecturerDto[]> {
     return await this.prismaService.$transaction(
       async (trasaction: PrismaTransaction) => {
+        const where = { deletedAt: null };
+
+        if (userId) {
+          where['blockedLecturer'] = { none: { userId } };
+        }
+
         const popularScores = [];
         const lecturers = await trasaction.lecturer.findMany({
-          where: { deletedAt: null, blockedLecturer: { none: { userId } } },
+          where,
           select: { id: true },
         });
 
@@ -55,7 +61,7 @@ export class PopularLecturerService {
 
         for (const popularLecturer of topFivePopularScores) {
           const lecturer =
-            await this.popularLecturerRepository.trxReadLecturerWithUserId(
+            await this.popularLecturerRepository.trxReadLecturerWithLecturerId(
               trasaction,
               popularLecturer.id,
             );
