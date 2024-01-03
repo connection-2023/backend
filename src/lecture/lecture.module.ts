@@ -22,6 +22,8 @@ import { LectureReviewLikeController } from './controllers/lecture-review-like.c
 import { PopularLectureController } from './controllers/popular-lecture.controller';
 import { PopularLectureRepository } from './repositories/popular-lecture.repository';
 import { PopularLectureService } from './services/popular-lecture.service';
+import { LatestLectureController } from './controllers/latest-lecture.controller';
+import { LatestLectureService } from './services/latest-lecture.service';
 
 @Module({
   imports: [],
@@ -32,6 +34,7 @@ import { PopularLectureService } from './services/popular-lecture.service';
     LectureReviewController,
     LectureReviewLikeController,
     PopularLectureController,
+    LatestLectureController,
   ],
   providers: [
     LectureService,
@@ -49,6 +52,7 @@ import { PopularLectureService } from './services/popular-lecture.service';
     LectureReviewLikeRepository,
     PopularLectureService,
     PopularLectureRepository,
+    LatestLectureService,
   ],
 })
 export class LectureModule {}

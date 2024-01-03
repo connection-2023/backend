@@ -522,10 +522,28 @@ export class LectureRepository {
 
   async readManyLatestLecturesWithUserId(userId: number): Promise<Lecture[]> {
     return await this.prismaService.lecture.findMany({
-      where: { deletedAt: null, isActive: true },
+      where: {
+        deletedAt: null,
+        isActive: true,
+        lecturer: { blockedLecturer: { none: { userId } } },
+      },
       take: 8,
       include: {
         likedLecture: { where: { userId } },
+        lectureImage: { orderBy: { id: 'asc' } },
+        lecturer: true,
+        lectureToDanceGenre: { include: { danceCategory: true } },
+        lectureToRegion: { include: { region: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async readManyLatestLecturesByNonMember(): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { deletedAt: null, isActive: true },
+      take: 8,
+      include: {
         lectureImage: { orderBy: { id: 'asc' } },
         lecturer: true,
         lectureToDanceGenre: { include: { danceCategory: true } },
