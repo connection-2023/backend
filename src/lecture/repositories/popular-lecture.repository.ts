@@ -31,24 +31,38 @@ export class PopularLectureRepository {
     return await transaction.lecture.findFirst({
       where: { id: lectureId, isActive: true },
       include: {
-        lecturer: {
-          select: {
-            nickname: true,
-            profileCardImageUrl: true,
-          },
-        },
+        lecturer: true,
         lectureToDanceGenre: {
-          include: { danceCategory: { select: { genre: true } } },
+          include: { danceCategory: true },
         },
         lectureToRegion: {
-          select: {
-            region: {
-              select: { administrativeDistrict: true, district: true },
-            },
+          include: {
+            region: true,
           },
         },
         lectureDay: true,
         likedLecture: { where: { userId } },
+      },
+    });
+  }
+
+  async trxReadLecture(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<Lecture> {
+    return await transaction.lecture.findFirst({
+      where: { id: lectureId, isActive: true },
+      include: {
+        lecturer: true,
+        lectureToDanceGenre: {
+          include: { danceCategory: true },
+        },
+        lectureToRegion: {
+          include: {
+            region: true,
+          },
+        },
+        lectureDay: true,
       },
     });
   }
