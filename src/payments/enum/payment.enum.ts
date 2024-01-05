@@ -2,6 +2,8 @@ export enum PaymentMethods {
   카드 = 1,
   가상계좌 = 2,
   패스권 = 3,
+  현장결제 = 4,
+  선결제 = 5,
 }
 
 export enum PaymentOrderStatus {

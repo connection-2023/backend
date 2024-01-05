@@ -48,6 +48,7 @@ model Users {
   lecturerLearner          LecturerLearner[]
   likedLecturer            LikedLecturer[]
   blockedLecturer          BlockedLecturer[]
+  userBankAccount          UserBankAccount[]
 }
 
 model UserProfileImage {
@@ -122,6 +123,7 @@ model Lecturer {
   lecturerLearner          LecturerLearner[]
   likedLecturer            LikedLecturer[]
   blockedLecturer          BlockedLecturer[]
+  lecturerBankAccount      LecturerBankAccount[]
 }
 
 model Lecture {
@@ -633,6 +635,8 @@ model Payment {
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
   paymentPassUsage          PaymentPassUsage?
   userPass                  UserPass[]
+  TransferPaymentInfo       TransferPaymentInfo?
+  refundPaymentInfo         RefundPaymentInfo?
 }
 
 //결제 방식
@@ -722,29 +726,15 @@ model Card {
 
 //가상계좌 결제정보
 model VirtualAccountPaymentInfo {
-  id                   Int                   @id @default(autoincrement())
-  paymentId            Int                   @unique
-  refundStatusId       Int
-  accountNumber        String
-  bankCode             String
-  customerName         String
-  dueDate              DateTime
-  expired              Boolean
-  payment              Payment               @relation(fields: [paymentId], references: [id])
-  bank                 Bank                  @relation(fields: [bankCode], references: [code])
-  refundStatus         RefundStatus          @relation(fields: [refundStatusId], references: [id])
-  refundReceiveAccount RefundReceiveAccount?
-}
-
-//환불계좌 정보
-model RefundReceiveAccount {
-  id                          Int                       @id @default(autoincrement())
-  virtualAccountPaymentInfoId Int                       @unique
-  bankCode                    String
-  createdAt                   DateTime                  @default(now()) @db.Timestamp(6)
-  updatedAt                   DateTime                  @default(now()) @updatedAt @db.Timestamp(6)
-  virtualAccountPaymentInfo   VirtualAccountPaymentInfo @relation(fields: [virtualAccountPaymentInfoId], references: [id])
-  bank                        Bank                      @relation(fields: [bankCode], references: [code])
+  id            Int      @id @default(autoincrement())
+  paymentId     Int      @unique
+  accountNumber String
+  bankCode      String
+  customerName  String
+  dueDate       DateTime
+  expired       Boolean
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+  bank          Bank     @relation(fields: [bankCode], references: [code])
 }
 
 model Bank {
@@ -754,13 +744,14 @@ model Bank {
   krCode                    String
   enCode                    String
   virtualAccountPaymentInfo VirtualAccountPaymentInfo[]
-  refundReceiveAccount      RefundReceiveAccount[]
+  userBankAccount           UserBankAccount[]
+  lecturerBankAccount       LecturerBankAccount[]
 }
 
 model RefundStatus {
-  id                        Int                         @id @default(autoincrement())
-  name                      String
-  virtualAccountPaymentInfo VirtualAccountPaymentInfo[]
+  id                Int                 @id @default(autoincrement())
+  name              String
+  refundPaymentInfo RefundPaymentInfo[]
 }
 
 model TemporaryLectureDay {
@@ -1025,4 +1016,61 @@ model LecturerLearner {
   lecturer Lecturer @relation(fields: [lecturerId], references: [id])
 
   @@unique([userId, lecturerId])
+}
+
+//계좌이체 거래 정보
+model TransferPaymentInfo {
+  id                    Int    @id @default(autoincrement())
+  paymentId             Int    @unique
+  lecturerBankAccountId Int
+  //입금자 명
+  senderName            String
+
+  payment             Payment             @relation(fields: [paymentId], references: [id])
+  lecturerBankAccount LecturerBankAccount @relation(fields: [lecturerBankAccountId], references: [id])
+}
+
+model LecturerBankAccount {
+  id            Int      @id @default(autoincrement())
+  lecturerId    Int
+  //예금주
+  holderName    String
+  bankCode      String
+  accountNumber String
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+
+  lecturer            Lecturer              @relation(fields: [lecturerId], references: [id])
+  bank                Bank                  @relation(fields: [bankCode], references: [code])
+  transferPaymentInfo TransferPaymentInfo[]
+}
+
+model UserBankAccount {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  //예금주
+  holderName    String
+  bankCode      String
+  accountNumber String
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+
+  user              Users               @relation(fields: [userId], references: [id])
+  bank              Bank                @relation(fields: [bankCode], references: [code])
+  refundPaymentInfo RefundPaymentInfo[]
+}
+
+//환불 정보
+model RefundPaymentInfo {
+  id                      Int      @id @default(autoincrement())
+  paymentId               Int      @unique
+  refundStatusId          Int
+  refundUserBankAccountId Int
+  cancelAmount            Int
+  reason                  String
+  refusedReason           String?
+  createdAt               DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  payment               Payment         @relation(fields: [paymentId], references: [id])
+  refundStatus          RefundStatus    @relation(fields: [refundStatusId], references: [id])
+  refundUserBankAccount UserBankAccount @relation(fields: [refundUserBankAccountId], references: [id])
 }
