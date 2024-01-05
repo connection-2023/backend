@@ -378,7 +378,11 @@ export class SearchService {
   private buildSortQuery(sortOption: LecturerSortOptions) {
     return sortOption === LecturerSortOptions.LATEST
       ? [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }]
-      : [{ stars: { order: 'desc' } }, { _score: { order: 'desc' } }];
+      : [
+          { stars: { order: 'desc' } },
+          { updatedat: { order: 'desc' } },
+          { _score: { order: 'desc' } },
+        ];
   }
 
   private buildRegionQuery(regions: string[]) {
