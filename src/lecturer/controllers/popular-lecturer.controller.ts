@@ -17,6 +17,7 @@ export class PopularLecturerController {
 
   @ApiGetPopularLecturer()
   @SetResponseKey('lecturers')
+  @UseGuards(UserAccessTokenGuard)
   @Get('users')
   async readManyPopularLecturerWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
