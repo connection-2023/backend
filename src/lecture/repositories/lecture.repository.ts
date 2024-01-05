@@ -152,7 +152,6 @@ export class LectureRepository {
         lectureType: { select: { name: true } },
         lectureMethod: { select: { name: true } },
         lectureNotification: true,
-        lectureImage: { select: { imageUrl: true }, orderBy: { id: 'asc' } },
         lectureToRegion: {
           select: {
             region: {
@@ -160,6 +159,7 @@ export class LectureRepository {
             },
           },
         },
+        lectureImage: true,
         lectureToDanceGenre: {
           select: { name: true, danceCategory: { select: { genre: true } } },
         },
@@ -179,7 +179,7 @@ export class LectureRepository {
       skip,
       take,
       include: {
-        lecturer: { include: { lecturerProfileImageUrl: true } },
+        lecturer: true,
         lectureToRegion: { include: { region: true } },
         lectureToDanceGenre: { include: { danceCategory: true } },
       },
@@ -328,7 +328,7 @@ export class LectureRepository {
         lecturer: {
           select: {
             nickname: true,
-            lecturerProfileImageUrl: { select: { url: true }, take: 1 },
+            profileCardImageUrl: true,
           },
         },
       },
@@ -500,8 +500,11 @@ export class LectureRepository {
     await transaction.lectureDay.createMany({ data: daySchedules });
   }
 
-  async readDaySchedule(lectureId: number): Promise<DaySchedule[]> {
-    return await this.prismaService.lectureDay.findMany({
+  async trxReadDaySchedule(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<DaySchedule[]> {
+    return await transaction.lectureDay.findMany({
       where: { lectureId },
     });
   }
@@ -515,6 +518,39 @@ export class LectureRepository {
       include: {
         lecture: { select: { id: true, title: true } },
       },
+    });
+  }
+
+  async readManyLatestLecturesWithUserId(userId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: {
+        deletedAt: null,
+        isActive: true,
+        lecturer: { blockedLecturer: { none: { userId } } },
+      },
+      take: 8,
+      include: {
+        likedLecture: { where: { userId } },
+        lectureImage: { orderBy: { id: 'asc' } },
+        lecturer: true,
+        lectureToDanceGenre: { include: { danceCategory: true } },
+        lectureToRegion: { include: { region: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async readManyLatestLecturesByNonMember(): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { deletedAt: null, isActive: true },
+      take: 8,
+      include: {
+        lectureImage: { orderBy: { id: 'asc' } },
+        lecturer: true,
+        lectureToDanceGenre: { include: { danceCategory: true } },
+        lectureToRegion: { include: { region: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

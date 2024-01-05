@@ -1,3 +1,4 @@
+import { ReadManyLatestLecturesResponseDto } from './../dtos/read-many-latest-lectures-response.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import {
@@ -37,6 +38,7 @@ import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
 
 @Injectable()
 export class LectureService {
@@ -135,7 +137,7 @@ export class LectureService {
           }
         }
 
-        if (daySchedules[0]) {
+        if (daySchedules) {
           const daySchedulesInputData = daySchedules.map((daySchedule) => ({
             lectureId: newLecture.id,
             ...daySchedule,
@@ -223,12 +225,8 @@ export class LectureService {
     const location = await this.lectureRepository.readLectureLocation(
       lectureId,
     );
-    const daySchedule = await this.lectureRepository.readDaySchedule(lectureId);
 
-    if (!daySchedule[0]) {
-      return { lecture, lecturer, location };
-    }
-    return { lecture, lecturer, location, daySchedule };
+    return { lecture, lecturer, location };
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
@@ -348,8 +346,15 @@ export class LectureService {
   }
 
   async updateLecture(lectureId: number, updateLectureDto: UpdateLectureDto) {
-    const { images, coupons, holidays, notification, ...lecture } =
-      updateLectureDto;
+    const {
+      images,
+      coupons,
+      holidays,
+      notification,
+      endDate,
+      schedules,
+      ...lecture
+    } = updateLectureDto;
     const currentTime = new Date();
 
     return await this.prismaService.$transaction(
@@ -374,6 +379,31 @@ export class LectureService {
               `maxCapacityIsSmallerThanParticipants ${readLectureParticipant.numberOfParticipants}`,
             );
           }
+        }
+        if (endDate) {
+          const isUpdatePossible = transaction.lecture.findFirst({
+            where: { id: lectureId, endDate: { lt: new Date(endDate) } },
+          });
+
+          if (isUpdatePossible) {
+            lecture['endDate'] = endDate;
+          } else {
+            throw new BadRequestException(
+              '현재 마감일이 수정 마감일보다 큽니다.',
+            );
+          }
+          const { duration } = await this.prismaService.lecture.findFirst({
+            where: { id: lectureId },
+            select: { duration: true },
+          });
+
+          const createNewScheduleInputData =
+            this.createLectureScheduleInputData(lectureId, schedules, duration);
+
+          await this.lectureRepository.trxCreateLectureSchedule(
+            transaction,
+            createNewScheduleInputData,
+          );
         }
 
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
@@ -481,15 +511,28 @@ export class LectureService {
           transaction,
           lectureId,
         );
+        const daySchedule = await this.lectureRepository.trxReadDaySchedule(
+          transaction,
+          lectureId,
+        );
 
-        return { schedule, holiday };
+        if (!daySchedule[0]) {
+          return { schedule, holiday };
+        }
+        return { schedule, holiday, daySchedule };
       },
     );
     const { schedule } = calendar;
     const { holiday } = calendar;
     const holidayArr = this.createLectureHolidayArr(holiday);
 
-    return { schedule, holidayArr };
+    if (!calendar.daySchedule) {
+      return { schedule, holidayArr };
+    }
+
+    const { daySchedule } = calendar;
+
+    return { schedule, holidayArr, daySchedule };
   }
 
   async readLectureReservationWithUser(userId: number, lectureId: number) {
@@ -687,6 +730,7 @@ export class LectureService {
       where,
     );
   }
+
   private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
     const cursor = { id: itemId };
 

@@ -5,12 +5,14 @@ import {
 } from '@src/common/validator/custom-validator';
 import { Transform } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Length,
 } from 'class-validator';
 import { LecturerSortOptions } from '../enum/search.enum';
 import { DanceCategory } from '@src/common/enum/enum';
@@ -39,6 +41,7 @@ export class GetLecturerSearchResultDto {
     description: '검색어',
     required: false,
   })
+  @Length(1, 50, { message: '값의 길이는 1에서 50 사이여야 합니다.' })
   @IsString()
   @IsOptional()
   value: string;
@@ -73,6 +76,7 @@ export class GetLecturerSearchResultDto {
     isArray: true,
     required: false,
   })
+  @ArrayMaxSize(30, { message: '지역은 최대 30개 까지 선택 할 수 있습니다.' })
   @ArrayMinSize(1)
   @IsArray()
   @IsOptional()
