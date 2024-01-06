@@ -25,6 +25,7 @@ export class UserBankAccountDto implements UserBankAccount {
 
   userId: number;
   createdAt: Date;
+  updatedAt: Date;
 
   constructor(userBankAccount: Partial<UserBankAccountDto>) {
     this.id = userBankAccount.id;

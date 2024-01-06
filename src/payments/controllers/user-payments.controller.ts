@@ -20,6 +20,7 @@ import { SaveUserBankAccountDto } from '@src/payments/dtos/save-user-bank-accoun
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
+import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-recent-bank-account.decorator';
 
 @ApiTags('유저-결제')
 @Controller('user-payments')
@@ -49,6 +50,18 @@ export class UserPaymentsController {
     return await this.userPaymentsService.getPaymentVirtualAccount(
       authorizedData.user.id,
       paymentId,
+    );
+  }
+
+  @ApiGetUserRecentBankAccount()
+  @SetResponseKey('userRecentBankAccount')
+  @Get('/recent-bank-account')
+  @UseGuards(UserAccessTokenGuard)
+  async getUserRecentBankAccount(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<UserBankAccountDto> {
+    return await this.userPaymentsService.getUserRecentBankAccount(
+      authorizedData.user.id,
     );
   }
 
