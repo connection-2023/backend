@@ -103,4 +103,10 @@ export class UserPaymentsService implements OnModuleInit {
       await this.paymentsRepository.createUserBankAccount({ userId, ...dto }),
     );
   }
+
+  async getUserRecentBankAccount(userId: number): Promise<UserBankAccountDto> {
+    return new UserBankAccountDto(
+      await this.paymentsRepository.getUserRecentBankAccount(userId),
+    );
+  }
 }

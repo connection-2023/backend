@@ -1055,4 +1055,11 @@ export class PaymentsRepository {
       data: userBankAccountInputData,
     });
   }
+
+  async getUserRecentBankAccount(userId: number): Promise<UserBankAccount> {
+    return await this.prismaService.userBankAccount.findFirst({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
 }

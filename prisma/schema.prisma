@@ -1038,6 +1038,7 @@ model LecturerBankAccount {
   bankCode      String
   accountNumber String
   createdAt     DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   lecturer            Lecturer              @relation(fields: [lecturerId], references: [id])
   bank                Bank                  @relation(fields: [bankCode], references: [code])
@@ -1052,6 +1053,7 @@ model UserBankAccount {
   bankCode      String
   accountNumber String
   createdAt     DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   user              Users               @relation(fields: [userId], references: [id])
   bank              Bank                @relation(fields: [bankCode], references: [code])
