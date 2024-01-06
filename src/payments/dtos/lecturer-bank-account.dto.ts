@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { LecturerBankAccount, UserBankAccount } from '@prisma/client';
+import { LecturerBankAccount } from '@prisma/client';
 
 export class LecturerBankAccountDto implements LecturerBankAccount {
   @ApiProperty({
@@ -27,11 +27,11 @@ export class LecturerBankAccountDto implements LecturerBankAccount {
   createdAt: Date;
   updatedAt: Date;
 
-  constructor(userBankAccount: Partial<LecturerBankAccountDto>) {
-    this.id = userBankAccount.id;
-    this.bankCode = userBankAccount.bankCode;
-    this.holderName = userBankAccount.holderName;
-    this.accountNumber = userBankAccount.accountNumber;
+  constructor(lecturerBankAccount: Partial<LecturerBankAccountDto>) {
+    this.id = lecturerBankAccount.id;
+    this.bankCode = lecturerBankAccount.bankCode;
+    this.holderName = lecturerBankAccount.holderName;
+    this.accountNumber = lecturerBankAccount.accountNumber;
 
     Object.assign(this);
   }

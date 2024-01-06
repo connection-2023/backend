@@ -27,6 +27,7 @@ import {
 } from '@src/payments/enum/payment.enum';
 import {
   LecturePass,
+  LecturerBankAccount,
   LecturerLearner,
   Payment,
   PaymentProductType,
@@ -1070,7 +1071,7 @@ export class PaymentsRepository {
 
   async createLecturerBankAccount(
     lecturerBankAccountInputData: ILecturerBankAccountInputData,
-  ) {
+  ): Promise<LecturerBankAccount> {
     return await this.prismaService.lecturerBankAccount.upsert({
       where: {
         lecturerId_holderName_bankCode_accountNumber:
@@ -1078,6 +1079,15 @@ export class PaymentsRepository {
       },
       update: lecturerBankAccountInputData,
       create: lecturerBankAccountInputData,
+    });
+  }
+
+  async getLecturerRecentBankAccount(
+    lecturerId: number,
+  ): Promise<LecturerBankAccount> {
+    return await this.prismaService.lecturerBankAccount.findFirst({
+      where: { lecturerId },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 }

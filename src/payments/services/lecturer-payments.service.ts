@@ -22,4 +22,12 @@ export class LecturerPaymentsService {
       }),
     );
   }
+
+  async getLecturerRecentBankAccount(
+    lecturerId: number,
+  ): Promise<LecturerBankAccountDto> {
+    return new LecturerBankAccountDto(
+      await this.paymentsRepository.getLecturerRecentBankAccount(lecturerId),
+    );
+  }
 }
