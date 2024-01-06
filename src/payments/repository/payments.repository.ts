@@ -7,6 +7,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardPaymentInfoInputData,
   ICursor,
+  ILecturerBankAccountInputData,
   IPaymentPassUsageInputData,
   ISelectedUserPass,
   IUserBankAccountInputData,
@@ -1051,8 +1052,12 @@ export class PaymentsRepository {
   async createUserBankAccount(
     userBankAccountInputData: IUserBankAccountInputData,
   ): Promise<UserBankAccount> {
-    return await this.prismaService.userBankAccount.create({
-      data: userBankAccountInputData,
+    return await this.prismaService.userBankAccount.upsert({
+      where: {
+        userId_holderName_bankCode_accountNumber: userBankAccountInputData,
+      },
+      update: userBankAccountInputData,
+      create: userBankAccountInputData,
     });
   }
 
@@ -1060,6 +1065,19 @@ export class PaymentsRepository {
     return await this.prismaService.userBankAccount.findFirst({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async createLecturerBankAccount(
+    lecturerBankAccountInputData: ILecturerBankAccountInputData,
+  ) {
+    return await this.prismaService.lecturerBankAccount.upsert({
+      where: {
+        lecturerId_holderName_bankCode_accountNumber:
+          lecturerBankAccountInputData,
+      },
+      update: lecturerBankAccountInputData,
+      create: lecturerBankAccountInputData,
     });
   }
 }

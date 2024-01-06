@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { BankEnum } from '@src/common/enum/enum';
 import { IsIn, IsNotEmpty, IsNumberString } from 'class-validator';
 
-export class SaveUserBankAccountDto {
+export class CreateBankAccountDto {
   @ApiProperty({
     enum: Object.values(BankEnum),
     description: '은행 식별 코드',
