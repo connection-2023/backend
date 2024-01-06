@@ -97,7 +97,7 @@ export class LectureDto extends BaseReturnDto implements Lecture {
     this.endDate = lecture.endDate;
     this.isActive = lecture.isActive;
     this.price = lecture.price;
-    this.stars = lecture.stars;
+    this.stars = parseFloat(lecture.stars.toFixed(1));
     this.reviewCount = lecture.reviewCount;
     this.isGroup = lecture.isGroup;
 

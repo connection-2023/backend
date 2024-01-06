@@ -529,7 +529,7 @@ export class LectureReviewService {
     const nextLectureStars =
       (prevLectureStars * prevLectureReviewCount + stars) /
       nextLectureReviewCount;
-    const roundLectureStars = Math.round(nextLectureStars * 100) / 100;
+    const roundLectureStars = Math.round(nextLectureStars * 10) / 10;
 
     await this.lectureReviewRepository.trxIncreaseLectureReviewCount(
       transaction,
@@ -556,7 +556,7 @@ export class LectureReviewService {
     const nextLecturerStars =
       (prevLecturerStars * prevLecturerReviewCount + stars) /
       nextLecturerReviewCount;
-    const roundLecturerStars = Math.round(nextLecturerStars * 100) / 100;
+    const roundLecturerStars = Math.round(nextLecturerStars * 10) / 10;
 
     await this.lectureReviewRepository.trxIncreaseLecturerReviewCount(
       transaction,
@@ -584,7 +584,7 @@ export class LectureReviewService {
     const nextLectureStars =
       (prevLectureStars * prevLectureReviewCount - stars) /
       nextLectureReviewCount;
-    const roundLectureStars = Math.round(nextLectureStars * 100) / 100;
+    const roundLectureStars = Math.round(nextLectureStars * 10) / 10;
 
     await this.lectureReviewRepository.trxDecreaseLectureReviewCount(
       transaction,
@@ -611,7 +611,7 @@ export class LectureReviewService {
     const nextLecturerStars =
       (prevLecturerStars * prevLecturerReviewCount - stars) /
       nextLecturerReviewCount;
-    const roundLecturerStars = Math.round(nextLecturerStars * 100) / 100;
+    const roundLecturerStars = Math.round(nextLecturerStars * 10) / 10;
 
     await this.lectureReviewRepository.trxDecreaseLecturerReviewCount(
       transaction,
