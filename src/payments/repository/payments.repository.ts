@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
-  CardInfo,
   CardPaymentInfoInputData,
   ICursor,
   IPaymentPassUsageInputData,
   ISelectedUserPass,
+  IUserBankAccountInputData,
   LectureCoupon,
   LectureCouponUseage,
   LecturePaymentUpdateData,
@@ -21,17 +21,16 @@ import {
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import {
-  PaymentProductTypes,
   PaymentOrderStatus,
   PaymentMethods,
-} from '../enum/payment.enum';
+} from '@src/payments/enum/payment.enum';
 import {
   LecturePass,
   LecturerLearner,
   Payment,
   PaymentProductType,
   PaymentStatus,
-  UserPass,
+  UserBankAccount,
 } from '@prisma/client';
 
 @Injectable()
@@ -1046,6 +1045,14 @@ export class PaymentsRepository {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
       data: { enrollmentCount: { decrement: enrollmentCount } },
+    });
+  }
+
+  async createUserBankAccount(
+    userBankAccountInputData: IUserBankAccountInputData,
+  ): Promise<UserBankAccount> {
+    return await this.prismaService.userBankAccount.create({
+      data: userBankAccountInputData,
     });
   }
 }
