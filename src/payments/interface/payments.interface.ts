@@ -1,21 +1,17 @@
 import { UserPass } from '@prisma/client';
-import {
-  PaymentMethods,
-  VirtualAccountRefundStatus,
-} from '@src/payments/enum/payment.enum';
-import { extend } from 'joi';
+import { PaymentMethods } from '@src/payments/enum/payment.enum';
 
-interface LectureSchedule {
+export interface LectureSchedule {
   id?: number;
   lectureScheduleId: number;
   participants: number;
 }
 
-interface LectureCoupon {
+export interface LectureCoupon {
   lectureCoupon: Coupon;
 }
 
-interface Coupon {
+export interface Coupon {
   id: number;
   title: string;
   percentage: number | null;
@@ -23,12 +19,12 @@ interface Coupon {
   maxDiscountPrice: number | null;
 }
 
-interface Coupons {
+export interface Coupons {
   coupon?: Coupon;
   stackableCoupon?: Coupon;
 }
 
-interface PaymentInputData {
+export interface PaymentInputData {
   lecturerId?: number;
   userId?: number;
   orderId: string;
@@ -40,7 +36,7 @@ interface PaymentInputData {
   paymentMethodId?: number;
 }
 
-interface ReservationInputData {
+export interface ReservationInputData {
   userId: number;
   paymentId: number;
   lectureScheduleId: number;
@@ -50,14 +46,14 @@ interface ReservationInputData {
   requests?: string | null;
 }
 
-interface LectureCouponUseage {
+export interface LectureCouponUseage {
   lectureCoupon: {
     maxUsageCount: number;
     usageCount: number;
   };
 }
 
-interface PaymentInfo {
+export interface PaymentInfo {
   orderId?: string;
   amount?: number;
   paymentKey?: string;
@@ -68,12 +64,12 @@ interface PaymentInfo {
   finalPrice?: number;
 }
 
-interface TossPaymentsConfirmResponse {
+export interface TossPaymentsConfirmResponse {
   card?: TossPaymentCardInfo;
   virtualAccount?: TossPaymentVirtualAccountInfo;
 }
 
-interface TossPaymentVirtualAccountInfo {
+export interface TossPaymentVirtualAccountInfo {
   accountNumber: string;
   accountType: string;
   bankCode: string;
@@ -85,7 +81,7 @@ interface TossPaymentVirtualAccountInfo {
   refundReceiveAccount: object | null;
 }
 
-interface CardInfo {
+export interface CardInfo {
   issuerCode: string;
   acquirerCode?: string | null;
   number: string;
@@ -96,23 +92,23 @@ interface CardInfo {
   isInterestFree: boolean;
 }
 
-interface TossPaymentCardInfo extends CardInfo {
+export interface TossPaymentCardInfo extends CardInfo {
   amount: number;
   interestPayer: null;
   useCardPoint: boolean;
   acquireStatus: string;
 }
 
-interface CardPaymentInfoInputData extends CardInfo {
+export interface CardPaymentInfoInputData extends CardInfo {
   paymentId: number;
 }
 
-interface LecturePaymentUpdateData {
+export interface LecturePaymentUpdateData {
   paymentKey: string;
   statusId: number;
 }
 
-interface IPaymentResult {
+export interface IPaymentResult {
   orderId: string;
   orderName: string;
   originalPrice: number;
@@ -131,13 +127,13 @@ interface IPaymentResult {
   userPass: IUserPass[];
 }
 
-interface ICardPaymentInfo {
+export interface ICardPaymentInfo {
   number: string;
   installmentPlanMonths: number;
   approveNo: string;
 }
 
-interface IVirtualAccountPaymentInfo {
+export interface IVirtualAccountPaymentInfo {
   accountNumber: string;
   customerName: string;
   dueDate: Date;
@@ -147,7 +143,7 @@ interface IVirtualAccountPaymentInfo {
   };
 }
 
-interface VirtualAccountPaymentInfoInputData {
+export interface VirtualAccountPaymentInfoInputData {
   paymentId: number;
   refundStatusId: number;
   accountNumber: string;
@@ -157,42 +153,42 @@ interface VirtualAccountPaymentInfoInputData {
   expired: boolean;
 }
 
-interface IReservationInfo {
+export interface IReservationInfo {
   lectureSchedule: ILectureSchedule;
   participants: number;
 }
 
-interface IUserPass {
+export interface IUserPass {
   lecturePass: ILecturePass;
 }
 
-interface ILecturePass {
+export interface ILecturePass {
   id: number;
   availableMonths: number;
 }
 
-interface ILectureSchedule {
+export interface ILectureSchedule {
   lectureId: number;
   startDateTime: Date;
 }
 
-interface ICursor {
+export interface ICursor {
   id: number;
 }
 
-interface UserPassInputData {
+export interface UserPassInputData {
   userId: number;
   paymentId: number;
   lecturePassId: number;
   remainingUses: number;
 }
-interface IPaymentPassUsageInputData {
+export interface IPaymentPassUsageInputData {
   paymentId: number;
   lecturePassId: number;
   usedCount: number;
 }
 
-interface ISelectedUserPass extends UserPass {
+export interface ISelectedUserPass extends UserPass {
   lecturePass: {
     availableMonths: number;
     lecturePassTarget: {
@@ -200,26 +196,9 @@ interface ISelectedUserPass extends UserPass {
     }[];
   };
 }
-
-export {
-  LectureSchedule,
-  LectureCoupon,
-  Coupon,
-  Coupons,
-  PaymentInputData,
-  ReservationInputData,
-  LectureCouponUseage,
-  PaymentInfo,
-  LecturePaymentUpdateData,
-  TossPaymentsConfirmResponse,
-  TossPaymentCardInfo,
-  TossPaymentVirtualAccountInfo,
-  CardInfo,
-  CardPaymentInfoInputData,
-  VirtualAccountPaymentInfoInputData,
-  IPaymentResult,
-  ICursor,
-  UserPassInputData,
-  IPaymentPassUsageInputData,
-  ISelectedUserPass,
-};
+export interface IUserBankAccountInputData {
+  userId: number;
+  holderName: string;
+  accountNumber: string;
+  bankCode: string;
+}

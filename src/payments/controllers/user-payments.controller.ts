@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -14,8 +16,12 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiGetUserPaymentsHistory } from '@src/payments/swagger-decorators/get-user-payments-history-decorator';
 import { ApiPaymentVirtualAccount } from '@src/payments/swagger-decorators/get-payment-virtual-account-decorator';
+import { SaveUserBankAccountDto } from '@src/payments/dtos/save-user-bank-account.dto';
+import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
 
-@ApiTags('결제')
+@ApiTags('유저-결제')
 @Controller('user-payments')
 export class UserPaymentsController {
   constructor(private readonly userPaymentsService: UserPaymentsService) {}
@@ -43,6 +49,20 @@ export class UserPaymentsController {
     return await this.userPaymentsService.getPaymentVirtualAccount(
       authorizedData.user.id,
       paymentId,
+    );
+  }
+
+  @ApiCreateUserBankAccount()
+  @SetResponseKey('createdUserBankAccount')
+  @Post('/bank-account')
+  @UseGuards(UserAccessTokenGuard)
+  async createUserBankAccount(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() saveUserBankAccountDto: SaveUserBankAccountDto,
+  ): Promise<UserBankAccountDto> {
+    return await this.userPaymentsService.createUserBankAccount(
+      authorizedData.user.id,
+      saveUserBankAccountDto,
     );
   }
 }
