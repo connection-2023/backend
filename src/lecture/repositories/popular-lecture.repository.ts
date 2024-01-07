@@ -42,6 +42,7 @@ export class PopularLectureRepository {
         },
         lectureDay: true,
         likedLecture: { where: { userId } },
+        lectureImage: true,
       },
     });
   }
@@ -63,6 +64,7 @@ export class PopularLectureRepository {
           },
         },
         lectureDay: true,
+        lectureImage: true,
       },
     });
   }
