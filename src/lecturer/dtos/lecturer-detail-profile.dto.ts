@@ -4,7 +4,7 @@ import { LecturerProfileImageDto } from '@src/common/dtos/lecturer-profile-image
 import { LecturerInstagramPostUrlDto } from './lecturer-instagram-post-url.dto';
 import { LecturerRegionDto } from '@src/common/dtos/lecturer-region.dto';
 import { LecturerDanceGenreDto } from '@src/common/dtos/lecturer-dance-genre.dto';
-import { BaseReturnWithSwaggerDto } from '@src/common/dtos/base-return-with-swagger.dto copy';
+import { BaseReturnWithSwaggerDto } from '@src/common/dtos/base-return-with-swagger.dto';
 
 export class LecturerDetailProfileDto
   extends BaseReturnWithSwaggerDto

@@ -635,7 +635,7 @@ model Payment {
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
   paymentPassUsage          PaymentPassUsage?
   userPass                  UserPass[]
-  TransferPaymentInfo       TransferPaymentInfo?
+  transferPaymentInfo       TransferPaymentInfo?
   refundPaymentInfo         RefundPaymentInfo?
 }
 
@@ -1038,13 +1038,13 @@ model LecturerBankAccount {
   bankCode      String
   accountNumber String
   createdAt     DateTime @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
-
- @@unique([lecturerId, holderName, bankCode, accountNumber])
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   lecturer            Lecturer              @relation(fields: [lecturerId], references: [id])
   bank                Bank                  @relation(fields: [bankCode], references: [code])
   transferPaymentInfo TransferPaymentInfo[]
+
+  @@unique([lecturerId, holderName, bankCode, accountNumber])
 }
 
 model UserBankAccount {
@@ -1055,13 +1055,13 @@ model UserBankAccount {
   bankCode      String
   accountNumber String
   createdAt     DateTime @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
-
- @@unique([userId, holderName, bankCode, accountNumber])
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   user              Users               @relation(fields: [userId], references: [id])
   bank              Bank                @relation(fields: [bankCode], references: [code])
   refundPaymentInfo RefundPaymentInfo[]
+
+  @@unique([userId, holderName, bankCode, accountNumber])
 }
 
 //환불 정보
@@ -1070,11 +1070,11 @@ model RefundPaymentInfo {
   paymentId               Int      @unique
   refundStatusId          Int
   refundUserBankAccountId Int
-  cancelAmount            Int
-  reason                  String
+  cancelAmount            Int?
+  reason                  String?
   refusedReason           String?
   createdAt               DateTime @default(now()) @db.Timestamp(6)
-  updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt               DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   payment               Payment         @relation(fields: [paymentId], references: [id])
   refundStatus          RefundStatus    @relation(fields: [refundStatusId], references: [id])

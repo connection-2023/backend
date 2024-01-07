@@ -1,9 +1,9 @@
 export enum PaymentMethods {
   카드 = 1,
-  가상계좌 = 2,
-  패스권 = 3,
-  현장결제 = 4,
-  선결제 = 5,
+  가상계좌,
+  패스권,
+  현장결제,
+  선결제,
 }
 
 export enum PaymentOrderStatus {
@@ -17,7 +17,7 @@ export enum PaymentOrderStatus {
   EXPIRED,
 }
 
-export enum VirtualAccountRefundStatus {
+export enum RefundStatuses {
   NONE = 1,
   PENDING,
   FAILED,

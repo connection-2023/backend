@@ -1,7 +1,7 @@
-import { UserPass } from '@prisma/client';
+import { RefundPaymentInfo, UserPass } from '@prisma/client';
 import { PaymentMethods } from '@src/payments/enum/payment.enum';
 
-export interface LectureSchedule {
+export interface ILectureSchedule {
   id?: number;
   lectureScheduleId: number;
   participants: number;
@@ -154,7 +154,7 @@ export interface VirtualAccountPaymentInfoInputData {
 }
 
 export interface IReservationInfo {
-  lectureSchedule: ILectureSchedule;
+  lectureSchedule: ILectureScheduleTime;
   participants: number;
 }
 
@@ -167,7 +167,7 @@ export interface ILecturePass {
   availableMonths: number;
 }
 
-export interface ILectureSchedule {
+export interface ILectureScheduleTime {
   lectureId: number;
   startDateTime: Date;
 }
@@ -209,4 +209,16 @@ interface IBankAccount {
   holderName: string;
   accountNumber: string;
   bankCode: string;
+}
+
+export interface ITransferPaymentInputData {
+  paymentId: number;
+  lecturerBankAccountId: number;
+  senderName: string;
+}
+
+export interface IRefundPaymentInputData {
+  paymentId: number;
+  refundStatusId: number;
+  refundUserBankAccountId: number;
 }

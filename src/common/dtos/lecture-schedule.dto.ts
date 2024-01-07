@@ -9,7 +9,6 @@ export class LectureScheduleDto implements LectureSchedule {
   })
   id: number;
   lectureId: number;
-  day: string[];
 
   @ApiProperty({
     description: '시작 시간',
@@ -24,7 +23,7 @@ export class LectureScheduleDto implements LectureSchedule {
   endDateTime: Date;
 
   @ApiProperty({
-    description: '신청 인원',
+    description: '현재 인원',
     type: Number,
   })
   numberOfParticipants: number;

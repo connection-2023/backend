@@ -24,6 +24,10 @@ import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto
 import { ApiCreatePassPaymentInfo } from '@src/payments/swagger-decorators/create-pass-payment-info-decorater';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 import { ApiCreateLecturePaymentWithPass } from '@src/payments/swagger-decorators/create-lecture-payment-with-pass-decorator';
+import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { PaymentDto } from '../dtos/payment.dto';
+import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/create-lecture-payment-info-with-transfer-decorater';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -93,7 +97,6 @@ export class PaymentsController {
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentWithPass(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-
     @Body() createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
   ) {
     const paymentResult =
@@ -105,18 +108,33 @@ export class PaymentsController {
     return { paymentResult };
   }
 
+  //일반결제(계좌이체)
+  @ApiCreateLecturePaymentWithTransfer()
+  @SetResponseKey('paymentResult')
+  @Post('/transfer/lecture')
+  @UseGuards(UserAccessTokenGuard)
+  async createLecturePaymentWithTransfer(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body()
+    createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
+  ): Promise<PaymentDto> {
+    return await this.paymentsService.createLecturePaymentWithTransfer(
+      authorizedData.user.id,
+      createLecturePaymentWithTransferDto,
+    );
+  }
+
   @ApiGetUserReceipt()
+  @SetResponseKey('receipt')
   @Get('/user-receipt')
   @UseGuards(UserAccessTokenGuard)
   async getUserReceipt(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query('orderId') orderId: string,
-  ) {
-    const receipt = await this.paymentsService.getUserReceipt(
+  ): Promise<PaymentDto> {
+    return await this.paymentsService.getUserReceipt(
       authorizedData.user.id,
       orderId,
     );
-
-    return { receipt };
   }
 }
