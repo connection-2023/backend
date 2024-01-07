@@ -1040,6 +1040,8 @@ model LecturerBankAccount {
   createdAt     DateTime @default(now()) @db.Timestamp(6)
   updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
+ @@unique([lecturerId, holderName, bankCode, accountNumber])
+
   lecturer            Lecturer              @relation(fields: [lecturerId], references: [id])
   bank                Bank                  @relation(fields: [bankCode], references: [code])
   transferPaymentInfo TransferPaymentInfo[]
@@ -1054,6 +1056,8 @@ model UserBankAccount {
   accountNumber String
   createdAt     DateTime @default(now()) @db.Timestamp(6)
   updatedAt       DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+ @@unique([userId, holderName, bankCode, accountNumber])
 
   user              Users               @relation(fields: [userId], references: [id])
   bank              Bank                @relation(fields: [bankCode], references: [code])

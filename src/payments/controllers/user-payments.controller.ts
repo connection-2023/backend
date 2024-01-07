@@ -16,7 +16,7 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiGetUserPaymentsHistory } from '@src/payments/swagger-decorators/get-user-payments-history-decorator';
 import { ApiPaymentVirtualAccount } from '@src/payments/swagger-decorators/get-payment-virtual-account-decorator';
-import { SaveUserBankAccountDto } from '@src/payments/dtos/save-user-bank-account.dto';
+import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
@@ -71,11 +71,11 @@ export class UserPaymentsController {
   @UseGuards(UserAccessTokenGuard)
   async createUserBankAccount(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body() saveUserBankAccountDto: SaveUserBankAccountDto,
+    @Body() createBankAccountDto: CreateBankAccountDto,
   ): Promise<UserBankAccountDto> {
     return await this.userPaymentsService.createUserBankAccount(
       authorizedData.user.id,
-      saveUserBankAccountDto,
+      createBankAccountDto,
     );
   }
 }

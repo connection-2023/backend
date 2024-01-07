@@ -196,8 +196,16 @@ export interface ISelectedUserPass extends UserPass {
     }[];
   };
 }
-export interface IUserBankAccountInputData {
+
+export interface IUserBankAccountInputData extends IBankAccount {
   userId: number;
+}
+
+export interface ILecturerBankAccountInputData extends IBankAccount {
+  lecturerId: number;
+}
+
+interface IBankAccount {
   holderName: string;
   accountNumber: string;
   bankCode: string;

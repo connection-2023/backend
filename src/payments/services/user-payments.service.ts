@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-history.dto';
-import { SaveUserBankAccountDto } from '@src/payments/dtos/save-user-bank-account.dto';
+import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 
 @Injectable()
@@ -97,7 +97,7 @@ export class UserPaymentsService implements OnModuleInit {
 
   async createUserBankAccount(
     userId: number,
-    dto: SaveUserBankAccountDto,
+    dto: CreateBankAccountDto,
   ): Promise<UserBankAccountDto> {
     return new UserBankAccountDto(
       await this.paymentsRepository.createUserBankAccount({ userId, ...dto }),

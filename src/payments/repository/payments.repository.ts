@@ -7,6 +7,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardPaymentInfoInputData,
   ICursor,
+  ILecturerBankAccountInputData,
   IPaymentPassUsageInputData,
   ISelectedUserPass,
   IUserBankAccountInputData,
@@ -26,6 +27,7 @@ import {
 } from '@src/payments/enum/payment.enum';
 import {
   LecturePass,
+  LecturerBankAccount,
   LecturerLearner,
   Payment,
   PaymentProductType,
@@ -1051,14 +1053,40 @@ export class PaymentsRepository {
   async createUserBankAccount(
     userBankAccountInputData: IUserBankAccountInputData,
   ): Promise<UserBankAccount> {
-    return await this.prismaService.userBankAccount.create({
-      data: userBankAccountInputData,
+    return await this.prismaService.userBankAccount.upsert({
+      where: {
+        userId_holderName_bankCode_accountNumber: userBankAccountInputData,
+      },
+      update: userBankAccountInputData,
+      create: userBankAccountInputData,
     });
   }
 
   async getUserRecentBankAccount(userId: number): Promise<UserBankAccount> {
     return await this.prismaService.userBankAccount.findFirst({
       where: { userId },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async createLecturerBankAccount(
+    lecturerBankAccountInputData: ILecturerBankAccountInputData,
+  ): Promise<LecturerBankAccount> {
+    return await this.prismaService.lecturerBankAccount.upsert({
+      where: {
+        lecturerId_holderName_bankCode_accountNumber:
+          lecturerBankAccountInputData,
+      },
+      update: lecturerBankAccountInputData,
+      create: lecturerBankAccountInputData,
+    });
+  }
+
+  async getLecturerRecentBankAccount(
+    lecturerId: number,
+  ): Promise<LecturerBankAccount> {
+    return await this.prismaService.lecturerBankAccount.findFirst({
+      where: { lecturerId },
       orderBy: { updatedAt: 'desc' },
     });
   }
