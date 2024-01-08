@@ -5,7 +5,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsBoolean,
+  IsBooleanString,
   IsDate,
   IsEnum,
   IsNotEmpty,
@@ -41,8 +41,7 @@ export class GetLectureSearchResultDto {
     description: '강의 인원 형식',
     required: true,
   })
-  @IsBoolean()
-  @Type(() => Boolean)
+  @IsBooleanString()
   @IsNotEmpty()
   isGroup: Boolean;
 
