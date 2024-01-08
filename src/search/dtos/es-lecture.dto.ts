@@ -60,10 +60,9 @@ export class EsLectureDto {
   lectureMethod: string;
 
   @ApiProperty({
-    type: Number,
     description: '별점',
   })
-  stars: number;
+  stars: string;
 
   @ApiProperty({
     type: Number,
@@ -81,6 +80,12 @@ export class EsLectureDto {
     description: '좋아요 여부',
   })
   isLiked: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    description: '활성화 여부',
+  })
+  isActive: boolean;
 
   updatedAt: Date;
 
@@ -121,9 +126,10 @@ export class EsLectureDto {
     this.endDate = lecture.enddate;
     this.isGroup = lecture.isgroup;
     this.lectureMethod = lecture.lecturemethod;
-    this.stars = lecture.stars;
+    this.stars = lecture.stars.toFixed(1);
     this.reviewCount = lecture.reviewcount;
     this.isLiked = lecture.isLiked;
+    this.isActive = lecture.isactive;
 
     this.lecturer = new EsSimpleLecturerDto(lecture.lecturer);
 

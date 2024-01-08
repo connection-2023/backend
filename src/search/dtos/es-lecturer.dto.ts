@@ -28,10 +28,9 @@ export class EsLecturerDto {
   profileCardImageUrl: string;
 
   @ApiProperty({
-    type: Number,
     description: '별점',
   })
-  stars: number;
+  stars: string;
 
   @ApiProperty({
     type: Number,
@@ -78,7 +77,7 @@ export class EsLecturerDto {
     this.id = lecturer.id;
     this.nickname = lecturer.nickname;
     this.profileCardImageUrl = lecturer.profilecardimageurl;
-    this.stars = lecturer.stars;
+    this.stars = lecturer.stars.toFixed(1);
     this.reviewCount = lecturer.reviewcount;
     this.affiliation = lecturer.affiliation;
     this.isLiked = lecturer.isLiked;

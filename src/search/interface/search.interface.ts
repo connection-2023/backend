@@ -20,6 +20,7 @@ export interface IEsLecture {
   isLiked: boolean | undefined;
   searchAfter: number[];
   days: IEsEsLectureDay[];
+  isactive: boolean;
 }
 
 export interface IEsLecturer {
