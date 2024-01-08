@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsOptional, Matches } from 'class-validator';
-import { LectureSchedule } from '@src/payments/interface/payments.interface';
+import { ILectureSchedule } from '@src/payments/interface/payments.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePassPaymentDto {

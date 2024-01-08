@@ -1,7 +1,7 @@
 import { LecturePass } from '@prisma/client';
 import { LecturePassTargetDto } from './lecture-pass-target.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { BaseReturnWithSwaggerDto } from './base-return-with-swagger.dto copy';
+import { BaseReturnWithSwaggerDto } from './base-return-with-swagger.dto';
 
 export class LecturePassDto
   extends BaseReturnWithSwaggerDto

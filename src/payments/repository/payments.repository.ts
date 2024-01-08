@@ -14,11 +14,13 @@ import {
   LectureCoupon,
   LectureCouponUseage,
   LecturePaymentUpdateData,
-  LectureSchedule,
+  ILectureSchedule,
   PaymentInputData,
   ReservationInputData,
   UserPassInputData,
   VirtualAccountPaymentInfoInputData,
+  ITransferPaymentInputData,
+  IRefundPaymentInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import {
@@ -200,7 +202,7 @@ export class PaymentsRepository {
 
   async trxIncrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
-    lectureSchedule: LectureSchedule,
+    lectureSchedule: ILectureSchedule,
   ) {
     try {
       await transaction.lectureSchedule.update({
@@ -495,7 +497,7 @@ export class PaymentsRepository {
 
   async getUserReceipt(userId, orderId) {
     return await this.prismaService.payment.findFirst({
-      where: { orderId, userId, statusId: PaymentOrderStatus.DONE },
+      where: { orderId, userId },
       select: {
         orderId: true,
         orderName: true,
@@ -700,7 +702,7 @@ export class PaymentsRepository {
 
   async trxDecrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
-    reservation: LectureSchedule,
+    reservation: ILectureSchedule,
   ) {
     try {
       await transaction.lectureSchedule.update({
@@ -1088,6 +1090,52 @@ export class PaymentsRepository {
     return await this.prismaService.lecturerBankAccount.findFirst({
       where: { lecturerId },
       orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async getUserBankAccount(userId: number, userBankAccountId: number) {
+    return await this.prismaService.userBankAccount.findFirst({
+      where: { id: userBankAccountId, userId },
+    });
+  }
+
+  async trxCreateTransferPayment(
+    transaction: PrismaTransaction,
+    transferPaymentInputData: ITransferPaymentInputData,
+  ) {
+    await transaction.transferPaymentInfo.create({
+      data: transferPaymentInputData,
+    });
+  }
+
+  async trxCreateRefundPayment(
+    transaction: PrismaTransaction,
+    refundPaymentInputData: IRefundPaymentInputData,
+  ) {
+    await transaction.refundPaymentInfo.create({
+      data: refundPaymentInputData,
+    });
+  }
+
+  async getUserPaymentInfo(userId: number, orderId: string) {
+    return await this.prismaService.payment.findFirst({
+      where: { userId, orderId },
+      include: {
+        paymentProductType: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        paymentCouponUsage: true,
+        transferPaymentInfo: { include: { lecturerBankAccount: true } },
+        refundPaymentInfo: {
+          include: { refundStatus: true, refundUserBankAccount: true },
+        },
+        reservation: {
+          include: { lectureSchedule: { include: { lecture: true } } },
+        },
+        cardPaymentInfo: { include: { issuer: true, acquirer: true } },
+        virtualAccountPaymentInfo: { include: { bank: true } },
+        paymentPassUsage: { include: { lecturePass: true } },
+      },
     });
   }
 }

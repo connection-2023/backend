@@ -6,7 +6,7 @@ import {
   IsOptional,
   Matches,
 } from 'class-validator';
-import { LectureSchedule } from '@src/payments/interface/payments.interface';
+import { ILectureSchedule } from '@src/payments/interface/payments.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateLecturePaymentWithPassDto {
@@ -56,7 +56,7 @@ export class CreateLecturePaymentWithPassDto {
   })
   @IsArray()
   @IsNotEmpty()
-  lectureSchedules: LectureSchedule[];
+  lectureSchedules: ILectureSchedule[];
 
   @ApiProperty({
     example: 100000,
