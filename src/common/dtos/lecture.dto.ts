@@ -8,8 +8,9 @@ import { LectureToRegionDto } from './lecture-to-region.dto';
 import { LectureToDanceGenreDto } from './lecture-to-dance-genre.dto';
 import { LectureMethodDto } from './lecture-method.dto';
 import { LikedLectureDto } from './liked-lecture.dto';
+import { ILecture } from '@src/lecture/interface/lecture.interface';
 
-export class LectureDto extends BaseReturnDto implements Lecture {
+export class LectureDto extends BaseReturnDto {
   @ApiProperty({
     type: Number,
   })
@@ -30,8 +31,8 @@ export class LectureDto extends BaseReturnDto implements Lecture {
   @ApiProperty({ description: '가격', type: Number })
   price: number;
 
-  @ApiProperty({ description: '평점', type: Number })
-  stars: number;
+  @ApiProperty({ description: '평점' })
+  stars: string;
 
   @ApiProperty({ description: '리뷰 수', type: Number })
   reviewCount: number;
@@ -87,7 +88,7 @@ export class LectureDto extends BaseReturnDto implements Lecture {
 
   lectureType: LectureTypeDto;
 
-  constructor(lecture: Partial<LectureDto>) {
+  constructor(lecture: Partial<ILecture>) {
     super();
 
     this.id = lecture.id;
@@ -97,7 +98,7 @@ export class LectureDto extends BaseReturnDto implements Lecture {
     this.endDate = lecture.endDate;
     this.isActive = lecture.isActive;
     this.price = lecture.price;
-    this.stars = parseFloat(lecture.stars.toFixed(1));
+    this.stars = lecture.stars.toFixed(1);
     this.reviewCount = lecture.reviewCount;
     this.isGroup = lecture.isGroup;
 

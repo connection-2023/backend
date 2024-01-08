@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
+import { ILecture } from '../interface/lecture.interface';
 
 export class ReadManyLatestLecturesResponseDto {
   @ApiProperty({
@@ -10,7 +11,7 @@ export class ReadManyLatestLecturesResponseDto {
   })
   lectures?: LectureDto[];
 
-  constructor(latestLectures: LectureDto[]) {
+  constructor(latestLectures: ILecture[]) {
     this.lectures = latestLectures
       ? latestLectures.map((lecture) => new LectureDto(lecture))
       : [];
