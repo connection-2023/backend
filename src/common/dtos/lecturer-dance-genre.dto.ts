@@ -1,7 +1,6 @@
 import { LecturerDanceGenre } from '@prisma/client';
 import { DanceCategoryDto } from './dance-category.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { number, string } from 'joi';
 
 export class LecturerDanceGenreDto implements LecturerDanceGenre {
   id: number;
