@@ -19,10 +19,12 @@ import { ReportModule } from '@src/report/report.module';
 import { AdminModule } from './admin/admin.module';
 import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
 import { SearchModule } from './search/search.module';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRoot(process.env.MONGODB_URL),
     UserModule,
     LectureModule,
     PrismaModule,
