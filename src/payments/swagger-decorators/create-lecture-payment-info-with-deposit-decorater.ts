@@ -11,16 +11,16 @@ import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { PaymentDto } from '../dtos/payment.dto';
 
-export function ApiCreateLecturePaymentWithTransfer() {
+export function ApiCreateLecturePaymentWithDeposit() {
   return applyDecorators(
     ApiOperation({
-      summary: '일반결제(선결제)',
-      description: '전체 금액 계좌이체로 결제(쿠폰 사용 가능)',
+      summary: '일반결제(현장결제)',
+      description: '보증금 결제 차액 현장 결제',
     }),
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(
       HttpStatus.CREATED,
-      'transferPaymentResult',
+      'depositPaymentResult',
       PaymentDto,
     ),
     ApiBadRequestResponse(
@@ -34,8 +34,12 @@ export function ApiCreateLecturePaymentWithTransfer() {
           example: { message: '상품 가격이 일치하지 않습니다.' },
         },
         {
-          name: 'DuplicateDiscount',
-          example: { message: '할인율은 중복적용이 불가능합니다.' },
+          name: 'DepositMissing',
+          example: { message: '보증금 정보가 누락되었습니다.' },
+        },
+        {
+          name: 'DepositMismatch',
+          example: { message: '보증금 가격이 일치하지 않습니다.' },
         },
         {
           name: 'PaymentAlreadyExists',

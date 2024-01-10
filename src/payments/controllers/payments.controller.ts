@@ -28,6 +28,8 @@ import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-paym
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { PaymentDto } from '../dtos/payment.dto';
 import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/create-lecture-payment-info-with-transfer-decorater';
+import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
+import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -110,7 +112,7 @@ export class PaymentsController {
 
   //일반결제(계좌이체)
   @ApiCreateLecturePaymentWithTransfer()
-  @SetResponseKey('paymentResult')
+  @SetResponseKey('transferPaymentResult')
   @Post('/transfer/lecture')
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentWithTransfer(
@@ -121,6 +123,21 @@ export class PaymentsController {
     return await this.paymentsService.createLecturePaymentWithTransfer(
       authorizedData.user.id,
       createLecturePaymentWithTransferDto,
+    );
+  }
+
+  @ApiCreateLecturePaymentWithDeposit()
+  @SetResponseKey('depositPaymentResult')
+  @Post('/deposit/lecture')
+  @UseGuards(UserAccessTokenGuard)
+  async createLecturePaymentWithDeposit(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body()
+    createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
+  ) {
+    return await this.paymentsService.createLecturePaymentWithDeposit(
+      authorizedData.user.id,
+      createLecturePaymentWithDepositDto,
     );
   }
 
