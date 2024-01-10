@@ -215,6 +215,7 @@ export interface ITransferPaymentInputData {
   paymentId: number;
   lecturerBankAccountId: number;
   senderName: string;
+  noShowDeposit?: number;
 }
 
 export interface IRefundPaymentInputData {

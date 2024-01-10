@@ -24,6 +24,7 @@ import {
   TossPaymentVirtualAccountInfo,
   TossPaymentsConfirmResponse,
   VirtualAccountPaymentInfoInputData,
+  ITransferPaymentInputData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
@@ -46,6 +47,7 @@ import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
 import { PaymentDto } from '../dtos/payment.dto';
+import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -265,13 +267,15 @@ export class PaymentsService implements OnModuleInit {
   private async comparePrice(
     userId: number,
     lectureOriginalPrice: number,
-    {
+    dto: CreateLecturePaymentWithTossDto | CreateLecturePaymentWithTransferDto,
+  ): Promise<Coupons> {
+    const {
       couponId,
       stackableCouponId,
       finalPrice: clientPrice,
       lectureSchedules,
-    }: CreateLecturePaymentWithTossDto,
-  ): Promise<Coupons> {
+    } = dto;
+
     let numberOfApplicants: number = 0;
     lectureSchedules.map((lectureSchedule) => {
       numberOfApplicants += lectureSchedule.participants;
@@ -493,7 +497,8 @@ export class PaymentsService implements OnModuleInit {
     paymentId: number,
     getLecturePaymentDto:
       | CreateLecturePaymentWithTossDto
-      | CreateLecturePaymentWithPassDto,
+      | CreateLecturePaymentWithPassDto
+      | CreateLecturePaymentWithDepositDto,
   ): Promise<void> {
     const { lectureSchedules, representative, phoneNumber, requests } =
       getLecturePaymentDto;
@@ -1247,7 +1252,8 @@ export class PaymentsService implements OnModuleInit {
             transaction,
             lecturerId,
             createdLecturePayment.id,
-            dto,
+            dto.senderName,
+            dto.userBankAccountId,
           ),
           //쿠폰 사용내역 생성
           this.trxUpdateCouponUsage(
@@ -1274,14 +1280,15 @@ export class PaymentsService implements OnModuleInit {
       },
     );
   }
+
   private async trxCreateTransferPayment(
     transaction: PrismaTransaction,
     lecturerId: number,
     paymentId: number,
-    dto: CreateLecturePaymentWithTransferDto,
+    senderName: string,
+    refundUserBankAccountId: number,
+    noShowDeposit?: number,
   ) {
-    const { senderName, userBankAccountId: refundUserBankAccountId } = dto;
-
     const lecturerBankAccount =
       await this.paymentsRepository.getLecturerRecentBankAccount(lecturerId);
 
@@ -1289,11 +1296,135 @@ export class PaymentsService implements OnModuleInit {
       paymentId,
       lecturerBankAccountId: lecturerBankAccount.id,
       senderName,
+      noShowDeposit,
     });
     await this.paymentsRepository.trxCreateRefundPayment(transaction, {
       paymentId,
       refundUserBankAccountId,
       refundStatusId: RefundStatuses.NONE,
     });
+  }
+
+  async createLecturePaymentWithDeposit(
+    userId: number,
+    dto: CreateLecturePaymentWithDepositDto,
+  ): Promise<PaymentDto> {
+    const { lectureId, lectureSchedules, orderId, userBankAccountId } = dto;
+
+    const lecture: Lecture = await this.checkLectureValidity(
+      lectureId,
+      lectureSchedules,
+    );
+
+    //올바른 환불 계좌인지 확인
+    await this.checkUserBankAccount(userId, userBankAccountId);
+    //유효한 orderId인지 확인
+    await this.checkUserPaymentValidity(userId, orderId);
+    //보증금 비교
+    this.compareDeposit(dto, lecture);
+
+    await this.trxCreateLecturePaymentWithDeposit(
+      userId,
+      lecture.lecturerId,
+      dto,
+    );
+
+    return new PaymentDto(
+      await this.paymentsRepository.getUserPaymentInfo(userId, orderId),
+    );
+  }
+
+  private compareDeposit(
+    dto: CreateLecturePaymentWithDepositDto,
+    lecture: Lecture,
+  ): void {
+    const {
+      noShowDeposit: clientDeposit,
+      lectureSchedules,
+      finalPrice: clientPrice,
+    } = dto;
+
+    let numberOfApplicants: number = 0;
+    lectureSchedules.map((lectureSchedule) => {
+      numberOfApplicants += lectureSchedule.participants;
+    });
+
+    if (
+      (lecture.noShowDeposit && !clientDeposit) ||
+      (!lecture.noShowDeposit && clientDeposit)
+    ) {
+      throw new BadRequestException(
+        '보증금 정보가 누락되었습니다.',
+        'DepositMissing',
+      );
+    } else if (lecture.noShowDeposit !== clientDeposit) {
+      throw new BadRequestException(
+        '보증금 가격이 일치하지 않습니다.',
+        'DepositMismatch',
+      );
+    }
+
+    if (clientPrice !== lecture.price * numberOfApplicants) {
+      throw new BadRequestException(
+        `상품 가격이 일치하지 않습니다.`,
+        'ProductPriceMismatch',
+      );
+    }
+  }
+
+  private async trxCreateLecturePaymentWithDeposit(
+    userId: number,
+    lecturerId: number,
+    dto:
+      | CreateLecturePaymentWithDepositDto
+      | CreateLecturePaymentWithDepositDto,
+  ): Promise<void> {
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const paymentInfo = {
+          orderId: dto.orderId,
+          orderName: dto.orderName,
+          originalPrice: dto.originalPrice,
+          finalPrice: dto.finalPrice,
+          noShowDeposit: dto.noShowDeposit,
+        };
+
+        const createdLecturePayment: Payment = await this.trxCreatePayment(
+          transaction,
+          lecturerId,
+          userId,
+          paymentInfo,
+          PaymentProductTypes.클래스,
+          PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+          PaymentMethods.현장결제,
+        );
+
+        await Promise.all([
+          //보증금을 포함한 계좌이체 정보 생성
+          this.trxCreateTransferPayment(
+            transaction,
+            lecturerId,
+            createdLecturePayment.id,
+            dto.senderName,
+            dto.userBankAccountId,
+            dto.noShowDeposit,
+          ),
+          //예약 내역 생성
+          this.trxCreateUserReservation(
+            transaction,
+            userId,
+            createdLecturePayment.id,
+            dto,
+          ),
+          //수강생 추가 및 신청 횟수 증가
+          this.trxCreateOrUpdateLectureLearner(
+            transaction,
+            userId,
+            lecturerId,
+            dto.lectureSchedules.length,
+          ),
+        ]);
+      },
+    );
   }
 }

@@ -1025,6 +1025,7 @@ model TransferPaymentInfo {
   lecturerBankAccountId Int
   //입금자 명
   senderName            String
+  noShowDeposit         Int?
 
   payment             Payment             @relation(fields: [paymentId], references: [id])
   lecturerBankAccount LecturerBankAccount @relation(fields: [lecturerBankAccountId], references: [id])
