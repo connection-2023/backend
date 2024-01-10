@@ -7,7 +7,7 @@ const options: SchemaOptions = {
 };
 
 @Schema(options)
-export class Chatting extends Document {
+export class Chats extends Document {
   @Prop({
     required: true,
     type: mongoose.Types.ObjectId,
@@ -39,4 +39,4 @@ export class Chatting extends Document {
   isRead: boolean;
 }
 
-export const ChattingSchema = SchemaFactory.createForClass(Chatting);
+export const ChatsSchema = SchemaFactory.createForClass(Chats);

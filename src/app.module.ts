@@ -20,6 +20,8 @@ import { AdminModule } from './admin/admin.module';
 import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
 import { SearchModule } from './search/search.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ChatsModule } from './chats/chats.module';
+import { EventsGateway } from './events/events.gateway';
 
 @Module({
   imports: [
@@ -43,8 +45,9 @@ import { MongooseModule } from '@nestjs/mongoose';
     AdminModule,
     SuccessInterceptorModule,
     SearchModule,
+    ChatsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService],
+  providers: [AppService, ConfigService, EventsGateway],
 })
 export class AppModule {}

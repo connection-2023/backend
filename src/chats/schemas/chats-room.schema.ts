@@ -6,7 +6,7 @@ const options: SchemaOptions = {
 };
 
 @Schema(options)
-export class ChattingRoom extends Document {
+export class ChatsRoom extends Document {
   @Prop({ required: true })
   @IsNotEmpty()
   @IsNumber()
@@ -26,4 +26,4 @@ export class ChattingRoom extends Document {
   deletedAt: Date | null;
 }
 
-export const ChattingRoomSchema = SchemaFactory.createForClass(ChattingRoom);
+export const ChatsRoomSchema = SchemaFactory.createForClass(ChatsRoom);
