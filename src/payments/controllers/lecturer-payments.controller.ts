@@ -9,8 +9,8 @@ import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ApiGetLecturerRecentBankAccount } from '@src/payments/swagger-decorators/get-lecturer-recent-bank-account.decorator';
-import { ApiGetPaymentRequestList } from '../swagger-decorators/create-lecturer-bank-account.decorator copy';
-import { PaymentRequestDto } from '../dtos/payment-request.dto';
+import { ApiGetPaymentRequestList } from '@src/payments/swagger-decorators/create-lecturer-bank-account.decorator copy';
+import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
 
 @ApiTags('강사-결제')
 @Controller('lecturer-payments')
