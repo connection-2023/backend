@@ -28,6 +28,7 @@ import {
   PaymentMethods,
 } from '@src/payments/enum/payment.enum';
 import {
+  Lecture,
   LecturePass,
   LecturerBankAccount,
   LecturerLearner,
@@ -1135,6 +1136,39 @@ export class PaymentsRepository {
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
         paymentPassUsage: { include: { lecturePass: true } },
+      },
+    });
+  }
+
+  async getLecturerLectureList(lecturerId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({ where: { lecturerId } });
+  }
+
+  async getPaymentRequestListByLecturerId(lectureId: number) {
+    return await this.prismaService.payment.findMany({
+      where: {
+        statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+        reservation: { some: { lectureSchedule: { lectureId } } },
+      },
+      include: {
+        user: { include: { userProfileImage: true } },
+        paymentProductType: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        paymentCouponUsage: true,
+        transferPaymentInfo: { include: { lecturerBankAccount: true } },
+        refundPaymentInfo: {
+          include: { refundStatus: true, refundUserBankAccount: true },
+        },
+        reservation: {
+          include: { lectureSchedule: true },
+        },
+        cardPaymentInfo: { include: { issuer: true, acquirer: true } },
+        virtualAccountPaymentInfo: { include: { bank: true } },
+        paymentPassUsage: { include: { lecturePass: true } },
+      },
+      orderBy: {
+        id: 'asc',
       },
     });
   }

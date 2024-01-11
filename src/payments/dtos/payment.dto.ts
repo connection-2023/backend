@@ -120,5 +120,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     this.refundPaymentInfo = payment.refundPaymentInfo
       ? new RefundPaymentInfoDto(payment.refundPaymentInfo)
       : null;
+
+    Object.assign(this);
   }
 }
