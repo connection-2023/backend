@@ -19,6 +19,12 @@ export class PaymentBaseLectureDto implements Lecture {
   })
   maxCapacity: number;
 
+  @ApiProperty({
+    type: Number,
+    description: '보증금',
+  })
+  noShowDeposit: number;
+
   lecturerId: number;
   lectureTypeId: number;
   lectureMethodId: number;
@@ -33,7 +39,6 @@ export class PaymentBaseLectureDto implements Lecture {
   reservationDeadline: number;
   reservationComment: string;
   price: number;
-  noShowDeposit: number;
   reviewCount: number;
   stars: number;
   isActive: boolean;
@@ -45,6 +50,7 @@ export class PaymentBaseLectureDto implements Lecture {
   constructor(paymentBaseLecture: Partial<PaymentBaseLectureDto>) {
     this.id = paymentBaseLecture.id;
     this.title = paymentBaseLecture.title;
+    this.noShowDeposit = paymentBaseLecture.noShowDeposit;
     this.maxCapacity = paymentBaseLecture.maxCapacity;
 
     Object.assign(this);
