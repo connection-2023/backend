@@ -105,8 +105,11 @@ export class UserPaymentsService implements OnModuleInit {
   }
 
   async getUserRecentBankAccount(userId: number): Promise<UserBankAccountDto> {
-    return new UserBankAccountDto(
-      await this.paymentsRepository.getUserRecentBankAccount(userId),
-    );
+    const selectedBankAccount =
+      await this.paymentsRepository.getUserRecentBankAccount(userId);
+
+    return selectedBankAccount
+      ? new UserBankAccountDto(selectedBankAccount)
+      : null;
   }
 }

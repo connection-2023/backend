@@ -29,9 +29,12 @@ export class LecturerPaymentsService {
   async getLecturerRecentBankAccount(
     lecturerId: number,
   ): Promise<LecturerBankAccountDto> {
-    return new LecturerBankAccountDto(
-      await this.paymentsRepository.getLecturerRecentBankAccount(lecturerId),
-    );
+    const selectedBankAccount =
+      await this.paymentsRepository.getLecturerRecentBankAccount(lecturerId);
+
+    return selectedBankAccount
+      ? new LecturerBankAccountDto(selectedBankAccount)
+      : null;
   }
 
   async getPaymentRequestList(
