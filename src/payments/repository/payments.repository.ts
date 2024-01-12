@@ -1172,4 +1172,13 @@ export class PaymentsRepository {
       },
     });
   }
+
+  async getPaymentRequest(paymentId, lecturerId): Promise<Payment> {
+    return this.prismaService.payment.findFirst({
+      where: {
+        id: paymentId,
+        lecturerId,
+      },
+    });
+  }
 }
