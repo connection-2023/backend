@@ -12,6 +12,7 @@ import { ApiGetLecturerRecentBankAccount } from '@src/payments/swagger-decorator
 import { ApiGetPaymentRequestList } from '@src/payments/swagger-decorators/create-lecturer-bank-account.decorator copy';
 import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
 import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
+import { ApiUpdatePaymentRequestStatus } from '../swagger-decorators/update-payment-request-status.decorator';
 
 @ApiTags('강사-결제')
 @Controller('lecturer-payments')
@@ -58,11 +59,7 @@ export class LecturerPaymentsController {
     );
   }
 
-  /**
-   * @todo 승인, 거절, 취소(되돌리기)
-   *
-   */
-
+  @ApiUpdatePaymentRequestStatus()
   @Patch('/request')
   @UseGuards(LecturerAccessTokenGuard)
   async updatePaymentRequestStatus(
