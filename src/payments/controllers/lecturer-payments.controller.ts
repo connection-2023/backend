@@ -62,7 +62,6 @@ export class LecturerPaymentsController {
    * @todo 승인, 거절, 취소(되돌리기)
    *
    */
-
   @Patch('/request')
   @UseGuards(LecturerAccessTokenGuard)
   async updatePaymentRequestStatus(

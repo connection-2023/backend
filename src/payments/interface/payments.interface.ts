@@ -1,4 +1,9 @@
-import { RefundPaymentInfo, UserPass } from '@prisma/client';
+import {
+  Payment,
+  Reservation,
+  TransferPaymentInfo,
+  UserPass,
+} from '@prisma/client';
 import { PaymentMethods } from '@src/payments/enum/payment.enum';
 
 export interface ILectureSchedule {
@@ -222,4 +227,16 @@ export interface IRefundPaymentInputData {
   paymentId: number;
   refundStatusId: number;
   refundUserBankAccountId: number;
+}
+
+export interface IRefundPaymentUpdateData {
+  cancelAmount?: number;
+  reason?: string;
+  refusedReason?: string;
+  refundStatusId?: number;
+}
+
+export interface IPayment extends Payment {
+  transferPaymentInfo: TransferPaymentInfo;
+  reservation: Reservation[];
 }
