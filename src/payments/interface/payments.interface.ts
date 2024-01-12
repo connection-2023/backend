@@ -1,4 +1,5 @@
 import {
+  LectureSchedule,
   Payment,
   Reservation,
   TransferPaymentInfo,
@@ -238,5 +239,9 @@ export interface IRefundPaymentUpdateData {
 
 export interface IPayment extends Payment {
   transferPaymentInfo: TransferPaymentInfo;
-  reservation: Reservation[];
+  reservation: IReservation[];
+}
+
+export interface IReservation extends Reservation {
+  lectureSchedule: LectureSchedule;
 }

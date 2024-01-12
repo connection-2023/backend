@@ -27,6 +27,7 @@ const getPaymentStatusForLecturer = (key: string): PaymentStatusForLecturer => {
 
 export class UpdatePaymentRequestStatusDto {
   @ApiProperty({
+    type: Number,
     description: 'payment Id',
     required: true,
   })
@@ -58,4 +59,16 @@ export class UpdatePaymentRequestStatusDto {
   @ValidateIf(({ status }) => status === PaymentStatusForLecturer.REFUSED)
   @IsNotEmpty()
   refusedReason: string;
+
+  @ApiProperty({
+    type: Number,
+    description: '강의 id / WAITING_FOR_DEPOSIT일때 필수',
+    required: false,
+  })
+  @IsNumberType()
+  @ValidateIf(
+    ({ status }) => status === PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+  )
+  @IsNotEmpty()
+  lectureId: number;
 }

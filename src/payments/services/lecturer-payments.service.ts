@@ -5,7 +5,12 @@ import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
 import { PaymentDto } from '../dtos/payment.dto';
 import { PaymentRequestDto } from '../dtos/payment-request.dto';
-import { Lecture, Payment, TransferPaymentInfo } from '@prisma/client';
+import {
+  Lecture,
+  Payment,
+  Reservation,
+  TransferPaymentInfo,
+} from '@prisma/client';
 import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
 import {
   PaymentMethods,
@@ -77,7 +82,7 @@ export class LecturerPaymentsService {
     lecturerId: number,
     dto: UpdatePaymentRequestStatusDto,
   ): Promise<void> {
-    const { paymentId, status, cancelAmount, refusedReason } = dto;
+    const { paymentId, status, cancelAmount, refusedReason, lectureId } = dto;
 
     //결제 정보 확인
     const payment: IPayment = await this.checkPaymentValidity(
@@ -100,6 +105,7 @@ export class LecturerPaymentsService {
         break;
 
       case PaymentStatusForLecturer.WAITING_FOR_DEPOSIT:
+        await this.processPaymentWaitingForDePositStatus(payment, lectureId);
         break;
     }
   }
@@ -125,7 +131,8 @@ export class LecturerPaymentsService {
       selectedPayment.paymentMethodId !== PaymentMethods.현장결제
     ) {
       throw new BadRequestException(
-        `해당 결제 정보는 변경이 불가능한 결제 정보입니다.`,
+        `해당 결제 정보는 변경이 불가능한 결제 방식입니다.`,
+        'InvalidPaymentMethod',
       );
     }
 
@@ -152,7 +159,7 @@ export class LecturerPaymentsService {
     return selectedPayment;
   }
 
-  private async processPaymentDoneStatus(paymentId: number) {
+  private async processPaymentDoneStatus(paymentId: number): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         await this.paymentsRepository.trxUpdateLecturePaymentStatus(
@@ -164,6 +171,7 @@ export class LecturerPaymentsService {
         await this.paymentsRepository.trxUpdateReservationEnabled(
           transaction,
           paymentId,
+          true,
         );
       },
     );
@@ -194,7 +202,11 @@ export class LecturerPaymentsService {
           },
         );
 
-        await this.trxRollbackReservationRelatedData(transaction, payment);
+        await this.trxRollbackReservationRelatedData(
+          transaction,
+          payment,
+          false,
+        );
       },
     );
   }
@@ -213,31 +225,122 @@ export class LecturerPaymentsService {
       case PaymentMethods.현장결제:
         targetAmount = payment.transferPaymentInfo.noShowDeposit;
         break;
-      default:
-        throw new BadRequestException(`지원하지 않는 결제 방식입니다.`);
     }
 
     if (targetAmount !== clientCancelAmount) {
-      throw new BadRequestException(`환불금액이 올바르지 않습니다.`);
+      throw new BadRequestException(
+        `환불금액이 올바르지 않습니다.`,
+        'InvalidRefundAmount',
+      );
     }
   }
 
   private async trxRollbackReservationRelatedData(
     transaction: PrismaTransaction,
     payment: IPayment,
-  ) {
+    isIncrement: boolean,
+    lectureMaxCapacity?: number,
+  ): Promise<void> {
+    const trxUpdateParticipantsMethod = isIncrement
+      ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
+      : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
+
+    const trxUpdateLearnerCountMethod = isIncrement
+      ? this.paymentsRepository.trxIncrementLectureLearner
+      : this.paymentsRepository.trxDecrementLectureLearner;
+
+    //각 스케쥴의 현재 인원 수정
     for (const reservation of payment.reservation) {
-      await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
-        transaction,
-        reservation,
-      );
+      //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
+      if (isIncrement && lectureMaxCapacity) {
+        const remainingCapacity =
+          lectureMaxCapacity - reservation.lectureSchedule.numberOfParticipants;
+
+        if (remainingCapacity < reservation.participants) {
+          throw new BadRequestException(
+            `최대 인원 초과로 인해 취소할 수 없습니다.`,
+            'ExceededMaxParticipants',
+          );
+        }
+      }
+
+      await trxUpdateParticipantsMethod(transaction, reservation);
     }
 
-    await this.paymentsRepository.trxDecrementLectureLearner(
+    //수강생의 신청 횟수 수정
+    await trxUpdateLearnerCountMethod(
       transaction,
       payment.userId,
       payment.lecturerId,
       payment.reservation.length,
+    );
+  }
+
+  private async processPaymentWaitingForDePositStatus(
+    payment: IPayment,
+    lectureId: number,
+  ): Promise<void> {
+    switch (payment.statusId) {
+      case PaymentOrderStatus.DONE:
+        await this.rollbackPaymentDoneStatus(payment.id);
+        break;
+      case PaymentOrderStatus.REFUSED:
+        await this.rollbackPaymentRefusedStatus(payment, lectureId);
+        break;
+    }
+  }
+
+  private async rollbackPaymentDoneStatus(paymentId: number) {
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+          transaction,
+          paymentId,
+          PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+        );
+
+        await this.paymentsRepository.trxUpdateReservationEnabled(
+          transaction,
+          paymentId,
+          false,
+        );
+      },
+    );
+  }
+
+  private async rollbackPaymentRefusedStatus(
+    payment: IPayment,
+    lectureId: number,
+  ): Promise<void> {
+    const lecture: Lecture = await this.paymentsRepository.getLecture(
+      lectureId,
+    );
+
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+          transaction,
+          payment.id,
+          PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+        );
+
+        await this.paymentsRepository.trxUpdateTransferPayment(
+          transaction,
+          payment.id,
+          {
+            refundStatusId: RefundStatuses.NONE,
+            cancelAmount: null,
+            refusedReason: null,
+          },
+        );
+
+        await this.trxRollbackReservationRelatedData(
+          transaction,
+          payment,
+          true,
+          lecture.maxCapacity,
+        );
+      },
     );
   }
 }

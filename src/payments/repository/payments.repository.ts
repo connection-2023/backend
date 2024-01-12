@@ -1038,18 +1038,22 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateReservationEnabled(transaction: PrismaTransaction, paymentId) {
+  async trxUpdateReservationEnabled(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    isEnabled: boolean,
+  ) {
     await transaction.reservation.updateMany({
       where: { paymentId },
-      data: { isEnabled: true },
+      data: { isEnabled },
     });
   }
 
   async trxDecrementLectureLearner(
     transaction: PrismaTransaction,
-    userId,
-    lecturerId,
-    enrollmentCount,
+    userId: number,
+    lecturerId: number,
+    enrollmentCount: number,
   ) {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
@@ -1187,7 +1191,10 @@ export class PaymentsRepository {
         lecturerId,
         paymentProductType: { name: PaymentProductTypes.클래스 },
       },
-      include: { transferPaymentInfo: true, reservation: true },
+      include: {
+        transferPaymentInfo: true,
+        reservation: { include: { lectureSchedule: true } },
+      },
     });
   }
 
@@ -1213,5 +1220,17 @@ export class PaymentsRepository {
         'PrismaUpdateFailed',
       );
     }
+  }
+
+  async trxIncrementLectureLearner(
+    transaction: PrismaTransaction,
+    userId: number,
+    lecturerId: number,
+    enrollmentCount: number,
+  ) {
+    await transaction.lecturerLearner.update({
+      where: { userId_lecturerId: { userId, lecturerId } },
+      data: { enrollmentCount: { increment: enrollmentCount } },
+    });
   }
 }
