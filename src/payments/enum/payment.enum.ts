@@ -15,6 +15,7 @@ export enum PaymentOrderStatus {
   DONE,
   ABORTED,
   EXPIRED,
+  REFUSED,
 }
 
 export enum RefundStatuses {
@@ -23,6 +24,8 @@ export enum RefundStatuses {
   FAILED,
   PARTIAL_FAILED,
   COMPLETED,
+  USER_PENDING,
+  LECTURER_PENDING,
 }
 
 export enum PaymentProductTypes {
@@ -34,4 +37,10 @@ export enum PaymentHistoryTypes {
   전체 = '전체',
   클래스 = '클래스',
   패스권 = '패스권',
+}
+
+export enum PaymentStatusForLecturer {
+  WAITING_FOR_DEPOSIT = PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+  DONE = PaymentOrderStatus.DONE,
+  REFUSED = PaymentOrderStatus.REFUSED,
 }
