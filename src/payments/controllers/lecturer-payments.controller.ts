@@ -9,10 +9,11 @@ import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ApiGetLecturerRecentBankAccount } from '@src/payments/swagger-decorators/get-lecturer-recent-bank-account.decorator';
-import { ApiGetPaymentRequestList } from '@src/payments/swagger-decorators/create-lecturer-bank-account.decorator copy';
+import { ApiGetPaymentRequestList } from '@src/payments/swagger-decorators/get-payment-request-list.decorator';
 import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
 import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
 import { ApiUpdatePaymentRequestStatus } from '../swagger-decorators/update-payment-request-status.decorator';
+import { ApiGetPaymentRequestCount } from '../swagger-decorators/get-lecturer-payment-request-count.decorator';
 
 @ApiTags('강사-결제')
 @Controller('lecturer-payments')
@@ -55,6 +56,18 @@ export class LecturerPaymentsController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ): Promise<PaymentRequestDto[]> {
     return await this.lecturerPaymentsService.getPaymentRequestList(
+      authorizedData.lecturer.id,
+    );
+  }
+
+  @ApiGetPaymentRequestCount()
+  @SetResponseKey('requestCount')
+  @Get('/requests/count')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getPaymentRequestCount(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<number> {
+    return await this.lecturerPaymentsService.getPaymentRequestCount(
       authorizedData.lecturer.id,
     );
   }
