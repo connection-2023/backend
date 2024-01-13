@@ -2,6 +2,7 @@ import { HttpStatus, Type, applyDecorators } from '@nestjs/common';
 import { ErrorHttpStatusCode } from '@nestjs/common/utils/http-error-by-code.util';
 import { ApiExtraModels, ApiProperty, ApiResponse } from '@nestjs/swagger';
 
+//여러 데이터가 합쳐졌을 때 사용
 export class GeneralResponseDto {
   [key: string]: unknown;
 

@@ -61,6 +61,7 @@ export class LecturerPaymentsService {
       return [];
     }
 
+    //각각의 강의에 해당하는 결제내역들을 합쳐서 반환
     const paymentList = await Promise.all(
       lectureList.map(async (lecture) => {
         const payments =
@@ -341,6 +342,12 @@ export class LecturerPaymentsService {
           lecture.maxCapacity,
         );
       },
+    );
+  }
+
+  async getPaymentRequestCount(lecturerId: number): Promise<number> {
+    return await this.paymentsRepository.countLecturerPaymentRequestCount(
+      lecturerId,
     );
   }
 }

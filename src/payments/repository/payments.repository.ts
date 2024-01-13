@@ -1156,6 +1156,9 @@ export class PaymentsRepository {
     return await this.prismaService.payment.findMany({
       where: {
         statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+        paymentMethodId: {
+          in: [PaymentMethods.현장결제, PaymentMethods.선결제],
+        },
         reservation: { some: { lectureSchedule: { lectureId } } },
       },
       include: {
@@ -1231,6 +1234,18 @@ export class PaymentsRepository {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
       data: { enrollmentCount: { increment: enrollmentCount } },
+    });
+  }
+
+  async countLecturerPaymentRequestCount(lecturerId: number): Promise<number> {
+    return await this.prismaService.payment.count({
+      where: {
+        lecturerId,
+        statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+        paymentMethodId: {
+          in: [PaymentMethods.현장결제, PaymentMethods.선결제],
+        },
+      },
     });
   }
 }
