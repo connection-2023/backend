@@ -1,14 +1,15 @@
+import { LecturePassTargetDto } from './lecture-pass-target.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseReturnWithSwaggerDto } from './base-return-with-swagger.dto';
 import { LecturePass } from '@prisma/client';
 
-export class LecturePassDto
+export class LecturePassWithTargetDto
   extends BaseReturnWithSwaggerDto
   implements LecturePass
 {
   @ApiProperty({
-    type: Number,
     description: '패스권 Id',
+    type: Number,
   })
   id: number;
   lecturerId: number;
@@ -40,13 +41,27 @@ export class LecturePassDto
   isDisabled: boolean;
   deletedAt: Date;
 
-  constructor(lecturePass: Partial<LecturePassDto>) {
+  @ApiProperty({
+    description: '적용된 강의',
+    type: [LecturePassTargetDto],
+  })
+  lecturePassTarget: LecturePassTargetDto[];
+
+  constructor(lecturePass: Partial<LecturePassWithTargetDto>) {
     super();
     this.id = lecturePass.id;
     this.title = lecturePass.title;
     this.price = lecturePass.price;
     this.maxUsageCount = lecturePass.maxUsageCount;
     this.availableMonths = lecturePass.availableMonths;
+    this.createdAt = lecturePass.createdAt;
+    this.updatedAt = lecturePass.updatedAt;
+
+    this.lecturePassTarget = lecturePass.lecturePassTarget
+      ? lecturePass.lecturePassTarget.map(
+          (passTarget) => new LecturePassTargetDto(passTarget),
+        )
+      : null;
 
     Object.assign(this);
   }

@@ -21,6 +21,7 @@ import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
 import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-recent-bank-account.decorator';
+import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
 
 @ApiTags('유저-결제')
 @Controller('user-payments')
@@ -33,7 +34,7 @@ export class UserPaymentsController {
   async GetUserPaymentsHistory(
     @Query() getUserPaymentsHistoryDto: GetUserPaymentsHistoryDto,
     @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
+  ): Promise<UserPaymentsHistoryWithCountDto> {
     return await this.userPaymentsService.getUserPaymentsHistory(
       getUserPaymentsHistoryDto,
       authorizedData.user.id,

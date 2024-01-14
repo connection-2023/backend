@@ -24,7 +24,10 @@ import {
   IRefundPaymentUpdateData,
   IPayment,
 } from '@src/payments/interface/payments.interface';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  IPaginationParams,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 import {
   PaymentOrderStatus,
   PaymentMethods,
@@ -755,10 +758,8 @@ export class PaymentsRepository {
 
   async getUserPaymentHistory(
     userId: number,
-    take: number,
     paymentProductTypeId: number | undefined,
-    cursor?: ICursor,
-    skip?: number,
+    { cursor, skip, take }: IPaginationParams,
   ) {
     try {
       return await this.prismaService.payment.findMany({
@@ -766,53 +767,33 @@ export class PaymentsRepository {
         take,
         skip,
         cursor,
-        select: {
-          id: true,
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
+        include: {
+          paymentProductType: true,
+          paymentStatus: true,
+          paymentMethod: true,
+          paymentCouponUsage: true,
+          transferPaymentInfo: { include: { lecturerBankAccount: true } },
+          refundPaymentInfo: {
+            include: { refundStatus: true, refundUserBankAccount: true },
           },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          paymentStatus: {
-            select: {
-              name: true,
-            },
-          },
-          updatedAt: true,
           reservation: {
-            select: {
-              participants: true,
+            include: {
               lectureSchedule: {
-                select: {
-                  startDateTime: true,
-                  lecture: {
-                    select: {
-                      id: true,
-                      lectureImage: { select: { imageUrl: true }, take: 1 },
-                    },
-                  },
-                },
+                include: { lecture: { include: { lectureImage: true } } },
               },
             },
           },
+          cardPaymentInfo: { include: { issuer: true, acquirer: true } },
+          virtualAccountPaymentInfo: { include: { bank: true } },
+          paymentPassUsage: {
+            include: {
+              lecturePass: true,
+            },
+          },
           userPass: {
-            select: {
+            include: {
               lecturePass: {
-                select: {
-                  id: true,
-                  title: true,
-                  maxUsageCount: true,
-                  availableMonths: true,
-                },
+                include: { lecturePassTarget: { include: { lecture: true } } },
               },
             },
           },
@@ -1143,7 +1124,10 @@ export class PaymentsRepository {
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
-        paymentPassUsage: { include: { lecturePass: true } },
+        paymentPassUsage: {
+          include: { lecturePass: true },
+        },
+        userPass: { include: { lecturePass: true } },
       },
     });
   }
@@ -1176,7 +1160,10 @@ export class PaymentsRepository {
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
-        paymentPassUsage: { include: { lecturePass: true } },
+        paymentPassUsage: {
+          include: { lecturePass: true },
+        },
+        userPass: { include: { lecturePass: true } },
       },
       orderBy: {
         id: 'asc',
