@@ -5,6 +5,9 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-history.dto';
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
+import { IPaginationParams } from '@src/common/interface/common-interface';
+import { PaymentHistoryTypes } from '../enum/payment.enum';
+import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
 
 @Injectable()
 export class UserPaymentsService implements OnModuleInit {
@@ -30,62 +33,40 @@ export class UserPaymentsService implements OnModuleInit {
       paymentHistoryType,
     }: GetUserPaymentsHistoryDto,
     userId: number,
-  ) {
-    let paymentType;
-    let cursor;
-    let skip;
-
-    if (paymentHistoryType !== '전체') {
-      const paymentProductType =
-        await this.paymentsRepository.getPaymentProductType(paymentHistoryType);
-      paymentType = paymentProductType?.id;
-    }
+  ): Promise<UserPaymentsHistoryWithCountDto> {
+    const paymentTypeId =
+      paymentHistoryType === PaymentHistoryTypes.전체
+        ? undefined
+        : paymentHistoryType;
 
     const totalItemCount: number =
       await this.paymentsRepository.countUserPaymentsHistory(
         userId,
-        paymentType,
+        paymentTypeId,
       );
     if (!totalItemCount) {
-      return { totalItemCount };
+      return new UserPaymentsHistoryWithCountDto({ totalItemCount });
     }
 
-    const isPagination = currentPage && targetPage;
-    const isInfiniteScroll = lastItemId && take;
-
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      ({ cursor, skip, take } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-    } else if (isInfiniteScroll) {
-      cursor = { id: lastItemId };
-      skip = 1;
-    }
-
-    const paymentHistory = await this.paymentsRepository.getUserPaymentHistory(
-      userId,
+    const paginationParams: IPaginationParams = this.getPaginationParams(
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
       take,
-      paymentType,
-      cursor,
-      skip,
     );
 
-    return { totalItemCount, paymentHistory };
-  }
+    const userPaymentsHistory =
+      await this.paymentsRepository.getUserPaymentHistory(
+        userId,
+        paymentTypeId,
+        paginationParams,
+      );
 
-  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
-    const cursor = { id: itemId };
-
-    const calculateSkipValue = (pageDiff: number) => {
-      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    };
-
-    const skip = calculateSkipValue(pageDiff);
-
-    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
+    return new UserPaymentsHistoryWithCountDto({
+      totalItemCount,
+      userPaymentsHistory,
+    });
   }
 
   async getPaymentVirtualAccount(userId: number, paymentId: number) {
@@ -111,5 +92,32 @@ export class UserPaymentsService implements OnModuleInit {
     return selectedBankAccount
       ? new UserBankAccountDto(selectedBankAccount)
       : null;
+  }
+
+  private getPaginationParams(
+    currentPage: number,
+    targetPage: number,
+    firstItemId: number,
+    lastItemId: number,
+    take: number,
+  ): IPaginationParams {
+    let cursor;
+    let skip;
+    let updatedTake = take;
+
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
+      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+      updatedTake = pageDiff >= 1 ? -take : take;
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    return { cursor, skip, take: updatedTake };
   }
 }

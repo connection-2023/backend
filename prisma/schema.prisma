@@ -634,7 +634,7 @@ model Payment {
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
   paymentPassUsage          PaymentPassUsage?
-  userPass                  UserPass[]
+  userPass                  UserPass?
   transferPaymentInfo       TransferPaymentInfo?
   refundPaymentInfo         RefundPaymentInfo?
 }

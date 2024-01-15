@@ -13,9 +13,10 @@ export class LecturePassTargetDto implements LecturePassTarget {
     isArray: true,
   })
   lecture: PassLectureDto;
-  constructor(lecturePassTarget: Partial<LecturePassTargetDto>) {
-    this.lecture = new PassLectureDto(lecturePassTarget.lecture);
 
-    Object.assign(this);
+  constructor(lecturePassTarget: Partial<LecturePassTargetDto>) {
+    this.lecture = lecturePassTarget.lecture
+      ? new PassLectureDto(lecturePassTarget.lecture)
+      : null;
   }
 }
