@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -35,6 +36,8 @@ import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-learner-list.decorator';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
+import { ApiGetLecturerLearnerPaymentsOverview } from '../swagger-decorators/get-lecturer-leaner-payments-overview.decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -137,6 +140,20 @@ export class LecturerController {
     return await this.lecturerService.getLecturerLearners(
       authorizedData.lecturer.id,
       getLecturerLearnerListDto,
+    );
+  }
+
+  @ApiGetLecturerLearnerPaymentsOverview()
+  @SetResponseKey('learnerPaymentsOverView')
+  @Get('/learners/:userId')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerPaymentsOverview(
+    @Param('userId', ParseIntPipe) userId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LearnerPaymentOverviewDto[]> {
+    return await this.lecturerService.getLecturerLearnerPaymentsOverview(
+      authorizedData.lecturer.id,
+      userId,
     );
   }
 }
