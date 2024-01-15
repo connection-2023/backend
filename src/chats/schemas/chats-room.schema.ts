@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose';
 import { IsNotEmpty, IsNumber, IsObject, IsString } from 'class-validator';
+import { Document } from 'mongoose';
 
 const options: SchemaOptions = {
   timestamps: true,
 };
 
 @Schema(options)
-export class ChatsRoom extends Document {
+export class ChatRoom extends Document {
   @Prop({ required: true })
   @IsNotEmpty()
   @IsNumber()
@@ -26,4 +27,4 @@ export class ChatsRoom extends Document {
   deletedAt: Date | null;
 }
 
-export const ChatsRoomSchema = SchemaFactory.createForClass(ChatsRoom);
+export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);
