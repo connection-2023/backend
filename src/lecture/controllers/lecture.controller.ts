@@ -74,9 +74,9 @@ export class LectureController {
   }
 
   @ApiReadOneLectureByNonMember()
-  @Get(':lectureId/non-members')
+  @Get(':lectureId/previews/non-members')
   async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
-    const lecture = await this.lectureService.readLecture(lectureId);
+    const lecture = await this.lectureService.readLecturePreview(lectureId);
 
     return lecture;
   }
@@ -152,31 +152,6 @@ export class LectureController {
     );
   }
 
-  @ApiReadManyLectureWithLecturer()
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers')
-  async readManyLectureWithLecturerId(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    const lecture = await this.lectureService.readManyLectureWithLecturerId(
-      authorizedData.lecturer.id,
-    );
-
-    return { lecture };
-  }
-
-  @ApiReadManyLectureByNonMemeber()
-  @Get('lecturers/:lecturerId/non-members')
-  async readManyLectureByNonMember(
-    @Param('lecturerId', ParseIntPipe) lecturerId: number,
-  ) {
-    const lecture = await this.lectureService.readManyLectureWithLecturerId(
-      lecturerId,
-    );
-
-    return { lecture };
-  }
-
   @ApiReadManyEnrollLecture()
   @UseGuards(UserAccessTokenGuard)
   @Get('users')
@@ -188,21 +163,6 @@ export class LectureController {
       authorizedData.user.id,
       query,
     );
-  }
-
-  @ApiReadManyLectureProgress()
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers/in-progress')
-  async readManyLectureProgress(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() query: ReadManyLectureProgressQueryDto,
-  ) {
-    const lectureProgress = await this.lectureService.readManyLectureProgress(
-      authorizedData.lecturer.id,
-      query,
-    );
-
-    return { lectureProgress };
   }
 
   @ApiOperation({ summary: '강의 전체 수강생 조회' })

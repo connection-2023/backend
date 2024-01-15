@@ -18,9 +18,15 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { LectureLocation, Lecturer, LikedLecturer } from '@prisma/client';
+import {
+  Lecture,
+  LectureLocation,
+  Lecturer,
+  LikedLecturer,
+} from '@prisma/client';
 import { PrismaClientValidationError } from '@prisma/client/runtime';
 import { when } from 'joi';
+import { LectureScheduleResponseData } from '@src/lecture/interface/lecture.interface';
 
 @Injectable()
 export class LecturerRepository {
@@ -315,5 +321,50 @@ export class LecturerRepository {
         'LikedLecturerFindFailed',
       );
     }
+  }
+
+  async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId },
+      include: {
+        lectureImage: { select: { imageUrl: true } },
+        lectureToDanceGenre: {
+          select: { danceCategory: { select: { genre: true } } },
+        },
+        lectureToRegion: { select: { region: true } },
+        lectureMethod: { select: { name: true } },
+      },
+    });
+  }
+
+  async trxReadManyLectureProgress(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<LectureScheduleResponseData[]> {
+    return await transaction.lecture.findMany({
+      where: { lecturerId, isActive: true },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async trxReadManyCompletedLectureScheduleCount(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    currentTime: Date,
+  ): Promise<number> {
+    return await transaction.lectureSchedule.count({
+      where: { lectureId, startDateTime: { lt: currentTime } },
+    });
+  }
+
+  async readManyCompletedLectureWithLecturerId(
+    lecturerId: number,
+  ): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, deletedAt: null, isActive: false },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

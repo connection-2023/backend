@@ -149,20 +149,20 @@ export class LectureRepository {
     return await this.prismaService.lecture.findFirst({
       where: { id: lectureId },
       include: {
-        lectureType: { select: { name: true } },
-        lectureMethod: { select: { name: true } },
+        lectureType: true,
+        lectureMethod: true,
         lectureNotification: true,
         lectureToRegion: {
-          select: {
-            region: {
-              select: { administrativeDistrict: true, district: true },
-            },
+          include: {
+            region: true,
           },
         },
         lectureImage: true,
         lectureToDanceGenre: {
-          select: { name: true, danceCategory: { select: { genre: true } } },
+          include: { danceCategory: true },
         },
+        lecturer: true,
+        lectureLocation: true,
       },
     });
   }
@@ -274,20 +274,6 @@ export class LectureRepository {
     });
   }
 
-  async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({
-      where: { lecturerId },
-      include: {
-        lectureImage: { select: { imageUrl: true } },
-        lectureToDanceGenre: {
-          select: { danceCategory: { select: { genre: true } } },
-        },
-        lectureToRegion: { select: { region: true } },
-        lectureMethod: { select: { name: true } },
-      },
-    });
-  }
-
   async trxReadManyEnrollLectureWithUserId(
     transaction: PrismaTransaction,
     userId: number,
@@ -351,37 +337,6 @@ export class LectureRepository {
       where: { lectureId },
       create: { lectureId, notification },
       update: { notification },
-    });
-  }
-
-  async trxReadManyLectureProgress(
-    transaction: PrismaTransaction,
-    lecturerId: number,
-  ): Promise<LectureScheduleResponseData[]> {
-    return await transaction.lecture.findMany({
-      where: { lecturerId, isActive: true },
-      include: { _count: { select: { lectureSchedule: true } } },
-      orderBy: { id: 'desc' },
-    });
-  }
-
-  async trxReadManyCompletedLectureScheduleCount(
-    transaction: PrismaTransaction,
-    lectureId: number,
-    currentTime: Date,
-  ): Promise<number> {
-    return await transaction.lectureSchedule.count({
-      where: { lectureId, startDateTime: { lt: currentTime } },
-    });
-  }
-
-  async readManyCompletedLectureWithLecturerId(
-    lecturerId: number,
-  ): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({
-      where: { lecturerId, deletedAt: null, isActive: false },
-      include: { _count: { select: { lectureSchedule: true } } },
-      orderBy: { createdAt: 'desc' },
     });
   }
 

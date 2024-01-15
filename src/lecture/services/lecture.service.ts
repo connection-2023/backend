@@ -39,6 +39,7 @@ import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
+import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
 
 @Injectable()
 export class LectureService {
@@ -217,16 +218,10 @@ export class LectureService {
     return { lecture, lecturer, location };
   }
 
-  async readLecture(lectureId: number) {
+  async readLecturePreview(lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
-    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
-      lecture.lecturerId,
-    );
-    const location = await this.lectureRepository.readLectureLocation(
-      lectureId,
-    );
 
-    return { lecture, lecturer, location };
+    return new LecturePreviewDto(lecture);
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
@@ -549,12 +544,6 @@ export class LectureService {
     return reservation;
   }
 
-  async readManyLectureWithLecturerId(lecturerId: number) {
-    return await this.lectureRepository.readManyLectureWithLectruerId(
-      lecturerId,
-    );
-  }
-
   async readManyEnrollLectureWithUserId(
     userId: number,
     {
@@ -627,52 +616,6 @@ export class LectureService {
         );
 
         return { count, enrollLecture };
-      },
-    );
-  }
-
-  async readManyLectureProgress(
-    lecturerId: number,
-    query: ReadManyLectureProgressQueryDto,
-  ) {
-    const { progressType } = query;
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        if (progressType === '진행중') {
-          const lectures =
-            await this.lectureRepository.trxReadManyLectureProgress(
-              transaction,
-              lecturerId,
-            );
-          const inprogressLecture = [];
-
-          for (const lecture of lectures) {
-            const currentTime = new Date();
-            const completedLectureSchedule =
-              await this.lectureRepository.trxReadManyCompletedLectureScheduleCount(
-                transaction,
-                lecture.id,
-                currentTime,
-              );
-            const progress = Math.round(
-              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
-            );
-            const inprogressLectureData = {
-              ...lecture,
-              progress,
-              allSchedule: lecture._count.lectureSchedule,
-              completedSchedule: completedLectureSchedule,
-            };
-
-            inprogressLecture.push(inprogressLectureData);
-          }
-
-          return inprogressLecture;
-        } else if (progressType === '마감된 클래스') {
-          return await this.lectureRepository.readManyCompletedLectureWithLecturerId(
-            lecturerId,
-          );
-        }
       },
     );
   }
