@@ -21,6 +21,7 @@ import {
 import { LectureLocation, Lecturer, LikedLecturer } from '@prisma/client';
 import { PrismaClientValidationError } from '@prisma/client/runtime';
 import { when } from 'joi';
+import { PaymentOrderStatus } from '@src/payments/enum/payment.enum';
 
 @Injectable()
 export class LecturerRepository {
@@ -315,5 +316,24 @@ export class LecturerRepository {
         'LikedLecturerFindFailed',
       );
     }
+  }
+
+  async getLecturerLearnerPaymentsOverview(lecturerId: number, userId: number) {
+    return await this.prismaService.payment.findMany({
+      where: { userId, lecturerId, statusId: PaymentOrderStatus.DONE },
+      include: {
+        paymentProductType: true,
+        paymentCouponUsage: true,
+        paymentPassUsage: {
+          include: {
+            lecturePass: true,
+          },
+        },
+        reservation: {
+          include: { lectureSchedule: { include: { lecture: true } } },
+        },
+        userPass: true,
+      },
+    });
   }
 }
