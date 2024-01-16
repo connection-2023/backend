@@ -128,67 +128,68 @@ model Lecturer {
 
 model Lecture {
   //고유 id
-  id                  Int                   @id @default(autoincrement())
+  id                   Int                    @id @default(autoincrement())
   //강사 id
-  lecturerId          Int
+  lecturerId           Int
   //강의 종류 id
-  lectureTypeId       Int
+  lectureTypeId        Int
   //강의 형식 id
-  lectureMethodId     Int
+  lectureMethodId      Int
   //강의 인원
-  isGroup             Boolean
-  startDate           DateTime
-  endDate             DateTime
+  isGroup              Boolean
+  startDate            DateTime
+  endDate              DateTime
   //강의명
-  title               String                @db.VarChar(30)
+  title                String                 @db.VarChar(30)
   //강의 소개
-  introduction        String?               @db.VarChar(500)
+  introduction         String?                @db.VarChar(500)
   //커리큘럼
-  curriculum          String                @db.Text
+  curriculum           String                 @db.Text
   //강의 시간
-  duration            Int                   @db.Integer
+  duration             Int                    @db.Integer
   //난이도
-  difficultyLevel     String                @db.VarChar(5)
+  difficultyLevel      String                 @db.VarChar(5)
   //최소 정원
-  minCapacity         Int?                  @db.Integer
+  minCapacity          Int?                   @db.Integer
   //최대 정원
-  maxCapacity         Int?                  @db.Integer
+  maxCapacity          Int?                   @db.Integer
   //강의 예약 마감일
-  reservationDeadline Int
+  reservationDeadline  Int
   //예약 설명
-  reservationComment  String?               @db.VarChar(255)
+  reservationComment   String?                @db.VarChar(255)
   //가격
-  price               Int                   @db.Integer
+  price                Int                    @db.Integer
   //선금
-  noShowDeposit       Int?                  @db.Integer
+  noShowDeposit        Int?                   @db.Integer
   //리뷰 수
-  reviewCount         Int                   @default(0) @db.Integer
+  reviewCount          Int                    @default(0) @db.Integer
   //평점
-  stars               Float                 @default(0) @db.Real
+  stars                Float                  @default(0) @db.Real
   //활성여부
-  isActive            Boolean               @default(true) @db.Boolean
-  locationDescription String?               @db.VarChar(300)
+  isActive             Boolean                @default(true) @db.Boolean
+  locationDescription  String?                @db.VarChar(300)
   //생성일자
-  createdAt           DateTime              @default(now()) @db.Timestamp(6)
+  createdAt            DateTime               @default(now()) @db.Timestamp(6)
   //수정일자
-  updatedAt           DateTime              @default(now()) @updatedAt @db.Timestamp(6)
+  updatedAt            DateTime               @default(now()) @updatedAt @db.Timestamp(6)
   //삭제일자
-  deletedAt           DateTime?             @db.Timestamp(6)
-  lecturer            Lecturer              @relation(fields: [lecturerId], references: [id])
-  lectureType         LectureType           @relation(fields: [lectureTypeId], references: [id])
-  lectureMethod       LectureMethod         @relation(fields: [lectureMethodId], references: [id])
-  lectureReview       LectureReview[]
-  likedLecture        LikedLecture[]
-  lectureNotification LectureNotification?
-  lectureImage        LectureImage[]
-  lectureCouponTarget LectureCouponTarget[]
-  lectureSchedule     LectureSchedule[]
-  lectureToRegion     LectureToRegion[]
-  lectureToDanceGenre LectureToDanceGenre[]
-  lectureHoliday      LectureHoliday[]
-  lectureLocation     LectureLocation?
-  lecturePassTarget   LecturePassTarget[]
-  lectureDay          LectureDay[]
+  deletedAt            DateTime?              @db.Timestamp(6)
+  lecturer             Lecturer               @relation(fields: [lecturerId], references: [id])
+  lectureType          LectureType            @relation(fields: [lectureTypeId], references: [id])
+  lectureMethod        LectureMethod          @relation(fields: [lectureMethodId], references: [id])
+  lectureReview        LectureReview[]
+  likedLecture         LikedLecture[]
+  lectureNotification  LectureNotification?
+  lectureImage         LectureImage[]
+  lectureCouponTarget  LectureCouponTarget[]
+  lectureSchedule      LectureSchedule[]
+  lectureToRegion      LectureToRegion[]
+  lectureToDanceGenre  LectureToDanceGenre[]
+  lectureHoliday       LectureHoliday[]
+  lectureLocation      LectureLocation?
+  lecturePassTarget    LecturePassTarget[]
+  lectureDay           LectureDay[]
+  regularLectureStatus RegularLectureStatus[]
 }
 
 model DanceCategory {
@@ -1080,4 +1081,22 @@ model RefundPaymentInfo {
   payment               Payment         @relation(fields: [paymentId], references: [id])
   refundStatus          RefundStatus    @relation(fields: [refundStatusId], references: [id])
   refundUserBankAccount UserBankAccount @relation(fields: [refundUserBankAccountId], references: [id])
+}
+
+model RegularLectureStatus {
+  id                     Int                      @id @default(autoincrement())
+  lectureId              Int
+  day                    String[]                 @default([])
+  dateTime               String[]                 @default([])
+  numberOfParticipants   Int
+  lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  regularLectureSchedule RegularLectureSchedule[]
+}
+
+model RegularLectureSchedule {
+  id                     Int                  @id @default(autoincrement())
+  regularLectureStatusId Int
+  startDateTime          DateTime
+  endDateTime            DateTime
+  regularLectureStatus   RegularLectureStatus @relation(fields: [regularLectureStatusId], references: [id], onDelete: Cascade)
 }
