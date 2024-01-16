@@ -224,6 +224,12 @@ export class LectureService {
     return new LecturePreviewDto(lecture);
   }
 
+  async readLectureDetail(lectureId: number) {
+    const lecture = await this.lectureRepository.readLecture(lectureId);
+
+    return new LecturePreviewDto(lecture);
+  }
+
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
     const {
       page,
