@@ -1090,13 +1090,14 @@ model RegularLectureStatus {
   dateTime               String[]                 @default([])
   numberOfParticipants   Int                      @default(0)
   lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  regularLectureSchedule RegularLectureSchedule[]
 }
 
 model RegularLectureSchedule {
   id                     Int                  @id @default(autoincrement())
-  lectureId Int
+  regularLectureStatusId Int
   startDateTime          DateTime
   endDateTime            DateTime
-  day String  @default(dbgenerated("(date_part('dow', start_date_time) + 1)::text"))
-  lecture Lecture @relation(fields: [lectureId],references: [id],onDelete: Cascade)
+  day                    Int
+  regularLectureStatus   RegularLectureStatus @relation(fields: [regularLectureStatusId], references: [id], onDelete: Cascade)
 }

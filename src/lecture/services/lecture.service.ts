@@ -122,17 +122,28 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          const regularDayScheduleInputData =
-            this.createRegularLectureStatusInputData(
-              newLecture.id,
-              regularSchedules,
-            );
+          for (const schedule of regularSchedules) {
+            const regularLectureStatusInputData =
+              this.createRegularLectureStatusInputData(newLecture.id, schedule);
 
-          await this.lectureRepository.trxCreateRegularLectureStatus(
-            transaction,
-            regularDayScheduleInputData,
-          );
-          for (const schedule of schedules) {
+            const regularLectureStatus =
+              await this.lectureRepository.trxCreateRegularLectureStatus(
+                transaction,
+                regularLectureStatusInputData,
+              );
+
+            const regularLectureSchedulesInputData =
+              this.createRegularLectureSchedulesInputData(
+                regularLectureStatus.id,
+                schedule.startDateTime,
+                lecture.duration,
+              );
+
+            const regularLectureSchedules =
+              await this.lectureRepository.trxCreateRegularLectureSchedule(
+                transaction,
+                regularLectureSchedulesInputData,
+              );
           }
         }
 
@@ -949,18 +960,37 @@ export class LectureService {
 
   private createRegularLectureStatusInputData(
     lectureId: number,
-    regularSchedules: RegularLectureSchedules[],
+    regularSchedule: RegularLectureSchedules,
   ) {
-    const regularScheduleInputData = regularSchedules.map((schedule) => {
-      return {
-        lectureId,
-        day: schedule.day,
-        dateTime: schedule.startDateTime,
-      };
-    });
-    return regularScheduleInputData;
+    return {
+      lectureId,
+      day: regularSchedule.day,
+      dateTime: regularSchedule.dateTime,
+    };
   }
 
+  private createRegularLectureSchedulesInputData(
+    regularLectureStatusId: number,
+    regularSchedules: Date[],
+    duration: number,
+  ) {
+    const regularLectureSchedulesInputData = regularSchedules.map((date) => {
+      const startDateTime = new Date(date);
+      const endDateTime = new Date(
+        startDateTime.getTime() + duration * 60 * 1000,
+      );
+      const day = startDateTime.getDay();
+
+      return {
+        regularLectureStatusId,
+        startDateTime,
+        endDateTime,
+        day,
+      };
+    });
+
+    return regularLectureSchedulesInputData;
+  }
   private createLectureCouponTargetInputData(
     lectureId: number,
     coupons: number[],

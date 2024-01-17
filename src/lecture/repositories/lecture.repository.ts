@@ -10,6 +10,7 @@ import {
   Reservation,
   LikedLecture,
   LectureNotification,
+  RegularLectureStatus,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import {
@@ -33,6 +34,7 @@ import {
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
   RegularLectureSchedules,
+  RegularLectureSchedulesInputData,
   RegularLectureStatusInputData,
 } from '@src/lecture/interface/lecture.interface';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
@@ -78,9 +80,18 @@ export class LectureRepository {
 
   async trxCreateRegularLectureStatus(
     transaction: PrismaTransaction,
-    regularSchedules: RegularLectureStatusInputData[],
+    regularSchedules: RegularLectureStatusInputData,
+  ): Promise<RegularLectureStatus> {
+    return await transaction.regularLectureStatus.create({
+      data: regularSchedules,
+    });
+  }
+
+  async trxCreateRegularLectureSchedule(
+    transaction: PrismaTransaction,
+    regularSchedules: RegularLectureSchedulesInputData[],
   ): Promise<void> {
-    await transaction.regularLectureStatus.createMany({
+    await transaction.regularLectureSchedule.createMany({
       data: regularSchedules,
     });
   }

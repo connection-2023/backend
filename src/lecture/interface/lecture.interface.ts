@@ -65,7 +65,8 @@ interface LectureHolidayInputData {
 
 interface RegularLectureSchedules {
   day: string[];
-  startDateTime: string[];
+  dateTime: string[];
+  startDateTime: Date[];
 }
 
 interface LectureCouponTargetInputData {
@@ -179,7 +180,12 @@ interface RegularLectureStatusInputData {
   dateTime: string[];
 }
 
-interface RegularLectureScheduleInputData
+interface RegularLectureSchedulesInputData {
+  regularLectureStatusId: number;
+  startDateTime: Date;
+  endDateTime: Date;
+  day: number;
+}
 
 export {
   ILecture,
@@ -203,4 +209,5 @@ export {
   DaySchedule,
   DayScheduleInputData,
   RegularLectureStatusInputData,
+  RegularLectureSchedulesInputData,
 };

@@ -270,6 +270,7 @@ export class CreateLectureDto {
   })
   @IsArray()
   @IsOptional()
+  @Type(() => Array)
   regularSchedules?: RegularLectureSchedules[];
 
   @ApiProperty({
