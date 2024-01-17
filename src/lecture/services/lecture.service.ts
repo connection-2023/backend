@@ -358,7 +358,7 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        if (notification) {
+        if (notification || notification.length === 0) {
           await this.lectureRepository.trxUpsertLectureNotification(
             transaction,
             lectureId,
