@@ -503,24 +503,50 @@ export class LectureService {
   async readManyLectureSchedule(lectureId: number) {
     const calendar = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const schedule =
-          await this.lectureRepository.trxReadManyLectureSchedule(
+        const isOneDay = await transaction.lecture.findFirst({
+          where: { id: lectureId },
+          select: { lectureMethod: { select: { name: true } } },
+        });
+
+        if (isOneDay.lectureMethod.name === '원데이') {
+          const schedule =
+            await this.lectureRepository.trxReadManyLectureSchedule(
+              transaction,
+              lectureId,
+            );
+          const holiday =
+            await this.lectureRepository.trxReadManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+          const daySchedule = await this.lectureRepository.trxReadDaySchedule(
             transaction,
             lectureId,
           );
-        const holiday = await this.lectureRepository.trxReadManyLectureHoliday(
-          transaction,
-          lectureId,
-        );
-        const daySchedule = await this.lectureRepository.trxReadDaySchedule(
-          transaction,
-          lectureId,
-        );
 
-        if (!daySchedule[0]) {
-          return { schedule, holiday };
+          if (!daySchedule[0]) {
+            return { schedule, holiday };
+          }
+          return { schedule, holiday, daySchedule };
+        } else {
+          const schedule =
+            await this.lectureRepository.trxReadManyRegularLectureSchedules(
+              transaction,
+              lectureId,
+            );
+          const holiday =
+            await this.lectureRepository.trxReadManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+
+          const daySchedule = await this.lectureRepository.trxReadDaySchedule(
+            transaction,
+            lectureId,
+          );
+
+          return { schedule, holiday, daySchedule };
         }
-        return { schedule, holiday, daySchedule };
       },
     );
     const { schedule } = calendar;

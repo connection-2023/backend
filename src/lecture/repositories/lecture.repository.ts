@@ -10,6 +10,8 @@ import {
   Reservation,
   LikedLecture,
   LectureNotification,
+  RegularLectureSchedule,
+  RegularLectureStatus,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import {
@@ -204,6 +206,15 @@ export class LectureRepository {
     return await transaction.lectureSchedule.findMany({
       where: { lectureId },
       orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async trxReadManyRegularLectureSchedules(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<RegularLectureSchedule[]> {
+    return await transaction.regularLectureSchedule.findMany({
+      where: { regularLectureStatus: { lectureId } },
     });
   }
 
@@ -460,6 +471,15 @@ export class LectureRepository {
     lectureId: number,
   ): Promise<DaySchedule[]> {
     return await transaction.lectureDay.findMany({
+      where: { lectureId },
+    });
+  }
+
+  async trxReadRegularLectureStatus(
+    transaction: PrismaTransaction,
+    lectureId: number,
+  ): Promise<RegularLectureStatus[]> {
+    return await transaction.regularLectureStatus.findMany({
       where: { lectureId },
     });
   }
