@@ -32,6 +32,8 @@ import {
   LectureScheduleResponseData,
   LectureToDanceGenreInputData,
   LectureToRegionInputData,
+  RegularLectureSchedules,
+  RegularLectureStatusInputData,
 } from '@src/lecture/interface/lecture.interface';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 
@@ -71,6 +73,15 @@ export class LectureRepository {
   ): Promise<void> {
     await transaction.lectureSchedule.createMany({
       data: lectureSchedule,
+    });
+  }
+
+  async trxCreateRegularLectureStatus(
+    transaction: PrismaTransaction,
+    regularSchedules: RegularLectureStatusInputData[],
+  ): Promise<void> {
+    await transaction.regularLectureStatus.createMany({
+      data: regularSchedules,
     });
   }
 

@@ -239,6 +239,7 @@ export class CreateLectureDto {
     example: [
       {
         day: ['월', '화'],
+        dateTime: ['13:00:00', '14:00:00'],
         startDateTime: [
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
@@ -247,6 +248,7 @@ export class CreateLectureDto {
       },
       {
         day: ['월', '수'],
+        dateTime: ['13:00:00', '14:00:00'],
         startDateTime: [
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
@@ -255,6 +257,7 @@ export class CreateLectureDto {
       },
       {
         day: ['수', '금'],
+        dateTime: ['13:00:00', '14:00:00'],
         startDateTime: [
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',

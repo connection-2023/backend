@@ -1088,7 +1088,7 @@ model RegularLectureStatus {
   lectureId              Int
   day                    String[]                 @default([])
   dateTime               String[]                 @default([])
-  numberOfParticipants   Int
+  numberOfParticipants   Int                      @default(0)
   lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   regularLectureSchedule RegularLectureSchedule[]
 }

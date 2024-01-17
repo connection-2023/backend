@@ -122,18 +122,17 @@ export class LectureService {
             lectureScheduleInputData,
           );
         } else if (lectureMethod === '정기') {
-          for (const schedule of regularSchedules) {
-            const regularDayScheduleInputData =
-              this.createRegularLectureScheduleInputData(
-                newLecture.id,
-                schedule,
-                lecture.duration,
-              );
-
-            await this.lectureRepository.trxCreateLectureSchedule(
-              transaction,
-              regularDayScheduleInputData,
+          const regularDayScheduleInputData =
+            this.createRegularLectureStatusInputData(
+              newLecture.id,
+              regularSchedules,
             );
+
+          await this.lectureRepository.trxCreateRegularLectureStatus(
+            transaction,
+            regularDayScheduleInputData,
+          );
+          for (const schedule of schedules) {
           }
         }
 
@@ -838,7 +837,7 @@ export class LectureService {
       (date) => {
         const startDateTime = new Date(date);
         const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
+          startDateTime.getTime() + duration * 60 * 1000,
         );
 
         return {
@@ -948,25 +947,17 @@ export class LectureService {
     return lectureTypeId.id;
   }
 
-  private createRegularLectureScheduleInputData(
+  private createRegularLectureStatusInputData(
     lectureId: number,
-    regularSchedule: RegularLectureSchedules,
-    duration: number,
+    regularSchedules: RegularLectureSchedules[],
   ) {
-    const regularScheduleInputData = regularSchedule.startDateTime.map(
-      (time) => {
-        const startTime = new Date(time);
-        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
-
-        return {
-          lectureId,
-          day: regularSchedule.day,
-          startDateTime: startTime,
-          endDateTime: endTime,
-          numberOfParticipants: 0,
-        };
-      },
-    );
+    const regularScheduleInputData = regularSchedules.map((schedule) => {
+      return {
+        lectureId,
+        day: schedule.day,
+        dateTime: schedule.startDateTime,
+      };
+    });
     return regularScheduleInputData;
   }
 
