@@ -807,9 +807,11 @@ export class LectureService {
         const endDateTime = new Date(
           startDateTime.getTime() + duration * 60 * 1000,
         );
+        const day = startDateTime.getDay();
 
         return {
           lectureId: lectureId,
+          day,
           startDateTime: startDateTime,
           endDateTime: endDateTime,
           numberOfParticipants: 0,
