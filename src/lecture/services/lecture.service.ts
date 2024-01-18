@@ -40,6 +40,7 @@ import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
+import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
 
 @Injectable()
 export class LectureService {
@@ -197,29 +198,10 @@ export class LectureService {
     );
   }
 
-  async readLectureWithUserId(userId: number, lectureId: number) {
-    const lecture = await this.lectureRepository.readLecture(lectureId);
-    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
-      lecture.lecturerId,
-    );
-    const location = await this.lectureRepository.readLectureLocation(
-      lectureId,
-    );
-
-    const isLike = await this.prismaService.likedLecture.findFirst({
-      where: { userId, lectureId },
-    });
-
-    if (isLike) {
-      lecture['isLike'] = true;
-    } else {
-      lecture['isLike'] = false;
-    }
-    return { lecture, lecturer, location };
-  }
-
-  async readLecturePreview(lectureId: number) {
-    const lecture = await this.lectureRepository.readLecture(lectureId);
+  async readLecturePreview(lectureId: number, userId?: number) {
+    const lecture = userId
+      ? await this.lectureRepository.readLecture(lectureId, userId)
+      : await this.lectureRepository.readLecture(lectureId);
 
     return new LecturePreviewDto(lecture);
   }
@@ -227,7 +209,7 @@ export class LectureService {
   async readLectureDetail(lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
 
-    return new LecturePreviewDto(lecture);
+    return new LectureDetailDto(lecture);
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {

@@ -4,7 +4,6 @@ import { LectureToDanceGenreDto } from '@src/common/dtos/lecture-to-dance-genre.
 import { LectureToRegionDto } from '@src/common/dtos/lecture-to-region.dto';
 import { ILecture } from '../interface/lecture.interface';
 import { LectureImageDto } from '@src/common/dtos/lecture-image.dto';
-import { LikedLectureDto } from '@src/common/dtos/liked-lecture.dto';
 
 export class LecturePreviewDto extends BaseReturnDto {
   @ApiProperty({ description: '강의 id', type: Number })
@@ -50,8 +49,8 @@ export class LecturePreviewDto extends BaseReturnDto {
   })
   lectureImage?: LectureImageDto[];
 
-  @ApiProperty({ description: '좋아요 여부', type: LikedLectureDto })
-  likedLecture?: LikedLectureDto[];
+  @ApiProperty({ description: '좋아요 여부', type: Boolean })
+  isLike?: boolean;
 
   constructor(lecture: Partial<ILecture>) {
     super();
@@ -69,9 +68,11 @@ export class LecturePreviewDto extends BaseReturnDto {
       ? lecture.lectureToRegion.map((region) => new LectureToRegionDto(region))
       : null;
 
-    this.likedLecture = lecture.likedLecture
-      ? lecture.likedLecture.map((like) => new LikedLectureDto(like))
-      : undefined;
+    this.isLike = lecture.likedLecture
+      ? lecture.likedLecture[0]
+        ? true
+        : false
+      : false;
 
     this.lectureImage = lecture.lectureImage
       ? lecture.lectureImage.map((url) => new LectureImageDto(url))

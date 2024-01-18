@@ -147,25 +147,29 @@ export class LectureRepository {
     });
   }
 
-  async readLecture(lectureId: number): Promise<Lecture> {
+  async readLecture(lectureId: number, userId?: number): Promise<Lecture> {
+    const include = {
+      lectureType: true,
+      lectureMethod: true,
+      lectureNotification: true,
+      lectureToRegion: {
+        include: {
+          region: true,
+        },
+      },
+      lectureImage: true,
+      lectureToDanceGenre: {
+        include: { danceCategory: true },
+      },
+      lecturer: true,
+      lectureLocation: true,
+    };
+
+    userId ? (include['likedLecture'] = { where: { userId } }) : false;
+
     return await this.prismaService.lecture.findFirst({
       where: { id: lectureId },
-      include: {
-        lectureType: true,
-        lectureMethod: true,
-        lectureNotification: true,
-        lectureToRegion: {
-          include: {
-            region: true,
-          },
-        },
-        lectureImage: true,
-        lectureToDanceGenre: {
-          include: { danceCategory: true },
-        },
-        lecturer: true,
-        lectureLocation: true,
-      },
+      include,
     });
   }
 
