@@ -17,7 +17,6 @@ import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
@@ -39,6 +38,9 @@ import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ApiReadManyLectureSchedulesWithLecturerId } from '../swagger-decorators/read-many-lecture-schedules-with-lecturer-id-decorator';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { ApiReadManyDailySchedules } from '../swagger-decorators/read-many-daily-schedules.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApiReadOneLectureDetail } from '../swagger-decorators/read-one-lectire-detail.decorator';
+import { ApiReadOneLecturePreview } from '../swagger-decorators/read-one-lecture-preview.decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -58,27 +60,24 @@ export class LectureController {
     );
   }
 
-  @ApiReadOneLecture()
-  @UseGuards(UserAccessTokenGuard)
-  @Get(':lectureId/users')
-  async readLectureWithUserId(
+  @ApiReadOneLecturePreview()
+  @SetResponseKey('lecturePreview')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get(':lectureId/previews')
+  async readLecturePreview(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    const lecture = await this.lectureService.readLectureWithUserId(
-      authorizedData.user.id,
-      lectureId,
-    );
+    const userId = authorizedData?.user?.id;
 
-    return lecture;
+    return await this.lectureService.readLecturePreview(lectureId, userId);
   }
 
-  @ApiReadOneLectureByNonMember()
-  @Get(':lectureId/non-members')
-  async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
-    const lecture = await this.lectureService.readLecture(lectureId);
-
-    return lecture;
+  @ApiReadOneLectureDetail()
+  @SetResponseKey('lectureDetail')
+  @Get(':lectureId/details')
+  async readLectureDetail(@Param('lectureId', ParseIntPipe) lectureId: number) {
+    return await this.lectureService.readLectureDetail(lectureId);
   }
 
   @ApiOperation({ summary: '강의 모두 보기' })
@@ -152,31 +151,6 @@ export class LectureController {
     );
   }
 
-  @ApiReadManyLectureWithLecturer()
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers')
-  async readManyLectureWithLecturerId(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    const lecture = await this.lectureService.readManyLectureWithLecturerId(
-      authorizedData.lecturer.id,
-    );
-
-    return { lecture };
-  }
-
-  @ApiReadManyLectureByNonMemeber()
-  @Get('lecturers/:lecturerId/non-members')
-  async readManyLectureByNonMember(
-    @Param('lecturerId', ParseIntPipe) lecturerId: number,
-  ) {
-    const lecture = await this.lectureService.readManyLectureWithLecturerId(
-      lecturerId,
-    );
-
-    return { lecture };
-  }
-
   @ApiReadManyEnrollLecture()
   @UseGuards(UserAccessTokenGuard)
   @Get('users')
@@ -188,21 +162,6 @@ export class LectureController {
       authorizedData.user.id,
       query,
     );
-  }
-
-  @ApiReadManyLectureProgress()
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers/in-progress')
-  async readManyLectureProgress(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() query: ReadManyLectureProgressQueryDto,
-  ) {
-    const lectureProgress = await this.lectureService.readManyLectureProgress(
-      authorizedData.lecturer.id,
-      query,
-    );
-
-    return { lectureProgress };
   }
 
   @ApiOperation({ summary: '강의 전체 수강생 조회' })

@@ -1,6 +1,8 @@
 import { Users } from '@prisma/client';
 import { LectureImageDto } from '@src/common/dtos/lecture-image.dto';
+import { LectureLocationDto } from '@src/common/dtos/lecture-location.dto';
 import { LectureMethodDto } from '@src/common/dtos/lecture-method.dto';
+import { LectureNotificationDto } from '@src/common/dtos/lecture-notification.dto';
 import { LectureToDanceGenreDto } from '@src/common/dtos/lecture-to-dance-genre.dto';
 import { LectureToRegionDto } from '@src/common/dtos/lecture-to-region.dto';
 import { LectureTypeDto } from '@src/common/dtos/lecture-type.dto';
@@ -10,6 +12,8 @@ import { LikedLectureDto } from '@src/common/dtos/liked-lecture.dto';
 
 interface ILecture extends Omit<LectureDto, 'stars'> {
   stars: number;
+  lectureLocation: LectureLocationDto;
+  lectureNotification: LectureNotificationDto;
 }
 
 interface LectureInputData {

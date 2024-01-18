@@ -9,6 +9,7 @@ import { LectureToDanceGenreDto } from './lecture-to-dance-genre.dto';
 import { LectureMethodDto } from './lecture-method.dto';
 import { LikedLectureDto } from './liked-lecture.dto';
 import { ILecture } from '@src/lecture/interface/lecture.interface';
+import { LectureLocationDto } from './lecture-location.dto';
 
 export class LectureDto extends BaseReturnDto {
   @ApiProperty({
@@ -101,7 +102,6 @@ export class LectureDto extends BaseReturnDto {
     this.stars = lecture.stars.toFixed(1);
     this.reviewCount = lecture.reviewCount;
     this.isGroup = lecture.isGroup;
-
     this.lectureToDanceGenre = lecture.lectureToDanceGenre
       ? lecture.lectureToDanceGenre.map(
           (dance) => new LectureToDanceGenreDto(dance),

@@ -32,6 +32,7 @@ import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
 import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
 import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 
 @Injectable()
@@ -329,6 +330,58 @@ export class LecturerService implements OnModuleInit {
             instagramPostUrls,
           ),
         ]);
+      },
+    );
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number) {
+    return await this.lecturerRepository.readManyLectureWithLectruerId(
+      lecturerId,
+    );
+  }
+
+  async readManyLectureProgress(
+    lecturerId: number,
+    query: ReadManyLectureProgressQueryDto,
+  ) {
+    const { progressType } = query;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (progressType === '진행중') {
+          const lectures =
+            await this.lecturerRepository.trxReadManyLectureProgress(
+              transaction,
+              lecturerId,
+            );
+          const inprogressLecture = [];
+
+          for (const lecture of lectures) {
+            const currentTime = new Date();
+            const completedLectureSchedule =
+              await this.lecturerRepository.trxReadManyCompletedLectureScheduleCount(
+                transaction,
+                lecture.id,
+                currentTime,
+              );
+            const progress = Math.round(
+              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+            );
+            const inprogressLectureData = {
+              ...lecture,
+              progress,
+              allSchedule: lecture._count.lectureSchedule,
+              completedSchedule: completedLectureSchedule,
+            };
+
+            inprogressLecture.push(inprogressLectureData);
+          }
+
+          return inprogressLecture;
+        } else if (progressType === '마감된 클래스') {
+          return await this.lecturerRepository.readManyCompletedLectureWithLecturerId(
+            lecturerId,
+          );
+        }
       },
     );
   }
