@@ -150,11 +150,11 @@ export class UserService {
     }
 
     if (imageUrl) {
-      return await this.userRepository.updateUserImage(userId, imageUrl);
+      await this.userRepository.updateUserImage(userId, imageUrl);
     }
 
     if (updateUserSetData) {
-      return await this.userRepository.updateUser(userId, updateUserSetData);
+      await this.userRepository.updateUser(userId, updateUserSetData);
     }
   }
 

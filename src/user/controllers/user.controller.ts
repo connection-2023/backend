@@ -25,6 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadMyProfile } from '../swagger-decorators/read-my-profile';
 import { UpdateUserDto } from '../dtos/update-user.dto';
+import { ApiUpdateUser } from '../swagger-decorators/update-user.decorator';
 
 @ApiTags('유저')
 @Controller('users')
@@ -84,19 +85,16 @@ export class UserController {
     return { myProfile };
   }
 
-  @ApiOperation({ summary: '내 프로필 수정' })
-  @ApiBearerAuth()
+  @ApiUpdateUser()
   @UseGuards(UserAccessTokenGuard)
   @Patch('my-pages')
   async updateUser(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() updateMyProfileDto: UpdateUserDto,
   ) {
-    const updatedUser = await this.userService.updateUser(
+    return await this.userService.updateUser(
       authorizedData.user.id,
       updateMyProfileDto,
     );
-
-    return updatedUser;
   }
 }
