@@ -27,6 +27,15 @@ export class UpdateLectureDto {
   maxCapacity?: number;
 
   @ApiPropertyOptional({
+    example: 'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+    description: '마감일',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  endDate?: Date;
+
+  @ApiPropertyOptional({
     example: '잘 운영할 예정',
     description: '강의 소개',
     required: false,
@@ -111,4 +120,27 @@ export class UpdateLectureDto {
   @IsArray()
   @Type(() => Array)
   holidays?: Date[];
+
+  @ApiProperty({
+    example: [
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+      'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
+    ],
+    description: '추가된 스케쥴',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => Array)
+  schedules?: Date[];
+
+  @ApiProperty({
+    example: '2층 복도 끝',
+    description: '지역 상세설명',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  locationDescription?: string;
 }

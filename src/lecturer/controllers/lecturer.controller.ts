@@ -3,8 +3,10 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { LecturerService } from '@src/lecturer/services/lecturer.service';
@@ -27,6 +29,19 @@ import { ApiGetLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-l
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
 import { ApiUpdateLecturerProfile } from '@src/lecturer/swagger-decorators/update-lecturer-profile-decorator';
 import { ApiGetLecturerBasicProfile } from '@src/lecturer/swagger-decorators/get-lecturer-profile-card-decorater';
+import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
+import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
+import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-learner-list.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApiReadManyLectureWithLecturer } from '@src/lecture/swagger-decorators/read-many-lecture-with-lecturers-decorator';
+import { ApiReadManyLectureByNonMemeber } from '@src/lecture/swagger-decorators/read-many-lecture-by-non-member-decorator';
+import { ApiReadManyLectureProgress } from '@src/lecture/swagger-decorators/read-many-lecture-progress-decorator';
+import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
+import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
+import { ApiGetLecturerLearnerPaymentsOverview } from '../swagger-decorators/get-lecturer-leaner-payments-overview.decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -60,12 +75,16 @@ export class LecturerController {
   }
 
   @ApiGetLecturerProfile()
+  @SetResponseKey('lecturerProfile')
+  @UseGuards(AllowUserAndGuestGuard)
   @Get('/profile/:lecturerId')
-  async getLecturerProfile(@Param('lecturerId') lecturerId: number) {
-    const lecturerProfile: LecturerProfile =
-      await this.lecturerService.getLecturerProfile(lecturerId);
+  async getLecturerProfile(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lecturerId') lecturerId: number,
+  ): Promise<LecturerDetailProfileDto> {
+    const userId: number = authorizedData?.user?.id;
 
-    return { lecturerProfile };
+    return await this.lecturerService.getLecturerProfile(userId, lecturerId);
   }
 
   @ApiGetLecturerBasicProfile()
@@ -113,5 +132,72 @@ export class LecturerController {
       authorizedData.lecturer.id,
       nickname,
     );
+  }
+
+  @ApiGetLecturerLearnerList()
+  @Get('/learners')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerList(
+    @Query() getLecturerLearnerListDto: GetLecturerLearnerListDto,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LecturerLearnerListDto> {
+    return await this.lecturerService.getLecturerLearners(
+      authorizedData.lecturer.id,
+      getLecturerLearnerListDto,
+    );
+  }
+
+  @ApiGetLecturerLearnerPaymentsOverview()
+  @SetResponseKey('learnerPaymentsOverView')
+  @Get('/learners/:userId')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerPaymentsOverview(
+    @Param('userId', ParseIntPipe) userId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LearnerPaymentOverviewDto[]> {
+    return await this.lecturerService.getLecturerLearnerPaymentsOverview(
+      authorizedData.lecturer.id,
+      userId,
+    );
+  }
+
+  @ApiReadManyLectureWithLecturer()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('/lectures')
+  async readManyLectureWithLecturerId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const lecture = await this.lecturerService.readManyLectureWithLecturerId(
+      authorizedData.lecturer.id,
+    );
+
+    return { lecture };
+  }
+
+  @ApiReadManyLectureByNonMemeber()
+  @Get('/lectures/:lecturerId/non-members')
+  async readManyLectureByNonMember(
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+  ) {
+    const lecture = await this.lecturerService.readManyLectureWithLecturerId(
+      lecturerId,
+    );
+
+    return { lecture };
+  }
+
+  @ApiReadManyLectureProgress()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('/in-progress')
+  async readManyLectureProgress(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureProgressQueryDto,
+  ) {
+    const lectureProgress = await this.lecturerService.readManyLectureProgress(
+      authorizedData.lecturer.id,
+      query,
+    );
+
+    return { lectureProgress };
   }
 }

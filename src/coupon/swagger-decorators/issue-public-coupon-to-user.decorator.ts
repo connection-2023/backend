@@ -6,7 +6,7 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { applyDecorators } from '@nestjs/common';
+import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 
 export function ApiIssuePublicCouponToUser() {
@@ -25,19 +25,39 @@ export function ApiIssuePublicCouponToUser() {
       SwaggerApiResponse.exception([
         {
           name: 'CouponAlreadyOwned',
-          example: { message: '이미 쿠폰을 보유하고있습니다.' },
+          example: {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: '이미 쿠폰을 보유하고있습니다.',
+            error: 'CouponAlreadyOwned',
+            rejectedCouponId: '1',
+          },
         },
         {
           name: 'DisabledCoupon',
-          example: { message: '비활성화 된 쿠폰입니다.' },
+          example: {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: '비활성화 된 쿠폰입니다.',
+            error: 'DisabledCoupon',
+            rejectedCouponId: '1',
+          },
         },
         {
           name: 'CouponAllocationExhausted',
-          example: { message: '모든 쿠폰 할당량이 소진되었습니다.' },
+          example: {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: '모든 쿠폰 할당량이 소진되었습니다.',
+            error: 'CouponAllocationExhausted',
+            rejectedCouponId: '1',
+          },
         },
         {
           name: 'InvalidCouponType',
-          example: { message: '해당 쿠폰은 비공개 or 공개 쿠폰 입니다.' },
+          example: {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: '해당 쿠폰은 비공개 or 공개 쿠폰 입니다.',
+            error: 'InvalidCouponType',
+            rejectedCouponId: 1,
+          },
         },
       ]),
     ),
@@ -45,7 +65,12 @@ export function ApiIssuePublicCouponToUser() {
       SwaggerApiResponse.exception([
         {
           name: 'CouponNotFound',
-          example: { message: '쿠폰이 존재하지 않습니다.' },
+          example: {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: '쿠폰이 존재하지 않습니다.',
+            error: 'CouponNotFound',
+            rejectedCouponId: 1,
+          },
         },
       ]),
     ),

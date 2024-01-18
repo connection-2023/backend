@@ -16,7 +16,7 @@ export function ApiReadOneLectureByNonMember() {
         statusCode: 200,
         data: {
           lecture: {
-            id: 34,
+            id: 93,
             lecturerId: 3,
             lectureTypeId: 1,
             lectureMethodId: 1,
@@ -38,8 +38,8 @@ export function ApiReadOneLectureByNonMember() {
             stars: 0,
             isActive: true,
             locationDescription: '버스타고 한번에',
-            createdAt: '2023-11-09T13:40:40.476Z',
-            updatedAt: '2023-11-09T13:40:40.476Z',
+            createdAt: '2023-12-22T03:25:54.587Z',
+            updatedAt: '2023-12-22T03:25:54.587Z',
             deletedAt: null,
             lectureType: {
               name: 'dance',
@@ -48,10 +48,10 @@ export function ApiReadOneLectureByNonMember() {
               name: '원데이',
             },
             lectureNotification: {
-              id: 63,
-              lectureId: 34,
+              id: 115,
+              lectureId: 93,
               notification: '15일 영업 안합니다요',
-              updatedAt: '2023-11-09T13:40:40.476Z',
+              updatedAt: '2023-12-22T03:25:54.587Z',
               deletedAt: null,
             },
             lectureImage: [
@@ -107,14 +107,29 @@ export function ApiReadOneLectureByNonMember() {
             id: 3,
             profileCardImageUrl: null,
             nickname: '올리버쌤',
+            phoneNumber: '01012345678',
           },
           location: {
-            id: 8,
-            lectureId: 34,
+            id: 12,
+            lectureId: 93,
             address: '서울특별시 중랑구 용마산로616',
             detailAddress: '101동 1802호',
             buildingName: '새한아파트',
           },
+          daySchedule: [
+            {
+              id: 1,
+              lectureId: 93,
+              day: ['월', '수', '금'],
+              dateTime: ['13:00:00', '14:00:00'],
+            },
+            {
+              id: 2,
+              lectureId: 93,
+              day: ['수'],
+              dateTime: ['13:00:00'],
+            },
+          ],
         },
       }),
     ),

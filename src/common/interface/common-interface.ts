@@ -18,9 +18,16 @@ export interface LecturerTokenPayload {
   exp: number;
 }
 
+export interface AdminTokenPayload {
+  adminId: number;
+  iat: number;
+  exp: number;
+}
+
 export interface TokenPayload {
   userId?: number;
   lecturerId?: number;
+  adminId?: number;
   iat: number;
   exp: number;
 }
@@ -53,8 +60,11 @@ export interface PrismaTransaction
 export interface ValidateResult {
   user?: GetUserResult;
   lecturer?: GetLecturerResult;
+  admin?: GetAdminResult;
   tokenType?: TokenTypes;
 }
+
+export interface GetAdminResult extends GetUserResult {}
 
 export interface GetUserResult {
   id: number;
@@ -63,4 +73,14 @@ export interface GetUserResult {
 export interface GetLecturerResult {
   id: number;
   userId: number;
+}
+
+export interface ICursor {
+  id: number;
+}
+
+export interface IPaginationParams {
+  cursor: ICursor | null;
+  skip: number | null;
+  take: number | null;
 }

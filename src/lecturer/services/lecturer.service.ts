@@ -2,25 +2,24 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
+  IPaginationParams,
   Id,
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { Lecturer } from '@prisma/client';
+import { Lecturer, LikedLecturer } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   LecturerBasicProfile,
   LecturerCoupon,
   LecturerDanceGenreInputData,
   LecturerInstagramPostInputData,
-  LecturerProfile,
   LecturerProfileImageUpdateData,
   LecturerRegionInputData,
 } from '@src/lecturer/interface/lecturer.interface';
@@ -29,11 +28,17 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { UpdateMyLecturerProfileDto } from '@src/lecturer/dtos/update-my-lecturer-profile.dto';
+import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
+import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
+import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
+import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
+import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
   private readonly logger = new Logger(LecturerService.name);
-
+  private readonly client;
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly prismaService: PrismaService,
@@ -41,9 +46,7 @@ export class LecturerService implements OnModuleInit {
     private readonly configService: ConfigService,
   ) {}
 
-  onModuleInit() {
-    this.logger.log('LecturerService Init');
-  }
+  onModuleInit() {}
 
   async createLecturer(
     userId: number,
@@ -262,8 +265,23 @@ export class LecturerService implements OnModuleInit {
     await this.lecturerRepository.updateLecturerNickname(lectureId, nickname);
   }
 
-  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
-    return await this.lecturerRepository.getLecturerProfile(lecturerId);
+  async getLecturerProfile(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LecturerDetailProfileDto> {
+    const lecturerProfile = await this.lecturerRepository.getLecturerProfile(
+      lecturerId,
+    );
+
+    //userId가 있으면서 좋아요가 있을때 true
+    const isLiked = userId
+      ? !!(await this.lecturerRepository.getUserLikedLecturerByLecturerId(
+          userId,
+          lecturerId,
+        ))
+      : false;
+
+    return new LecturerDetailProfileDto({ ...lecturerProfile, isLiked });
   }
 
   async getLecturerBasicProfile(
@@ -312,6 +330,58 @@ export class LecturerService implements OnModuleInit {
             instagramPostUrls,
           ),
         ]);
+      },
+    );
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number) {
+    return await this.lecturerRepository.readManyLectureWithLectruerId(
+      lecturerId,
+    );
+  }
+
+  async readManyLectureProgress(
+    lecturerId: number,
+    query: ReadManyLectureProgressQueryDto,
+  ) {
+    const { progressType } = query;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (progressType === '진행중') {
+          const lectures =
+            await this.lecturerRepository.trxReadManyLectureProgress(
+              transaction,
+              lecturerId,
+            );
+          const inprogressLecture = [];
+
+          for (const lecture of lectures) {
+            const currentTime = new Date();
+            const completedLectureSchedule =
+              await this.lecturerRepository.trxReadManyCompletedLectureScheduleCount(
+                transaction,
+                lecture.id,
+                currentTime,
+              );
+            const progress = Math.round(
+              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+            );
+            const inprogressLectureData = {
+              ...lecture,
+              progress,
+              allSchedule: lecture._count.lectureSchedule,
+              completedSchedule: completedLectureSchedule,
+            };
+
+            inprogressLecture.push(inprogressLectureData);
+          }
+
+          return inprogressLecture;
+        } else if (progressType === '마감된 클래스') {
+          return await this.lecturerRepository.readManyCompletedLectureWithLecturerId(
+            lecturerId,
+          );
+        }
       },
     );
   }
@@ -499,5 +569,150 @@ export class LecturerService implements OnModuleInit {
     } catch (error) {
       throw error;
     }
+  }
+
+  async getLecturerLearners(
+    lecturerId: number,
+    {
+      sortOption,
+      filterOption,
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      lectureId,
+    }: GetLecturerLearnerListDto,
+  ): Promise<LecturerLearnerListDto> {
+    const { orderBy, user } = await this.getLectureLearnerFilterOptions(
+      sortOption,
+      filterOption,
+      lectureId,
+    );
+
+    const paginationParams: IPaginationParams = this.getPaginationParams(
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    );
+
+    const totalItemCount: number =
+      await this.lecturerRepository.getLecturerLearnerCount(lecturerId, user);
+    if (!totalItemCount) {
+      return new LecturerLearnerListDto({ totalItemCount });
+    }
+
+    const selectedLearners = await this.lecturerRepository.getLecturerLeaners(
+      lecturerId,
+      paginationParams,
+      orderBy,
+      user,
+    );
+
+    const lecturerLearnerList = await Promise.all(
+      selectedLearners.map(async (selectedLearner) => {
+        const reservation = await this.lecturerRepository.getUserReservation(
+          selectedLearner.userId,
+        );
+        return { ...selectedLearner, reservation };
+      }),
+    );
+
+    return new LecturerLearnerListDto({
+      totalItemCount,
+      lecturerLearnerList,
+    });
+  }
+
+  private getLectureLearnerFilterOptions(
+    sortOption: SortOptions,
+    filterOption: FilterOptions,
+    lectureId: number,
+  ) {
+    let orderBy;
+    const user = { reservation: {} };
+    const currentDate = new Date();
+
+    switch (sortOption) {
+      case SortOptions.ASC:
+        orderBy = { user: { nickname: 'asc' } };
+        break;
+
+      case SortOptions.HIGHEST_APPLICANTS:
+        orderBy = [{ enrollmentCount: 'desc' }, { id: 'desc' }];
+        break;
+
+      case SortOptions.LATEST:
+        orderBy = { id: 'desc' };
+        break;
+    }
+
+    switch (filterOption) {
+      case FilterOptions.IN_PROGRESS:
+        user.reservation = {
+          some: {
+            lectureSchedule: {
+              lectureId,
+              startDateTime: { gt: currentDate },
+            },
+          },
+        };
+        break;
+
+      case FilterOptions.COMPLETED:
+        user.reservation = {
+          some: { lectureSchedule: { lectureId } },
+          every: { lectureSchedule: { startDateTime: { lt: currentDate } } },
+        };
+        break;
+    }
+
+    return { orderBy, user };
+  }
+
+  private getPaginationParams(
+    currentPage: number,
+    targetPage: number,
+    firstItemId: number,
+    lastItemId: number,
+    take: number,
+  ): IPaginationParams {
+    let cursor;
+    let skip;
+    let updatedTake = take;
+
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
+      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+      updatedTake = pageDiff >= 1 ? -take : take;
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    return { cursor, skip, take: updatedTake };
+  }
+
+  async getLecturerLearnerPaymentsOverview(
+    lecturerId: number,
+    userId: number,
+  ): Promise<LearnerPaymentOverviewDto[]> {
+    const learnerPaymentOverView =
+      await this.lecturerRepository.getLecturerLearnerPaymentsOverview(
+        lecturerId,
+        userId,
+      );
+
+    return (
+      learnerPaymentOverView?.map(
+        (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
+      ) || []
+    );
   }
 }

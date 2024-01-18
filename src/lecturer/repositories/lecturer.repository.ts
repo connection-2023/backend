@@ -12,12 +12,22 @@ import {
   LecturerBasicProfile,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
+  ICursor,
+  IPaginationParams,
   Id,
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { LectureLocation, Lecturer } from '@prisma/client';
+import {
+  Lecture,
+  LectureLocation,
+  Lecturer,
+  LikedLecturer,
+} from '@prisma/client';
 import { PrismaClientValidationError } from '@prisma/client/runtime';
+import { when } from 'joi';
+import { LectureScheduleResponseData } from '@src/lecture/interface/lecture.interface';
+import { PaymentOrderStatus } from '@src/payments/enum/payment.enum';
 
 @Injectable()
 export class LecturerRepository {
@@ -124,39 +134,24 @@ export class LecturerRepository {
     });
   }
 
-  async getLecturerProfile(lecturerId: number): Promise<LecturerProfile> {
+  async getLecturerProfile(lecturerId: number) {
     return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId, deletedAt: null },
-      select: {
-        profileCardImageUrl: true,
-        nickname: true,
-        email: true,
-        phoneNumber: true,
-        youtubeUrl: true,
-        instagramUrl: true,
-        homepageUrl: true,
-        affiliation: true,
-        introduction: true,
-        experience: true,
+      include: {
         lecturerRegion: {
-          select: {
-            region: {
-              select: { administrativeDistrict: true, district: true },
-            },
+          include: {
+            region: true,
           },
         },
         lecturerDanceGenre: {
-          select: {
-            name: true,
-            danceCategory: { select: { genre: true } },
+          include: {
+            danceCategory: true,
           },
         },
         lecturerInstagramPostUrl: {
-          select: { url: true },
           orderBy: { id: 'asc' },
         },
         lecturerProfileImageUrl: {
-          select: { url: true },
           orderBy: { id: 'asc' },
         },
       },
@@ -170,6 +165,7 @@ export class LecturerRepository {
         id: true,
         profileCardImageUrl: true,
         nickname: true,
+        phoneNumber: true,
       },
     });
   }
@@ -254,5 +250,140 @@ export class LecturerRepository {
         'LecturerUpdateFailed',
       );
     }
+  }
+
+  async getLecturerLeaners(
+    lecturerId: number,
+    { cursor, skip, take }: IPaginationParams,
+    orderBy: Array<object> | object,
+    user?: object,
+  ) {
+    try {
+      return await this.prismaService.lecturerLearner.findMany({
+        where: {
+          lecturerId,
+          user,
+        },
+        orderBy,
+        take,
+        cursor,
+        skip,
+        include: { user: { include: { userProfileImage: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `수강생 조회 실패: ${error}`,
+        'LecturerLearnerFindFailed',
+      );
+    }
+  }
+
+  async getUserReservation(userId: number) {
+    try {
+      return await this.prismaService.reservation.findFirst({
+        where: { userId },
+        orderBy: { id: 'desc' },
+        include: { lectureSchedule: { include: { lecture: true } } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `예약 정보 조회 실패: ${error}`,
+        'ReservationLearnerFindFailed',
+      );
+    }
+  }
+  async getLecturerLearnerCount(lecturerId: number, user?: object) {
+    try {
+      return await this.prismaService.lecturerLearner.count({
+        where: {
+          lecturerId,
+          user,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `수강생 조회 실패: ${error}`,
+        'LecturerLearnerFindFailed',
+      );
+    }
+  }
+
+  async getUserLikedLecturerByLecturerId(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LikedLecturer> {
+    try {
+      return await this.prismaService.likedLecturer.findUnique({
+        where: { lecturerId_userId: { userId, lecturerId } },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `종아요 목록 조회 실패: ${error}`,
+        'LikedLecturerFindFailed',
+      );
+    }
+  }
+
+  async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId },
+      include: {
+        lectureImage: { select: { imageUrl: true } },
+        lectureToDanceGenre: {
+          select: { danceCategory: { select: { genre: true } } },
+        },
+        lectureToRegion: { select: { region: true } },
+        lectureMethod: { select: { name: true } },
+      },
+    });
+  }
+
+  async trxReadManyLectureProgress(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<LectureScheduleResponseData[]> {
+    return await transaction.lecture.findMany({
+      where: { lecturerId, isActive: true },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async trxReadManyCompletedLectureScheduleCount(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    currentTime: Date,
+  ): Promise<number> {
+    return await transaction.lectureSchedule.count({
+      where: { lectureId, startDateTime: { lt: currentTime } },
+    });
+  }
+
+  async readManyCompletedLectureWithLecturerId(
+    lecturerId: number,
+  ): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, deletedAt: null, isActive: false },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+  async getLecturerLearnerPaymentsOverview(lecturerId: number, userId: number) {
+    return await this.prismaService.payment.findMany({
+      where: { userId, lecturerId, statusId: PaymentOrderStatus.DONE },
+      include: {
+        paymentProductType: true,
+        paymentCouponUsage: true,
+        paymentPassUsage: {
+          include: {
+            lecturePass: true,
+          },
+        },
+        reservation: {
+          include: { lectureSchedule: { include: { lecture: true } } },
+        },
+        userPass: true,
+      },
+    });
   }
 }

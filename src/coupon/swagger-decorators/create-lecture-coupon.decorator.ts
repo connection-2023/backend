@@ -17,8 +17,28 @@ export function ApiCreateLectureCoupon() {
     }),
     ApiBearerAuth(),
     ApiCreatedResponse(
-      SwaggerApiResponse.success('반환값 없음', {
-        status: 201,
+      SwaggerApiResponse.success('생성된 쿠폰 정보 반환', {
+        statusCode: 201,
+        data: {
+          coupon: {
+            id: 8,
+            lecturerId: 1,
+            title: '최최종 쿠폰',
+            percentage: null,
+            discountPrice: 5000,
+            maxDiscountPrice: null,
+            maxUsageCount: 100,
+            usageCount: 0,
+            isDisabled: false,
+            isStackable: false,
+            isPrivate: true,
+            startAt: '2023-01-19T00:00:00.000Z',
+            endAt: '2024-01-19T00:00:00.000Z',
+            createdAt: '2023-11-22T13:55:42.580Z',
+            updatedAt: '2023-11-22T13:55:42.580Z',
+            deletedAt: null,
+          },
+        },
       }),
     ),
     ApiBadRequestResponse(

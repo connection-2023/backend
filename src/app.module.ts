@@ -9,11 +9,16 @@ import { UserModule } from '@src/user/user.module';
 import { LectureModule } from '@src/lecture/lecture.module';
 import { PrismaModule } from '@src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CustomJwtModule } from './common/config/jwt-module.cofig';
-import { UploadsModule } from './uploads/uploads.module';
-import { CouponModule } from './coupon/coupon.module';
-import { PaymentsModule } from './payments/payments.module';
+import { CustomJwtModule } from '@src/common/config/jwt-module.cofig';
+import { UploadsModule } from '@src/uploads/uploads.module';
+import { CouponModule } from '@src/coupon/coupon.module';
+import { PaymentsModule } from '@src/payments/payments.module';
 import { TestModule } from '@src/apiTest/test.module';
+import { PassModule } from '@src/pass/pass.module';
+import { ReportModule } from '@src/report/report.module';
+import { AdminModule } from './admin/admin.module';
+import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -31,6 +36,11 @@ import { TestModule } from '@src/apiTest/test.module';
     UploadsModule,
     TestModule,
     PaymentsModule,
+    PassModule,
+    ReportModule,
+    AdminModule,
+    SuccessInterceptorModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

@@ -156,9 +156,6 @@ export class UserService {
     if (updateUserSetData) {
       return await this.userRepository.updateUser(userId, updateUserSetData);
     }
-
-    if (provider || authEmail) {
-    }
   }
 
   private async getRegisterConsentIds(

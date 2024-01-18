@@ -1,3 +1,4 @@
+import { Type } from '@nestjs/common';
 import { ApiErrorResponse } from '../interface/common-interface';
 
 export const SwaggerApiResponse: any = {

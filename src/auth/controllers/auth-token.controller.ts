@@ -59,6 +59,24 @@ export class AuthTokenController {
     return { userAccessToken: token.accessToken };
   }
 
+  //토큰 생성을 위한 임시 url
+  @Get('/test/admin/:adminId')
+  async getAdminAccessToken(
+    @Param('adminId') adminId: number,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const token: Token = await this.authTokenService.generateToken(
+      { adminId },
+      TokenTypes.Admin,
+    );
+
+    response.cookie('refreshToken', token.refreshToken, {
+      httpOnly: true,
+    });
+
+    return { adminAccessToken: token.accessToken };
+  }
+
   //유저 토큰 재발급
   // @ApiRefreshUserJwtToken()
   // @Get('/user/refresh')

@@ -18,6 +18,12 @@ import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { LectureLikeRepository } from './repositories/lecture-like.repository';
 import { LectureReviewLikeService } from './services/lecture-review-like.service';
 import { LectureReviewLikeRepository } from './repositories/lecture-review-like.repository';
+import { LectureReviewLikeController } from './controllers/lecture-review-like.controller';
+import { PopularLectureController } from './controllers/popular-lecture.controller';
+import { PopularLectureRepository } from './repositories/popular-lecture.repository';
+import { PopularLectureService } from './services/popular-lecture.service';
+import { LatestLectureController } from './controllers/latest-lecture.controller';
+import { LatestLectureService } from './services/latest-lecture.service';
 
 @Module({
   imports: [],
@@ -26,7 +32,9 @@ import { LectureReviewLikeRepository } from './repositories/lecture-review-like.
     LectureLikeController,
     LectureTemporarilySaveController,
     LectureReviewController,
-    LectureReviewController,
+    LectureReviewLikeController,
+    PopularLectureController,
+    LatestLectureController,
   ],
   providers: [
     LectureService,
@@ -42,6 +50,9 @@ import { LectureReviewLikeRepository } from './repositories/lecture-review-like.
     LectureLikeRepository,
     LectureReviewLikeService,
     LectureReviewLikeRepository,
+    PopularLectureService,
+    PopularLectureRepository,
+    LatestLectureService,
   ],
 })
 export class LectureModule {}

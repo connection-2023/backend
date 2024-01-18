@@ -1,3 +1,21 @@
+import { Users } from '@prisma/client';
+import { LectureImageDto } from '@src/common/dtos/lecture-image.dto';
+import { LectureLocationDto } from '@src/common/dtos/lecture-location.dto';
+import { LectureMethodDto } from '@src/common/dtos/lecture-method.dto';
+import { LectureNotificationDto } from '@src/common/dtos/lecture-notification.dto';
+import { LectureToDanceGenreDto } from '@src/common/dtos/lecture-to-dance-genre.dto';
+import { LectureToRegionDto } from '@src/common/dtos/lecture-to-region.dto';
+import { LectureTypeDto } from '@src/common/dtos/lecture-type.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
+import { LecturerDto } from '@src/common/dtos/lecturer.dto';
+import { LikedLectureDto } from '@src/common/dtos/liked-lecture.dto';
+
+interface ILecture extends Omit<LectureDto, 'stars'> {
+  stars: number;
+  lectureLocation: LectureLocationDto;
+  lectureNotification: LectureNotificationDto;
+}
+
 interface LectureInputData {
   isGroup: boolean;
   startDate: Date;
@@ -51,6 +69,7 @@ interface LectureHolidayInputData {
 
 interface RegularLectureSchedules {
   day: string[];
+  dateTime: string[];
   startDateTime: Date[];
 }
 
@@ -88,7 +107,92 @@ interface LikedLectureReviewWhereData {
   lecturerId?: number;
 }
 
+interface EnrollLectureReservationResponseData {
+  id: number;
+  userId: number;
+  paymentId: number;
+  lectureScheduleId: number;
+  representative: string;
+  phoneNumber: string;
+  participants: number;
+  requests: string | null;
+  lectureSchedule: {
+    startDateTime: Date;
+    lecture: {
+      id: number;
+      lecturerId: number;
+      title: string;
+    };
+  };
+}
+
+interface LectureScheduleResponseData {
+  id: number;
+  lecturerId: number;
+  lectureTypeId: number;
+  lectureMethodId: number;
+  isGroup: boolean;
+  startDate: Date;
+  endDate: Date;
+  title: string;
+  introduction: string;
+  curriculum: string;
+  duration: number;
+  difficultyLevel: string;
+  minCapacity: number;
+  maxCapacity: number;
+  reservationDeadline: number;
+  reservationComment: string;
+  price: number;
+  noShowDeposit: number;
+  reviewCount: number;
+  stars: number;
+  isActive: boolean;
+  locationDescription: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  _count: { lectureSchedule: number };
+}
+
+interface LectureScheduleParticipantResponseData {
+  reservation: {
+    user: {
+      id: number;
+      nickname: string;
+      userProfileImage: {
+        imageUrl: string;
+      };
+    };
+  }[];
+}
+
+interface DaySchedule {
+  day: string[];
+  dateTime: string[];
+}
+
+interface DayScheduleInputData {
+  lectureId: number;
+  day: string[];
+  dateTime: string[];
+}
+
+interface RegularLectureStatusInputData {
+  lectureId: number;
+  day: string[];
+  dateTime: string[];
+}
+
+interface RegularLectureSchedulesInputData {
+  regularLectureStatusId: number;
+  startDateTime: Date;
+  endDateTime: Date;
+  day: number;
+}
+
 export {
+  ILecture,
   LectureInputData,
   LectureToRegionInputData,
   LectureImageInputData,
@@ -103,4 +207,11 @@ export {
   LectureLocationInputData,
   LectureLikeInputData,
   LikedLectureReviewWhereData,
+  EnrollLectureReservationResponseData,
+  LectureScheduleResponseData,
+  LectureScheduleParticipantResponseData,
+  DaySchedule,
+  DayScheduleInputData,
+  RegularLectureStatusInputData,
+  RegularLectureSchedulesInputData,
 };

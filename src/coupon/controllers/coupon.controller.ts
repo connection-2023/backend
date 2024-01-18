@@ -1,10 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CouponService } from '@src/coupon/services/coupon.service';
@@ -19,25 +22,83 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { UpdateCouponTargetDto } from '@src/coupon/dtos/update-coupon-target.dto';
 import { ApiApplyLectureCoupon } from '@src/coupon/swagger-decorators/apply-lecture-coupon.decorator';
-import { ApiGetApplicableCouponsForLecture } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
+import { ApiGetCouponListByLectureId } from '@src/coupon/swagger-decorators/get-applicable-coupons-for-lecture.decorator';
 import { ApiGetPrivateLectureCouponCode } from '@src/coupon/swagger-decorators/get-private-lecture-coupon-code.decorator';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
-import { ApiIssuePrivateCouponToUser } from '../swagger-decorators/issue-private-coupon-to-user.decorator';
+import { ApiIssuePrivateCouponToUser } from '@src/coupon/swagger-decorators/issue-private-coupon-to-user.decorator';
+import { GetMyCouponListDto } from '@src/coupon/dtos/get-my-coupon-list.dto';
+import { GetMyIssuedCouponListDto } from '@src/coupon/dtos/get-my-issued-coupon-list.dto';
+import { UpdateCouponDto } from '@src/coupon/dtos/update-coupon.dto';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
+import { ApiUpdateLectureCoupon } from '@src/coupon/swagger-decorators/update-lecture-coupon.decorator';
+import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
+import { ApiDeleteLectureCoupon } from '@src/coupon/swagger-decorators/delete-coupon.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApplicableCouponDto } from '@src/coupon/dtos/applicable-coupon.dto';
+import { IssuePublicCouponToUserDto } from '@src/coupon/dtos/issue-public-coupons-to-user.dto';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
 export class CouponController {
   constructor(private couponService: CouponService) {}
 
+  @ApiGetCouponListByLectureId()
+  @SetResponseKey('couponList')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('/lectures/:lectureId')
+  async getCouponListByLectureId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ): Promise<ApplicableCouponDto[]> {
+    const userId = authorizedData?.user?.id;
+
+    return await this.couponService.getCouponListByLectureId(lectureId, userId);
+  }
+
+  @ApiUpdateLectureCoupon()
+  @Patch('/:couponId')
+  @SetResponseKey('updatedCoupon')
+  @UseGuards(LecturerAccessTokenGuard)
+  async updateCoupon(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Param('couponId', ParseIntPipe) couponId: number,
+    @Body() updateCouponDto: UpdateCouponDto,
+  ): Promise<LectureCouponDto> {
+    return await this.couponService.updateLectureCoupon(
+      AuthorizedData.lecturer.id,
+      couponId,
+      updateCouponDto,
+    );
+  }
+
+  @ApiDeleteLectureCoupon()
+  @Delete('/:couponId')
+  @UseGuards(AccessTokenGuard)
+  async deleteCoupon(
+    @GetAuthorizedUser() { user, lecturer }: ValidateResult,
+    @Param('couponId', ParseIntPipe) couponId: number,
+  ) {
+    if (user) {
+      await this.couponService.deleteUserCoupon(user.id, couponId);
+    }
+
+    if (lecturer) {
+      await this.couponService.deleteLectureCoupon(lecturer.id, couponId);
+    }
+  }
+
   @ApiGetMyCouponList()
   @Get('/user')
   @UseGuards(UserAccessTokenGuard)
-  async getMyCouponList(@GetAuthorizedUser() AuthorizedData: ValidateResult) {
-    const coupons = await this.couponService.getMyCouponList(
+  async getMyCouponList(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Query() getMyCouponListDto: GetMyCouponListDto,
+  ) {
+    return await this.couponService.getMyCouponList(
       AuthorizedData.user.id,
+      getMyCouponListDto,
     );
-
-    return { coupons };
   }
 
   @ApiGetMyIssuedCouponList()
@@ -45,36 +106,27 @@ export class CouponController {
   @UseGuards(LecturerAccessTokenGuard)
   async getMyIssuedCouponList(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Query() getMyIssuedCouponListDto: GetMyIssuedCouponListDto,
   ) {
-    const coupons = await this.couponService.getMyIssuedCouponList(
+    return await this.couponService.getMyIssuedCouponList(
       AuthorizedData.lecturer.id,
+      getMyIssuedCouponListDto,
     );
-
-    return { coupons };
   }
 
   @ApiCreateLectureCoupon()
-  @Post('/lectures')
+  @Post('/lecture')
   @UseGuards(LecturerAccessTokenGuard)
   async createLectureCoupon(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
     @Body() createLectureCouponDto: CreateLectureCouponDto,
   ) {
-    await this.couponService.createLectureCoupon(
+    const coupon = await this.couponService.createLectureCoupon(
       AuthorizedData.lecturer.id,
       createLectureCouponDto,
     );
-  }
 
-  @ApiGetApplicableCouponsForLecture()
-  @Get('/lectures/:lectureId')
-  async getApplicableCouponsForLecture(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-  ) {
-    const applicableCoupons =
-      await this.couponService.getApplicableCouponsForLecture(lectureId);
-
-    return { applicableCoupons };
+    return { coupon };
   }
 
   @ApiApplyLectureCoupon()
@@ -122,15 +174,15 @@ export class CouponController {
   }
 
   @ApiIssuePublicCouponToUser()
-  @Post('/public/:couponId/user')
+  @Post('/public/user')
   @UseGuards(UserAccessTokenGuard)
   async issuePublicCouponToUser(
-    @Param('couponId', ParseIntPipe) couponId: number,
+    @Body() issuePublicCouponToUserDto: IssuePublicCouponToUserDto,
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
-  ) {
+  ): Promise<void> {
     await this.couponService.issuePublicCouponToUser(
       AuthorizedData.user.id,
-      couponId,
+      issuePublicCouponToUserDto,
     );
   }
 }

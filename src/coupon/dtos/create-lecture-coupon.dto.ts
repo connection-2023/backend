@@ -1,43 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
-
-import {
-  registerDecorator,
-  ValidationOptions,
-  ValidationArguments,
-} from 'class-validator';
-
-function isEitherDiscountPriceOrPercentageFilled(
-  value: any,
-  args: ValidationArguments,
-): boolean {
-  const dto: CreateLectureCouponDto = args.object as CreateLectureCouponDto;
-  const discountPrice = dto.discountPrice;
-  const percentage = dto.percentage;
-
-  return (
-    (discountPrice !== null && discountPrice !== undefined) !==
-    (percentage !== null && percentage !== undefined)
-  );
-}
-
-export function IsEitherDiscountPriceOrPercentageFilled(
-  validationOptions?: ValidationOptions,
-) {
-  return function (object: Object, propertyName: string) {
-    registerDecorator({
-      name: 'isEitherDiscountPriceOrPercentageFilled',
-      target: object.constructor,
-      propertyName: propertyName,
-      constraints: [],
-      options: validationOptions,
-      validator: {
-        validate: isEitherDiscountPriceOrPercentageFilled,
-      },
-    });
-  };
-}
+import { IsEitherDiscountPriceOrPercentageFilled } from '../decorator/coupon.decorator';
+import { IsFutureDate } from '@src/common/validator/custom-validator';
 
 export class CreateLectureCouponDto {
   @ApiProperty({
@@ -92,8 +57,9 @@ export class CreateLectureCouponDto {
     description: '쿠폰 적용 종료 날짜',
     required: true,
   })
-  @IsNotEmpty()
+  @IsFutureDate({ message: 'endAt은 현재 시간보다 작을 수 없습니다.' })
   @Type(() => Date)
+  @IsNotEmpty()
   endAt: Date;
 
   @ApiProperty({
@@ -116,7 +82,7 @@ export class CreateLectureCouponDto {
 
   @ApiProperty({
     example: [1, 2],
-    description: '강의 Id',
+    description: '강의 Id/ 생략 가능',
     required: false,
   })
   @IsOptional()
