@@ -17,7 +17,6 @@ import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
@@ -39,6 +38,9 @@ import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ApiReadManyLectureSchedulesWithLecturerId } from '../swagger-decorators/read-many-lecture-schedules-with-lecturer-id-decorator';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { ApiReadManyDailySchedules } from '../swagger-decorators/read-many-daily-schedules.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApiReadOneLectureDetail } from '../swagger-decorators/read-one-lectire-detail.decorator';
+import { ApiReadOneLecturePreview } from '../swagger-decorators/read-one-lecture-preview.decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -58,27 +60,24 @@ export class LectureController {
     );
   }
 
-  @ApiReadOneLecture()
-  @UseGuards(UserAccessTokenGuard)
-  @Get(':lectureId/previews/users')
-  async readLectureWithUserId(
+  @ApiReadOneLecturePreview()
+  @SetResponseKey('lecturePreview')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get(':lectureId/previews')
+  async readLecturePreview(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    const lecture = await this.lectureService.readLecturePreview(
-      authorizedData.user.id,
-      lectureId,
-    );
+    const userId = authorizedData?.user?.id;
 
-    return lecture;
+    return await this.lectureService.readLecturePreview(lectureId, userId);
   }
 
-  @ApiReadOneLectureByNonMember()
-  @Get(':lectureId/previews/non-members')
-  async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
-    const lecture = await this.lectureService.readLecturePreview(lectureId);
-
-    return lecture;
+  @ApiReadOneLectureDetail()
+  @SetResponseKey('lectureDetail')
+  @Get(':lectureId/details')
+  async readLectureDetail(@Param('lectureId', ParseIntPipe) lectureId: number) {
+    return await this.lectureService.readLectureDetail(lectureId);
   }
 
   @ApiOperation({ summary: '강의 모두 보기' })

@@ -83,5 +83,7 @@ export class LecturePreviewDto extends BaseReturnDto {
           (dance) => new LectureToDanceGenreDto(dance),
         )
       : null;
+
+    Object.seal(this);
   }
 }
