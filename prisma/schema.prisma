@@ -448,6 +448,7 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
+  day                  Int
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
