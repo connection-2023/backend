@@ -68,11 +68,8 @@ export class LecturePreviewDto extends BaseReturnDto {
       ? lecture.lectureToRegion.map((region) => new LectureToRegionDto(region))
       : null;
 
-    this.isLike = lecture.likedLecture
-      ? lecture.likedLecture[0]
-        ? true
-        : false
-      : false;
+    this.isLike =
+      lecture.likedLecture || !lecture.likedLecture[0] ? false : true;
 
     this.lectureImage = lecture.lectureImage
       ? lecture.lectureImage.map((url) => new LectureImageDto(url))
