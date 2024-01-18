@@ -1,3 +1,4 @@
+import { UpdateUserDto } from './../dtos/update-user.dto';
 import { AuthService } from '@src/auth/services/auth.service';
 import { CreateUserDto } from '@src/user/dtos/create-user.dto';
 import { UserRepository } from '@src/user/repositories/user.repository';
@@ -114,6 +115,47 @@ export class UserService {
 
   async getMyProfile(userId: number) {
     return await this.userRepository.getMyProfile(userId);
+  }
+
+  async updateUser(userId: number, updateUserDto: UpdateUserDto) {
+    const { provider, authEmail, imageUrl, ...updateUserSetData } =
+      updateUserDto;
+
+    if (updateUserDto.email) {
+      const selectedEmailUser = await this.prismaServcie.users.findUnique({
+        where: { email: updateUserDto.email },
+      });
+      if (selectedEmailUser) {
+        throw new BadRequestException('사용 중인 이메일입니다.');
+      }
+    }
+    if (updateUserDto.nickname) {
+      const selectedNicknameUser = await this.prismaServcie.users.findUnique({
+        where: { nickname: updateUserDto.nickname },
+      });
+      if (selectedNicknameUser) {
+        throw new BadRequestException('사용 중인 닉네임입니다.');
+      }
+    }
+
+    if (updateUserDto.phoneNumber) {
+      const selectedPhoneNumberUser = await this.prismaServcie.users.findUnique(
+        {
+          where: { phoneNumber: updateUserDto.phoneNumber },
+        },
+      );
+      if (selectedPhoneNumberUser) {
+        throw new BadRequestException('사용 중인 번호입니다.');
+      }
+    }
+
+    if (imageUrl) {
+      await this.userRepository.updateUserImage(userId, imageUrl);
+    }
+
+    if (updateUserSetData) {
+      await this.userRepository.updateUser(userId, updateUserSetData);
+    }
   }
 
   private async getRegisterConsentIds(
