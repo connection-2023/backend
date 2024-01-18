@@ -33,6 +33,7 @@ import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto
 import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
+import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -696,5 +697,22 @@ export class LecturerService implements OnModuleInit {
     }
 
     return { cursor, skip, take: updatedTake };
+  }
+
+  async getLecturerLearnerPaymentsOverview(
+    lecturerId: number,
+    userId: number,
+  ): Promise<LearnerPaymentOverviewDto[]> {
+    const learnerPaymentOverView =
+      await this.lecturerRepository.getLecturerLearnerPaymentsOverview(
+        lecturerId,
+        userId,
+      );
+
+    return (
+      learnerPaymentOverView?.map(
+        (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
+      ) || []
+    );
   }
 }

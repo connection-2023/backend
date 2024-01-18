@@ -10,9 +10,11 @@ export class LecturerPaymentDto extends PaymentDto {
   })
   user: UserDto;
 
-  constructor(payment: Partial<LecturerPaymentDto>) {
+  constructor(lecturerPayment: Partial<LecturerPaymentDto>) {
+    const { user, ...payment } = lecturerPayment;
+
     super(payment);
-    this.user = new UserDto(payment.user);
+    this.user = new UserDto(user);
 
     Object.assign(this);
   }

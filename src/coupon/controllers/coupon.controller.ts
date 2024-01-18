@@ -33,9 +33,10 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
 import { ApiUpdateLectureCoupon } from '@src/coupon/swagger-decorators/update-lecture-coupon.decorator';
 import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
-import { ApiDeleteLectureCoupon } from '../swagger-decorators/delete-coupon.decorator';
+import { ApiDeleteLectureCoupon } from '@src/coupon/swagger-decorators/delete-coupon.decorator';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
-import { ApplicableCouponDto } from '../dtos/applicable-coupon.dto';
+import { ApplicableCouponDto } from '@src/coupon/dtos/applicable-coupon.dto';
+import { IssuePublicCouponToUserDto } from '@src/coupon/dtos/issue-public-coupons-to-user.dto';
 
 @ApiTags('쿠폰')
 @Controller('coupons')
@@ -173,15 +174,15 @@ export class CouponController {
   }
 
   @ApiIssuePublicCouponToUser()
-  @Post('/public/:couponId/user')
+  @Post('/public/user')
   @UseGuards(UserAccessTokenGuard)
   async issuePublicCouponToUser(
-    @Param('couponId', ParseIntPipe) couponId: number,
+    @Body() issuePublicCouponToUserDto: IssuePublicCouponToUserDto,
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
-  ) {
+  ): Promise<void> {
     await this.couponService.issuePublicCouponToUser(
       AuthorizedData.user.id,
-      couponId,
+      issuePublicCouponToUserDto,
     );
   }
 }

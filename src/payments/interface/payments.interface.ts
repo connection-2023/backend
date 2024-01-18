@@ -130,7 +130,7 @@ export interface IPaymentResult {
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
   reservation: IReservationInfo[];
-  userPass: IUserPass[];
+  userPass: IUserPass;
 }
 
 export interface ICardPaymentInfo {

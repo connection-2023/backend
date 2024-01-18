@@ -34,9 +34,9 @@ export enum PaymentProductTypes {
 }
 
 export enum PaymentHistoryTypes {
-  전체 = '전체',
-  클래스 = '클래스',
-  패스권 = '패스권',
+  전체 = 0,
+  클래스 = 1,
+  패스권 = 2,
 }
 
 export enum PaymentStatusForLecturer {
