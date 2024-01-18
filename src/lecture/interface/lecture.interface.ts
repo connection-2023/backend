@@ -41,7 +41,7 @@ interface LectureToRegionInputData {
 
 interface LectureScheduleInputData {
   lectureId: number;
-  day?: string[];
+  day: number;
   startDateTime: Date;
   endDateTime: Date;
   numberOfParticipants: number;
