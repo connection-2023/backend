@@ -7,6 +7,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadManyPopularLecturesWithUserId } from '../swagger-decorators/read-many-popular-lecture-with-user-id.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiReadManyPopularLecturesByNonMember } from '../swagger-decorators/read-many-popular-lectures-by-non-member.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 
 @ApiTags('인기 강의')
 @Controller('popular-lectures')
@@ -15,20 +16,14 @@ export class PopularLectureController {
 
   @ApiReadManyPopularLecturesWithUserId()
   @SetResponseKey('lectures')
-  @UseGuards(UserAccessTokenGuard)
-  @Get('users')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get()
   async readManyPopularLecturesWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
+    const userId = authorizedData?.user?.id;
     return await this.popularLectureService.readPopularLectureWithUserId(
-      authorizedData.user.id,
+      userId,
     );
-  }
-
-  @ApiReadManyPopularLecturesByNonMember()
-  @SetResponseKey('lectures')
-  @Get('non-members')
-  async readManyPopularLecturesByNonMember() {
-    return await this.popularLectureService.readPopularLecture();
   }
 }

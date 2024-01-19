@@ -7,7 +7,7 @@ import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto'
 export function ApiGetPopularLecturerByNonMember() {
   return applyDecorators(
     ApiOperation({
-      summary: '비회원용 인기 강사 조회 ',
+      summary: '인기 강사 조회 ',
     }),
     DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'lecturers', LecturerDto, {
       isArray: true,
