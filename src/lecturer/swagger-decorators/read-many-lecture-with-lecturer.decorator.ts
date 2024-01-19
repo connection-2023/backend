@@ -6,7 +6,7 @@ import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto'
 export function ApiReadManyLectureWithLecturer() {
   return applyDecorators(
     ApiOperation({
-      summary: '토큰 강사 id로 강의 조회',
+      summary: '강사 토큰 강사 id로 강의 조회',
     }),
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'lecture', LectureDto, {
