@@ -1,19 +1,36 @@
-import { Users } from '@prisma/client';
+import { Lecture, Users } from '@prisma/client';
 import { LectureImageDto } from '@src/common/dtos/lecture-image.dto';
 import { LectureLocationDto } from '@src/common/dtos/lecture-location.dto';
 import { LectureMethodDto } from '@src/common/dtos/lecture-method.dto';
 import { LectureNotificationDto } from '@src/common/dtos/lecture-notification.dto';
+import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 import { LectureToDanceGenreDto } from '@src/common/dtos/lecture-to-dance-genre.dto';
 import { LectureToRegionDto } from '@src/common/dtos/lecture-to-region.dto';
 import { LectureTypeDto } from '@src/common/dtos/lecture-type.dto';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
+import { LikedLectureReviewDto } from '@src/common/dtos/liked-lecture-review.dto';
 import { LikedLectureDto } from '@src/common/dtos/liked-lecture.dto';
+import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { UserDto } from '@src/common/dtos/user.dto';
 
 interface ILecture extends Omit<LectureDto, 'stars'> {
   stars: number;
   lectureLocation: LectureLocationDto;
   lectureNotification: LectureNotificationDto;
+  likedLecture: LikedLectureDto[];
+}
+
+interface ILectureReview
+  extends Omit<
+    LectureReviewDto,
+    'user' | 'lectureTitle' | 'isLike' | 'startDateTime' | 'likeCount'
+  > {
+  users: UserDto;
+  lecture: Lecture;
+  likedLectureReview?: LikedLectureReviewDto[];
+  reservation: ReservationDto;
+  _count: { [likedLectureReview: string]: number };
 }
 
 interface LectureInputData {
@@ -214,4 +231,5 @@ export {
   DayScheduleInputData,
   RegularLectureStatusInputData,
   RegularLectureSchedulesInputData,
+  ILectureReview,
 };

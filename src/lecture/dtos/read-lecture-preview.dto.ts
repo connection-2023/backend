@@ -69,7 +69,7 @@ export class LecturePreviewDto extends BaseReturnDto {
       : null;
 
     this.isLike =
-      lecture.likedLecture || !lecture.likedLecture[0] ? false : true;
+      lecture.likedLecture && lecture.likedLecture[0] ? true : false;
 
     this.lectureImage = lecture.lectureImage
       ? lecture.lectureImage.map((url) => new LectureImageDto(url))

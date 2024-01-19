@@ -36,8 +36,8 @@ import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-learner-list.decorator';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
-import { ApiReadManyLectureWithLecturer } from '@src/lecture/swagger-decorators/read-many-lecture-with-lecturers-decorator';
-import { ApiReadManyLectureByNonMemeber } from '@src/lecture/swagger-decorators/read-many-lecture-by-non-member-decorator';
+import { ApiReadManyLectureWithLecturer } from '@src/lecturer/swagger-decorators/read-many-lecture-with-lecturer.decorator';
+import { ApiReadManyLecture } from '@src/lecturer/swagger-decorators/read-many-lecture.decorator';
 import { ApiReadManyLectureProgress } from '@src/lecture/swagger-decorators/read-many-lecture-progress-decorator';
 import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
@@ -162,25 +162,30 @@ export class LecturerController {
   }
 
   @ApiReadManyLectureWithLecturer()
+  @SetResponseKey('lecture')
   @UseGuards(LecturerAccessTokenGuard)
   @Get('/lectures')
   async readManyLectureWithLecturerId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
-    const lecture = await this.lecturerService.readManyLectureWithLecturerId(
+    return await this.lecturerService.readManyLectureWithLecturerId(
       authorizedData.lecturer.id,
     );
-
-    return { lecture };
   }
 
-  @ApiReadManyLectureByNonMemeber()
-  @Get('/lectures/:lecturerId/non-members')
+  @ApiReadManyLecture()
+  @SetResponseKey('lecture')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('/lectures/:lecturerId')
   async readManyLectureByNonMember(
     @Param('lecturerId', ParseIntPipe) lecturerId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
+    const userId = authorizedData?.user?.id;
+
     const lecture = await this.lecturerService.readManyLectureWithLecturerId(
       lecturerId,
+      userId,
     );
 
     return { lecture };

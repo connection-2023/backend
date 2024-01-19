@@ -26,24 +26,27 @@ export class PopularLectureRepository {
   async trxReadLectureWithUserId(
     transaction: PrismaTransaction,
     lectureId: number,
-    userId: number,
+    userId?: number,
   ): Promise<Lecture> {
+    const include = {
+      lecturer: true,
+      lectureToDanceGenre: {
+        include: { danceCategory: true },
+      },
+      lectureToRegion: {
+        include: {
+          region: true,
+        },
+      },
+      lectureDay: true,
+      lectureImage: true,
+    };
+
+    userId ? (include['likedLecture'] = { where: { userId } }) : false;
+
     return await transaction.lecture.findFirst({
       where: { id: lectureId, isActive: true },
-      include: {
-        lecturer: true,
-        lectureToDanceGenre: {
-          include: { danceCategory: true },
-        },
-        lectureToRegion: {
-          include: {
-            region: true,
-          },
-        },
-        lectureDay: true,
-        likedLecture: { where: { userId } },
-        lectureImage: true,
-      },
+      include,
     });
   }
 
