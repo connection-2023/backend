@@ -324,17 +324,26 @@ export class LecturerRepository {
     }
   }
 
-  async readManyLectureWithLectruerId(lecturerId: number): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({
-      where: { lecturerId },
-      include: {
-        lectureImage: { select: { imageUrl: true } },
-        lectureToDanceGenre: {
-          select: { danceCategory: { select: { genre: true } } },
-        },
-        lectureToRegion: { select: { region: true } },
-        lectureMethod: { select: { name: true } },
+  async readManyLectureWithLectruerId(
+    lecturerId: number,
+    userId?: number,
+  ): Promise<Lecture[]> {
+    const include = {
+      lectureImage: true,
+      lectureToDanceGenre: {
+        include: { danceCategory: true },
       },
+      lectureToRegion: { select: { region: true } },
+      lectureMethod: { select: { name: true } },
+      lecturer: true,
+    };
+
+    userId ? (include['likedLecture'] = { where: { userId } }) : false;
+
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, isActive: true },
+      include,
+      orderBy: { id: 'desc' },
     });
   }
 

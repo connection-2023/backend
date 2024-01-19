@@ -14,6 +14,7 @@ interface ILecture extends Omit<LectureDto, 'stars'> {
   stars: number;
   lectureLocation: LectureLocationDto;
   lectureNotification: LectureNotificationDto;
+  likedLecture: LikedLectureDto[];
 }
 
 interface LectureInputData {

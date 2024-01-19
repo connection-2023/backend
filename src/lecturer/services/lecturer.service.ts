@@ -34,6 +34,7 @@ import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -334,10 +335,13 @@ export class LecturerService implements OnModuleInit {
     );
   }
 
-  async readManyLectureWithLecturerId(lecturerId: number) {
-    return await this.lecturerRepository.readManyLectureWithLectruerId(
-      lecturerId,
-    );
+  async readManyLectureWithLecturerId(lecturerId: number, userId?: number) {
+    const lectures =
+      await this.lecturerRepository.readManyLectureWithLectruerId(
+        lecturerId,
+        userId,
+      );
+    return lectures.map((lecture) => new LectureDto(lecture));
   }
 
   async readManyLectureProgress(

@@ -69,8 +69,8 @@ export class LectureDto extends BaseReturnDto {
   })
   lectureImage?: LectureImageDto[];
 
-  @ApiProperty({ description: '좋아요 여부', type: LikedLectureDto })
-  likedLecture?: LikedLectureDto[];
+  @ApiProperty({ description: '좋아요 여부' })
+  isLike: boolean;
 
   lecturerId: number;
   lectureTypeId: number;
@@ -116,9 +116,8 @@ export class LectureDto extends BaseReturnDto {
       ? new LectureMethodDto(lecture.lectureMethod)
       : undefined;
 
-    this.likedLecture = lecture.likedLecture
-      ? lecture.likedLecture.map((like) => new LikedLectureDto(like))
-      : undefined;
+    this.isLike =
+      lecture.likedLecture && lecture.likedLecture[0] ? true : false;
 
     this.lecturer = lecture.lecturer
       ? new LecturerDto(lecture.lecturer)
