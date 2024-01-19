@@ -7,7 +7,7 @@ import { LectureDto } from '@src/common/dtos/lecture.dto';
 export function ApiReadManyPopularLecturesWithUserId() {
   return applyDecorators(
     ApiOperation({
-      summary: '유저용 인기 강의 조회',
+      summary: '회원/비회원 인기 강의 조회',
     }),
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'lectures', LectureDto, {

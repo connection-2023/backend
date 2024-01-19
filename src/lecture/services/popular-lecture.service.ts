@@ -11,7 +11,7 @@ export class PopularLectureService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async readPopularLectureWithUserId(userId: number): Promise<LectureDto[]> {
+  async readPopularLectureWithUserId(userId?: number): Promise<LectureDto[]> {
     return await this.prismaService.$transaction(
       async (trasaction: PrismaTransaction) => {
         const popularScores = [];
