@@ -26,10 +26,9 @@ import { ApiReadManyReservationThatCanBeCreated } from '../swagger-decorators/re
 import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';
 import { ApiReadManyLecturerMyReview } from '../swagger-decorators/read-many-lecturer-my-reivew-decorator';
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
-import { ApiReadManyLecturerReviewWithUserId } from '../swagger-decorators/read-many-lecturer-review-with-user-id-decorator';
-import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-reivew-decorator';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-review.decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -140,7 +139,7 @@ export class LectureReviewController {
   }
 
   @SetResponseKey('lecturerReviews')
-  @ApiReadManyLecturerReviewWithUserId()
+  @ApiReadManyLecturerReview()
   @UseGuards(AllowUserAndGuestGuard)
   @Get('lecturers/:lecturerId')
   async readManyLecturerReviewWithUserId(
