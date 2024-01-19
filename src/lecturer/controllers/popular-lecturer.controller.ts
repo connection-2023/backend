@@ -15,21 +15,9 @@ export class PopularLecturerController {
     private readonly popularLecturerService: PopularLecturerService,
   ) {}
 
-  @ApiGetPopularLecturer()
-  @SetResponseKey('lecturers')
-  @UseGuards(UserAccessTokenGuard)
-  @Get('users')
-  async readManyPopularLecturerWithUserId(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    return await this.popularLecturerService.readManyPopularLecturer(
-      authorizedData.user.id,
-    );
-  }
-
   @ApiGetPopularLecturerByNonMember()
   @SetResponseKey('lecturers')
-  @Get('non-members')
+  @Get()
   async readManyPopularLecturerByNonMember() {
     return await this.popularLecturerService.readManyPopularLecturer();
   }

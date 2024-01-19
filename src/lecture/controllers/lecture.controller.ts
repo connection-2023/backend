@@ -23,7 +23,7 @@ import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lect
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
 import { ApiReadOneLectureByNonMember } from '../swagger-decorators/read-one-lecture-by-lecturer-non-member-decorator';
-import { ApiReadManyLectureWithLecturer } from '../../lecturer/swagger-decorators/read-many-lecture-with-lecturers-decorator';
+import { ApiReadManyLectureWithLecturer } from '../../lecturer/swagger-decorators/read-many-lecture-with-lecturer.decorator';
 import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
