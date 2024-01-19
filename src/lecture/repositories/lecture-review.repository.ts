@@ -7,6 +7,7 @@ import {
   ICursor,
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
+import { ILectureReview } from '../interface/lecture.interface';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -106,7 +107,7 @@ export class LectureReviewRepository {
     });
   }
 
-  async readManyLectureReviewByLectureWithUserId(
+  async readManyLectureReview(
     lectureId: number,
     order,
     userId?: number,
@@ -254,74 +255,36 @@ export class LectureReviewRepository {
     });
   }
 
-  async readManyLecturerReviewWithUserId(
-    lecturerId: number,
-    userId: number,
-    take: number,
-    orderBy,
-    cursor?: ICursor,
-    skip?: number,
-  ): Promise<LectureReview[]> {
-    return await this.prismaService.lectureReview.findMany({
-      where: { lecture: { lecturerId } },
-      take,
-      skip,
-      cursor,
-      include: {
-        reservation: {
-          select: {
-            lectureSchedule: {
-              select: {
-                startDateTime: true,
-                lecture: { select: { title: true } },
-              },
-            },
-          },
-        },
-        users: {
-          select: {
-            nickname: true,
-            userProfileImage: { select: { imageUrl: true } },
-          },
-        },
-        likedLectureReview: { where: { userId } },
-        _count: { select: { likedLectureReview: true } },
-      },
-      orderBy,
-    });
-  }
-
   async readManyLecturerReview(
     lecturerId: number,
     take: number,
     orderBy,
     cursor?: ICursor,
     skip?: number,
-  ): Promise<LectureReview[]> {
+    userId?: number,
+  ): Promise<ILectureReview[]> {
+    const include = {
+      reservation: {
+        include: {
+          lectureSchedule: true,
+        },
+      },
+      lecture: true,
+      users: {
+        include: {
+          userProfileImage: true,
+        },
+      },
+      _count: { select: { likedLectureReview: true } },
+    };
+    userId ? (include['likedLectureReview'] = { where: { userId } }) : false;
+
     return await this.prismaService.lectureReview.findMany({
       where: { lecture: { lecturerId } },
       take,
       skip,
       cursor,
-      include: {
-        reservation: {
-          select: {
-            lectureSchedule: {
-              select: {
-                startDateTime: true,
-                lecture: { select: { title: true } },
-              },
-            },
-          },
-        },
-        users: {
-          select: {
-            nickname: true,
-            userProfileImage: { select: { imageUrl: true } },
-          },
-        },
-        _count: { select: { likedLectureReview: true } },
-      },
+      include,
       orderBy,
     });
   }

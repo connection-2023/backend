@@ -140,29 +140,19 @@ export class LectureReviewController {
   }
 
   @ApiReadManyLecturerReviewWithUserId()
-  @UseGuards(UserAccessTokenGuard)
-  @Get('lecturers/:lecturerId/users')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('lecturers/:lecturerId')
   async readManyLecturerReviewWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLecturerReviewQueryDto,
     @Param('lecturerId', ParseIntPipe) lecturerId: number,
   ) {
-    return await this.lectureReviewService.readManyLecturerReviewWithUserId(
-      lecturerId,
-      authorizedData.user.id,
-      query,
-    );
-  }
+    const userId = authorizedData?.user?.id;
 
-  @ApiReadManyLecturerReview()
-  @Get('lecturers/:lecturerId/non-members')
-  async readManyLecturerReview(
-    @Query() query: ReadManyLecturerReviewQueryDto,
-    @Param('lecturerId', ParseIntPipe) lecturerId: number,
-  ) {
     return await this.lectureReviewService.readManyLecturerReview(
       lecturerId,
       query,
+      userId,
     );
   }
 }

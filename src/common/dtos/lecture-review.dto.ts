@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseReturnDto } from './base-return.dto';
 import { ReviewUserDto } from '@src/lecture/dtos/read-review-user.dto';
-import { ILectureReivew } from '@src/lecture/interface/lecture.interface';
+import { ILectureReview } from '@src/lecture/interface/lecture.interface';
 import { UserDto } from './user.dto';
 
 export class LectureReviewDto extends BaseReturnDto {
@@ -36,11 +36,11 @@ export class LectureReviewDto extends BaseReturnDto {
   isLike: boolean;
 
   @ApiProperty({ description: '리뷰 좋아요 수', type: Number })
-  count: number;
+  likeCount: number;
 
   deletedAt: Date;
 
-  constructor(review: Partial<ILectureReivew>) {
+  constructor(review: Partial<ILectureReview>) {
     super();
 
     this.id = review.id;
@@ -54,7 +54,7 @@ export class LectureReviewDto extends BaseReturnDto {
     this.startDateTime = review.reservation.lectureSchedule.startDateTime;
     this.isLike =
       review.likedLectureReview && review.likedLectureReview[0] ? true : false;
-    this.count = review._count.likedLectureReview;
+    this.likeCount = review._count.likedLectureReview;
 
     Object.seal(this);
   }
