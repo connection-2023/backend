@@ -10,6 +10,7 @@ import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-query.dto';
 import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
+import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -61,9 +62,9 @@ export class LectureReviewService {
   }
 
   async readManyLectureReviewWithUserId(
-    userId: number,
     lectureId: number,
     orderBy: string,
+    userId?: number,
   ) {
     const order = [];
 
@@ -92,89 +93,11 @@ export class LectureReviewService {
     const readedReviews =
       await this.lectureReviewRepository.readManyLectureReviewByLectureWithUserId(
         lectureId,
+        order,
         userId,
-        order,
       );
-    const reviews = [];
 
-    for (const review of readedReviews) {
-      const {
-        _count,
-        likedLectureReview,
-        lecture,
-        reservation,
-        users,
-        ...reviewObj
-      } = review;
-      const { userProfileImage, phoneNumber, email, gender, name, ...user } =
-        users;
-
-      user['profileImage'] = userProfileImage.imageUrl;
-
-      reviewObj['user'] = user;
-      reviewObj['lectureTitle'] = lecture.title;
-      reviewObj['startDateTime'] = reservation.lectureSchedule.startDateTime;
-
-      if (likedLectureReview[0]) {
-        reviewObj['isLike'] = true;
-      } else {
-        reviewObj['isLike'] = false;
-      }
-      reviews.push(reviewObj);
-      reviewObj['count'] = _count.likedLectureReview;
-    }
-
-    return reviews;
-  }
-
-  async readManyLectureReviewNonMember(lectureId: number, orderBy: string) {
-    const order = [];
-
-    if (orderBy === '최신순') {
-      order.push({
-        reservation: {
-          lectureSchedule: {
-            startDateTime: 'desc',
-          },
-        },
-      });
-    } else if (orderBy === '좋아요순') {
-      order.push({
-        likedLectureReview: {
-          _count: 'desc',
-        },
-      });
-    } else if (orderBy === '평점 높은순') {
-      order.push({ stars: 'desc' });
-    } else if (orderBy === '평점 낮은순') {
-      order.push({ stars: 'asc' });
-    }
-
-    order.push({ id: 'desc' });
-
-    const readedReviews =
-      await this.lectureReviewRepository.readManyLectureReviewByLecture(
-        lectureId,
-        order,
-      );
-    const reviews = [];
-
-    for (const review of readedReviews) {
-      const { _count, lecture, reservation, users, ...reviewObj } = review;
-      const { userProfileImage, phoneNumber, email, gender, name, ...user } =
-        users;
-
-      user['profileImage'] = userProfileImage.imageUrl;
-
-      reviewObj['user'] = user;
-      reviewObj['lectureTitle'] = lecture.title;
-      reviewObj['startDateTime'] = reservation.lectureSchedule.startDateTime;
-
-      reviews.push(reviewObj);
-      reviewObj['count'] = _count.likedLectureReview;
-    }
-
-    return reviews;
+    return readedReviews.map((review) => new LectureReviewDto(review));
   }
 
   async updateLectureReview(

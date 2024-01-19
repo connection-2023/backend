@@ -5,11 +5,8 @@ import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import {
   ICursor,
-  Id,
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
-import { LectureReviewResponseDto } from '../dtos/read-many-lecture-review-response.dto';
-import { title } from 'process';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -111,42 +108,25 @@ export class LectureReviewRepository {
 
   async readManyLectureReviewByLectureWithUserId(
     lectureId: number,
-    userId: number,
     order,
-  ): Promise<LectureReviewResponseDto[]> {
-    return await this.prismaService.lectureReview.findMany({
-      where: { lectureId, deletedAt: null },
-      include: {
-        reservation: {
-          select: { lectureSchedule: { select: { startDateTime: true } } },
-        },
-        users: {
-          include: { userProfileImage: { select: { imageUrl: true } } },
-        },
-        lecture: { select: { title: true } },
-        likedLectureReview: { where: { userId } },
-        _count: { select: { likedLectureReview: true } },
+    userId?: number,
+  ): Promise<LectureReview[]> {
+    const include = {
+      reservation: {
+        include: { lectureSchedule: true },
       },
-      orderBy: order,
-    });
-  }
+      users: {
+        include: { userProfileImage: true },
+      },
+      lecture: true,
+      _count: { select: { likedLectureReview: true } },
+    };
 
-  async readManyLectureReviewByLecture(
-    lectureId: number,
-    order,
-  ): Promise<LectureReviewResponseDto[]> {
+    userId ? (include['likedLectureReview'] = { where: { userId } }) : false;
+
     return await this.prismaService.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
-      include: {
-        reservation: {
-          select: { lectureSchedule: { select: { startDateTime: true } } },
-        },
-        users: {
-          include: { userProfileImage: { select: { imageUrl: true } } },
-        },
-        lecture: { select: { title: true } },
-        _count: { select: { likedLectureReview: true } },
-      },
+      include,
       orderBy: order,
     });
   }

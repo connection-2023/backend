@@ -28,6 +28,8 @@ import { ApiReadManyLecturerMyReview } from '../swagger-decorators/read-many-lec
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { ApiReadManyLecturerReviewWithUserId } from '../swagger-decorators/read-many-lecturer-review-with-user-id-decorator';
 import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-reivew-decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -67,38 +69,21 @@ export class LectureReviewController {
   }
 
   @ApiReadManyLectureReview()
-  @UseGuards(UserAccessTokenGuard)
-  @Get('lectures/:lectureId/users')
+  @SetResponseKey('review')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('lectures/:lectureId')
   async readManyLectureReviewWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureReviewQueryDto,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
     const { orderBy } = query;
-    const review =
-      await this.lectureReviewService.readManyLectureReviewWithUserId(
-        authorizedData.user.id,
-        lectureId,
-        orderBy,
-      );
-
-    return { review };
-  }
-
-  @ApiReadManyLectureReviewNonMember()
-  @Get('lectures/:lectureId/non-members')
-  async readManyLectureReviewWithNonMember(
-    @Query() query: ReadManyLectureReviewQueryDto,
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-  ) {
-    const { orderBy } = query;
-    const review =
-      await this.lectureReviewService.readManyLectureReviewNonMember(
-        lectureId,
-        orderBy,
-      );
-
-    return { review };
+    const userId = authorizedData?.user?.id;
+    return await this.lectureReviewService.readManyLectureReviewWithUserId(
+      lectureId,
+      orderBy,
+      userId,
+    );
   }
 
   @ApiOperation({ summary: '강의 리뷰 삭제' })
