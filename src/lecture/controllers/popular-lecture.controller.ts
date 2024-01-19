@@ -22,8 +22,6 @@ export class PopularLectureController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
   ) {
     const userId = authorizedData?.user?.id;
-    return await this.popularLectureService.readPopularLectureWithUserId(
-      userId,
-    );
+    return await this.popularLectureService.readPopularLecture(userId);
   }
 }
