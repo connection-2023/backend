@@ -20,7 +20,6 @@ import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-
 import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
-import { ApiReadManyLectureReviewNonMember } from '../swagger-decorators/read-many-lecture-review-non-member-decorator';
 import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
 import { ApiReadManyReservationThatCanBeCreated } from '../swagger-decorators/read-many-reservation-that-can-be-created-decorator';
 import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';

@@ -6,7 +6,6 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadManyPopularLecturesWithUserId } from '../swagger-decorators/read-many-popular-lecture-with-user-id.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
-import { ApiReadManyPopularLecturesByNonMember } from '../swagger-decorators/read-many-popular-lectures-by-non-member.decorator';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 
 @ApiTags('인기 강의')
