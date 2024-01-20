@@ -61,11 +61,12 @@ export class LectureDetailDto {
     this.notification = new LectureNotificationDto(lecture.lectureNotification);
     this.introduction = lecture.introduction;
     this.curriculum = lecture.curriculum;
-    this.maxCapacity = lecture.maxCapacity;
     this.minCapacity = lecture.minCapacity;
     this.reviewCount = lecture.reviewCount;
     this.locationDescription = lecture.locationDescription;
-    this.location = new LectureLocationDto(lecture.lectureLocation);
+    this.location = lecture.lectureLocation
+      ? new LectureLocationDto(lecture.lectureLocation)
+      : undefined;
 
     Object.assign(this);
   }

@@ -3,12 +3,12 @@ import { BaseReturnDto } from './base-return.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { LectureDto } from './lecture.dto';
 
-export class LectureNotificationDto implements LectureNotification {
+export class LectureNotificationDto {
   @ApiProperty({ description: '공지 id', type: Number })
   id: number;
 
   @ApiProperty({ description: '공지사항' })
-  notification: string;
+  content: string;
 
   @ApiProperty({ description: '수정일', type: Date })
   updatedAt: Date;
@@ -18,9 +18,9 @@ export class LectureNotificationDto implements LectureNotification {
 
   lecture: LectureDto;
 
-  constructor(lectureNotification: Partial<LectureNotificationDto>) {
+  constructor(lectureNotification: Partial<LectureNotification>) {
     this.id = lectureNotification.id;
-    this.notification = lectureNotification.notification;
+    this.content = lectureNotification.notification;
     this.updatedAt = lectureNotification.updatedAt;
 
     Object.assign(this);
