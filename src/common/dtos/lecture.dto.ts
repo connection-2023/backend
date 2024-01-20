@@ -106,11 +106,11 @@ export class LectureDto extends BaseReturnDto {
       ? lecture.lectureToDanceGenre.map(
           (dance) => new LectureToDanceGenreDto(dance),
         )
-      : null;
+      : undefined;
 
     this.lectureToRegion = lecture.lectureToRegion
       ? lecture.lectureToRegion.map((region) => new LectureToRegionDto(region))
-      : null;
+      : undefined;
 
     this.lectureMethod = lecture.lectureMethod
       ? new LectureMethodDto(lecture.lectureMethod)
@@ -125,7 +125,7 @@ export class LectureDto extends BaseReturnDto {
 
     this.lectureImage = lecture.lectureImage
       ? lecture.lectureImage.map((url) => new LectureImageDto(url))
-      : null;
+      : undefined;
 
     Object.seal(this);
   }
