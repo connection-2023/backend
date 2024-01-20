@@ -15,10 +15,12 @@ export class LecturerDto extends BaseReturnDto implements Lecturer {
   })
   nickname: string;
 
+  @ApiProperty({ description: '강사 카드 이미지' })
+  profileCardImageUrl: string;
+
   userId: number;
   email: string;
   phoneNumber: string;
-  profileCardImageUrl: string;
   youtubeUrl: string;
   instagramUrl: string;
   homepageUrl: string;
@@ -50,7 +52,7 @@ export class LecturerDto extends BaseReturnDto implements Lecturer {
       ? lecturer.lecturerProfileImageUrl.map(
           (lecturerProfile) => new LecturerProfileImageDto(lecturerProfile),
         )
-      : null;
+      : undefined;
 
     Object.seal(this);
   }
