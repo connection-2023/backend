@@ -9,6 +9,9 @@ export class LecturePreviewDto extends BaseReturnDto {
   @ApiProperty({ description: '강의 id', type: Number })
   id: number;
 
+  @ApiProperty({ description: '강사 id', type: Number })
+  lecturerId: number;
+
   @ApiProperty({ description: '강의 제목' })
   title: string;
 
@@ -56,6 +59,7 @@ export class LecturePreviewDto extends BaseReturnDto {
     super();
 
     this.id = lecture.id;
+    this.lecturerId = lecture.lecturerId;
     this.title = lecture.title;
     this.lectureImage = lecture.lectureImage;
     this.stars = lecture.stars.toFixed(1);
