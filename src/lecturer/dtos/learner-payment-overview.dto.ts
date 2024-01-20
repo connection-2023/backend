@@ -53,11 +53,11 @@ export class LearnerPaymentOverviewDto
   paymentCouponUsage: PaymentCouponUsageDto;
 
   @ApiProperty({
-    type: [ReservationDto],
+    type: ReservationDto,
     description: '예약 정보',
     nullable: true,
   })
-  reservation: ReservationDto[];
+  reservation: ReservationDto;
 
   @ApiProperty({
     type: PaymentPassUsageDto,
@@ -86,14 +86,11 @@ export class LearnerPaymentOverviewDto
     );
 
     this.reservation = learnerOverview.reservation
-      ? learnerOverview.reservation.map(
-          (reservation) => new ReservationDto(reservation),
-        )
+      ? new ReservationDto(learnerOverview.reservation)
       : null;
     this.paymentCouponUsage = learnerOverview.paymentCouponUsage
       ? new PaymentCouponUsageDto(learnerOverview.paymentCouponUsage)
       : null;
-
     this.paymentPassUsage = learnerOverview.paymentPassUsage
       ? new PaymentPassUsageDto(learnerOverview.paymentPassUsage)
       : null;

@@ -779,10 +779,14 @@ export class PaymentsRepository {
           reservation: {
             include: {
               lectureSchedule: {
-                include: { lecture: { include: { lectureImage: true } } },
+                include: {
+                  lecture: { include: { lectureImage: true } },
+                },
               },
+              regularLectureStatus: { include: { lecture: true } },
             },
           },
+
           cardPaymentInfo: { include: { issuer: true, acquirer: true } },
           virtualAccountPaymentInfo: { include: { bank: true } },
           paymentPassUsage: {
@@ -1003,13 +1007,12 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ): Promise<void> {
     try {
       await transaction.lecturerLearner.upsert({
         where: { userId_lecturerId: { userId, lecturerId } },
-        create: { userId, lecturerId, enrollmentCount },
-        update: { enrollmentCount: { increment: enrollmentCount } },
+        create: { userId, lecturerId, enrollmentCount: 1 },
+        update: { enrollmentCount: { increment: 1 } },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -1034,11 +1037,10 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ) {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
-      data: { enrollmentCount: { decrement: enrollmentCount } },
+      data: { enrollmentCount: { decrement: 1 } },
     });
   }
 
@@ -1120,7 +1122,10 @@ export class PaymentsRepository {
           include: { refundStatus: true, refundUserBankAccount: true },
         },
         reservation: {
-          include: { lectureSchedule: { include: { lecture: true } } },
+          include: {
+            lectureSchedule: { include: { lecture: true } },
+            regularLectureStatus: { include: { lecture: true } },
+          },
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
@@ -1143,7 +1148,7 @@ export class PaymentsRepository {
         paymentMethodId: {
           in: [PaymentMethods.현장결제, PaymentMethods.선결제],
         },
-        reservation: { some: { lectureSchedule: { lectureId } } },
+        reservation: { lectureSchedule: { lectureId } },
       },
       include: {
         user: { include: { userProfileImage: true } },
@@ -1156,7 +1161,10 @@ export class PaymentsRepository {
           include: { refundStatus: true, refundUserBankAccount: true },
         },
         reservation: {
-          include: { lectureSchedule: true },
+          include: {
+            lectureSchedule: true,
+            regularLectureStatus: true,
+          },
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
@@ -1216,11 +1224,10 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ) {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
-      data: { enrollmentCount: { increment: enrollmentCount } },
+      data: { enrollmentCount: { increment: 1 } },
     });
   }
 

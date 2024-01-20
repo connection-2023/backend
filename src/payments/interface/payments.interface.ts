@@ -129,7 +129,7 @@ export interface IPaymentResult {
   };
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
-  reservation: IReservationInfo[];
+  reservation: IReservationInfo;
   userPass: IUserPass;
 }
 
@@ -239,7 +239,7 @@ export interface IRefundPaymentUpdateData {
 
 export interface IPayment extends Payment {
   transferPaymentInfo: TransferPaymentInfo;
-  reservation: IReservation[];
+  reservation: IReservation;
 }
 
 export interface IReservation extends Reservation {

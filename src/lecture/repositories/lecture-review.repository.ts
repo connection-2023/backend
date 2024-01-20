@@ -267,6 +267,7 @@ export class LectureReviewRepository {
       reservation: {
         include: {
           lectureSchedule: true,
+          regularLectureStatus: true,
         },
       },
       lecture: true,

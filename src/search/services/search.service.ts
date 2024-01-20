@@ -23,7 +23,11 @@ import {
 } from '@src/search/enum/search.enum';
 import { EsLectureDto } from '@src/search/dtos/es-lecture.dto';
 import { EsLecturerDto } from '@src/search/dtos/es-lecturer.dto';
-import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
+import {
+  DanceCategory,
+  DanceMethod,
+  TemporaryWeek,
+} from '@src/common/enum/enum';
 import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
 
 @Injectable()
@@ -528,7 +532,7 @@ export class SearchService {
     }
   }
 
-  private buildDayQuery(days: Week[]) {
+  private buildDayQuery(days: TemporaryWeek[]) {
     const dayQuery =
       days && days.length > 0
         ? days.map((day) => ({ match: { 'days.day': day } }))

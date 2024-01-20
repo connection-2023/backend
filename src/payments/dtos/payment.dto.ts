@@ -87,11 +87,11 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   refundPaymentInfo: RefundPaymentInfoDto;
 
   @ApiProperty({
-    type: [ReservationDto],
+    type: ReservationDto,
     description: '예약 정보',
     nullable: true,
   })
-  reservation: ReservationDto[];
+  reservation: ReservationDto;
 
   @ApiProperty({
     type: PaymentPassUsageDto,
@@ -122,9 +122,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
       ? new PaymentMethodDto(payment.paymentMethod)
       : null;
     this.reservation = payment.reservation
-      ? payment.reservation.map(
-          (reservation) => new ReservationDto(reservation),
-        )
+      ? new ReservationDto(payment.reservation)
       : null;
     this.paymentCouponUsage = payment.paymentCouponUsage
       ? new PaymentCouponUsageDto(payment.paymentCouponUsage)

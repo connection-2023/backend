@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Reservation } from '@prisma/client';
 import { LectureScheduleDto } from './lecture-schedule.dto';
+import { RegularLectureStatusDto } from './regular-lecture-status.dto';
 
 export class ReservationDto implements Reservation {
   @ApiProperty({
@@ -11,6 +12,8 @@ export class ReservationDto implements Reservation {
   userId: number;
   paymentId: number;
   lectureScheduleId: number;
+  regularLectureStatusId: number;
+
   @ApiProperty({
     description: '예약자명',
   })
@@ -39,6 +42,12 @@ export class ReservationDto implements Reservation {
   })
   lectureSchedule: LectureScheduleDto;
 
+  @ApiProperty({
+    description: '일정',
+    type: RegularLectureStatusDto,
+  })
+  regularLectureStatus: RegularLectureStatusDto;
+
   constructor(reservation: Partial<ReservationDto>) {
     this.id = reservation.id;
     this.representative = reservation.representative;
@@ -46,7 +55,12 @@ export class ReservationDto implements Reservation {
     this.participants = reservation.participants;
     this.requests = reservation.requests;
 
-    this.lectureSchedule = new LectureScheduleDto(reservation.lectureSchedule);
+    this.lectureSchedule = reservation.lectureSchedule
+      ? new LectureScheduleDto(reservation.lectureSchedule)
+      : null;
+    this.regularLectureStatus = reservation.regularLectureStatus
+      ? new RegularLectureStatusDto(reservation.regularLectureStatus)
+      : null;
 
     Object.seal(this);
   }
