@@ -242,6 +242,7 @@ export class LecturerPaymentsService {
     isIncrement: boolean,
     lectureMaxCapacity?: number,
   ): Promise<void> {
+    const { reservation } = payment;
     const trxUpdateParticipantsMethod = isIncrement
       ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
       : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
@@ -251,29 +252,26 @@ export class LecturerPaymentsService {
       : this.paymentsRepository.trxDecrementLectureLearner;
 
     //각 스케쥴의 현재 인원 수정
-    for (const reservation of payment.reservation) {
-      //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
-      if (isIncrement && lectureMaxCapacity) {
-        const remainingCapacity =
-          lectureMaxCapacity - reservation.lectureSchedule.numberOfParticipants;
+    //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
+    if (isIncrement && lectureMaxCapacity) {
+      const remainingCapacity =
+        lectureMaxCapacity - reservation.lectureSchedule.numberOfParticipants;
 
-        if (remainingCapacity < reservation.participants) {
-          throw new BadRequestException(
-            `최대 인원 초과로 인해 취소할 수 없습니다.`,
-            'ExceededMaxParticipants',
-          );
-        }
+      if (remainingCapacity < reservation.participants) {
+        throw new BadRequestException(
+          `최대 인원 초과로 인해 취소할 수 없습니다.`,
+          'ExceededMaxParticipants',
+        );
       }
-
-      await trxUpdateParticipantsMethod(transaction, reservation);
     }
+
+    await trxUpdateParticipantsMethod(transaction, reservation);
 
     //수강생의 신청 횟수 수정
     await trxUpdateLearnerCountMethod(
       transaction,
       payment.userId,
       payment.lecturerId,
-      payment.reservation.length,
     );
   }
 

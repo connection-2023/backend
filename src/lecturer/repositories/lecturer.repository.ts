@@ -389,7 +389,10 @@ export class LecturerRepository {
           },
         },
         reservation: {
-          include: { lectureSchedule: { include: { lecture: true } } },
+          include: {
+            lectureSchedule: { include: { lecture: true } },
+            regularLectureStatus: { include: { lecture: true } },
+          },
         },
         userPass: true,
       },

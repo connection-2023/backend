@@ -631,7 +631,7 @@ model Payment {
   paymentStatus             PaymentStatus              @relation(fields: [statusId], references: [id])
   paymentMethod             PaymentMethod?             @relation(fields: [paymentMethodId], references: [id])
   paymentProductType        PaymentProductType         @relation(fields: [paymentProductTypeId], references: [id])
-  reservation               Reservation[]
+  reservation               Reservation?
   paymentCouponUsage        PaymentCouponUsage?
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
@@ -680,22 +680,24 @@ model PaymentProductType {
 
 //예약 정보
 model Reservation {
-  id                Int             @id @default(autoincrement())
-  userId            Int
-  paymentId         Int
-  lectureScheduleId Int
+  id                     Int                   @id @default(autoincrement())
+  userId                 Int
+  paymentId              Int  @unique
+  lectureScheduleId      Int?
+  regularLectureStatusId Int?
   //대표자
-  representative    String
-  phoneNumber       String
+  representative         String
+  phoneNumber            String
   //예약 인원
-  participants      Int
+  participants           Int
   //예약 요청사항
-  requests          String?
-  isEnabled         Boolean         @default(false)
-  user              Users           @relation(fields: [userId], references: [id])
-  lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
-  payment           Payment         @relation(fields: [paymentId], references: [id])
-  lectureReview     LectureReview?
+  requests               String?
+  isEnabled              Boolean               @default(false)
+  user                   Users                 @relation(fields: [userId], references: [id])
+  lectureSchedule        LectureSchedule?      @relation(fields: [lectureScheduleId], references: [id])
+  regularLectureStatus   RegularLectureStatus? @relation(fields: [regularLectureStatusId], references: [id])
+  payment                Payment               @relation(fields: [paymentId], references: [id])
+  lectureReview          LectureReview?
 }
 
 //카드 결제 시 저장되는 정보
@@ -1092,6 +1094,7 @@ model RegularLectureStatus {
   numberOfParticipants   Int                      @default(0)
   lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   regularLectureSchedule RegularLectureSchedule[]
+  reservation            Reservation[]
 }
 
 model RegularLectureSchedule {

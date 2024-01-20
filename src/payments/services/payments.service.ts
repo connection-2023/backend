@@ -860,7 +860,6 @@ export class PaymentsService implements OnModuleInit {
           transaction,
           userId,
           lecturerId,
-          reservations.length,
         );
 
         if (couponIds.length) {
