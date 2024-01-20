@@ -99,7 +99,7 @@ export class LectureDto extends BaseReturnDto {
     this.endDate = lecture.endDate;
     this.isActive = lecture.isActive;
     this.price = lecture.price;
-    this.stars = lecture.stars.toFixed(1);
+    this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
     this.reviewCount = lecture.reviewCount;
     this.isGroup = lecture.isGroup;
     this.lectureToDanceGenre = lecture.lectureToDanceGenre
