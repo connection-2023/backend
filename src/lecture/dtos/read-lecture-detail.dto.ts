@@ -58,14 +58,14 @@ export class LectureDetailDto {
     this.reservationDeadline = lecture.reservationDeadline;
     this.reservationComment = lecture.reservationComment;
     this.price = lecture.price;
-    this.notification = lecture.lectureNotification;
+    this.notification = new LectureNotificationDto(lecture.lectureNotification);
     this.introduction = lecture.introduction;
     this.curriculum = lecture.curriculum;
     this.maxCapacity = lecture.maxCapacity;
     this.minCapacity = lecture.minCapacity;
     this.reviewCount = lecture.reviewCount;
     this.locationDescription = lecture.locationDescription;
-    this.location = lecture.lectureLocation;
+    this.location = new LectureLocationDto(lecture.lectureLocation);
 
     Object.assign(this);
   }
