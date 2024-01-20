@@ -29,6 +29,9 @@ export class LectureDetailDto {
   @ApiProperty({ description: '마감일', type: Date })
   endDate: Date;
 
+  @ApiProperty({ description: '강의 시간', type: Number })
+  duration: number;
+
   @ApiProperty({ description: '예약 데드라인', type: Number })
   reservationDeadline: number;
 
@@ -50,11 +53,15 @@ export class LectureDetailDto {
   @ApiProperty({ description: '상세 지역', type: LectureLocationDto })
   location: LectureLocationDto;
 
+  @ApiProperty({ description: '리뷰 평점' })
+  stars: string;
+
   constructor(lecture: Partial<ILecture>) {
     this.id = lecture.id;
     this.lecturer = new LecturerDto(lecture.lecturer);
     this.startDate = lecture.startDate;
     this.endDate = lecture.endDate;
+    this.duration = lecture.duration;
     this.reservationDeadline = lecture.reservationDeadline;
     this.reservationComment = lecture.reservationComment;
     this.price = lecture.price;
@@ -62,11 +69,15 @@ export class LectureDetailDto {
     this.introduction = lecture.introduction;
     this.curriculum = lecture.curriculum;
     this.minCapacity = lecture.minCapacity;
+    this.maxCapacity = lecture.maxCapacity;
     this.reviewCount = lecture.reviewCount;
     this.locationDescription = lecture.locationDescription;
+
     this.location = lecture.lectureLocation
       ? new LectureLocationDto(lecture.lectureLocation)
       : undefined;
+
+    this.stars = lecture.stars.toFixed(1);
 
     Object.assign(this);
   }
