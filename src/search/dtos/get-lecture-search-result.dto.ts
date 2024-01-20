@@ -14,7 +14,11 @@ import {
   Length,
 } from 'class-validator';
 import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
-import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
+import {
+  DanceCategory,
+  DanceMethod,
+  TemporaryWeek,
+} from '@src/common/enum/enum';
 
 export class GetLectureSearchResultDto {
   @ApiProperty({
@@ -101,15 +105,15 @@ export class GetLectureSearchResultDto {
   stars: number;
 
   @ApiProperty({
-    enum: Week,
+    enum: TemporaryWeek,
     description: '요일',
     isArray: true,
     required: false,
   })
   @ArrayMinSize(1)
-  @IsEnum(Week, { each: true })
+  @IsEnum(TemporaryWeek, { each: true })
   @IsOptional()
-  days: Week[];
+  days: TemporaryWeek[];
 
   @ApiProperty({
     enum: TimeOfDay,

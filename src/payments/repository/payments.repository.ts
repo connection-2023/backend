@@ -1003,13 +1003,12 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ): Promise<void> {
     try {
       await transaction.lecturerLearner.upsert({
         where: { userId_lecturerId: { userId, lecturerId } },
-        create: { userId, lecturerId, enrollmentCount },
-        update: { enrollmentCount: { increment: enrollmentCount } },
+        create: { userId, lecturerId, enrollmentCount: 1 },
+        update: { enrollmentCount: { increment: 1 } },
       });
     } catch (error) {
       throw new InternalServerErrorException(
