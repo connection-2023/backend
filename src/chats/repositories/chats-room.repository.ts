@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Chats } from '../schemas/chats.schema';
 import { Model } from 'mongoose';
+import { Chats } from '../schemas/chats.schema';
 import { ChatRoom } from '../schemas/chats-room.schema';
-import { ValidateResult } from '@src/common/interface/common-interface';
 
 @Injectable()
-export class ChatsRepository {
+export class ChatRoomRepository {
   constructor(
     @InjectModel(Chats.name) private readonly chatsModel: Model<Chats>,
     @InjectModel(ChatRoom.name)
     private readonly chatRoomModel: Model<ChatRoom>,
   ) {}
+
+  async getRoomById(where): Promise<ChatRoom[]> {
+    return await this.chatRoomModel.find({ where });
+  }
 }

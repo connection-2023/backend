@@ -22,6 +22,7 @@ import { SearchModule } from './search/search.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatsModule } from './chats/chats.module';
 import { EventsGateway } from './events/events.gateway';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { EventsGateway } from './events/events.gateway';
     SuccessInterceptorModule,
     SearchModule,
     ChatsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService, EventsGateway],
