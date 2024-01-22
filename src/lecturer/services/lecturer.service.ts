@@ -32,6 +32,9 @@ import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
 import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
 import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
+import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -328,6 +331,61 @@ export class LecturerService implements OnModuleInit {
             instagramPostUrls,
           ),
         ]);
+      },
+    );
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number, userId?: number) {
+    const lectures =
+      await this.lecturerRepository.readManyLectureWithLectruerId(
+        lecturerId,
+        userId,
+      );
+    return lectures.map((lecture) => new LectureDto(lecture));
+  }
+
+  async readManyLectureProgress(
+    lecturerId: number,
+    query: ReadManyLectureProgressQueryDto,
+  ) {
+    const { progressType } = query;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (progressType === '진행중') {
+          const lectures =
+            await this.lecturerRepository.trxReadManyLectureProgress(
+              transaction,
+              lecturerId,
+            );
+          const inprogressLecture = [];
+
+          for (const lecture of lectures) {
+            const currentTime = new Date();
+            const completedLectureSchedule =
+              await this.lecturerRepository.trxReadManyCompletedLectureScheduleCount(
+                transaction,
+                lecture.id,
+                currentTime,
+              );
+            const progress = Math.round(
+              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+            );
+            const inprogressLectureData = {
+              ...lecture,
+              progress,
+              allSchedule: lecture._count.lectureSchedule,
+              completedSchedule: completedLectureSchedule,
+            };
+
+            inprogressLecture.push(inprogressLectureData);
+          }
+
+          return inprogressLecture;
+        } else if (progressType === '마감된 클래스') {
+          return await this.lecturerRepository.readManyCompletedLectureWithLecturerId(
+            lecturerId,
+          );
+        }
       },
     );
   }
@@ -643,5 +701,22 @@ export class LecturerService implements OnModuleInit {
     }
 
     return { cursor, skip, take: updatedTake };
+  }
+
+  async getLecturerLearnerPaymentsOverview(
+    lecturerId: number,
+    userId: number,
+  ): Promise<LearnerPaymentOverviewDto[]> {
+    const learnerPaymentOverView =
+      await this.lecturerRepository.getLecturerLearnerPaymentsOverview(
+        lecturerId,
+        userId,
+      );
+
+    return (
+      learnerPaymentOverView?.map(
+        (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
+      ) || []
+    );
   }
 }

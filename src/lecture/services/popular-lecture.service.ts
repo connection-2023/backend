@@ -11,15 +11,17 @@ export class PopularLectureService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async readPopularLectureWithUserId(userId: number): Promise<LectureDto[]> {
+  async readPopularLecture(userId?: number): Promise<LectureDto[]> {
     return await this.prismaService.$transaction(
       async (trasaction: PrismaTransaction) => {
         const popularScores = [];
+        const where = { isActive: true };
+        userId
+          ? (where['lecturer'] = { blockedLecturer: { none: { userId } } })
+          : false;
+
         const lectures = await trasaction.lecture.findMany({
-          where: {
-            isActive: true,
-            lecturer: { blockedLecturer: { none: { userId } } },
-          },
+          where,
           select: { id: true },
         });
 
@@ -55,57 +57,6 @@ export class PopularLectureService {
               popularLecture.id,
               userId,
             );
-
-          popularLectures.push(new LectureDto(lecture));
-        }
-
-        return popularLectures;
-      },
-    );
-  }
-
-  async readPopularLecture(): Promise<LectureDto[]> {
-    return await this.prismaService.$transaction(
-      async (trasaction: PrismaTransaction) => {
-        const popularScores = [];
-        const lectures = await trasaction.lecture.findMany({
-          where: {
-            isActive: true,
-            deletedAt: null,
-          },
-          select: { id: true },
-        });
-
-        for (const lecture of lectures) {
-          const reservationCount =
-            await this.popularLectureRepository.trxReadLectureReservationCount(
-              trasaction,
-              lecture.id,
-            );
-          const likesCount =
-            await this.popularLectureRepository.trxReadLectureLikesCount(
-              trasaction,
-              lecture.id,
-            );
-          const popularScore = this.createPopularScore(
-            lecture.id,
-            reservationCount,
-            likesCount,
-          );
-          popularScores.push(popularScore);
-        }
-
-        const sortedPopularScores = this.sortPopularScores(popularScores);
-
-        const topFivePopularScores = sortedPopularScores.slice(0, 5);
-
-        const popularLectures = [];
-
-        for (const popularLecture of topFivePopularScores) {
-          const lecture = await this.popularLectureRepository.trxReadLecture(
-            trasaction,
-            popularLecture.id,
-          );
 
           popularLectures.push(new LectureDto(lecture));
         }

@@ -20,7 +20,7 @@ export function ApiCreateLecturePaymentWithTransfer() {
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(
       HttpStatus.CREATED,
-      'paymentResult',
+      'transferPaymentResult',
       PaymentDto,
     ),
     ApiBadRequestResponse(

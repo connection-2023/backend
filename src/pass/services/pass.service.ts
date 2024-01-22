@@ -14,7 +14,7 @@ import {
 } from '@src/pass/interface/interface';
 import { GetMyIssuedPassListDto } from '../dtos/get-my-issued-pass-list.dto';
 import { IssuedPassFilterOptions, PassStatusOptions } from '../enum/pass.enum';
-import { LecturePassDto } from '@src/common/dtos/lecture-pass.dto';
+import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-target.dto';
 
 @Injectable()
 export class PassService {
@@ -202,15 +202,19 @@ export class PassService {
     );
   }
 
-  async getLecturePassList(lectureId: number): Promise<LecturePassDto[]> {
+  async getLecturePassList(
+    lectureId: number,
+  ): Promise<LecturePassWithTargetDto[]> {
     return (await this.passRepository.getLecturePassList(lectureId)).map(
-      (lecturePass) => new LecturePassDto(lecturePass),
+      (lecturePass) => new LecturePassWithTargetDto(lecturePass),
     );
   }
 
-  async getLecturerPassList(lecturerId: number): Promise<LecturePassDto[]> {
+  async getLecturerPassList(
+    lecturerId: number,
+  ): Promise<LecturePassWithTargetDto[]> {
     return (await this.passRepository.getLecturerPassList(lecturerId)).map(
-      (lecturePass) => new LecturePassDto(lecturePass),
+      (lecturePass) => new LecturePassWithTargetDto(lecturePass),
     );
   }
 }

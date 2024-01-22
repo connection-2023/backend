@@ -8,6 +8,8 @@ import { PaymentCouponUsageDto } from '@src/payments/dtos/payment-coupon-usage.d
 import { RefundPaymentInfoDto } from '@src/payments/dtos/refund-payment-info.dto';
 import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { BaseReturnWithSwaggerDto } from '@src/common/dtos/base-return-with-swagger.dto';
+import { PaymentPassUsageDto } from './payment-pass-usage.dto';
+import { UserPassDto } from '@src/common/dtos/user-pass.dto';
 
 export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   @ApiProperty({
@@ -85,11 +87,24 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   refundPaymentInfo: RefundPaymentInfoDto;
 
   @ApiProperty({
-    type: [ReservationDto],
+    type: ReservationDto,
     description: '예약 정보',
     nullable: true,
   })
-  reservation: ReservationDto[];
+  reservation: ReservationDto;
+
+  @ApiProperty({
+    type: PaymentPassUsageDto,
+    description: '패스권 사용 정보',
+    nullable: true,
+  })
+  paymentPassUsage: PaymentPassUsageDto;
+
+  @ApiProperty({
+    type: UserPassDto,
+    description: '구매한 유저 패스권 정보',
+  })
+  userPass: UserPassDto;
 
   constructor(payment: Partial<PaymentDto>) {
     super();
@@ -107,9 +122,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
       ? new PaymentMethodDto(payment.paymentMethod)
       : null;
     this.reservation = payment.reservation
-      ? payment.reservation.map(
-          (reservation) => new ReservationDto(reservation),
-        )
+      ? new ReservationDto(payment.reservation)
       : null;
     this.paymentCouponUsage = payment.paymentCouponUsage
       ? new PaymentCouponUsageDto(payment.paymentCouponUsage)
@@ -120,5 +133,11 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     this.refundPaymentInfo = payment.refundPaymentInfo
       ? new RefundPaymentInfoDto(payment.refundPaymentInfo)
       : null;
+    this.paymentPassUsage = payment.paymentPassUsage
+      ? new PaymentPassUsageDto(payment.paymentPassUsage)
+      : null;
+    this.userPass = payment.userPass ? new UserPassDto(payment.userPass) : null;
+
+    Object.assign(this);
   }
 }

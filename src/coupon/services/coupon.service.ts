@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateLectureCouponDto } from '@src/coupon/dtos/create-lecture-coupon.dto';
@@ -20,12 +21,13 @@ import {
   CouponFilterOptions,
   IssuedCouponStatusOptions,
   UserCouponStatusOptions,
-} from '../enum/coupon.enum.ts';
-import { GetMyIssuedCouponListDto } from '../dtos/get-my-issued-coupon-list.dto';
+} from '@src/coupon/enum/coupon.enum.ts';
+import { GetMyIssuedCouponListDto } from '@src/coupon/dtos/get-my-issued-coupon-list.dto';
 import { ICursor } from '@src/payments/interface/payments.interface';
-import { UpdateCouponDto } from '../dtos/update-coupon.dto';
+import { UpdateCouponDto } from '@src/coupon/dtos/update-coupon.dto';
 import { LectureCouponDto } from '@src/common/dtos/lecture-coupon.dto';
-import { ApplicableCouponDto } from '../dtos/applicable-coupon.dto.js';
+import { ApplicableCouponDto } from '@src/coupon/dtos/applicable-coupon.dto';
+import { IssuePublicCouponToUserDto } from '@src/coupon/dtos/issue-public-coupons-to-user.dto.js';
 
 @Injectable()
 export class CouponService {
@@ -168,13 +170,31 @@ export class CouponService {
 
   async issuePublicCouponToUser(
     userId: number,
-    couponId: number,
+    { couponIds }: IssuePublicCouponToUserDto,
   ): Promise<void> {
     const isOwn = false;
     const isPrivate = false;
-    await this.checkUserCoupon(userId, couponId, isOwn, isPrivate);
 
-    await this.couponRepository.createUserCoupon(userId, couponId);
+    const promises = couponIds.map(async (couponId) => {
+      await this.checkUserCoupon(userId, couponId, isOwn, isPrivate);
+      await this.couponRepository.createUserCoupon(userId, couponId);
+    });
+
+    const results = await Promise.allSettled(promises);
+
+    const errors = results
+      .filter(
+        (result): result is PromiseRejectedResult =>
+          result.status === 'rejected',
+      )
+      .map((result, index) => ({
+        ...result.reason.response,
+        rejectedCouponId: couponIds[index],
+      }));
+
+    if (errors.length > 0) {
+      throw new InternalServerErrorException({ errors });
+    }
   }
 
   private async checkUserCoupon(
@@ -230,6 +250,7 @@ export class CouponService {
       }
     }
   }
+
   async getPrivateLectureCouponCode(
     lecturerId: number,
     couponId: number,

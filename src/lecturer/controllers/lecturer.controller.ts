@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -35,6 +36,12 @@ import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-learner-list.decorator';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApiReadManyLectureWithLecturer } from '@src/lecturer/swagger-decorators/read-many-lecture-with-lecturer.decorator';
+import { ApiReadManyLecture } from '@src/lecturer/swagger-decorators/read-many-lecture.decorator';
+import { ApiReadManyLectureProgress } from '@src/lecture/swagger-decorators/read-many-lecture-progress-decorator';
+import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
+import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
+import { ApiGetLecturerLearnerPaymentsOverview } from '../swagger-decorators/get-lecturer-leaner-payments-overview.decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -138,5 +145,64 @@ export class LecturerController {
       authorizedData.lecturer.id,
       getLecturerLearnerListDto,
     );
+  }
+
+  @ApiGetLecturerLearnerPaymentsOverview()
+  @SetResponseKey('learnerPaymentsOverView')
+  @Get('/learners/:userId')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerPaymentsOverview(
+    @Param('userId', ParseIntPipe) userId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LearnerPaymentOverviewDto[]> {
+    return await this.lecturerService.getLecturerLearnerPaymentsOverview(
+      authorizedData.lecturer.id,
+      userId,
+    );
+  }
+
+  @ApiReadManyLectureWithLecturer()
+  @SetResponseKey('lecture')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('/lectures')
+  async readManyLectureWithLecturerId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.lecturerService.readManyLectureWithLecturerId(
+      authorizedData.lecturer.id,
+    );
+  }
+
+  @ApiReadManyLecture()
+  @SetResponseKey('lecture')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get('/lectures/:lecturerId')
+  async readManyLectureByNonMember(
+    @Param('lecturerId', ParseIntPipe) lecturerId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    const userId = authorizedData?.user?.id;
+
+    const lecture = await this.lecturerService.readManyLectureWithLecturerId(
+      lecturerId,
+      userId,
+    );
+
+    return { lecture };
+  }
+
+  @ApiReadManyLectureProgress()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('/in-progress')
+  async readManyLectureProgress(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: ReadManyLectureProgressQueryDto,
+  ) {
+    const lectureProgress = await this.lecturerService.readManyLectureProgress(
+      authorizedData.lecturer.id,
+      query,
+    );
+
+    return { lectureProgress };
   }
 }

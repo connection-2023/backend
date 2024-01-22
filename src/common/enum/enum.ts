@@ -55,7 +55,7 @@ export enum LecturerReviewType {
   '평점 낮은순' = '평점 낮은순',
 }
 
-export enum Week {
+export enum TemporaryWeek {
   '월' = '월',
   '화' = '화',
   '수' = '수',
@@ -63,6 +63,16 @@ export enum Week {
   '금' = '금',
   '토' = '토',
   '일' = '일',
+}
+
+export enum Week {
+  '일' = 0,
+  '월' = 1,
+  '화',
+  '수',
+  '목',
+  '금',
+  '토',
 }
 
 export enum BankEnum {

@@ -1,4 +1,8 @@
-import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
+import {
+  DanceCategory,
+  DanceMethod,
+  TemporaryWeek,
+} from '@src/common/enum/enum';
 import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
 
 export interface IEsLecture {
@@ -72,7 +76,7 @@ export interface ILecturerSearchParams {
 
 export interface ILectureSearchParams {
   take: number;
-  days?: Week[];
+  days?: TemporaryWeek[];
   timeOfDay?: TimeOfDay[];
   value?: string;
   searchAfter?: number[];

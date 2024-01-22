@@ -9,6 +9,7 @@ import { LectureToDanceGenreDto } from './lecture-to-dance-genre.dto';
 import { LectureMethodDto } from './lecture-method.dto';
 import { LikedLectureDto } from './liked-lecture.dto';
 import { ILecture } from '@src/lecture/interface/lecture.interface';
+import { LectureLocationDto } from './lecture-location.dto';
 
 export class LectureDto extends BaseReturnDto {
   @ApiProperty({
@@ -68,8 +69,8 @@ export class LectureDto extends BaseReturnDto {
   })
   lectureImage?: LectureImageDto[];
 
-  @ApiProperty({ description: '좋아요 여부', type: LikedLectureDto })
-  likedLecture?: LikedLectureDto[];
+  @ApiProperty({ description: '좋아요 여부' })
+  isLike: boolean;
 
   lecturerId: number;
   lectureTypeId: number;
@@ -98,27 +99,25 @@ export class LectureDto extends BaseReturnDto {
     this.endDate = lecture.endDate;
     this.isActive = lecture.isActive;
     this.price = lecture.price;
-    this.stars = lecture.stars.toFixed(1);
+    this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
     this.reviewCount = lecture.reviewCount;
     this.isGroup = lecture.isGroup;
-
     this.lectureToDanceGenre = lecture.lectureToDanceGenre
       ? lecture.lectureToDanceGenre.map(
           (dance) => new LectureToDanceGenreDto(dance),
         )
-      : null;
+      : undefined;
 
     this.lectureToRegion = lecture.lectureToRegion
       ? lecture.lectureToRegion.map((region) => new LectureToRegionDto(region))
-      : null;
+      : undefined;
 
     this.lectureMethod = lecture.lectureMethod
       ? new LectureMethodDto(lecture.lectureMethod)
       : undefined;
 
-    this.likedLecture = lecture.likedLecture
-      ? lecture.likedLecture.map((like) => new LikedLectureDto(like))
-      : undefined;
+    this.isLike =
+      lecture.likedLecture && lecture.likedLecture[0] ? true : false;
 
     this.lecturer = lecture.lecturer
       ? new LecturerDto(lecture.lecturer)
@@ -126,7 +125,7 @@ export class LectureDto extends BaseReturnDto {
 
     this.lectureImage = lecture.lectureImage
       ? lecture.lectureImage.map((url) => new LectureImageDto(url))
-      : null;
+      : undefined;
 
     Object.seal(this);
   }

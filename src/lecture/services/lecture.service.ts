@@ -39,6 +39,8 @@ import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
+import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
+import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
 
 @Injectable()
 export class LectureService {
@@ -123,17 +125,27 @@ export class LectureService {
           );
         } else if (lectureMethod === '정기') {
           for (const schedule of regularSchedules) {
-            const regularDayScheduleInputData =
-              this.createRegularLectureScheduleInputData(
-                newLecture.id,
-                schedule,
+            const regularLectureStatusInputData =
+              this.createRegularLectureStatusInputData(newLecture.id, schedule);
+
+            const regularLectureStatus =
+              await this.lectureRepository.trxCreateRegularLectureStatus(
+                transaction,
+                regularLectureStatusInputData,
+              );
+
+            const regularLectureSchedulesInputData =
+              this.createRegularLectureSchedulesInputData(
+                regularLectureStatus.id,
+                schedule.startDateTime,
                 lecture.duration,
               );
 
-            await this.lectureRepository.trxCreateLectureSchedule(
-              transaction,
-              regularDayScheduleInputData,
-            );
+            const regularLectureSchedules =
+              await this.lectureRepository.trxCreateRegularLectureSchedule(
+                transaction,
+                regularLectureSchedulesInputData,
+              );
           }
         }
 
@@ -196,37 +208,18 @@ export class LectureService {
     );
   }
 
-  async readLectureWithUserId(userId: number, lectureId: number) {
-    const lecture = await this.lectureRepository.readLecture(lectureId);
-    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
-      lecture.lecturerId,
-    );
-    const location = await this.lectureRepository.readLectureLocation(
-      lectureId,
-    );
+  async readLecturePreview(lectureId: number, userId?: number) {
+    const lecture = userId
+      ? await this.lectureRepository.readLecture(lectureId, userId)
+      : await this.lectureRepository.readLecture(lectureId);
 
-    const isLike = await this.prismaService.likedLecture.findFirst({
-      where: { userId, lectureId },
-    });
-
-    if (isLike) {
-      lecture['isLike'] = true;
-    } else {
-      lecture['isLike'] = false;
-    }
-    return { lecture, lecturer, location };
+    return new LecturePreviewDto(lecture);
   }
 
-  async readLecture(lectureId: number) {
+  async readLectureDetail(lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
-    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
-      lecture.lecturerId,
-    );
-    const location = await this.lectureRepository.readLectureLocation(
-      lectureId,
-    );
 
-    return { lecture, lecturer, location };
+    return new LectureDetailDto(lecture);
   }
 
   async readManyLecture(query: ReadManyLectureQueryDto): Promise<any> {
@@ -359,7 +352,7 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        if (notification) {
+        if (notification || notification.length === 0) {
           await this.lectureRepository.trxUpsertLectureNotification(
             transaction,
             lectureId,
@@ -502,24 +495,50 @@ export class LectureService {
   async readManyLectureSchedule(lectureId: number) {
     const calendar = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const schedule =
-          await this.lectureRepository.trxReadManyLectureSchedule(
+        const isOneDay = await transaction.lecture.findFirst({
+          where: { id: lectureId },
+          select: { lectureMethod: { select: { name: true } } },
+        });
+
+        if (isOneDay.lectureMethod.name === '원데이') {
+          const schedule =
+            await this.lectureRepository.trxReadManyLectureSchedule(
+              transaction,
+              lectureId,
+            );
+          const holiday =
+            await this.lectureRepository.trxReadManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+          const daySchedule = await this.lectureRepository.trxReadDaySchedule(
             transaction,
             lectureId,
           );
-        const holiday = await this.lectureRepository.trxReadManyLectureHoliday(
-          transaction,
-          lectureId,
-        );
-        const daySchedule = await this.lectureRepository.trxReadDaySchedule(
-          transaction,
-          lectureId,
-        );
 
-        if (!daySchedule[0]) {
-          return { schedule, holiday };
+          if (!daySchedule[0]) {
+            return { schedule, holiday };
+          }
+          return { schedule, holiday, daySchedule };
+        } else {
+          const schedule =
+            await this.lectureRepository.trxReadManyRegularLectureSchedules(
+              transaction,
+              lectureId,
+            );
+          const holiday =
+            await this.lectureRepository.trxReadManyLectureHoliday(
+              transaction,
+              lectureId,
+            );
+
+          const daySchedule = await this.lectureRepository.trxReadDaySchedule(
+            transaction,
+            lectureId,
+          );
+
+          return { schedule, holiday, daySchedule };
         }
-        return { schedule, holiday, daySchedule };
       },
     );
     const { schedule } = calendar;
@@ -547,12 +566,6 @@ export class LectureService {
     }
 
     return reservation;
-  }
-
-  async readManyLectureWithLecturerId(lecturerId: number) {
-    return await this.lectureRepository.readManyLectureWithLectruerId(
-      lecturerId,
-    );
   }
 
   async readManyEnrollLectureWithUserId(
@@ -627,52 +640,6 @@ export class LectureService {
         );
 
         return { count, enrollLecture };
-      },
-    );
-  }
-
-  async readManyLectureProgress(
-    lecturerId: number,
-    query: ReadManyLectureProgressQueryDto,
-  ) {
-    const { progressType } = query;
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        if (progressType === '진행중') {
-          const lectures =
-            await this.lectureRepository.trxReadManyLectureProgress(
-              transaction,
-              lecturerId,
-            );
-          const inprogressLecture = [];
-
-          for (const lecture of lectures) {
-            const currentTime = new Date();
-            const completedLectureSchedule =
-              await this.lectureRepository.trxReadManyCompletedLectureScheduleCount(
-                transaction,
-                lecture.id,
-                currentTime,
-              );
-            const progress = Math.round(
-              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
-            );
-            const inprogressLectureData = {
-              ...lecture,
-              progress,
-              allSchedule: lecture._count.lectureSchedule,
-              completedSchedule: completedLectureSchedule,
-            };
-
-            inprogressLecture.push(inprogressLectureData);
-          }
-
-          return inprogressLecture;
-        } else if (progressType === '마감된 클래스') {
-          return await this.lectureRepository.readManyCompletedLectureWithLecturerId(
-            lecturerId,
-          );
-        }
       },
     );
   }
@@ -838,11 +805,13 @@ export class LectureService {
       (date) => {
         const startDateTime = new Date(date);
         const endDateTime = new Date(
-          startDateTime.getTime() + duration * 60 * 60 * 1000,
+          startDateTime.getTime() + duration * 60 * 1000,
         );
+        const day = startDateTime.getDay();
 
         return {
           lectureId: lectureId,
+          day,
           startDateTime: startDateTime,
           endDateTime: endDateTime,
           numberOfParticipants: 0,
@@ -948,28 +917,39 @@ export class LectureService {
     return lectureTypeId.id;
   }
 
-  private createRegularLectureScheduleInputData(
+  private createRegularLectureStatusInputData(
     lectureId: number,
     regularSchedule: RegularLectureSchedules,
-    duration: number,
   ) {
-    const regularScheduleInputData = regularSchedule.startDateTime.map(
-      (time) => {
-        const startTime = new Date(time);
-        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
-
-        return {
-          lectureId,
-          day: regularSchedule.day,
-          startDateTime: startTime,
-          endDateTime: endTime,
-          numberOfParticipants: 0,
-        };
-      },
-    );
-    return regularScheduleInputData;
+    return {
+      lectureId,
+      day: regularSchedule.day,
+      dateTime: regularSchedule.dateTime,
+    };
   }
 
+  private createRegularLectureSchedulesInputData(
+    regularLectureStatusId: number,
+    regularSchedules: Date[],
+    duration: number,
+  ) {
+    const regularLectureSchedulesInputData = regularSchedules.map((date) => {
+      const startDateTime = new Date(date);
+      const endDateTime = new Date(
+        startDateTime.getTime() + duration * 60 * 1000,
+      );
+      const day = startDateTime.getDay();
+
+      return {
+        regularLectureStatusId,
+        startDateTime,
+        endDateTime,
+        day,
+      };
+    });
+
+    return regularLectureSchedulesInputData;
+  }
   private createLectureCouponTargetInputData(
     lectureId: number,
     coupons: number[],

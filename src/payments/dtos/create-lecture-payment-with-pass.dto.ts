@@ -5,9 +5,11 @@ import {
   IsNotEmpty,
   IsOptional,
   Matches,
+  ValidateNested,
 } from 'class-validator';
 import { ILectureSchedule } from '@src/payments/interface/payments.interface';
 import { ApiProperty } from '@nestjs/swagger';
+import { SwaggerLectureScheduleDto } from '../swagger-dtos/lecture-schedule';
 
 export class CreateLecturePaymentWithPassDto {
   @ApiProperty({
@@ -45,18 +47,14 @@ export class CreateLecturePaymentWithPassDto {
   orderId: string;
 
   @ApiProperty({
-    example: [
-      {
-        lectureScheduleId: 1,
-        participants: 4,
-      },
-    ],
-    description: '강의스케쥴, 인원수 배열| 여러 스케쥴 결제 가능',
+    type: SwaggerLectureScheduleDto,
+    description: '강의스케쥴',
     required: true,
   })
-  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SwaggerLectureScheduleDto)
   @IsNotEmpty()
-  lectureSchedules: ILectureSchedule[];
+  lectureSchedule: ILectureSchedule;
 
   @ApiProperty({
     example: 100000,

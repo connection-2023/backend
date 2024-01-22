@@ -3,6 +3,10 @@ import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TransferPaymentInfoDto implements TransferPaymentInfo {
+  @ApiProperty({
+    type: Number,
+    description: '계좌 이체 정보 Id',
+  })
   id: number;
   paymentId: number;
   lecturerBankAccountId: number;
@@ -13,13 +17,21 @@ export class TransferPaymentInfoDto implements TransferPaymentInfo {
   senderName: string;
 
   @ApiProperty({
+    type: Number,
+    description: '보증금 / 현장결제일때 존재',
+    nullable: true,
+  })
+  noShowDeposit: number;
+  @ApiProperty({
     type: LecturerBankAccountDto,
     description: '강사 계좌 정보',
   })
   lecturerBankAccount: LecturerBankAccountDto;
 
   constructor(transferPayment: Partial<TransferPaymentInfoDto>) {
+    this.id = transferPayment.id;
     this.senderName = transferPayment.senderName;
+    this.noShowDeposit = transferPayment.noShowDeposit;
     this.lecturerBankAccount = new LecturerBankAccountDto(
       transferPayment.lecturerBankAccount,
     );

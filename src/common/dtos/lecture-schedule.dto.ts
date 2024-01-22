@@ -9,6 +9,7 @@ export class LectureScheduleDto implements LectureSchedule {
   })
   id: number;
   lectureId: number;
+  day: number;
 
   @ApiProperty({
     description: '시작 시간',
@@ -37,6 +38,7 @@ export class LectureScheduleDto implements LectureSchedule {
   constructor(lectureSchedule: Partial<LectureScheduleDto>) {
     this.id = lectureSchedule.id;
     this.lectureId = lectureSchedule.lectureId;
+    this.day = lectureSchedule.day;
     this.startDateTime = lectureSchedule.startDateTime;
     this.endDateTime = lectureSchedule.endDateTime;
     this.numberOfParticipants = lectureSchedule.numberOfParticipants;

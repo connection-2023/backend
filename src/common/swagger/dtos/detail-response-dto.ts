@@ -40,7 +40,7 @@ export class DetailResponseDto {
     }
 
     Object.defineProperty(Temp, 'name', {
-      value: `${key[0].toUpperCase()}${key.slice(1)}Dto`,
+      value: `${key[0].toUpperCase()}${key.slice(1)}ResponseDto`,
     });
 
     Object.defineProperty(Data, 'name', {

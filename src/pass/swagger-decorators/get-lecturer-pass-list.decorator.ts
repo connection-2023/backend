@@ -1,7 +1,7 @@
 import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { LecturePassDto } from '@src/common/dtos/lecture-pass.dto';
+import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-target.dto';
 
 export function ApiGetLecturerPassList() {
   return applyDecorators(
@@ -11,7 +11,7 @@ export function ApiGetLecturerPassList() {
     DetailResponseDto.swaggerBuilder(
       HttpStatus.OK,
       'passList',
-      LecturePassDto,
+      LecturePassWithTargetDto,
       { isArray: true },
     ),
   );

@@ -21,7 +21,8 @@ function isEitherDiscountPriceOrPercentageFilled(
       'NoValueProvided',
     );
   }
-  if ((discountPrice && percentage) || (maxDiscountPrice && percentage)) {
+
+  if (discountPrice && percentage) {
     throw new BadRequestException(
       `할인 금액과 할인 비율은 동시에 설정할 수 없습니다.`,
       'BothValueProvided',

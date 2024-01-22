@@ -18,9 +18,16 @@ import {
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import { LectureLocation, Lecturer, LikedLecturer } from '@prisma/client';
+import {
+  Lecture,
+  LectureLocation,
+  Lecturer,
+  LikedLecturer,
+} from '@prisma/client';
 import { PrismaClientValidationError } from '@prisma/client/runtime';
 import { when } from 'joi';
+import { LectureScheduleResponseData } from '@src/lecture/interface/lecture.interface';
+import { PaymentOrderStatus } from '@src/payments/enum/payment.enum';
 
 @Injectable()
 export class LecturerRepository {
@@ -315,5 +322,80 @@ export class LecturerRepository {
         'LikedLecturerFindFailed',
       );
     }
+  }
+
+  async readManyLectureWithLectruerId(
+    lecturerId: number,
+    userId?: number,
+  ): Promise<Lecture[]> {
+    const include = {
+      lectureImage: true,
+      lectureToDanceGenre: {
+        include: { danceCategory: true },
+      },
+      lectureToRegion: { select: { region: true } },
+      lectureMethod: { select: { name: true } },
+      lecturer: true,
+    };
+
+    userId ? (include['likedLecture'] = { where: { userId } }) : false;
+
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, isActive: true },
+      include,
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async trxReadManyLectureProgress(
+    transaction: PrismaTransaction,
+    lecturerId: number,
+  ): Promise<LectureScheduleResponseData[]> {
+    return await transaction.lecture.findMany({
+      where: { lecturerId, isActive: true },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  async trxReadManyCompletedLectureScheduleCount(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    currentTime: Date,
+  ): Promise<number> {
+    return await transaction.lectureSchedule.count({
+      where: { lectureId, startDateTime: { lt: currentTime } },
+    });
+  }
+
+  async readManyCompletedLectureWithLecturerId(
+    lecturerId: number,
+  ): Promise<Lecture[]> {
+    return await this.prismaService.lecture.findMany({
+      where: { lecturerId, deletedAt: null, isActive: false },
+      include: { _count: { select: { lectureSchedule: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+  async getLecturerLearnerPaymentsOverview(lecturerId: number, userId: number) {
+    return await this.prismaService.payment.findMany({
+      where: { userId, lecturerId, statusId: PaymentOrderStatus.DONE },
+      include: {
+        paymentProductType: true,
+        paymentCouponUsage: true,
+        paymentPassUsage: {
+          include: {
+            lecturePass: true,
+          },
+        },
+        reservation: {
+          include: {
+            lectureSchedule: { include: { lecture: true } },
+            regularLectureStatus: { include: { lecture: true } },
+          },
+        },
+        userPass: true,
+      },
+    });
   }
 }
