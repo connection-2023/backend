@@ -1,12 +1,13 @@
-import { PickType } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 
-export class GetSocketRoomIdDto extends PickType(ChatRoomDto, [
-  'roomId',
-] as const) {
-  constructor(room: ChatRoomDto) {
-    super();
+export class GetSocketRoomIdDto {
+  @ApiProperty({ description: '소켓 룸 id', type: Array })
+  rooms: string[];
 
-    this.roomId = room.roomId;
+  constructor(rooms: ChatRoomDto[]) {
+    this.rooms = rooms[0] ? rooms.map((room) => room.roomId) : [];
+
+    Object.assign(this);
   }
 }

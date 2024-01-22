@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose';
-import { IsNotEmpty, IsNumber, IsObject, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Document } from 'mongoose';
 
 const options: SchemaOptions = {
@@ -18,7 +18,7 @@ export class ChatRoom extends Document {
   @IsNumber()
   lecturerId: number;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   @IsNotEmpty()
   @IsString()
   roomId: string;
@@ -28,3 +28,4 @@ export class ChatRoom extends Document {
 }
 
 export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);
+ChatRoomSchema.index({ userId: 1, lecturerId: 1 }, { unique: true });

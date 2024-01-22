@@ -21,5 +21,7 @@ export class ChatRoomDto {
     this.userId = room.userId;
     this.lecturerId = room.lecturerId;
     this.roomId = room.roomId;
+
+    Object.assign(this);
   }
 }
