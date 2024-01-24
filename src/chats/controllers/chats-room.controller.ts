@@ -1,6 +1,14 @@
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ChatRoomService } from './../services/chats-room.service';
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiGetSocketRoom } from '../swagger-decorators/get-scoket-room-id.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
@@ -9,7 +17,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { ApiCreateChatRoom } from '../swagger-decorators/create-chat-room.decorator';
 
-@Controller('chat-rooms/:id')
+@Controller('chat-rooms')
 @ApiTags('채팅방')
 export class ChatRoomController {
   constructor(private readonly chatRoomService: ChatRoomService) {}
@@ -32,5 +40,15 @@ export class ChatRoomController {
       authorizedData,
       createChatRoomDto,
     );
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard)
+  @Get('targets/:targetId')
+  async getChatRoom(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('targetId', ParseIntPipe) targetId: number,
+  ) {
+    return await this.chatRoomService.getChatRoom(authorizedData, targetId);
   }
 }

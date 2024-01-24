@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { GetSocketRoomIdDto } from '../dtos/get-socket-room-id.dto';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { GetChatRoomDto } from '../dtos/get-chat-room.dto';
 
 @Injectable()
 export class ChatRoomService {
@@ -23,9 +24,39 @@ export class ChatRoomService {
     authorizedData: ValidateResult,
     { targetId }: CreateChatRoomDto,
   ) {
+    const roomId = uuidv4();
+    const { userId, lecturerId } = this.createUserIdAndLecturerId(
+      authorizedData,
+      targetId,
+    );
+
+    return await this.chatRoomRepository.createChatRoom(
+      userId,
+      lecturerId,
+      roomId,
+    );
+  }
+
+  async getChatRoom(authorizedData: ValidateResult, targetId: number) {
+    const { userId, lecturerId } = this.createUserIdAndLecturerId(
+      authorizedData,
+      targetId,
+    );
+
+    const chatRoom = await this.chatRoomRepository.getChatRoom(
+      userId,
+      lecturerId,
+    );
+
+    return new GetChatRoomDto(chatRoom);
+  }
+
+  private createUserIdAndLecturerId(
+    authorizedData: ValidateResult,
+    targetId: number,
+  ) {
     let userId: number;
     let lecturerId: number;
-    const roomId = uuidv4();
 
     if (authorizedData.user) {
       userId = authorizedData.user.id;
@@ -35,10 +66,6 @@ export class ChatRoomService {
       lecturerId = authorizedData.lecturer.id;
     }
 
-    return await this.chatRoomRepository.createChatRoom(
-      userId,
-      lecturerId,
-      roomId,
-    );
+    return { userId, lecturerId };
   }
 }

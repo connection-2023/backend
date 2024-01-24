@@ -2,8 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import mongoose from 'mongoose';
 
 export class ChatRoomDto {
-  @ApiProperty({ description: '채팅방 고유 id', type: mongoose.Types.ObjectId })
-  id?: mongoose.Types.ObjectId;
+  _id: mongoose.Types.ObjectId;
 
   @ApiProperty({ description: '참여 유저 id', type: Number })
   userId: number;
@@ -17,7 +16,7 @@ export class ChatRoomDto {
   deletedAt: Date | null;
 
   constructor(room: Partial<ChatRoomDto>) {
-    this.id = room.id;
+    this._id = room._id;
     this.userId = room.userId;
     this.lecturerId = room.lecturerId;
     this.roomId = room.roomId;
