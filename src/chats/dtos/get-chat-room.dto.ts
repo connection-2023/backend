@@ -4,12 +4,12 @@ import mongoose from 'mongoose';
 
 export class GetChatRoomDto extends OmitType(ChatRoomDto, ['_id'] as const) {
   @ApiProperty({ description: '채팅방 id', type: mongoose.Types.ObjectId })
-  id: mongoose.Types.ObjectId;
+  id: string;
 
   constructor(room: Partial<ChatRoomDto>) {
     super();
 
-    this.id = room._id;
+    this.id = room._id.toString();
     this.userId = room.userId;
     this.lecturerId = room.lecturerId;
     this.roomId = room.roomId;
