@@ -6,6 +6,7 @@ import { UserDto } from '@src/common/dtos/user.dto';
 import { uuid } from 'aws-sdk/clients/customerprofiles';
 import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class PrivateUserProfileDto extends BaseReturnDto {
   @Expose()
   @ApiProperty({
@@ -28,7 +29,6 @@ export class PrivateUserProfileDto extends BaseReturnDto {
   @ApiProperty({ description: '이메일' })
   email: string;
 
-  @Exclude()
   isProfileOpen: boolean;
 
   @Expose()
@@ -43,25 +43,18 @@ export class PrivateUserProfileDto extends BaseReturnDto {
 
   @Expose()
   @ApiProperty({ description: '소셜 정보', type: AuthDto })
-  social: AuthDto;
-
-  @Exclude()
-  uuid: string;
-
-  @Exclude()
   auth?: AuthDto;
 
-  @Exclude()
-  gender: number | null;
+  uuid: string;
 
-  @Exclude()
+  gender: number | null;
   deletedAt: Date;
 
   constructor(user: Partial<PrivateUserProfileDto>) {
     super();
 
-    this.social = new AuthDto(user.auth);
-
     Object.assign(this, user);
+
+    this.auth = new AuthDto(user.auth);
   }
 }

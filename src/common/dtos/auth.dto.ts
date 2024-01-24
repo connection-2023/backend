@@ -4,14 +4,10 @@ import { BaseReturnDto } from './base-return.dto';
 import { UserDto } from './user.dto';
 import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class AuthDto extends BaseReturnDto {
-  @Exclude()
   id: number;
-
-  @Exclude()
   userId: number;
-
-  @Exclude()
   signUpType?: SignUpTypeDto;
 
   @Expose()
@@ -22,11 +18,8 @@ export class AuthDto extends BaseReturnDto {
   @ApiProperty({ description: '가입 방식' })
   type: string;
 
-  @Exclude()
   signUpTypeId: number;
-
-  @Exclude()
-  users: UserDto;
+  users?: UserDto;
 
   constructor(auth: Partial<AuthDto>) {
     super();

@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SignUpType } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class SignUpTypeDto implements SignUpType {
-  @Exclude()
   id: number;
 
   @Expose()
