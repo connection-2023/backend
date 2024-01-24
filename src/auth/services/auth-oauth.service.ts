@@ -62,7 +62,7 @@ export class AuthOAuthService implements OnModuleInit {
       return { userEmail };
     }
 
-    if (userAuth.signUpType !== SignUpType[provider]) {
+    if (userAuth.signUpTypeId !== SignUpType[provider]) {
       throw new BadRequestException(
         `다른 방식으로 가입된 이메일 입니다.`,
         'differentSignUpMethod',

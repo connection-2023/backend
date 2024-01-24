@@ -32,7 +32,7 @@ export class AuthService implements OnModuleInit {
     const authData: AuthInputData = {
       userId,
       email: authEmail,
-      signUpType: mappedSignUpType,
+      signUpTypeId: mappedSignUpType,
     };
 
     await this.prismaService.auth.create({ data: authData });
@@ -48,7 +48,7 @@ export class AuthService implements OnModuleInit {
     const authData: AuthInputData = {
       userId,
       email: authEmail,
-      signUpType: mappedSignUpType,
+      signUpTypeId: mappedSignUpType,
     };
 
     return await tx.auth.create({ data: authData });
