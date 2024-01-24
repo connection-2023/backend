@@ -16,6 +16,7 @@ import {
   RegisterConsentInputData,
   RegisterConsents,
 } from '../interface/user.interface';
+import { PrivateUserProfileDto } from '../dtos/private-user-profile.dto';
 
 @Injectable()
 export class UserService {
@@ -114,7 +115,9 @@ export class UserService {
   }
 
   async getMyProfile(userId: number) {
-    return await this.userRepository.getMyProfile(userId);
+    const user = await this.userRepository.getMyProfile(userId);
+
+    return new PrivateUserProfileDto(user);
   }
 
   async updateUser(userId: number, updateUserDto: UpdateUserDto) {

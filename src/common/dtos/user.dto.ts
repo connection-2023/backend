@@ -1,7 +1,8 @@
-import { Users } from '@prisma/client';
+import { Users, Auth } from '@prisma/client';
 import { BaseReturnDto } from './base-return.dto';
 import { UserProfileImageDto } from './user-profile-image.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { AuthDto } from './auth.dto';
 
 export class UserDto extends BaseReturnDto implements Users {
   @ApiProperty({
@@ -28,11 +29,13 @@ export class UserDto extends BaseReturnDto implements Users {
   })
   userProfileImage?: UserProfileImageDto;
 
+  @ApiProperty({ description: '유저 소셜', type: AuthDto })
+  auth?: AuthDto;
+
   constructor(user: Partial<UserDto>) {
     super();
-    this.id = user.id;
-    this.nickname = user.nickname;
 
+    this.auth = new AuthDto(user.auth);
     this.userProfileImage = user.userProfileImage
       ? new UserProfileImageDto(user.userProfileImage)
       : null;

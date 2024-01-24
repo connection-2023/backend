@@ -8,7 +8,7 @@ import { TransformEnumValue } from '@src/common/utils/enum-value-extractor';
 import { Exclude, Expose, Transform } from 'class-transformer';
 
 @Exclude()
-class PrivateAuthDto implements Pick<Auth, 'email' | 'signUpType'> {
+class PrivateAuthDto implements Pick<Auth, 'email' | 'signUpTypeId'> {
   @ApiProperty({
     description: '소셜 이메일',
   })
@@ -20,7 +20,7 @@ class PrivateAuthDto implements Pick<Auth, 'email' | 'signUpType'> {
     description: `${ExtractEnumKeys(SignUpType)}`,
   })
   @Expose()
-  signUpType: number;
+  signUpTypeId: number;
 
   constructor(auth: Partial<PrivateAuthDto>) {
     Object.assign(this, auth);

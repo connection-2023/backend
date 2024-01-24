@@ -73,7 +73,7 @@ interface CreateUserAuthData {
 interface AuthInputData {
   userId: number;
   email: string;
-  signUpType: SignUpType;
+  signUpTypeId: SignUpType;
 }
 
 interface GoogleUserProfile {
