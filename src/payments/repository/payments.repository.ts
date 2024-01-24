@@ -32,15 +32,18 @@ import {
   PaymentOrderStatus,
   PaymentMethods,
   PaymentProductTypes,
+  LectureMethod,
 } from '@src/payments/enum/payment.enum';
 import {
   Lecture,
   LecturePass,
+  LectureSchedule,
   LecturerBankAccount,
   LecturerLearner,
   Payment,
   PaymentProductType,
   PaymentStatus,
+  RegularLectureStatus,
   UserBankAccount,
 } from '@prisma/client';
 import { PaymentProductTypeDto } from '../dtos/payment-product-type.dto';
@@ -144,13 +147,25 @@ export class PaymentsRepository {
     }
   }
 
-  async getLectureSchedule(lectureScheduleId: number) {
+  async getLectureSchedule(
+    lectureMethod: LectureMethod,
+    lectureScheduleId: number,
+  ): Promise<LectureSchedule | RegularLectureStatus> {
     try {
-      return await this.prismaService.lectureSchedule.findFirst({
-        where: {
-          id: lectureScheduleId,
-        },
-      });
+      if (lectureMethod === LectureMethod.원데이) {
+        return await this.prismaService.lectureSchedule.findFirst({
+          where: {
+            id: lectureScheduleId,
+          },
+        });
+      }
+      if (lectureMethod === LectureMethod.정기) {
+        return await this.prismaService.regularLectureStatus.findFirst({
+          where: {
+            id: lectureScheduleId,
+          },
+        });
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 강의 일정 조회 실패: ${error}`,
@@ -210,18 +225,33 @@ export class PaymentsRepository {
 
   async trxIncrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
+    lectureMethod: LectureMethod,
     lectureSchedule: ILectureSchedule,
   ) {
     try {
-      await transaction.lectureSchedule.update({
-        where: { id: lectureSchedule.lectureScheduleId },
-        data: {
-          numberOfParticipants: {
-            increment: lectureSchedule.participants,
+      if (lectureMethod === LectureMethod.원데이) {
+        await transaction.lectureSchedule.update({
+          where: { id: lectureSchedule.lectureScheduleId },
+          data: {
+            numberOfParticipants: {
+              increment: lectureSchedule.participants,
+            },
           },
-        },
-      });
+        });
+      }
+      if (lectureMethod === LectureMethod.정기) {
+        await transaction.regularLectureStatus.update({
+          where: { id: lectureSchedule.lectureScheduleId },
+          data: {
+            numberOfParticipants: {
+              increment: lectureSchedule.participants,
+            },
+          },
+        });
+      }
     } catch (error) {
+      console.log(error);
+
       throw new InternalServerErrorException(
         `Prisma 강의 일정 수정 실패: ${error}`,
         'PrismaUpdateFailed',
@@ -303,27 +333,10 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.payment.findUnique({
         where: { orderId },
-        select: {
-          id: true,
-          orderId: true,
-          originalPrice: true,
-          finalPrice: true,
-          lecturerId: true,
-          userId: true,
-          paymentProductType: { select: { id: true, name: true } },
-          paymentStatus: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          reservation: {
-            select: {
-              id: true,
-              participants: true,
-              lectureScheduleId: true,
-            },
-          },
+        include: {
+          paymentStatus: true,
+          paymentProductType: true,
+          reservation: true,
           paymentCouponUsage: true,
         },
       });
@@ -710,17 +723,30 @@ export class PaymentsRepository {
 
   async trxDecrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
+    lectureMethod: LectureMethod,
     reservation: ILectureSchedule,
   ) {
     try {
-      await transaction.lectureSchedule.update({
-        where: { id: reservation.lectureScheduleId },
-        data: {
-          numberOfParticipants: {
-            decrement: reservation.participants,
+      if (lectureMethod === LectureMethod.원데이) {
+        await transaction.lectureSchedule.update({
+          where: { id: reservation.lectureScheduleId },
+          data: {
+            numberOfParticipants: {
+              decrement: reservation.participants,
+            },
           },
-        },
-      });
+        });
+      }
+      if (lectureMethod === LectureMethod.정기) {
+        await transaction.regularLectureStatus.update({
+          where: { id: reservation.regularLectureStatusId },
+          data: {
+            numberOfParticipants: {
+              decrement: reservation.participants,
+            },
+          },
+        });
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 강의 일정 수정 실패: ${error}`,
@@ -1191,7 +1217,9 @@ export class PaymentsRepository {
       },
       include: {
         transferPaymentInfo: true,
-        reservation: { include: { lectureSchedule: true } },
+        reservation: {
+          include: { lectureSchedule: true, regularLectureStatus: true },
+        },
       },
     });
   }
