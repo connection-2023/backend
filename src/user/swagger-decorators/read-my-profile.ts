@@ -1,40 +1,18 @@
-import {
-  ApiBadRequestResponse,
-  ApiBearerAuth,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
-import { applyDecorators } from '@nestjs/common';
-import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { HttpStatus, applyDecorators } from '@nestjs/common';
+import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
+import { PrivateUserProfileDto } from '../dtos/private-user-profile.dto';
 
-export function ApiReadMyProfile() {
+export function ApiGetUserMyProfile() {
   return applyDecorators(
-    ApiOperation({ summary: '내 프로필 조회' }),
+    ApiOperation({
+      summary: '유저 내 프로필 조회',
+    }),
     ApiBearerAuth(),
-    ApiOkResponse(
-      SwaggerApiResponse.success('프로필 조회 성공', {
-        statusCode: 200,
-        data: {
-          myProfile: {
-            id: 19,
-            name: '이재현',
-            nickname: 'hyun',
-            email: 'illppang@naver.com',
-            isProfileOpen: true,
-            phoneNumber: '01012345678',
-            gender: 0,
-            createdAt: '2023-10-19T17:02:20.948Z',
-            updatedAt: '2023-10-19T17:02:20.948Z',
-            deletedAt: null,
-            auth: {
-              email: 'illppang@naver.com',
-              signUpType: 0,
-            },
-            userProfileImage: null,
-          },
-        },
-      }),
+    DetailResponseDto.swaggerBuilder(
+      HttpStatus.OK,
+      'myProfile',
+      PrivateUserProfileDto,
     ),
   );
 }

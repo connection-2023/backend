@@ -35,6 +35,7 @@ import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
 import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
+import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -287,8 +288,12 @@ export class LecturerService implements OnModuleInit {
 
   async getLecturerBasicProfile(
     lecturerId: number,
-  ): Promise<LecturerBasicProfile> {
-    return await this.lecturerRepository.getLecturerBasicProfile(lecturerId);
+  ): Promise<LecturerBasicProfileDto> {
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecturerId,
+    );
+
+    return lecturer ? new LecturerBasicProfileDto(lecturer) : null;
   }
 
   async updateMyLecturerProfile(

@@ -405,13 +405,20 @@ model UserCoupon {
 }
 
 model Auth {
-  id         Int       @id @default(autoincrement())
-  userId     Int       @unique
-  email      String    @unique
-  signUpType Int
-  createdAt  DateTime  @default(now()) @db.Timestamp(6)
-  deletedAt  DateTime? @db.Timestamp(6)
-  users      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           Int        @id @default(autoincrement())
+  userId       Int        @unique
+  email        String     @unique
+  signUpTypeId Int
+  createdAt    DateTime   @default(now()) @db.Timestamp(6)
+  deletedAt    DateTime?  @db.Timestamp(6)
+  users        Users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signUpType   SignUpType @relation(fields: [signUpTypeId], references: [id])
+}
+
+model SignUpType {
+  id   Int    @id @default(autoincrement())
+  type String
+  auth Auth[]
 }
 
 model LecturerRegion {
@@ -682,7 +689,7 @@ model PaymentProductType {
 model Reservation {
   id                     Int                   @id @default(autoincrement())
   userId                 Int
-  paymentId              Int  @unique
+  paymentId              Int                   @unique
   lectureScheduleId      Int?
   regularLectureStatusId Int?
   //대표자

@@ -50,8 +50,8 @@ export class UserRepository {
     return await this.prismaService.users.findUnique({
       where: { id: userId },
       include: {
-        auth: { select: { email: true, signUpType: true } },
-        userProfileImage: { select: { imageUrl: true } },
+        auth: { include: { signUpType: true } },
+        userProfileImage: true,
       },
     });
   }

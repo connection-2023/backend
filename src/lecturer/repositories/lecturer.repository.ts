@@ -158,14 +158,11 @@ export class LecturerRepository {
     });
   }
 
-  async getLecturerBasicProfile(lecturerId): Promise<LecturerBasicProfile> {
+  async getLecturerBasicProfile(lecturerId) {
     return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId, deletedAt: null },
-      select: {
-        id: true,
-        profileCardImageUrl: true,
-        nickname: true,
-        phoneNumber: true,
+      include: {
+        users: { include: { auth: true } },
       },
     });
   }

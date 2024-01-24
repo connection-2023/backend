@@ -42,6 +42,7 @@ import { ApiReadManyLectureProgress } from '@src/lecture/swagger-decorators/read
 import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 import { ApiGetLecturerLearnerPaymentsOverview } from '../swagger-decorators/get-lecturer-leaner-payments-overview.decorator';
+import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -87,18 +88,16 @@ export class LecturerController {
     return await this.lecturerService.getLecturerProfile(userId, lecturerId);
   }
 
+  @SetResponseKey('lecturerBasicProfile')
   @ApiGetLecturerBasicProfile()
   @Get('/my-basic-profile')
   @UseGuards(LecturerAccessTokenGuard)
   async getMyLecturerBasicProfile(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    const lecturerBasicProfile: LecturerBasicProfile =
-      await this.lecturerService.getLecturerBasicProfile(
-        authorizedData.lecturer.id,
-      );
-
-    return { lecturerBasicProfile };
+  ): Promise<LecturerBasicProfileDto> {
+    return await this.lecturerService.getLecturerBasicProfile(
+      authorizedData.lecturer.id,
+    );
   }
 
   @ApiGetMyCoupons()
