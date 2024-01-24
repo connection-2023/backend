@@ -162,7 +162,7 @@ export class LecturerRepository {
     return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId, deletedAt: null },
       include: {
-        users: { include: { auth: true } },
+        users: { include: { auth: { include: { signUpType: true } } } },
       },
     });
   }

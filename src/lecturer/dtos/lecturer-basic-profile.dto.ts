@@ -1,31 +1,8 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
-import { Auth, Users } from '@prisma/client';
-import { SignUpType } from '@src/common/config/sign-up-type.config';
+import { ApiProperty } from '@nestjs/swagger';
+import { AuthDto } from '@src/common/dtos/auth.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { UserDto } from '@src/common/dtos/user.dto';
-import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
-import { TransformEnumValue } from '@src/common/utils/enum-value-extractor';
-import { Exclude, Expose, Transform } from 'class-transformer';
-
-@Exclude()
-class PrivateAuthDto implements Pick<Auth, 'email' | 'signUpTypeId'> {
-  @ApiProperty({
-    description: '소셜 이메일',
-  })
-  @Expose()
-  email: string;
-
-  @ApiProperty({
-    enum: SignUpType,
-    description: `${ExtractEnumKeys(SignUpType)}`,
-  })
-  @Expose()
-  signUpTypeId: number;
-
-  constructor(auth: Partial<PrivateAuthDto>) {
-    Object.assign(this, auth);
-  }
-}
+import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
 class PrivateUserDto implements Pick<UserDto, 'name'> {
@@ -35,17 +12,17 @@ class PrivateUserDto implements Pick<UserDto, 'name'> {
   @Expose()
   name: string;
 
-  @ApiProperty({
-    type: PrivateAuthDto,
-    description: '소셜 정보',
-  })
   @Expose()
-  auth: PrivateAuthDto;
+  @ApiProperty({
+    description: '소셜 정보',
+    type: AuthDto,
+  })
+  auth?: AuthDto;
 
   constructor(user: Partial<PrivateUserDto>) {
     Object.assign(this, user);
 
-    this.auth = new PrivateAuthDto(user.auth);
+    this.auth = new AuthDto(user.auth);
   }
 }
 
