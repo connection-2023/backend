@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose';
 import { IsNotEmpty, IsObject } from 'class-validator';
-import mongoose, { Document, ObjectId } from 'mongoose';
+import mongoose, { Document, ObjectId, now } from 'mongoose';
 
 const options: SchemaOptions = {
   timestamps: true,
@@ -18,14 +18,20 @@ export class Chats extends Document {
 
   @Prop({
     required: true,
-    type: { userId: { type: Number }, lecturerId: { type: Number } },
+    type: {
+      userId: { type: Number, default: null },
+      lecturerId: { type: Number, default: null },
+    },
   })
   @IsNotEmpty()
   sender: object;
 
   @Prop({
     required: true,
-    type: { userId: { type: Number }, lecturerId: { type: Number } },
+    type: {
+      userId: { type: Number, default: null },
+      lecturerId: { type: Number, default: null },
+    },
   })
   @IsNotEmpty()
   receiver: object;
@@ -34,9 +40,9 @@ export class Chats extends Document {
   @IsNotEmpty()
   content: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: null })
   @IsNotEmpty()
-  isRead: boolean;
+  isRead: Date;
 }
 
 export const ChatsSchema = SchemaFactory.createForClass(Chats);

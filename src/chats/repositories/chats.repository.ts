@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Post, UseGuards } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chats } from '../schemas/chats.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { ChatRoom } from '../schemas/chats-room.schema';
-import { ValidateResult } from '@src/common/interface/common-interface';
+import { ISenderAndReceiver } from '../interfaces/chats.interface';
 
 @Injectable()
 export class ChatsRepository {
@@ -12,4 +12,18 @@ export class ChatsRepository {
     @InjectModel(ChatRoom.name)
     private readonly chatRoomModel: Model<ChatRoom>,
   ) {}
+
+  async createChats(
+    sender: ISenderAndReceiver,
+    receiver: ISenderAndReceiver,
+    content: string,
+    roomObjectId: mongoose.Types.ObjectId,
+  ): Promise<Chats> {
+    return await this.chatsModel.create({
+      chattingRommId: roomObjectId,
+      sender,
+      receiver,
+      content,
+    });
+  }
 }
