@@ -1174,7 +1174,18 @@ export class PaymentsRepository {
         paymentMethodId: {
           in: [PaymentMethods.현장결제, PaymentMethods.선결제],
         },
-        reservation: { lectureSchedule: { lectureId } },
+        OR: [
+          {
+            reservation: {
+              lectureSchedule: { lectureId },
+            },
+          },
+          {
+            reservation: {
+              regularLectureStatus: { lectureId },
+            },
+          },
+        ],
       },
       include: {
         user: { include: { userProfileImage: true } },
@@ -1189,7 +1200,7 @@ export class PaymentsRepository {
         reservation: {
           include: {
             lectureSchedule: true,
-            regularLectureStatus: true,
+            regularLectureStatus: { include: { regularLectureSchedule: true } },
           },
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },

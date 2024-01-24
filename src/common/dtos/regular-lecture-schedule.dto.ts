@@ -7,7 +7,6 @@ export class RegularLectureScheduleDto implements RegularLectureSchedule {
     type: Number,
   })
   id: number;
-  lectureId: number;
 
   @ApiProperty({
     description: '요일',
@@ -31,7 +30,6 @@ export class RegularLectureScheduleDto implements RegularLectureSchedule {
 
   constructor(regularLectureSchedule: Partial<RegularLectureScheduleDto>) {
     this.id = regularLectureSchedule.id;
-    this.lectureId = regularLectureSchedule.lectureId;
     this.day = regularLectureSchedule.day;
     this.startDateTime = regularLectureSchedule.startDateTime;
     this.endDateTime = regularLectureSchedule.endDateTime;
