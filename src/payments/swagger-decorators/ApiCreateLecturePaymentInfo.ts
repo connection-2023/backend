@@ -1,15 +1,13 @@
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { PendingPaymentInfoDto } from '@src/payments/dtos/pending-payment-info.dto';
 
 export function ApiCreateLecturePaymentInfo() {
   return applyDecorators(

@@ -51,6 +51,7 @@ import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lectu
 import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
 import { PaymentDto } from '../dtos/payment.dto';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
+import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -100,41 +101,31 @@ export class PaymentsService implements OnModuleInit {
 
   async createLecturePaymentWithToss(
     userId: number,
-    createLecturePaymentDto: CreateLecturePaymentWithTossDto,
-  ) {
-    const { lectureId, lectureSchedule } = createLecturePaymentDto;
+    dto: CreateLecturePaymentWithTossDto,
+  ): Promise<PendingPaymentInfoDto> {
+    const { lectureId, lectureSchedule } = dto;
     const lecture: Lecture = await this.checkLectureValidity(
       lectureId,
       lectureSchedule,
     );
 
-    await this.checkUserPaymentValidity(
-      userId,
-      createLecturePaymentDto.orderId,
-    );
-    await this.checkApplicableCoupon(createLecturePaymentDto);
+    await this.checkUserPaymentValidity(userId, dto.orderId);
+    await this.checkApplicableCoupon(dto);
 
     // 강의 자리수 확인 및 쿠폰 비교
     const coupons: Coupons = await this.comparePrice(
       userId,
       lecture.price,
-      createLecturePaymentDto,
+      dto,
     );
 
-    await this.trxCreateLecturePaymentWithToss(
-      userId,
-      lecture,
-      createLecturePaymentDto,
-      coupons,
-    );
+    await this.trxCreateLecturePaymentWithToss(userId, lecture, dto, coupons);
 
-    const lecturePaymentInfo = {
-      orderId: createLecturePaymentDto.orderId,
-      orderName: createLecturePaymentDto.orderName,
-      value: createLecturePaymentDto.finalPrice,
-    };
-
-    return lecturePaymentInfo;
+    return new PendingPaymentInfoDto({
+      orderId: dto.orderId,
+      orderName: dto.orderName,
+      value: dto.finalPrice,
+    });
   }
 
   private async trxCreateLecturePaymentWithToss(
