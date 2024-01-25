@@ -31,7 +31,10 @@ import {
   Lecture,
   LecturePass,
   Payment,
+  PaymentCouponUsage,
   PaymentProductType,
+  PaymentStatus,
+  Reservation,
 } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ConfirmLecturePaymentDto as ConfirmPaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
@@ -40,6 +43,7 @@ import {
   PaymentProductTypes,
   PaymentOrderStatus,
   RefundStatuses,
+  LectureMethod,
 } from '@src/payments/enum/payment.enum';
 import axios from 'axios';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
@@ -119,7 +123,7 @@ export class PaymentsService implements OnModuleInit {
 
     await this.trxCreateLecturePaymentWithToss(
       userId,
-      lecture.lecturerId,
+      lecture,
       createLecturePaymentDto,
       coupons,
     );
@@ -135,7 +139,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithToss(
     userId: number,
-    lecturerId: number,
+    { lecturerId, lectureMethodId }: Lecture,
     createLecturePaymentDto: CreateLecturePaymentWithTossDto,
     coupons: Coupons,
   ): Promise<void> {
@@ -163,6 +167,7 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             createLecturePaymentDto,
+            lectureMethodId,
           ),
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
         ]);
@@ -177,6 +182,7 @@ export class PaymentsService implements OnModuleInit {
     const lecture: Lecture = await this.paymentsRepository.getLecture(
       lectureId,
     );
+
     if (!lecture) {
       throw new NotFoundException(`강의정보가 존재하지 않습니다.`);
     }
@@ -185,7 +191,11 @@ export class PaymentsService implements OnModuleInit {
     }
 
     //강의 인원수 확인
-    await this.checkLectureSchedules(lecture.maxCapacity, lectureSchedule);
+    await this.checkLectureSchedules(
+      lecture.lectureMethodId,
+      lecture.maxCapacity,
+      lectureSchedule,
+    );
 
     return lecture;
   }
@@ -205,16 +215,17 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async checkLectureSchedules(
-    lectureMaxCapacity,
+    lectureMethod: number,
+    lectureMaxCapacity: number,
     lectureSchedule: ILectureSchedule,
   ) {
     const selectedSchedule = await this.paymentsRepository.getLectureSchedule(
+      lectureMethod,
       lectureSchedule.lectureScheduleId,
     );
+
     if (!selectedSchedule) {
-      throw new NotFoundException(
-        `scheduleId:${lectureSchedule.lectureScheduleId} 해당 강의 정보가 존재하지 않습니다.`,
-      );
+      throw new NotFoundException(`해당 강의 정보가 존재하지 않습니다.`);
     }
 
     const remainingCapacity = lectureMaxCapacity - lectureSchedule.participants;
@@ -484,12 +495,14 @@ export class PaymentsService implements OnModuleInit {
       | CreateLecturePaymentWithTossDto
       | CreateLecturePaymentWithPassDto
       | CreateLecturePaymentWithDepositDto,
+    lectureMethod: LectureMethod,
   ): Promise<void> {
     const { lectureSchedule, representative, phoneNumber, requests } =
       getLecturePaymentDto;
 
     await this.paymentsRepository.trxIncrementLectureScheduleParticipants(
       transaction,
+      lectureMethod,
       lectureSchedule,
     );
 
@@ -499,7 +512,10 @@ export class PaymentsService implements OnModuleInit {
       representative,
       phoneNumber,
       requests,
-      ...lectureSchedule,
+      participants: lectureSchedule.participants,
+      ...(lectureMethod === LectureMethod.원데이
+        ? { lectureScheduleId: lectureSchedule.lectureScheduleId }
+        : { regularLectureStatusId: lectureSchedule.lectureScheduleId }),
     };
     await this.paymentsRepository.trxCreateReservation(
       transaction,
@@ -830,10 +846,17 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  private async cancelReservationTransaction(paymentInfo) {
+  private async cancelReservationTransaction(
+    paymentInfo: Payment & {
+      paymentStatus: PaymentStatus;
+      paymentCouponUsage: PaymentCouponUsage;
+      paymentProductType: PaymentProductType;
+      reservation: Reservation;
+    },
+  ) {
     const {
       id: paymentId,
-      reservation: reservations,
+      reservation,
       userId,
       lecturerId,
       paymentCouponUsage,
@@ -846,16 +869,19 @@ export class PaymentsService implements OnModuleInit {
       paymentCouponUsage.stackableCouponId !== null &&
         couponIds.push(paymentCouponUsage.stackableCouponId);
     }
+    const lectureMethod = reservation.lectureScheduleId
+      ? LectureMethod.원데이
+      : LectureMethod.정기;
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         await Promise.all([]);
-        for (const reservation of reservations) {
-          await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
-            transaction,
-            reservation,
-          );
-        }
+        await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
+          transaction,
+          lectureMethod,
+          reservation,
+        );
+
         await this.paymentsRepository.trxDecrementLectureLearner(
           transaction,
           userId,
@@ -1016,7 +1042,7 @@ export class PaymentsService implements OnModuleInit {
 
     const payment: Payment = await this.trxCreateLecturePaymentWithPass(
       userId,
-      lecture.lecturerId,
+      lecture,
       createLecturePaymentWithPassDto,
       userPass,
     );
@@ -1059,7 +1085,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithPass(
     userId: number,
-    lecturerId: number,
+    { lecturerId, lectureMethodId }: Lecture,
     createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
     userPass: ISelectedUserPass,
   ) {
@@ -1084,6 +1110,7 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             createLecturePaymentWithPassDto,
+            lectureMethodId,
           ),
           this.trxUpdatePassUsage(
             transaction,
@@ -1147,16 +1174,11 @@ export class PaymentsService implements OnModuleInit {
     userId: number,
     dto: CreateLecturePaymentWithTransferDto,
   ): Promise<PaymentDto> {
-    const {
-      lectureId,
-      lectureSchedule: lectureSchedules,
-      orderId,
-      userBankAccountId,
-    } = dto;
+    const { lectureId, lectureSchedule, orderId, userBankAccountId } = dto;
 
     const lecture: Lecture = await this.checkLectureValidity(
       lectureId,
-      lectureSchedules,
+      lectureSchedule,
     );
 
     //올바른 환불 계좌인지 확인
@@ -1175,6 +1197,7 @@ export class PaymentsService implements OnModuleInit {
     await this.trxCreateLecturePaymentWithTransfer(
       userId,
       lecture.lecturerId,
+      lecture.lectureMethodId,
       dto,
       coupons,
     );
@@ -1182,6 +1205,7 @@ export class PaymentsService implements OnModuleInit {
     return new PaymentDto(
       await this.paymentsRepository.getUserPaymentInfo(userId, orderId),
     );
+    return;
   }
 
   private async checkUserBankAccount(
@@ -1202,6 +1226,7 @@ export class PaymentsService implements OnModuleInit {
   private async trxCreateLecturePaymentWithTransfer(
     userId: number,
     lecturerId: number,
+    lectureMethod: LectureMethod,
     dto: CreateLecturePaymentWithTransferDto,
     coupons: Coupons,
   ): Promise<void> {
@@ -1240,6 +1265,7 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             dto,
+            lectureMethod,
           ),
           //수강생 추가 및 신청 횟수 증가
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
@@ -1276,16 +1302,11 @@ export class PaymentsService implements OnModuleInit {
     userId: number,
     dto: CreateLecturePaymentWithDepositDto,
   ): Promise<PaymentDto> {
-    const {
-      lectureId,
-      lectureSchedule: lectureSchedules,
-      orderId,
-      userBankAccountId,
-    } = dto;
+    const { lectureId, lectureSchedule, orderId, userBankAccountId } = dto;
 
     const lecture: Lecture = await this.checkLectureValidity(
       lectureId,
-      lectureSchedules,
+      lectureSchedule,
     );
 
     //올바른 환불 계좌인지 확인
@@ -1295,11 +1316,7 @@ export class PaymentsService implements OnModuleInit {
     //보증금 비교
     this.compareDeposit(dto, lecture);
 
-    await this.trxCreateLecturePaymentWithDeposit(
-      userId,
-      lecture.lecturerId,
-      dto,
-    );
+    await this.trxCreateLecturePaymentWithDeposit(userId, lecture, dto);
 
     return new PaymentDto(
       await this.paymentsRepository.getUserPaymentInfo(userId, orderId),
@@ -1340,7 +1357,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithDeposit(
     userId: number,
-    lecturerId: number,
+    { lecturerId, lectureMethodId }: Lecture,
     dto:
       | CreateLecturePaymentWithDepositDto
       | CreateLecturePaymentWithDepositDto,
@@ -1381,6 +1398,7 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             dto,
+            lectureMethodId,
           ),
           //수강생 추가 및 신청 횟수 증가
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),

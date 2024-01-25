@@ -37,13 +37,13 @@ export class ReservationDto implements Reservation {
   isEnabled: boolean;
 
   @ApiProperty({
-    description: '일정',
+    description: '원데이 클래스 일정',
     type: LectureScheduleDto,
   })
   lectureSchedule: LectureScheduleDto;
 
   @ApiProperty({
-    description: '일정',
+    description: '정기 클래스 일정',
     type: RegularLectureStatusDto,
   })
   regularLectureStatus: RegularLectureStatusDto;

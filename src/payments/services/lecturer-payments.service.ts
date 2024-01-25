@@ -13,6 +13,7 @@ import {
 } from '@prisma/client';
 import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
 import {
+  LectureMethod,
   PaymentMethods,
   PaymentOrderStatus,
   PaymentStatusForLecturer,
@@ -243,6 +244,17 @@ export class LecturerPaymentsService {
     lectureMaxCapacity?: number,
   ): Promise<void> {
     const { reservation } = payment;
+    let lectureMethod;
+    let numberOfParticipants;
+    if (reservation.lectureScheduleId) {
+      lectureMethod = LectureMethod.원데이;
+      numberOfParticipants = reservation.lectureSchedule.numberOfParticipants;
+    } else {
+      lectureMethod = LectureMethod.정기;
+      numberOfParticipants =
+        reservation.regularLectureStatus.numberOfParticipants;
+    }
+
     const trxUpdateParticipantsMethod = isIncrement
       ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
       : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
@@ -254,8 +266,7 @@ export class LecturerPaymentsService {
     //각 스케쥴의 현재 인원 수정
     //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
     if (isIncrement && lectureMaxCapacity) {
-      const remainingCapacity =
-        lectureMaxCapacity - reservation.lectureSchedule.numberOfParticipants;
+      const remainingCapacity = lectureMaxCapacity - numberOfParticipants;
 
       if (remainingCapacity < reservation.participants) {
         throw new BadRequestException(
@@ -265,7 +276,7 @@ export class LecturerPaymentsService {
       }
     }
 
-    await trxUpdateParticipantsMethod(transaction, reservation);
+    await trxUpdateParticipantsMethod(transaction, lectureMethod, reservation);
 
     //수강생의 신청 횟수 수정
     await trxUpdateLearnerCountMethod(

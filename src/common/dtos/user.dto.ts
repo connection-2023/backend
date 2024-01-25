@@ -35,7 +35,7 @@ export class UserDto extends BaseReturnDto implements Users {
   constructor(user: Partial<UserDto>) {
     super();
 
-    this.auth = new AuthDto(user.auth);
+    this.auth = user.auth ? new AuthDto(user.auth) : undefined;
     this.userProfileImage = user.userProfileImage
       ? new UserProfileImageDto(user.userProfileImage)
       : null;

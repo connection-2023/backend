@@ -44,3 +44,8 @@ export enum PaymentStatusForLecturer {
   DONE = PaymentOrderStatus.DONE,
   REFUSED = PaymentOrderStatus.REFUSED,
 }
+
+export enum LectureMethod {
+  '원데이' = 1,
+  '정기' = 2,
+}
