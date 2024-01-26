@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
@@ -31,6 +32,7 @@ import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/creat
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { Request } from 'express';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -151,6 +153,15 @@ export class PaymentsController {
     return await this.paymentsService.getUserReceipt(
       authorizedData.user.id,
       orderId,
+    );
+  }
+
+  @Post('/toss/status')
+  async handleVirtualAccountPaymentStatusWebhook(
+    @Req() req: Request,
+  ): Promise<void> {
+    return await this.paymentsService.handleVirtualAccountPaymentStatusWebhook(
+      req.body,
     );
   }
 }

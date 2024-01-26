@@ -76,6 +76,7 @@ export interface PaymentInfo {
 export interface TossPaymentsConfirmResponse {
   card?: TossPaymentCardInfo;
   virtualAccount?: TossPaymentVirtualAccountInfo;
+  secret?: string;
 }
 
 export interface TossPaymentVirtualAccountInfo {
@@ -154,7 +155,6 @@ export interface IVirtualAccountPaymentInfo {
 
 export interface VirtualAccountPaymentInfoInputData {
   paymentId: number;
-  refundStatusId: number;
   accountNumber: string;
   bankCode: string;
   customerName: string;
@@ -248,4 +248,12 @@ export interface IPayment extends Payment {
 export interface IReservation extends Reservation {
   lectureSchedule?: LectureSchedule;
   regularLectureStatus?: RegularLectureStatus;
+}
+
+export interface IWebHookData {
+  createdAt: string;
+  secret: string;
+  orderId: string;
+  status: string;
+  transactionKey: string;
 }

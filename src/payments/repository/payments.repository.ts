@@ -327,7 +327,7 @@ export class PaymentsRepository {
     }
   }
 
-  async getPaymentInfo(orderId: string) {
+  async getPaymentInfoByOrderId(orderId: string) {
     try {
       return await this.prismaService.payment.findUnique({
         where: { orderId },
@@ -369,11 +369,12 @@ export class PaymentsRepository {
     paymentKey: string,
     statusId: number,
     paymentMethodId: number,
+    secret?: string,
   ) {
     try {
       return await transaction.payment.update({
         where: { id: paymentId },
-        data: { paymentKey, statusId, paymentMethodId },
+        data: { paymentKey, statusId, paymentMethodId, secret },
         select: {
           orderId: true,
           orderName: true,
@@ -902,7 +903,7 @@ export class PaymentsRepository {
     target: string,
   ) {
     try {
-      return await transaction[target].updateMany({
+      return await transaction[target].update({
         where: { paymentId },
         data: { isEnabled: true },
       });
