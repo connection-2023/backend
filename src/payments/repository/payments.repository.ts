@@ -250,8 +250,6 @@ export class PaymentsRepository {
         });
       }
     } catch (error) {
-      console.log(error);
-
       throw new InternalServerErrorException(
         `Prisma 강의 일정 수정 실패: ${error}`,
         'PrismaUpdateFailed',
@@ -1150,7 +1148,9 @@ export class PaymentsRepository {
         reservation: {
           include: {
             lectureSchedule: { include: { lecture: true } },
-            regularLectureStatus: { include: { lecture: true } },
+            regularLectureStatus: {
+              include: { lecture: true, regularLectureSchedule: true },
+            },
           },
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },

@@ -14,7 +14,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiCreateLecturePaymentInfo } from '@src/payments/swagger-decorators/create-lecture-payment-info-decorater';
+import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/ApiCreateLecturePaymentInfo';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { ApiConfirmPayment } from '@src/payments/swagger-decorators/confirm-payment-decorater';
 import { IPaymentResult } from '@src/payments/interface/payments.interface';
@@ -30,6 +30,7 @@ import { PaymentDto } from '../dtos/payment.dto';
 import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/create-lecture-payment-info-with-transfer-decorater';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
+import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -42,20 +43,18 @@ export class PaymentsController {
   // }
 
   //토스 페이먼츠로 클래스 결제
+  @SetResponseKey('pendingPaymentInfo')
   @ApiCreateLecturePaymentInfo()
   @Post('/toss/lecture')
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentWithToss(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLecturePaymentDto: CreateLecturePaymentWithTossDto,
-  ) {
-    const lecturePaymentInfo =
-      await this.paymentsService.createLecturePaymentWithToss(
-        authorizedData.user.id,
-        createLecturePaymentDto,
-      );
-
-    return { lecturePaymentInfo };
+  ): Promise<PendingPaymentInfoDto> {
+    return await this.paymentsService.createLecturePaymentWithToss(
+      authorizedData.user.id,
+      createLecturePaymentDto,
+    );
   }
 
   //토스 페이먼츠로 패스권 결제
