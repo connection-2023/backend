@@ -1,14 +1,19 @@
+import { ChatsRepository } from './../repositories/chats.repository';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { GetSocketRoomIdDto } from '../dtos/get-socket-room-id.dto';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { GetChatRoomDto } from '../dtos/get-chat-room.dto';
+import { CombinedChatRoomDto } from '../dtos/combined-chat-room.dto';
+import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 
 @Injectable()
 export class ChatRoomService {
-  constructor(private readonly chatRoomRepository: ChatRoomRepository) {}
+  constructor(
+    private readonly chatRoomRepository: ChatRoomRepository,
+    private readonly chatsRepository: ChatsRepository,
+  ) {}
 
   async getSocketRoom(authorizedData: ValidateResult) {
     const where = authorizedData.user
@@ -48,7 +53,13 @@ export class ChatRoomService {
       lecturerId,
     );
 
-    return new GetChatRoomDto(chatRoom);
+    if (!chatRoom) {
+      throw new NotFoundException(
+        `chat room not found for user with ID: ${userId}, lecturer with ID: ${lecturerId}`,
+      );
+    }
+
+    return new ChatRoomDto(chatRoom);
   }
 
   private createUserIdAndLecturerId(

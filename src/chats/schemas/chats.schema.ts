@@ -24,7 +24,7 @@ export class Chats extends Document {
     },
   })
   @IsNotEmpty()
-  sender: object;
+  sender: { userId: number | null; lecturerId: number | null };
 
   @Prop({
     required: true,
@@ -34,7 +34,7 @@ export class Chats extends Document {
     },
   })
   @IsNotEmpty()
-  receiver: object;
+  receiver: { userId: number | null; lecturerId: number | null };
 
   @Prop({ required: true })
   @IsNotEmpty()
@@ -42,7 +42,7 @@ export class Chats extends Document {
 
   @Prop({ required: false, default: null })
   @IsNotEmpty()
-  isRead: Date;
+  readedAt: Date;
 }
 
 export const ChatsSchema = SchemaFactory.createForClass(Chats);

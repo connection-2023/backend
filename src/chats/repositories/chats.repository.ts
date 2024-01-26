@@ -26,4 +26,10 @@ export class ChatsRepository {
       content,
     });
   }
+
+  async getChatsWithChatRoomId(
+    roomId: mongoose.Types.ObjectId,
+  ): Promise<Chats[]> {
+    return await this.chatsModel.find({ chattingRommId: roomId }).exec();
+  }
 }
