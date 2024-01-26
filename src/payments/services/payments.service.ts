@@ -751,15 +751,34 @@ export class PaymentsService implements OnModuleInit {
           PaymentOrderStatus[
             response.data.status as unknown as keyof typeof PaymentOrderStatus
           ];
-        if (status === PaymentOrderStatus.DONE && response.data.card) {
+
+        if (status === PaymentOrderStatus.DONE && response.data.card !== null) {
           return { card: response.data.card };
         }
         if (
           status === PaymentOrderStatus.WAITING_FOR_DEPOSIT &&
-          response.data.virtualAccount
+          response.data.virtualAccount !== null
         ) {
           return { virtualAccount: response.data.virtualAccount };
         }
+
+        //제공되는 결제 방식이 아닐때
+        await axios.post(
+          `${this.tossPaymentsUrl}/${paymentInfo.paymentKey}/cancel`,
+          { cancelReason: '올바르지 않은 결제 방식' },
+          {
+            headers: {
+              Authorization: `Basic ${tossSkKey}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        await this.cancelPayment(paymentInfo.orderId);
+
+        throw new BadRequestException(
+          `올바르지 않은 결제 방식입니다.`,
+          'InvalidPaymentMethod',
+        );
       }
     } catch (error) {
       if (error.response.data) {
