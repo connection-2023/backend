@@ -1,3 +1,4 @@
+import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -37,7 +38,7 @@ export class ChatsService {
 
     this.eventsGateway.server.to(chatRoom.roomId).emit('newChat', chat);
 
-    return chat;
+    return new ChatRoomDto(chat);
   }
 
   private createSenderAndReceiver(

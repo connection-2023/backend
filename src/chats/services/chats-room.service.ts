@@ -62,6 +62,25 @@ export class ChatRoomService {
     return new ChatRoomDto(chatRoom);
   }
 
+  async getMyChatRoom(authorizedData: ValidateResult) {
+    const where = {};
+    if (authorizedData.user) {
+      where['$and'] = [{ userId: authorizedData.user.id }, { deletedAt: null }];
+    } else {
+      where['$and'] = [
+        { lecturer: authorizedData.lecturer.id },
+        { deletedAt: null },
+      ];
+    }
+
+    const chatRooms = await this.chatRoomRepository.getMyChatRooms(where);
+    if (!chatRooms[0]) {
+      throw new NotFoundException(`chat room not found`);
+    }
+
+    return chatRooms.map((chatRoom) => new ChatRoomDto(chatRoom));
+  }
+
   private createUserIdAndLecturerId(
     authorizedData: ValidateResult,
     targetId: number,

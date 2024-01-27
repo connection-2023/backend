@@ -17,6 +17,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { ApiCreateChatRoom } from '../swagger-decorators/create-chat-room.decorator';
 import { ApiGetChatRoom } from '../swagger-decorators/get-chat-room.decorator';
+import { ApiGetMyChatRoom } from '../swagger-decorators/get-my-chat-room.decorator';
 
 @Controller('chat-rooms')
 @ApiTags('채팅방')
@@ -52,5 +53,12 @@ export class ChatRoomController {
     @Param('targetId', ParseIntPipe) targetId: number,
   ) {
     return await this.chatRoomService.getChatRoom(authorizedData, targetId);
+  }
+
+  @ApiGetMyChatRoom()
+  @UseGuards(AccessTokenGuard)
+  @Get()
+  async getMyChatRooms(@GetAuthorizedUser() authorizedData: ValidateResult) {
+    return await this.chatRoomService.getMyChatRoom(authorizedData);
   }
 }
