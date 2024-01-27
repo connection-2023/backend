@@ -20,7 +20,7 @@ export class ChatsRepository {
     roomObjectId: mongoose.Types.ObjectId,
   ): Promise<Chats> {
     return await this.chatsModel.create({
-      chattingRommId: roomObjectId,
+      chattingRoomId: roomObjectId,
       sender,
       receiver,
       content,

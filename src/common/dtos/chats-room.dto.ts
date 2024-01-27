@@ -13,13 +13,16 @@ export class ChatRoomDto {
   @ApiProperty({ description: '참여 강사 id', type: Number })
   lecturerId: number;
 
+  @ApiProperty({ description: 'socket room id' })
   roomId: string;
+
   deletedAt: Date | null;
 
   constructor(room: Partial<ChatRoomDto>) {
     this.id = room._id.toString();
     this.userId = room.userId;
     this.lecturerId = room.lecturerId;
+    this.roomId = room.roomId;
 
     Object.assign(this);
   }

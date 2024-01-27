@@ -1,20 +1,18 @@
-import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose';
-import { IsNotEmpty, IsObject } from 'class-validator';
-import mongoose, { Document, ObjectId, now } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { IsNotEmpty } from 'class-validator';
+import mongoose, { Document, model } from 'mongoose';
+import { ChatRoom, ChatRoomSchema } from './chats-room.schema';
+import { Model } from 'mongoose';
 
-const options: SchemaOptions = {
-  timestamps: true,
-};
-
-@Schema(options)
+@Schema()
 export class Chats extends Document {
   @Prop({
     required: true,
     type: mongoose.Types.ObjectId,
-    ref: 'ChattingRoom',
+    ref: 'ChatRoom',
   })
   @IsNotEmpty()
-  chattingRommId: mongoose.Types.ObjectId;
+  chattingRoomId: mongoose.Types.ObjectId;
 
   @Prop({
     required: true,
@@ -42,7 +40,7 @@ export class Chats extends Document {
 
   @Prop({ required: false, default: null })
   @IsNotEmpty()
-  readedAt: Date;
+  readAt: Date;
 }
 
 export const ChatsSchema = SchemaFactory.createForClass(Chats);

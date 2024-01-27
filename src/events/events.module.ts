@@ -6,7 +6,6 @@ import { Chats, ChatsSchema } from '@src/chats/schemas/chats.schema';
 import { EventsGateway } from '@src/events/events.gateway';
 
 @Module({
-  imports: [ChatsModule],
   providers: [EventsGateway],
   exports: [EventsGateway],
 })

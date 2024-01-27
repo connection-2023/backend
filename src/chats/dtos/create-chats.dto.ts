@@ -5,7 +5,7 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class CreateChatsDto {
   @ApiProperty({ description: '채팅방 id', required: true })
   @IsNotEmpty()
-  roomId: string;
+  chatRoomId: string;
 
   @ApiProperty({ description: 'receiver', required: true })
   @IsNotEmpty()
