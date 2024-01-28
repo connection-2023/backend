@@ -10,6 +10,8 @@ import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { BaseReturnWithSwaggerDto } from '@src/common/dtos/base-return-with-swagger.dto';
 import { PaymentPassUsageDto } from './payment-pass-usage.dto';
 import { UserPassDto } from '@src/common/dtos/user-pass.dto';
+import { VirtualAccountPaymentInfoDto } from './virtual-account-payment-info.dto';
+import { CardPaymentInfoDto } from './card-payment-info.dto';
 
 export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   @ApiProperty({
@@ -73,6 +75,20 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   paymentCouponUsage: PaymentCouponUsageDto;
 
   @ApiProperty({
+    type: CardPaymentInfoDto,
+    description: '카드 결제 정보',
+    nullable: true,
+  })
+  cardPaymentInfo: CardPaymentInfoDto;
+
+  @ApiProperty({
+    type: VirtualAccountPaymentInfoDto,
+    description: '가상 계좌 결제 정보',
+    nullable: true,
+  })
+  virtualAccountPaymentInfo: VirtualAccountPaymentInfoDto;
+
+  @ApiProperty({
     type: TransferPaymentInfoDto,
     description: '계좌 이체 정보',
     nullable: true,
@@ -103,8 +119,10 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   @ApiProperty({
     type: UserPassDto,
     description: '구매한 유저 패스권 정보',
+    nullable: true,
   })
   userPass: UserPassDto;
+  secret: string;
 
   constructor(payment: Partial<PaymentDto>) {
     super();
@@ -126,6 +144,13 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
       : null;
     this.paymentCouponUsage = payment.paymentCouponUsage
       ? new PaymentCouponUsageDto(payment.paymentCouponUsage)
+      : null;
+
+    this.cardPaymentInfo = payment.cardPaymentInfo
+      ? new CardPaymentInfoDto(payment.cardPaymentInfo)
+      : null;
+    this.virtualAccountPaymentInfo = payment.virtualAccountPaymentInfo
+      ? new VirtualAccountPaymentInfoDto(payment.virtualAccountPaymentInfo)
       : null;
     this.transferPaymentInfo = payment.transferPaymentInfo
       ? new TransferPaymentInfoDto(payment.transferPaymentInfo)

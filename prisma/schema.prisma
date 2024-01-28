@@ -624,6 +624,7 @@ model Payment {
   paymentKey                String?                    @unique
   paymentProductTypeId      Int
   orderId                   String                     @unique
+  secret                    String?
   orderName                 String
   originalPrice             Int
   finalPrice                Int

@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
@@ -31,6 +32,7 @@ import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/creat
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { Request } from 'express';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -79,11 +81,8 @@ export class PaymentsController {
   @UseGuards(UserAccessTokenGuard)
   async confirmLecturePayment(
     @Body() confirmPaymentDto: ConfirmLecturePaymentDto,
-  ) {
-    const paymentResult: IPaymentResult =
-      await this.paymentsService.confirmPayment(confirmPaymentDto);
-
-    return { paymentResult };
+  ): Promise<PaymentDto> {
+    return await this.paymentsService.confirmPayment(confirmPaymentDto);
   }
 
   @ApiCancelPayment()
@@ -140,17 +139,12 @@ export class PaymentsController {
     );
   }
 
-  @ApiGetUserReceipt()
-  @SetResponseKey('receipt')
-  @Get('/user-receipt')
-  @UseGuards(UserAccessTokenGuard)
-  async getUserReceipt(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query('orderId') orderId: string,
-  ): Promise<PaymentDto> {
-    return await this.paymentsService.getUserReceipt(
-      authorizedData.user.id,
-      orderId,
+  @Post('/toss/status')
+  async handleVirtualAccountPaymentStatusWebhook(
+    @Req() req: Request,
+  ): Promise<void> {
+    await this.paymentsService.handleVirtualAccountPaymentStatusWebhook(
+      req.body,
     );
   }
 }

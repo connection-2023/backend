@@ -24,6 +24,7 @@ import {
   TossPaymentVirtualAccountInfo,
   TossPaymentsConfirmResponse,
   VirtualAccountPaymentInfoInputData,
+  IWebHookData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
@@ -572,7 +573,9 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
+  async confirmPayment(
+    confirmPaymentDto: ConfirmPaymentDto,
+  ): Promise<PaymentDto> {
     const { orderId, amount, paymentKey } = confirmPaymentDto;
     const paymentInfo = await this.getPaymentInfo(orderId);
 
@@ -589,9 +592,12 @@ export class PaymentsService implements OnModuleInit {
     ];
 
     if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
-      return await this.paymentsRepository.getLecturePaymentResultWithToss(
-        paymentInfo.id,
-      );
+      const payment =
+        await this.paymentsRepository.getLecturePaymentResultWithToss(
+          paymentInfo.id,
+        );
+
+      return new PaymentDto(payment);
     }
 
     if (paymentInfo.paymentStatus.id === PaymentOrderStatus.READY) {
@@ -621,8 +627,8 @@ export class PaymentsService implements OnModuleInit {
     productType: string,
     paymentKey: string,
     paymentInfo: TossPaymentsConfirmResponse,
-  ): Promise<IPaymentResult> {
-    const paymentResult: IPaymentResult = await this.prismaService.$transaction(
+  ): Promise<PaymentDto> {
+    const paymentResult = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         let paymentMethodId: number;
         let statusId: number;
@@ -668,11 +674,12 @@ export class PaymentsService implements OnModuleInit {
           paymentKey,
           statusId,
           paymentMethodId,
+          paymentInfo.secret,
         );
       },
     );
 
-    return paymentResult;
+    return new PaymentDto(paymentResult);
   }
 
   private async createCardPaymentInfo(
@@ -716,7 +723,9 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async getPaymentInfo(orderId: string) {
-    const paymentInfo = await this.paymentsRepository.getPaymentInfo(orderId);
+    const paymentInfo = await this.paymentsRepository.getPaymentInfoByOrderId(
+      orderId,
+    );
 
     if (!paymentInfo) {
       throw new NotFoundException(
@@ -759,7 +768,10 @@ export class PaymentsService implements OnModuleInit {
           status === PaymentOrderStatus.WAITING_FOR_DEPOSIT &&
           response.data.virtualAccount !== null
         ) {
-          return { virtualAccount: response.data.virtualAccount };
+          return {
+            virtualAccount: response.data.virtualAccount,
+            secret: response.data.secret,
+          };
         }
 
         //제공되는 결제 방식이 아닐때
@@ -817,7 +829,6 @@ export class PaymentsService implements OnModuleInit {
     const virtualAccountPaymentInfoInputData: VirtualAccountPaymentInfoInputData =
       {
         paymentId,
-        refundStatusId: RefundStatuses.NONE,
         bankCode,
         dueDate: convertedDueDate,
         ...virtualAccountData,
@@ -827,21 +838,6 @@ export class PaymentsService implements OnModuleInit {
       transaction,
       virtualAccountPaymentInfoInputData,
     );
-  }
-
-  async getUserReceipt(userId: number, orderId: string) {
-    const receipt = await this.paymentsRepository.getUserPaymentInfo(
-      userId,
-      orderId,
-    );
-    if (!receipt) {
-      throw new NotFoundException(
-        `결제정보가 존재하지 않습니다.`,
-        `NotFoundPaymentInfo`,
-      );
-    }
-
-    return new PaymentDto(receipt);
   }
 
   async cancelPayment(orderId: string): Promise<void> {
@@ -1028,7 +1024,9 @@ export class PaymentsService implements OnModuleInit {
       createLecturePaymentWithPassDto;
 
     //결제 완료된 상태면 결제 내역 반환
-    const paymentInfo = await this.paymentsRepository.getPaymentInfo(orderId);
+    const paymentInfo = await this.paymentsRepository.getPaymentInfoByOrderId(
+      orderId,
+    );
     if (
       paymentInfo &&
       paymentInfo.paymentStatus.id === PaymentOrderStatus.DONE
@@ -1413,6 +1411,53 @@ export class PaymentsService implements OnModuleInit {
           //수강생 추가 및 신청 횟수 증가
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
         ]);
+      },
+    );
+  }
+
+  async handleVirtualAccountPaymentStatusWebhook({
+    status,
+    secret,
+    orderId,
+  }: IWebHookData): Promise<void> {
+    const selectedPayment =
+      await this.paymentsRepository.getPaymentInfoByOrderId(orderId);
+    // secret 키가 다르면 반환
+    if (!selectedPayment) {
+      return;
+    }
+    if (selectedPayment.secret !== secret) {
+      return;
+    }
+
+    const convertedStatus =
+      PaymentOrderStatus[
+        status.toUpperCase() as unknown as keyof typeof PaymentOrderStatus
+      ];
+
+    // status가 다르면 반환
+    if (convertedStatus !== PaymentOrderStatus.DONE) {
+      return;
+    }
+
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const target =
+          selectedPayment.paymentProductType.name === PaymentProductTypes.클래스
+            ? 'reservation'
+            : 'userPass';
+
+        await this.paymentsRepository.trxUpdateProductEnabled(
+          transaction,
+          selectedPayment.id,
+          target,
+        );
+
+        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+          transaction,
+          selectedPayment.id,
+          PaymentOrderStatus.DONE,
+        );
       },
     );
   }
