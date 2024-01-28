@@ -138,4 +138,13 @@ export class PaymentsController {
       createLecturePaymentWithDepositDto,
     );
   }
+
+  @Post('/toss/status')
+  async handleVirtualAccountPaymentStatusWebhook(
+    @Req() req: Request,
+  ): Promise<void> {
+    await this.paymentsService.handleVirtualAccountPaymentStatusWebhook(
+      req.body,
+    );
+  }
 }
