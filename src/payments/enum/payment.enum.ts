@@ -49,3 +49,10 @@ export enum LectureMethod {
   '원데이' = 1,
   '정기' = 2,
 }
+
+export enum CardTypes {
+  신용 = '신용',
+  체크 = '체크',
+  기프트 = '기프트',
+  미확인 = '미확인',
+}

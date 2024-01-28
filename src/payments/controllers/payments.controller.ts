@@ -81,11 +81,8 @@ export class PaymentsController {
   @UseGuards(UserAccessTokenGuard)
   async confirmLecturePayment(
     @Body() confirmPaymentDto: ConfirmLecturePaymentDto,
-  ) {
-    const paymentResult: IPaymentResult =
-      await this.paymentsService.confirmPayment(confirmPaymentDto);
-
-    return { paymentResult };
+  ): Promise<PaymentDto> {
+    return await this.paymentsService.confirmPayment(confirmPaymentDto);
   }
 
   @ApiCancelPayment()

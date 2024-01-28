@@ -375,67 +375,14 @@ export class PaymentsRepository {
       return await transaction.payment.update({
         where: { id: paymentId },
         data: { paymentKey, statusId, paymentMethodId, secret },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
-          reservation: {
-            select: {
-              participants: true,
-              requests: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
-            },
-          },
-          userPass: {
-            select: {
-              lecturePass: {
-                select: {
-                  id: true,
-                  title: true,
-                  maxUsageCount: true,
-                  availableMonths: true,
-                },
-              },
-            },
-          },
-          cardPaymentInfo: {
-            select: {
-              number: true,
-              installmentPlanMonths: true,
-              approveNo: true,
-            },
-          },
-          virtualAccountPaymentInfo: {
-            select: {
-              accountNumber: true,
-              customerName: true,
-              dueDate: true,
-              bank: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
-            },
-          },
+        include: {
+          paymentStatus: true,
+          paymentProductType: true,
+          paymentMethod: true,
+          reservation: { include: { lectureSchedule: true } },
+          userPass: { include: { lecturePass: true } },
+          cardPaymentInfo: true,
+          virtualAccountPaymentInfo: { include: { bank: true } },
         },
       });
     } catch (error) {
@@ -597,66 +544,14 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.payment.findUnique({
         where: { id: paymentId },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
-          reservation: {
-            select: {
-              participants: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
-            },
-          },
-          userPass: {
-            select: {
-              lecturePass: {
-                select: {
-                  id: true,
-                  title: true,
-                  maxUsageCount: true,
-                  availableMonths: true,
-                },
-              },
-            },
-          },
-          cardPaymentInfo: {
-            select: {
-              number: true,
-              installmentPlanMonths: true,
-              approveNo: true,
-            },
-          },
-          virtualAccountPaymentInfo: {
-            select: {
-              accountNumber: true,
-              customerName: true,
-              dueDate: true,
-              bank: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
-            },
-          },
+        include: {
+          paymentStatus: true,
+          paymentProductType: true,
+          paymentMethod: true,
+          reservation: { include: { lectureSchedule: true } },
+          userPass: { include: { lecturePass: true } },
+          cardPaymentInfo: true,
+          virtualAccountPaymentInfo: { include: { bank: true } },
         },
       });
     } catch (error) {

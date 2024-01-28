@@ -573,7 +573,9 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
+  async confirmPayment(
+    confirmPaymentDto: ConfirmPaymentDto,
+  ): Promise<PaymentDto> {
     const { orderId, amount, paymentKey } = confirmPaymentDto;
     const paymentInfo = await this.getPaymentInfo(orderId);
 
@@ -590,9 +592,12 @@ export class PaymentsService implements OnModuleInit {
     ];
 
     if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
-      return await this.paymentsRepository.getLecturePaymentResultWithToss(
-        paymentInfo.id,
-      );
+      const payment =
+        await this.paymentsRepository.getLecturePaymentResultWithToss(
+          paymentInfo.id,
+        );
+
+      return new PaymentDto(payment);
     }
 
     if (paymentInfo.paymentStatus.id === PaymentOrderStatus.READY) {
@@ -622,8 +627,8 @@ export class PaymentsService implements OnModuleInit {
     productType: string,
     paymentKey: string,
     paymentInfo: TossPaymentsConfirmResponse,
-  ): Promise<IPaymentResult> {
-    const paymentResult: IPaymentResult = await this.prismaService.$transaction(
+  ): Promise<PaymentDto> {
+    const paymentResult = await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         let paymentMethodId: number;
         let statusId: number;
@@ -674,7 +679,7 @@ export class PaymentsService implements OnModuleInit {
       },
     );
 
-    return paymentResult;
+    return new PaymentDto(paymentResult);
   }
 
   private async createCardPaymentInfo(

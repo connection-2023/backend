@@ -40,13 +40,13 @@ export class ReservationDto implements Reservation {
     description: '원데이 클래스 일정',
     type: LectureScheduleDto,
   })
-  lectureSchedule: LectureScheduleDto;
+  lectureSchedule?: LectureScheduleDto;
 
   @ApiProperty({
     description: '정기 클래스 일정',
     type: RegularLectureStatusDto,
   })
-  regularLectureStatus: RegularLectureStatusDto;
+  regularLectureStatus?: RegularLectureStatusDto;
 
   constructor(reservation: Partial<ReservationDto>) {
     this.id = reservation.id;
