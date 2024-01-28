@@ -112,6 +112,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '구매한 유저 패스권 정보',
   })
   userPass: UserPassDto;
+  secret: string;
 
   constructor(payment: Partial<PaymentDto>) {
     super();
