@@ -829,21 +829,6 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  async getUserReceipt(userId: number, orderId: string) {
-    const receipt = await this.paymentsRepository.getUserPaymentInfo(
-      userId,
-      orderId,
-    );
-    if (!receipt) {
-      throw new NotFoundException(
-        `결제정보가 존재하지 않습니다.`,
-        `NotFoundPaymentInfo`,
-      );
-    }
-
-    return new PaymentDto(receipt);
-  }
-
   async cancelPayment(orderId: string): Promise<void> {
     const paymentInfo = await this.getPaymentInfo(orderId);
 

@@ -139,18 +139,4 @@ export class PaymentsController {
       createLecturePaymentWithDepositDto,
     );
   }
-
-  @ApiGetUserReceipt()
-  @SetResponseKey('receipt')
-  @Get('/user-receipt')
-  @UseGuards(UserAccessTokenGuard)
-  async getUserReceipt(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query('orderId') orderId: string,
-  ): Promise<PaymentDto> {
-    return await this.paymentsService.getUserReceipt(
-      authorizedData.user.id,
-      orderId,
-    );
-  }
 }
