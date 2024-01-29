@@ -73,10 +73,7 @@ export class PaymentRegularLectureStatusDto implements RegularLectureStatus {
   regularLectureSchedule?: RegularLectureScheduleDto[];
 
   constructor(lectureSchedule: Partial<PaymentRegularLectureStatusDto>) {
-    this.id = lectureSchedule.id;
-    this.lectureId = lectureSchedule.lectureId;
-    this.day = lectureSchedule.day;
-    this.numberOfParticipants = lectureSchedule.numberOfParticipants;
+    Object.assign(this, lectureSchedule);
 
     this.lecture = lectureSchedule.lecture
       ? new PrivateSimpleLecture(lectureSchedule.lecture)
@@ -89,9 +86,5 @@ export class PaymentRegularLectureStatusDto implements RegularLectureStatus {
             (lectureSchedule) => new RegularLectureScheduleDto(lectureSchedule),
           )
         : undefined;
-
-    console.log(lectureSchedule.regularLectureSchedule);
-
-    Object.seal(this);
   }
 }
