@@ -591,6 +591,7 @@ export class PaymentsService implements OnModuleInit {
       PaymentOrderStatus.DONE,
     ];
 
+    //입금 대기중 또는 결제 완료일때
     if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
       const payment =
         await this.paymentsRepository.getLecturePaymentResultWithToss(
@@ -600,6 +601,7 @@ export class PaymentsService implements OnModuleInit {
       return new PaymentDto(payment);
     }
 
+    //결제 대기중일때
     if (paymentInfo.paymentStatus.id === PaymentOrderStatus.READY) {
       const authorizedPaymentInfo: TossPaymentsConfirmResponse =
         await this.authorizeTossPaymentApiServer({
@@ -622,6 +624,64 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
+  // 카드 결제 정보 처리
+  private async handleCardPayment(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    paymentInfo: TossPaymentsConfirmResponse,
+    productType: string,
+  ): Promise<{
+    paymentMethodId: PaymentMethods;
+    statusId: PaymentOrderStatus;
+  }> {
+    if (!paymentInfo.card) {
+      return;
+    }
+
+    const paymentMethodId = PaymentMethods.카드;
+    const statusId = PaymentOrderStatus.DONE;
+
+    const trxUpdateProductTarget =
+      productType === PaymentProductTypes.클래스 ? 'reservation' : 'userPass';
+    await this.paymentsRepository.trxUpdateProductEnabled(
+      transaction,
+      paymentId,
+      trxUpdateProductTarget,
+    );
+
+    if (productType === PaymentProductTypes.패스권) {
+      await this.trxUpdateLecturePassSalesCount(transaction, paymentId);
+    }
+
+    await this.createCardPaymentInfo(transaction, paymentId, paymentInfo.card);
+
+    return { paymentMethodId, statusId };
+  }
+
+  // 가상계좌 결제 정보 처리
+  private async handleVirtualAccountPayment(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    paymentInfo: TossPaymentsConfirmResponse,
+  ): Promise<{
+    paymentMethodId: PaymentMethods;
+    statusId: PaymentOrderStatus;
+  }> {
+    if (!paymentInfo.virtualAccount) {
+      return;
+    }
+
+    const paymentMethodId = PaymentMethods.가상계좌;
+    const statusId = PaymentOrderStatus.WAITING_FOR_DEPOSIT;
+    await this.createVirtualAccountPaymentInfo(
+      transaction,
+      paymentId,
+      paymentInfo.virtualAccount,
+    );
+
+    return { paymentMethodId, statusId };
+  }
+
   private async confirmPaymentTransaction(
     paymentId: number,
     productType: string,
@@ -633,41 +693,31 @@ export class PaymentsService implements OnModuleInit {
         let paymentMethodId: number;
         let statusId: number;
 
-        if (paymentInfo.card) {
-          paymentMethodId = PaymentMethods.카드;
-          statusId = PaymentOrderStatus.DONE;
-          const target =
-            productType === PaymentProductTypes.클래스
-              ? 'reservation'
-              : 'userPass';
-
-          await this.paymentsRepository.trxUpdateProductEnabled(
-            transaction,
-            paymentId,
-            target,
-          );
-
-          if (productType === PaymentProductTypes.패스권) {
-            await this.trxUpdateLecturePassSalesCount(transaction, paymentId);
-          }
-
-          await this.createCardPaymentInfo(
-            transaction,
-            paymentId,
-            paymentInfo.card,
-          );
-        }
-        if (paymentInfo.virtualAccount) {
-          paymentMethodId = PaymentMethods.가상계좌;
-          statusId = PaymentOrderStatus.WAITING_FOR_DEPOSIT;
-
-          await this.createVirtualAccountPaymentInfo(
-            transaction,
-            paymentId,
-            paymentInfo.virtualAccount,
-          );
+        // 카드 결제 정보 처리
+        const cardPaymentResult = await this.handleCardPayment(
+          transaction,
+          paymentId,
+          paymentInfo,
+          productType,
+        );
+        if (cardPaymentResult) {
+          paymentMethodId = cardPaymentResult.paymentMethodId;
+          statusId = cardPaymentResult.statusId;
         }
 
+        // 가상계좌 결제 정보 처리
+        const virtualAccountPaymentResult =
+          await this.handleVirtualAccountPayment(
+            transaction,
+            paymentId,
+            paymentInfo,
+          );
+        if (virtualAccountPaymentResult) {
+          paymentMethodId = virtualAccountPaymentResult.paymentMethodId;
+          statusId = virtualAccountPaymentResult.statusId;
+        }
+
+        // 결제 정보 업데이트
         return await this.paymentsRepository.trxUpdatePayment(
           transaction,
           paymentId,
@@ -818,6 +868,7 @@ export class PaymentsService implements OnModuleInit {
       refundReceiveAccount,
       ...virtualAccountData
     } = virtualAccountInfo;
+
     const convertedDueDate: Date = new Date(dueDate);
     const bank = await this.paymentsRepository.getBankInfo(bankCode);
     if (!bank) {
@@ -848,7 +899,7 @@ export class PaymentsService implements OnModuleInit {
     }
 
     if (paymentInfo.paymentProductType.name === PaymentProductTypes.클래스) {
-      await this.cancelReservationTransaction(paymentInfo);
+      return await this.cancelReservationTransaction(paymentInfo);
     }
   }
 
@@ -903,7 +954,7 @@ export class PaymentsService implements OnModuleInit {
           );
         }
 
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentOrderStatus.CANCELED,
@@ -1442,7 +1493,7 @@ export class PaymentsService implements OnModuleInit {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const target =
+        const trxUpdateProductTarget =
           selectedPayment.paymentProductType.name === PaymentProductTypes.클래스
             ? 'reservation'
             : 'userPass';
@@ -1450,10 +1501,10 @@ export class PaymentsService implements OnModuleInit {
         await this.paymentsRepository.trxUpdateProductEnabled(
           transaction,
           selectedPayment.id,
-          target,
+          trxUpdateProductTarget,
         );
 
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           selectedPayment.id,
           PaymentOrderStatus.DONE,
