@@ -796,6 +796,7 @@ export class PaymentsRepository {
       );
     }
   }
+
   async trxUpdateProductEnabled(
     transaction: PrismaTransaction,
     paymentId: number,
@@ -1180,5 +1181,12 @@ export class PaymentsRepository {
         },
       },
     });
+  }
+
+  async trxDeleteUserPass(
+    transaction: PrismaTransaction,
+    paymentId: number,
+  ): Promise<void> {
+    await transaction.userPass.delete({ where: { paymentId } });
   }
 }
