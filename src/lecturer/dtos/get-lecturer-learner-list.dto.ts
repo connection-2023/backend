@@ -11,14 +11,22 @@ export class GetLecturerLearnerListDto extends PaginationDto {
   }
 
   @ApiProperty({
-    example: 'LATEST',
+    enum: SortOptions,
     required: true,
-    type: SortOptions,
   })
   @IsEnum(SortOptions, { each: true })
   @Transform(({ value }) => value.toUpperCase())
   @IsNotEmpty()
   sortOption: SortOptions;
+
+  @ApiProperty({
+    enum: FilterOptions,
+    required: true,
+  })
+  @IsEnum(FilterOptions, { each: true })
+  @Transform(({ value }) => value.toUpperCase())
+  @IsNotEmpty()
+  filterOption: FilterOptions;
 
   @ApiProperty({
     description: '강의 id',
@@ -28,15 +36,4 @@ export class GetLecturerLearnerListDto extends PaginationDto {
   @IsNumberType()
   @IsOptional()
   lectureId: number;
-
-  @ApiProperty({
-    example: 'AVAILABLE',
-    description: 'AVAILABLE, DISABLED 중 하나',
-    required: true,
-    type: FilterOptions,
-  })
-  @IsEnum(FilterOptions, { each: true })
-  @Transform(({ value }) => value.toUpperCase())
-  @IsNotEmpty()
-  filterOption: FilterOptions;
 }

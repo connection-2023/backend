@@ -408,46 +408,6 @@ export class LectureRepository {
     });
   }
 
-  async readManyParticipantWithLectureId(lectureId: number): Promise<any> {
-    return await this.prismaService.lecture.findFirst({
-      where: { id: lectureId },
-      include: {
-        lectureSchedule: {
-          select: {
-            reservation: {
-              select: {
-                user: {
-                  include: { userProfileImage: { select: { imageUrl: true } } },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async readManyParticipantWithScheduleId(
-    scheduleId: number,
-  ): Promise<LectureScheduleParticipantResponseData> {
-    return await this.prismaService.lectureSchedule.findFirst({
-      where: { id: scheduleId },
-      select: {
-        reservation: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                nickname: true,
-                userProfileImage: { select: { imageUrl: true } },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
   async getLectureLearnerList(
     lecturerId: number,
     lectureId: number,
@@ -457,7 +417,16 @@ export class LectureRepository {
     return await this.prismaService.lecturerLearner.findMany({
       where: {
         lecturerId,
-        user: { reservation: { some: { lectureSchedule: { lectureId } } } },
+        OR: [
+          {
+            user: { reservation: { some: { lectureSchedule: { lectureId } } } },
+          },
+          {
+            user: {
+              reservation: { some: { regularLectureStatus: { lectureId } } },
+            },
+          },
+        ],
       },
       take,
       cursor,

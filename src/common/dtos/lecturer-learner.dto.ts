@@ -3,7 +3,9 @@ import { BaseReturnDto } from './base-return.dto';
 import { UserDto } from './user.dto';
 import { ReservationDto } from './reservation.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class LecturerLearnerDto
   extends BaseReturnDto
   implements LecturerLearner
@@ -12,6 +14,7 @@ export class LecturerLearnerDto
     description: '수강생 목록 Id',
     type: Number,
   })
+  @Expose()
   id: number;
   userId: number;
   lecturerId: number;
@@ -20,30 +23,32 @@ export class LecturerLearnerDto
     description: '수강 횟수 Id',
     type: Number,
   })
+  @Expose()
   enrollmentCount: number;
 
   @ApiProperty({
     description: '강사가 작성한 메모',
   })
+  @Expose()
   memo: string;
 
   @ApiProperty({
     description: '유저',
     type: UserDto,
   })
+  @Expose()
   user?: UserDto;
 
   @ApiProperty({
     description: '예약 정보',
     type: ReservationDto,
   })
+  @Expose()
   reservation?: ReservationDto;
 
   constructor(lecturerLearner: Partial<LecturerLearnerDto>) {
     super();
-    this.id = lecturerLearner.id;
-    this.enrollmentCount = lecturerLearner.enrollmentCount;
-    this.memo = lecturerLearner.memo;
+    Object.assign(this, lecturerLearner);
 
     this.user = lecturerLearner.user
       ? new UserDto(lecturerLearner.user)
@@ -52,7 +57,5 @@ export class LecturerLearnerDto
     this.reservation = lecturerLearner.reservation
       ? new ReservationDto(lecturerLearner.reservation)
       : undefined;
-
-    Object.seal(this);
   }
 }

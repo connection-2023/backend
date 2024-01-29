@@ -159,32 +159,6 @@ export class LectureController {
     );
   }
 
-  @ApiOperation({ summary: '강의 전체 수강생 조회' })
-  @Get(':lectureId/participants')
-  async readManyParticipantWithLectureId(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-  ) {
-    const participant =
-      await this.lectureService.readManyParticipantWithLectureId(lectureId);
-
-    return { participant };
-  }
-
-  @ApiReadManyParticipantWithScheduleId()
-  @Get(':lectureId/schedules/:scheduleId/participants')
-  async readManyParticipantWithScheduleId(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-    @Param('scheduleId', ParseIntPipe) scheduleId: number,
-  ) {
-    const participant =
-      await this.lectureService.readManyParticipantWithScheduleId(
-        lectureId,
-        scheduleId,
-      );
-
-    return { participant };
-  }
-
   @ApiReadManyLectureSchedulesWithLecturerId()
   @UseGuards(LecturerAccessTokenGuard)
   @Get('schedules')
