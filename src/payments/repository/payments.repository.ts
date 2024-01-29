@@ -548,7 +548,9 @@ export class PaymentsRepository {
           paymentStatus: true,
           paymentProductType: true,
           paymentMethod: true,
-          reservation: { include: { lectureSchedule: true } },
+          reservation: {
+            include: { lectureSchedule: true, regularLectureStatus: true },
+          },
           userPass: { include: { lecturePass: true } },
           cardPaymentInfo: true,
           virtualAccountPaymentInfo: { include: { bank: true } },
@@ -703,7 +705,9 @@ export class PaymentsRepository {
                   lecture: { include: { lectureImage: true } },
                 },
               },
-              regularLectureStatus: { include: { lecture: true } },
+              regularLectureStatus: {
+                include: { lecture: { include: { lectureImage: true } } },
+              },
             },
           },
 

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Reservation } from '@prisma/client';
-import { LectureScheduleDto } from './lecture-schedule.dto';
-import { RegularLectureStatusDto } from './regular-lecture-status.dto';
+import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
 
 export class ReservationDto implements Reservation {
   @ApiProperty({
@@ -38,15 +38,15 @@ export class ReservationDto implements Reservation {
 
   @ApiProperty({
     description: '원데이 클래스 일정',
-    type: LectureScheduleDto,
+    type: PaymentLectureScheduleDto,
   })
-  lectureSchedule?: LectureScheduleDto;
+  lectureSchedule?: PaymentLectureScheduleDto;
 
   @ApiProperty({
     description: '정기 클래스 일정',
-    type: RegularLectureStatusDto,
+    type: PaymentRegularLectureStatusDto,
   })
-  regularLectureStatus?: RegularLectureStatusDto;
+  regularLectureStatus?: PaymentRegularLectureStatusDto;
 
   constructor(reservation: Partial<ReservationDto>) {
     this.id = reservation.id;
@@ -56,10 +56,10 @@ export class ReservationDto implements Reservation {
     this.requests = reservation.requests;
 
     this.lectureSchedule = reservation.lectureSchedule
-      ? new LectureScheduleDto(reservation.lectureSchedule)
+      ? new PaymentLectureScheduleDto(reservation.lectureSchedule)
       : null;
     this.regularLectureStatus = reservation.regularLectureStatus
-      ? new RegularLectureStatusDto(reservation.regularLectureStatus)
+      ? new PaymentRegularLectureStatusDto(reservation.regularLectureStatus)
       : null;
 
     Object.seal(this);
