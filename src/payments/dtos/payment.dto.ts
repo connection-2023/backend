@@ -12,34 +12,41 @@ import { PaymentPassUsageDto } from './payment-pass-usage.dto';
 import { UserPassDto } from '@src/common/dtos/user-pass.dto';
 import { VirtualAccountPaymentInfoDto } from './virtual-account-payment-info.dto';
 import { CardPaymentInfoDto } from './card-payment-info.dto';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   @ApiProperty({
     type: Number,
     description: '결제 Id',
   })
+  @Expose()
   id: number;
 
   @ApiProperty({
     description: '주문 uuid',
   })
+  @Expose()
   orderId: string;
 
   @ApiProperty({
     description: '주문명',
   })
+  @Expose()
   orderName: string;
 
   @ApiProperty({
     type: Number,
     description: '금액',
   })
+  @Expose()
   originalPrice: number;
 
   @ApiProperty({
     type: Number,
     description: '최종 결제 금액',
   })
+  @Expose()
   finalPrice: number;
 
   userId: number;
@@ -53,18 +60,21 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     type: PaymentProductTypeDto,
     description: '결제 상품 종류',
   })
+  @Expose()
   paymentProductType: PaymentProductTypeDto;
 
   @ApiProperty({
     type: PaymentMethodDto,
     description: '결제 방식',
   })
+  @Expose()
   paymentMethod: PaymentMethodDto;
 
   @ApiProperty({
     type: PaymentStatusDto,
     description: '결제 상태',
   })
+  @Expose()
   paymentStatus: PaymentStatusDto;
 
   @ApiProperty({
@@ -72,6 +82,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '쿠폰 사용 내역',
     nullable: true,
   })
+  @Expose()
   paymentCouponUsage: PaymentCouponUsageDto;
 
   @ApiProperty({
@@ -79,6 +90,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '카드 결제 정보',
     nullable: true,
   })
+  @Expose()
   cardPaymentInfo: CardPaymentInfoDto;
 
   @ApiProperty({
@@ -86,6 +98,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '가상 계좌 결제 정보',
     nullable: true,
   })
+  @Expose()
   virtualAccountPaymentInfo: VirtualAccountPaymentInfoDto;
 
   @ApiProperty({
@@ -93,6 +106,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '계좌 이체 정보',
     nullable: true,
   })
+  @Expose()
   transferPaymentInfo: TransferPaymentInfoDto;
 
   @ApiProperty({
@@ -100,6 +114,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '환불 정보',
     nullable: true,
   })
+  @Expose()
   refundPaymentInfo: RefundPaymentInfoDto;
 
   @ApiProperty({
@@ -107,6 +122,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '예약 정보',
     nullable: true,
   })
+  @Expose()
   reservation: ReservationDto;
 
   @ApiProperty({
@@ -114,6 +130,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '패스권 사용 정보',
     nullable: true,
   })
+  @Expose()
   paymentPassUsage: PaymentPassUsageDto;
 
   @ApiProperty({
@@ -121,16 +138,13 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
     description: '구매한 유저 패스권 정보',
     nullable: true,
   })
+  @Expose()
   userPass: UserPassDto;
   secret: string;
 
   constructor(payment: Partial<PaymentDto>) {
     super();
-    this.id = payment.id;
-    this.orderId = payment.orderId;
-    this.orderName = payment.orderName;
-    this.originalPrice = payment.originalPrice;
-    this.finalPrice = payment.finalPrice;
+    Object.assign(this, payment);
 
     this.paymentProductType = new PaymentProductTypeDto(
       payment.paymentProductType,
@@ -162,7 +176,5 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
       ? new PaymentPassUsageDto(payment.paymentPassUsage)
       : null;
     this.userPass = payment.userPass ? new UserPassDto(payment.userPass) : null;
-
-    Object.assign(this);
   }
 }
