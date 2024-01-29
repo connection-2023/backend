@@ -164,7 +164,7 @@ export class LecturerPaymentsService {
   private async processPaymentDoneStatus(paymentId: number): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentStatusForLecturer.DONE,
@@ -188,7 +188,7 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
           PaymentStatusForLecturer.REFUSED,
@@ -303,7 +303,7 @@ export class LecturerPaymentsService {
   private async rollbackPaymentDoneStatus(paymentId: number) {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
@@ -328,7 +328,7 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,

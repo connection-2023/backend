@@ -651,7 +651,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePaymentStatus(
+  async trxUpdatePaymentStatus(
     transaction: PrismaTransaction,
     paymentId: number,
     statusId: number,
@@ -800,9 +800,9 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     paymentId: number,
     target: string,
-  ) {
+  ): Promise<void> {
     try {
-      return await transaction[target].update({
+      await transaction[target].update({
         where: { paymentId },
         data: { isEnabled: true },
       });
