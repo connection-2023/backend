@@ -6,12 +6,12 @@ import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
 export function ApiGetLectureLearnerList() {
   return applyDecorators(
     ApiOperation({
-      summary: '강사 수강생 목록 조회',
+      summary: '강의 수강생 목록 조회',
     }),
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(
       HttpStatus.OK,
-      'learnerList',
+      'lectureLearnerList',
       LectureLearnerDto,
       { isArray: true },
     ),

@@ -644,26 +644,6 @@ export class LectureService {
     );
   }
 
-  async readManyParticipantWithLectureId(lectureId: number) {
-    return await this.lectureRepository.readManyParticipantWithLectureId(
-      lectureId,
-    );
-  }
-
-  async readManyParticipantWithScheduleId(
-    lectureId: number,
-    scheduleId: number,
-  ) {
-    await this.validateScheduleId(lectureId, scheduleId);
-
-    const participant =
-      await this.lectureRepository.readManyParticipantWithScheduleId(
-        scheduleId,
-      );
-
-    return participant.reservation;
-  }
-
   async readManyLectureSchedulesWithLecturerId(
     lecturerId: number,
     query: ReadManyLectureScheduleQueryDto,
@@ -1030,19 +1010,6 @@ export class LectureService {
 
     if (reservation[0]) {
       throw new BadRequestException(`existReservation ${reservation}`);
-    }
-  }
-
-  private async validateScheduleId(lectureId: number, scheduleId: number) {
-    const schedule = await this.prismaService.lectureSchedule.findFirst({
-      where: { lectureId, id: scheduleId },
-    });
-
-    if (!schedule) {
-      throw new BadRequestException(
-        '해당 강의에 존재하지 않는 scheduleId입니다.',
-        'InvalidScheduleId',
-      );
     }
   }
 
