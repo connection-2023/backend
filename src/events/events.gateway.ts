@@ -55,9 +55,6 @@ export class EventsGateway
 
   handleConnection(@ConnectedSocket() socket: Socket) {
     console.log('connected', socket.nsp.name);
-    socket.on('newChat', (message) => {
-      console.log('Received new chat message:', message);
-    });
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
