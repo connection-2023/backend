@@ -3,9 +3,12 @@ import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ChatsRepository } from './../repositories/chats.repository';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import mongoose from 'mongoose';
 import { EventsGateway } from '@src/events/events.gateway';
+import { GetChatsQueryDto } from '../dtos/get-chats.query.dto';
+import { ChatsDto } from '@src/common/dtos/chats.dto';
+import { Chats } from '../schemas/chats.schema';
 
 @Injectable()
 export class ChatsService {
@@ -38,9 +41,27 @@ export class ChatsService {
 
     this.eventsGateway.server.to(chatRoom.roomId).emit('newChat', chat);
 
-    return new ChatRoomDto(chat);
+    return new ChatsDto(chat);
   }
 
+  async getChatsWithChatRoomId(
+    { pageToken, pageSize }: GetChatsQueryDto,
+    chatRoomId: mongoose.Types.ObjectId,
+  ) {
+    const where = { chattingRoomId: chatRoomId };
+    pageToken ? (where['_id'] = { $lt: pageToken }) : false;
+
+    const chats = await this.chatsRepository.getChatsWithChatRoomId(
+      where,
+      pageSize,
+    );
+
+    if (!chats[0]) {
+      throw new NotFoundException(`chat not found`);
+    }
+
+    return chats.map((chat) => new ChatsDto(chat));
+  }
   private createSenderAndReceiver(
     authorizedData: ValidateResult,
     targetId: number,

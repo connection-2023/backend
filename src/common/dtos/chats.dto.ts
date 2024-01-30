@@ -1,26 +1,38 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import mongoose from 'mongoose';
 
 @Exclude()
 export class ChatsDto {
-  _id?: mongoose.Types.ObjectId;
+  _id: mongoose.Types.ObjectId;
+
+  chattingRoomId: mongoose.Types.ObjectId;
+
+  @Expose()
+  @ApiProperty({ description: '채팅 id' })
+  id: string;
 
   @Expose()
   @ApiProperty({
     description: 'sender',
     type: Object,
-    example: { userId: 1, lecturerId: null },
+    example: { userId: 1 },
   })
-  sender: { userId: number | null; lecturerId: number | null };
+  sender: {
+    userId?: number;
+    lecturerId?: number;
+  };
 
   @Expose()
   @ApiProperty({
     description: 'receiver',
     type: Object,
-    example: { userId: null, lecturerId: 14 },
+    example: { lecturerId: 14 },
   })
-  receiver: { userId: number | null; lecturerId: number | null };
+  receiver: {
+    userId?: number;
+    lecturerId?: number;
+  };
 
   @Expose()
   @ApiProperty({ description: '내용' })
@@ -34,12 +46,16 @@ export class ChatsDto {
   @ApiProperty({ description: '보낸시간', type: Date })
   createdAt?: Date;
 
-  constructor(chat: ChatsDto) {
-    this.sender = chat.sender;
-    this.receiver = chat.receiver;
+  constructor(chat: Partial<ChatsDto>) {
+    this.id = chat._id.toString();
+    this.sender = chat.sender.lecturerId
+      ? { lecturerId: chat.sender.lecturerId }
+      : { userId: chat.sender.userId };
+    this.receiver = chat.receiver.lecturerId
+      ? { lecturerId: chat.receiver.lecturerId }
+      : { userId: chat.receiver.userId };
     this.content = chat.content;
     this.readedAt = chat.readedAt;
-    this.createdAt = chat.createdAt;
 
     Object.assign(this);
   }

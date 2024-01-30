@@ -23,6 +23,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChatsModule } from './chats/chats.module';
 import { EventsGateway } from './events/events.gateway';
 import { EventsModule } from './events/events.module';
+import { ChatRoom, ChatRoomSchema } from './chats/schemas/chats-room.schema';
 
 @Module({
   imports: [

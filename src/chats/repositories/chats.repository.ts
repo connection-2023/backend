@@ -4,6 +4,7 @@ import { Chats } from '../schemas/chats.schema';
 import mongoose, { Model } from 'mongoose';
 import { ChatRoom } from '../schemas/chats-room.schema';
 import { ISenderAndReceiver } from '../interfaces/chats.interface';
+import { ChatsDto } from '@src/common/dtos/chats.dto';
 
 @Injectable()
 export class ChatsRepository {
@@ -27,9 +28,13 @@ export class ChatsRepository {
     });
   }
 
-  async getChatsWithChatRoomId(
-    roomId: mongoose.Types.ObjectId,
-  ): Promise<Chats[]> {
-    return await this.chatsModel.find({ chattingRommId: roomId }).exec();
+  async getChatsWithChatRoomId(where, pageSize: number): Promise<Chats[]> {
+    return await this.chatsModel
+      .find(where)
+      .sort({
+        _id: -1,
+      })
+      .limit(pageSize)
+      .exec();
   }
 }

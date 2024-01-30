@@ -1,16 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsNotEmpty } from 'class-validator';
-import mongoose, { Document, model } from 'mongoose';
+import mongoose, { Document, SchemaOptions } from 'mongoose';
 import { ChatRoom, ChatRoomSchema } from './chats-room.schema';
-import { Model } from 'mongoose';
+import { Transform } from 'class-transformer';
 
-@Schema()
-export class Chats extends Document {
+export type ChatsDocument = Chats & Document;
+
+const options: SchemaOptions = {
+  timestamps: true,
+};
+
+@Schema(options)
+export class Chats {
   @Prop({
-    required: true,
     type: mongoose.Types.ObjectId,
-    ref: 'ChatRoom',
+    ref: ChatRoom.name,
   })
+  @Transform(({ value }) => value.toString())
   @IsNotEmpty()
   chattingRoomId: mongoose.Types.ObjectId;
 
@@ -40,7 +46,7 @@ export class Chats extends Document {
 
   @Prop({ required: false, default: null })
   @IsNotEmpty()
-  readAt: Date;
+  readedAt: Date;
 }
 
 export const ChatsSchema = SchemaFactory.createForClass(Chats);
