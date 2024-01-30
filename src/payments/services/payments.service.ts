@@ -899,11 +899,15 @@ export class PaymentsService implements OnModuleInit {
     }
 
     if (paymentInfo.paymentProductType.name === PaymentProductTypes.클래스) {
-      return await this.cancelReservationTransaction(paymentInfo);
+      return await this.trxCancelReservation(paymentInfo);
+    }
+
+    if (paymentInfo.paymentProductType.name === PaymentProductTypes.패스권) {
+      return await this.trxCancelUserPass(paymentInfo);
     }
   }
 
-  private async cancelReservationTransaction(
+  private async trxCancelReservation(
     paymentInfo: Payment & {
       paymentStatus: PaymentStatus;
       paymentCouponUsage: PaymentCouponUsage;
@@ -932,7 +936,6 @@ export class PaymentsService implements OnModuleInit {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await Promise.all([]);
         await this.paymentsRepository.trxDecrementLectureScheduleParticipants(
           transaction,
           lectureMethod,
@@ -957,6 +960,22 @@ export class PaymentsService implements OnModuleInit {
         await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
+          PaymentOrderStatus.CANCELED,
+        );
+      },
+    );
+  }
+
+  private async trxCancelUserPass(paymentInfo: Payment): Promise<void> {
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.paymentsRepository.trxDeleteUserPass(
+          transaction,
+          paymentInfo.id,
+        );
+        await this.paymentsRepository.trxUpdatePaymentStatus(
+          transaction,
+          paymentInfo.id,
           PaymentOrderStatus.CANCELED,
         );
       },

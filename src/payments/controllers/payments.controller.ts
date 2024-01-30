@@ -87,8 +87,8 @@ export class PaymentsController {
 
   @ApiCancelPayment()
   @Post('/toss/:orderId/cancel')
-  async cancelPayment(@Param('orderId') orderId: string) {
-    await this.paymentsService.cancelPayment(orderId);
+  async cancelPayment(@Param('orderId') orderId: string): Promise<void> {
+    return await this.paymentsService.cancelPayment(orderId);
   }
 
   //패스권으로 클래스 결제
