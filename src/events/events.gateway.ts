@@ -38,11 +38,11 @@ export class EventsGateway
 
     newNamespace.emit('onlineList');
 
-    const key =
-      data.authorizedData.tokenType === 'Lecturer'
-        ? `onlineMap:lecturerId:${data.authorizedData.lecturer.id}`
-        : `onlineMap:userId:${data.authorizedData.user.id}`;
-    await this.cacheManager.set(key, data.authorizedData, 0);
+    // const key =
+    //   data.authorizedData.tokenType === 'Lecturer'
+    //     ? `onlineMap:lecturerId:${data.authorizedData.lecturer.id}`
+    //     : `onlineMap:userId:${data.authorizedData.user.id}`;
+    // await this.cacheManager.set(key, data.authorizedData, 0);
     rooms.forEach((room: string) => {
       console.log('join', room);
       socket.join(`${room}`);
