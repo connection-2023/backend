@@ -1,3 +1,4 @@
+import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { ReadManyLatestLecturesResponseDto } from './../dtos/read-many-latest-lectures-response.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
@@ -577,14 +578,7 @@ export class LectureService {
 
   async readManyEnrollLectureWithUserId(
     userId: number,
-    {
-      take,
-      currentPage,
-      targetPage,
-      firstItemId,
-      lastItemId,
-      enrollLectureType,
-    }: ReadManyEnrollLectureQueryDto,
+    { take, skip, enrollLectureType }: ReadManyEnrollLectureQueryDto,
   ) {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -596,57 +590,67 @@ export class LectureService {
           return;
         }
 
-        let cursor;
-        let skip;
-        const currentTime = {};
+        const getEnrollReservationWhereData = {
+          userId,
+          isEnabled: false,
+        };
 
         if (enrollLectureType === '수강 완료') {
-          currentTime['reservation'] = {
-            every: {
-              lectureSchedule: {
-                startDateTime: {
-                  lt: new Date(),
+          getEnrollReservationWhereData['OR'] = [
+            { lectureSchedule: { startDateTime: { lt: new Date() } } },
+            {
+              regularLectureStatus: {
+                regularLectureSchedule: {
+                  every: { startDateTime: { lt: new Date() } },
                 },
               },
             },
-          };
+          ];
         } else if (enrollLectureType === '진행중') {
-          currentTime['reservation'] = {
-            some: {
-              lectureSchedule: {
-                startDateTime: {
-                  gt: new Date(),
+          getEnrollReservationWhereData['OR'] = [
+            { lectureSchedule: { startDateTime: { gt: new Date() } } },
+            {
+              regularLectureStatus: {
+                regularLectureSchedule: {
+                  some: { startDateTime: { gt: new Date() } },
                 },
               },
             },
-          };
-        }
-        const isPagination = currentPage && targetPage;
-
-        if (isPagination) {
-          const pageDiff = currentPage - targetPage;
-          ({ cursor, skip, take } = this.getPaginationOptions(
-            pageDiff,
-            pageDiff <= -1 ? lastItemId : firstItemId,
-            take,
-          ));
+          ];
         }
 
-        const enrollLecture =
-          await this.lectureRepository.trxReadManyEnrollLectureWithUserId(
+        const enrollReservations =
+          await this.lectureRepository.trxGetEnrollReservation(
             transaction,
-            userId,
-            take,
-            currentTime,
-            cursor,
+            getEnrollReservationWhereData,
             skip,
+            take,
           );
-        const count = await this.lectureRepository.trxEnrollLectureCount(
-          transaction,
-          userId,
+
+        const reservations = await Promise.all(
+          enrollReservations.map(async (reservation) => {
+            const lectureId = reservation['lectureSchedule']
+              ? reservation['lectureSchedule']['lectureId']
+              : reservation['regularLectureStatus']['lectureId'];
+
+            const lecture = await this.lectureRepository.readLecture(
+              lectureId,
+              userId,
+            );
+
+            return {
+              reservation: new ReservationDto(reservation),
+              lecture: new LectureDto(lecture),
+            };
+          }),
         );
 
-        return { count, enrollLecture };
+        const count = await this.lectureRepository.trxEnrollLectureCount(
+          transaction,
+          getEnrollReservationWhereData,
+        );
+
+        return { count, reservations };
       },
     );
   }

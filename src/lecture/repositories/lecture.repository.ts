@@ -311,58 +311,29 @@ export class LectureRepository {
     });
   }
 
-  async trxReadManyEnrollLectureWithUserId(
+  async trxGetEnrollReservation(
     transaction: PrismaTransaction,
-    userId: number,
+    where,
+    skip: number,
     take: number,
-    currentTime,
-    cursor?: ICursor,
-    skip?: number,
-  ): Promise<any> {
-    return await transaction.payment.findMany({
-      where: {
-        userId,
-        ...currentTime,
+  ): Promise<Reservation[]> {
+    return await transaction.reservation.findMany({
+      where,
+      include: {
+        lectureSchedule: true,
+        regularLectureStatus: { include: { regularLectureSchedule: true } },
       },
-      take,
+      orderBy: { id: 'desc' },
       skip,
-      cursor,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        orderId: true,
-        orderName: true,
-        reservation: {
-          select: {
-            lectureSchedule: {
-              select: {
-                startDateTime: true,
-                lecture: {
-                  select: {
-                    id: true,
-                    title: true,
-                    lectureImage: { select: { imageUrl: true }, take: 1 },
-                  },
-                },
-              },
-            },
-          },
-        },
-        lecturer: {
-          select: {
-            nickname: true,
-            profileCardImageUrl: true,
-          },
-        },
-      },
+      take,
     });
   }
 
   async trxEnrollLectureCount(
     transaction: PrismaTransaction,
-    userId: number,
+    where,
   ): Promise<number> {
-    return await transaction.payment.count({ where: { userId } });
+    return await transaction.reservation.count({ where });
   }
 
   async trxUpsertLectureNotification(
