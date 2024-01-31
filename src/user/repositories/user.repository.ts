@@ -88,9 +88,10 @@ export class UserRepository {
     userId: number,
     imageUrl: string,
   ): Promise<UserProfileImage> {
-    return await this.prismaService.userProfileImage.update({
+    return await this.prismaService.userProfileImage.upsert({
       where: { userId },
-      data: { imageUrl },
+      create: { userId, imageUrl },
+      update: { imageUrl },
     });
   }
 }
