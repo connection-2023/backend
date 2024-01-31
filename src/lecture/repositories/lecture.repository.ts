@@ -431,7 +431,7 @@ export class LectureRepository {
       },
       take,
       cursor,
-      include: { user: true },
+      include: { user: { include: { userProfileImage: true } } },
     });
   }
 
