@@ -21,6 +21,8 @@ import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-tar
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiGetLecturePassList } from '@src/pass/swagger-decorators/get-lecture-pass-list.decorator';
 import { ApiGetLecturerPassList } from '@src/pass/swagger-decorators/get-lecturer-pass-list.decorator';
+import { MyPassDto } from '../dtos/pass.dto';
+import { ApiGetMyIssuedPass } from '../swagger-decorators/get-my-issued-pass.decorator';
 
 @ApiTags('패스권')
 @Controller('passes')
@@ -41,9 +43,9 @@ export class PassController {
   }
 
   @ApiGetMyIssuedPassList()
-  @Get('/lecturer')
+  @Get('/issued')
   @UseGuards(LecturerAccessTokenGuard)
-  async getMyIssuedCouponList(
+  async getMyIssuedPassList(
     @GetAuthorizedUser() AuthorizedData: ValidateResult,
     @Query() getMyIssuedPassListDto: GetMyIssuedPassListDto,
   ) {
@@ -51,6 +53,17 @@ export class PassController {
       AuthorizedData.lecturer.id,
       getMyIssuedPassListDto,
     );
+  }
+
+  @ApiGetMyIssuedPass()
+  @SetResponseKey('myPass')
+  @Get('/issued/:passId')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getMyPass(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Param('passId', ParseIntPipe) passId: number,
+  ): Promise<MyPassDto> {
+    return await this.passService.getMyPass(AuthorizedData.lecturer.id, passId);
   }
 
   @ApiGetLecturePassList()
