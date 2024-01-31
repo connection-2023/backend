@@ -12,6 +12,7 @@ import {
   LectureNotification,
   RegularLectureSchedule,
   RegularLectureStatus,
+  LecturerLearner,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import {
@@ -520,6 +521,21 @@ export class LectureRepository {
         lectureToRegion: { include: { region: true } },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getLectureScheduleLearnerList(lecturerId: number, scheduleId: number) {
+    return await this.prismaService.reservation.findMany({
+      where: { lectureScheduleId: scheduleId, payment: { lecturerId } },
+    });
+  }
+
+  async getLecturerLearnerInfo(userId: number) {
+    return await this.prismaService.lecturerLearner.findFirst({
+      where: {
+        userId,
+      },
+      include: { user: { include: { userProfileImage: true } } },
     });
   }
 }

@@ -8,7 +8,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, LectureHoliday, Region } from '@prisma/client';
+import {
+  Lecture,
+  LectureHoliday,
+  LecturerLearner,
+  Region,
+  Reservation,
+} from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -41,6 +47,7 @@ import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-sched
 import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
 import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
+import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
 
 @Injectable()
 export class LectureService {
@@ -1031,5 +1038,30 @@ export class LectureService {
     return lecturerLearnerList.map(
       (lecturerLearner) => new LectureLearnerDto(lecturerLearner),
     );
+  }
+
+  async getLectureScheduleLearnerList(
+    lecturerId: number,
+    scheduleId: number,
+  ): Promise<LectureLearnerInfoDto[]> {
+    const learnerList: Reservation[] =
+      await this.lectureRepository.getLectureScheduleLearnerList(
+        lecturerId,
+        scheduleId,
+      );
+    if (!learnerList[0]) {
+      return null;
+    }
+
+    const lectureLearnerInfoList: LectureLearnerInfoDto[] = await Promise.all(
+      learnerList.map(async (learner: Reservation) => {
+        const learnerInfo = await this.lectureRepository.getLecturerLearnerInfo(
+          learner.userId,
+        );
+        return new LectureLearnerInfoDto({ ...learner, ...learnerInfo });
+      }),
+    );
+
+    return lectureLearnerInfoList;
   }
 }

@@ -36,6 +36,8 @@ import { ApiReadManyDailySchedules } from '../swagger-decorators/read-many-daily
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { ApiReadOneLectureDetail } from '../swagger-decorators/read-one-lectire-detail.decorator';
 import { ApiReadOneLecturePreview } from '../swagger-decorators/read-one-lecture-preview.decorator';
+import { ApiGetScheduleLearnerList } from '../swagger-decorators/get-schedule-learner-list.decorator';
+import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -115,6 +117,20 @@ export class LectureController {
     );
 
     return schedules;
+  }
+
+  @ApiGetScheduleLearnerList()
+  @SetResponseKey('scheduleLearnerList')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('schedules/:scheduleId/learners')
+  async readLectureScheduleLearnerList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('scheduleId', ParseIntPipe) scheduleId: number,
+  ): Promise<LectureLearnerInfoDto[]> {
+    return await this.lectureService.getLectureScheduleLearnerList(
+      authorizedData.lecturer.id,
+      scheduleId,
+    );
   }
 
   @ApiReadLectureReservationWithUser()
