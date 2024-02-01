@@ -22,7 +22,6 @@ import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
-import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
 import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
@@ -38,6 +37,7 @@ import { ApiReadOneLectureDetail } from '../swagger-decorators/read-one-lectire-
 import { ApiReadOneLecturePreview } from '../swagger-decorators/read-one-lecture-preview.decorator';
 import { ApiGetScheduleLearnerList } from '../swagger-decorators/get-schedule-learner-list.decorator';
 import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
+import { ApiGetEnrollLectureSchedules } from '../swagger-decorators/get-enroll-lecture-schedule.decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -162,7 +162,7 @@ export class LectureController {
     );
   }
 
-  @ApiReadManyEnrollLecture()
+  @ApiGetEnrollLectureSchedules()
   @UseGuards(UserAccessTokenGuard)
   @Get('users')
   async readManyEnrollLectureWithUserId(

@@ -40,6 +40,8 @@ import {
   RegularLectureStatusInputData,
 } from '@src/lecture/interface/lecture.interface';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
+import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
+import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 
 @Injectable()
 export class LectureRepository {
@@ -311,21 +313,74 @@ export class LectureRepository {
     });
   }
 
-  async trxGetEnrollReservation(
+  async trxGetEnrollSchedule(
     transaction: PrismaTransaction,
-    where,
-    skip: number,
-    take: number,
-  ): Promise<Reservation[]> {
-    return await transaction.reservation.findMany({
-      where,
-      include: {
-        lectureSchedule: true,
-        regularLectureStatus: { include: { regularLectureSchedule: true } },
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<LectureScheduleDto[]> {
+    return await transaction.lectureSchedule.findMany({
+      where: {
+        reservation: { some: { userId } },
+        startDateTime: { gte: startDate, lte: endDate },
       },
-      orderBy: { id: 'desc' },
-      skip,
-      take,
+      include: { lecture: true },
+      orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async trxGetEnrollRegularSchedule(
+    transaction: PrismaTransaction,
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<RegularLectureSchedule[]> {
+    return await transaction.regularLectureSchedule.findMany({
+      where: {
+        regularLectureStatus: { reservation: { some: { userId } } },
+        startDateTime: { gte: startDate, lte: endDate },
+      },
+      include: { regularLectureStatus: { select: { lecture: true } } },
+      orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async getDetailEnrollSchedule(scheduleId: number): Promise<LectureSchedule> {
+    return await this.prismaService.lectureSchedule.findFirst({
+      where: { id: scheduleId },
+      include: {
+        lecture: {
+          include: {
+            lectureNotification: true,
+            lecturer: true,
+            lectureLocation: true,
+          },
+        },
+        reservation: { include: { payment: true } },
+      },
+    });
+  }
+
+  async getDetailEnrollRegularSchedule(
+    scheduleId: number,
+  ): Promise<RegularLectureSchedule> {
+    return await this.prismaService.regularLectureSchedule.findFirst({
+      where: { id: scheduleId },
+      include: {
+        regularLectureStatus: {
+          select: {
+            regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
+            reservation: { include: { payment: true } },
+            lecture: {
+              include: {
+                lectureNotification: true,
+                lecturer: true,
+                lectureLocation: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 

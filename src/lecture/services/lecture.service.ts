@@ -49,6 +49,7 @@ import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
 import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
 import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
+import { EnrollLectureScheduleDto } from '../dtos/get-enroll-schedule.dto';
 
 @Injectable()
 export class LectureService {
@@ -578,10 +579,13 @@ export class LectureService {
 
   async readManyEnrollLectureWithUserId(
     userId: number,
-    { take, skip, enrollLectureType }: ReadManyEnrollLectureQueryDto,
+    { year, month }: ReadManyEnrollLectureQueryDto,
   ) {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        const startDate = new Date(year, month - 1, 2, -15);
+        const endDate = new Date(year, month, 1, 8, 59, 59, 999);
+
         const existEnrollLecture =
           await this.prismaService.reservation.findFirst({
             where: { userId },
@@ -590,67 +594,22 @@ export class LectureService {
           return;
         }
 
-        const getEnrollReservationWhereData = {
+        const schedules = await this.lectureRepository.trxGetEnrollSchedule(
+          transaction,
           userId,
-          isEnabled: false,
-        };
+          startDate,
+          endDate,
+        );
 
-        if (enrollLectureType === '수강 완료') {
-          getEnrollReservationWhereData['OR'] = [
-            { lectureSchedule: { startDateTime: { lt: new Date() } } },
-            {
-              regularLectureStatus: {
-                regularLectureSchedule: {
-                  every: { startDateTime: { lt: new Date() } },
-                },
-              },
-            },
-          ];
-        } else if (enrollLectureType === '진행중') {
-          getEnrollReservationWhereData['OR'] = [
-            { lectureSchedule: { startDateTime: { gt: new Date() } } },
-            {
-              regularLectureStatus: {
-                regularLectureSchedule: {
-                  some: { startDateTime: { gt: new Date() } },
-                },
-              },
-            },
-          ];
-        }
-
-        const enrollReservations =
-          await this.lectureRepository.trxGetEnrollReservation(
+        const regularSchedules =
+          await this.lectureRepository.trxGetEnrollRegularSchedule(
             transaction,
-            getEnrollReservationWhereData,
-            skip,
-            take,
+            userId,
+            startDate,
+            endDate,
           );
 
-        const reservations = await Promise.all(
-          enrollReservations.map(async (reservation) => {
-            const lectureId = reservation['lectureSchedule']
-              ? reservation['lectureSchedule']['lectureId']
-              : reservation['regularLectureStatus']['lectureId'];
-
-            const lecture = await this.lectureRepository.readLecture(
-              lectureId,
-              userId,
-            );
-
-            return {
-              reservation: new ReservationDto(reservation),
-              lecture: new LectureDto(lecture),
-            };
-          }),
-        );
-
-        const count = await this.lectureRepository.trxEnrollLectureCount(
-          transaction,
-          getEnrollReservationWhereData,
-        );
-
-        return { count, reservations };
+        return new EnrollLectureScheduleDto(schedules, regularSchedules);
       },
     );
   }
