@@ -6,7 +6,6 @@ import {
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardPaymentInfoInputData,
-  ICursor,
   ILecturerBankAccountInputData,
   IPaymentPassUsageInputData,
   ISelectedUserPass,
@@ -46,7 +45,6 @@ import {
   RegularLectureStatus,
   UserBankAccount,
 } from '@prisma/client';
-import { PaymentProductTypeDto } from '../dtos/payment-product-type.dto';
 
 @Injectable()
 export class PaymentsRepository {
@@ -1188,5 +1186,31 @@ export class PaymentsRepository {
     paymentId: number,
   ): Promise<void> {
     await transaction.userPass.delete({ where: { paymentId } });
+  }
+
+  async getMyPass(lecturerId: number, passId: number) {
+    return await this.prismaService.lecturePass.findFirst({
+      where: { id: passId, lecturerId },
+    });
+  }
+
+  async getUserPassList(passId: number) {
+    return await this.prismaService.userPass.findMany({
+      where: { lecturePassId: passId, isEnabled: true },
+      include: { users: { include: { userProfileImage: true } } },
+    });
+  }
+
+  async getUserPaymentPassUsage(userId: number, passId: number) {
+    return await this.prismaService.paymentPassUsage.findMany({
+      where: { payment: { userId }, lecturePassId: passId },
+    });
+  }
+
+  async getUserReservation(paymentId: number) {
+    return await this.prismaService.reservation.findFirst({
+      where: { paymentId },
+      include: { lectureSchedule: true, lecture: true },
+    });
   }
 }
