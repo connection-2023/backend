@@ -47,6 +47,7 @@ export interface PaymentInputData {
 export interface ReservationInputData {
   userId: number;
   paymentId: number;
+  lectureId: number;
   lectureScheduleId?: number;
   regularLectureStatusId?: number;
   representative: string;

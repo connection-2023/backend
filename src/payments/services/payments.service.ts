@@ -131,7 +131,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithToss(
     userId: number,
-    { lecturerId, lectureMethodId }: Lecture,
+    { id: lectureId, lecturerId, lectureMethodId }: Lecture,
     createLecturePaymentDto: CreateLecturePaymentWithTossDto,
     coupons: Coupons,
   ): Promise<void> {
@@ -160,6 +160,7 @@ export class PaymentsService implements OnModuleInit {
             createdLecturePayment.id,
             createLecturePaymentDto,
             lectureMethodId,
+            lectureId,
           ),
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
         ]);
@@ -488,6 +489,7 @@ export class PaymentsService implements OnModuleInit {
       | CreateLecturePaymentWithPassDto
       | CreateLecturePaymentWithDepositDto,
     lectureMethod: LectureMethod,
+    lectureId: number,
   ): Promise<void> {
     const { lectureSchedule, representative, phoneNumber, requests } =
       getLecturePaymentDto;
@@ -499,6 +501,7 @@ export class PaymentsService implements OnModuleInit {
     );
 
     const reservationInputData: ReservationInputData = {
+      lectureId,
       userId,
       paymentId,
       representative,
@@ -509,6 +512,7 @@ export class PaymentsService implements OnModuleInit {
         ? { lectureScheduleId: lectureSchedule.lectureScheduleId }
         : { regularLectureStatusId: lectureSchedule.lectureScheduleId }),
     };
+
     await this.paymentsRepository.trxCreateReservation(
       transaction,
       reservationInputData,
@@ -1163,7 +1167,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithPass(
     userId: number,
-    { lecturerId, lectureMethodId }: Lecture,
+    { id: lectureId, lecturerId, lectureMethodId }: Lecture,
     createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
     userPass: ISelectedUserPass,
   ) {
@@ -1189,6 +1193,7 @@ export class PaymentsService implements OnModuleInit {
             createdLecturePayment.id,
             createLecturePaymentWithPassDto,
             lectureMethodId,
+            lectureId,
           ),
           this.trxUpdatePassUsage(
             transaction,
@@ -1274,8 +1279,7 @@ export class PaymentsService implements OnModuleInit {
     //계좌이체 관련 정보 생성
     await this.trxCreateLecturePaymentWithTransfer(
       userId,
-      lecture.lecturerId,
-      lecture.lectureMethodId,
+      lecture,
       dto,
       coupons,
     );
@@ -1303,8 +1307,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithTransfer(
     userId: number,
-    lecturerId: number,
-    lectureMethod: LectureMethod,
+    { id: lectureId, lecturerId, lectureMethodId },
     dto: CreateLecturePaymentWithTransferDto,
     coupons: Coupons,
   ): Promise<void> {
@@ -1343,7 +1346,8 @@ export class PaymentsService implements OnModuleInit {
             userId,
             createdLecturePayment.id,
             dto,
-            lectureMethod,
+            lectureMethodId,
+            lectureId,
           ),
           //수강생 추가 및 신청 횟수 증가
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
@@ -1435,7 +1439,7 @@ export class PaymentsService implements OnModuleInit {
 
   private async trxCreateLecturePaymentWithDeposit(
     userId: number,
-    { lecturerId, lectureMethodId }: Lecture,
+    { id: lectureId, lecturerId, lectureMethodId }: Lecture,
     dto:
       | CreateLecturePaymentWithDepositDto
       | CreateLecturePaymentWithDepositDto,
@@ -1477,6 +1481,7 @@ export class PaymentsService implements OnModuleInit {
             createdLecturePayment.id,
             dto,
             lectureMethodId,
+            lectureId,
           ),
           //수강생 추가 및 신청 횟수 증가
           this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),

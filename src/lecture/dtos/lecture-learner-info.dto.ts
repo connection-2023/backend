@@ -90,6 +90,7 @@ export class LectureLearnerInfoDto
   @Expose()
   memo: string;
 
+  lectureId: number;
   paymentId: number;
   lectureScheduleId: number;
   regularLectureStatusId: number;

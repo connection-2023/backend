@@ -13,9 +13,11 @@ export class ReservationDto implements Reservation {
   })
   @Expose()
   id: number;
+
   userId: number;
   paymentId: number;
   lectureScheduleId: number;
+  lectureId: number;
   regularLectureStatusId: number;
 
   @ApiProperty({
