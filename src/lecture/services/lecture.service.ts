@@ -50,6 +50,8 @@ import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
 import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
 import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
 import { EnrollLectureScheduleDto } from '../dtos/get-enroll-schedule.dto';
+import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
+import { DetailEnrollScheduleDto } from '../dtos/get-detail-enroll-schedule.dto';
 
 @Injectable()
 export class LectureService {
@@ -581,37 +583,54 @@ export class LectureService {
     userId: number,
     { year, month }: ReadManyEnrollLectureQueryDto,
   ) {
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const startDate = new Date(year, month - 1, 2, -15);
-        const endDate = new Date(year, month, 1, 8, 59, 59, 999);
+    const startDate = new Date(year, month - 1, 2, -15);
+    const endDate = new Date(year, month, 1, 8, 59, 59, 999);
 
-        const existEnrollLecture =
-          await this.prismaService.reservation.findFirst({
-            where: { userId },
-          });
-        if (!existEnrollLecture) {
-          return;
-        }
+    const existEnrollLecture = await this.prismaService.reservation.findFirst({
+      where: { userId },
+    });
+    if (!existEnrollLecture) {
+      return;
+    }
 
-        const schedules = await this.lectureRepository.trxGetEnrollSchedule(
-          transaction,
+    const schedules = await this.lectureRepository.getEnrollSchedule(
+      userId,
+      startDate,
+      endDate,
+    );
+
+    const regularSchedules =
+      await this.lectureRepository.getEnrollRegularSchedule(
+        userId,
+        startDate,
+        endDate,
+      );
+
+    return new EnrollLectureScheduleDto(schedules, regularSchedules);
+  }
+
+  async getDetailEnrollSchedule(
+    scheduleId: number,
+    userId: number,
+    { type }: EnrollScheduleDetailQueryDto,
+  ) {
+    if (type === '원데이') {
+      const enrollScheduleDetail =
+        await this.lectureRepository.getDetailEnrollSchedule(
+          scheduleId,
           userId,
-          startDate,
-          endDate,
         );
 
-        const regularSchedules =
-          await this.lectureRepository.trxGetEnrollRegularSchedule(
-            transaction,
-            userId,
-            startDate,
-            endDate,
-          );
+      return new DetailEnrollScheduleDto(enrollScheduleDetail);
+    } else {
+      const enrollScheduleDetail =
+        await this.lectureRepository.getDetailEnrollRegularSchedule(
+          scheduleId,
+          userId,
+        );
 
-        return new EnrollLectureScheduleDto(schedules, regularSchedules);
-      },
-    );
+      return new DetailEnrollScheduleDto(enrollScheduleDetail);
+    }
   }
 
   async readManyLectureSchedulesWithLecturerId(

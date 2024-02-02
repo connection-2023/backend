@@ -3,6 +3,7 @@ import { Lecture } from '@prisma/client';
 import { BaseReturnWithSwaggerDto } from '../../common/dtos/base-return-with-swagger.dto';
 import { BaseReturnDto } from '@src/common/dtos/base-return.dto';
 import { Exclude, Expose } from 'class-transformer';
+import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 
 @Exclude()
 export class SimpleLectureDto extends BaseReturnDto implements Lecture {
@@ -40,6 +41,7 @@ export class SimpleLectureDto extends BaseReturnDto implements Lecture {
   isActive: boolean;
   locationDescription: string;
   deletedAt: Date;
+  lecturer?: LecturerDto;
 
   constructor(lecture: Partial<SimpleLectureDto>) {
     super();
