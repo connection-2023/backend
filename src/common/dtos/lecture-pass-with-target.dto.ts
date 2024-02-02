@@ -15,7 +15,7 @@ export class LecturePassWithTargetDto
   lecturerId: number;
 
   @ApiProperty({
-    description: '패스권 Id',
+    description: '패스권명',
     type: Number,
   })
   title: string;

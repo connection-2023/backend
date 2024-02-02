@@ -15,6 +15,8 @@ import {
 import { GetMyIssuedPassListDto } from '../dtos/get-my-issued-pass-list.dto';
 import { IssuedPassFilterOptions, PassStatusOptions } from '../enum/pass.enum';
 import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-target.dto';
+import { LecturePass } from '@prisma/client';
+import { MyPassDto } from '../dtos/pass.dto';
 
 @Injectable()
 export class PassService {
@@ -216,5 +218,14 @@ export class PassService {
     return (await this.passRepository.getLecturerPassList(lecturerId)).map(
       (lecturePass) => new LecturePassWithTargetDto(lecturePass),
     );
+  }
+
+  async getMyPass(lecturerId: number, passId: number): Promise<MyPassDto> {
+    const selectedPass: LecturePass = await this.passRepository.getPassById(
+      lecturerId,
+      passId,
+    );
+
+    return selectedPass ? new MyPassDto(selectedPass) : null;
   }
 }
