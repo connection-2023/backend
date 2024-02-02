@@ -58,7 +58,7 @@ export class LectureDto extends BaseReturnDto {
   lectureToDanceGenre?: LectureToDanceGenreDto[];
 
   @ApiProperty({ description: '원데이 정기', type: LectureMethodDto })
-  lectureMethod: LectureMethodDto;
+  lectureMethod?: LectureMethodDto;
 
   @ApiProperty({ description: '강사', type: LecturerDto })
   lecturer?: LecturerDto;

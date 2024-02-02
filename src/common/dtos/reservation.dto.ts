@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Reservation } from '@prisma/client';
 import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
+import { PaymentDto } from '@src/payments/dtos/payment.dto';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
@@ -56,6 +57,8 @@ export class ReservationDto implements Reservation {
   })
   @Expose()
   regularLectureStatus?: PaymentRegularLectureStatusDto;
+
+  payment?: PaymentDto;
 
   constructor(reservation: Partial<ReservationDto>) {
     Object.assign(this, reservation);

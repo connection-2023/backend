@@ -40,6 +40,8 @@ import {
   RegularLectureStatusInputData,
 } from '@src/lecture/interface/lecture.interface';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
+import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
+import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 
 @Injectable()
 export class LectureRepository {
@@ -311,47 +313,82 @@ export class LectureRepository {
     });
   }
 
-  async trxReadManyEnrollLectureWithUserId(
-    transaction: PrismaTransaction,
+  async getEnrollSchedule(
     userId: number,
-    take: number,
-    currentTime,
-    cursor?: ICursor,
-    skip?: number,
-  ): Promise<any> {
-    return await transaction.payment.findMany({
+    startDate: Date,
+    endDate: Date,
+  ): Promise<LectureScheduleDto[]> {
+    return await this.prismaService.lectureSchedule.findMany({
       where: {
-        userId,
-        ...currentTime,
+        reservation: { some: { userId } },
+        startDateTime: { gte: startDate, lte: endDate },
       },
-      take,
-      skip,
-      cursor,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        orderId: true,
-        orderName: true,
-        reservation: {
-          select: {
-            lectureSchedule: {
-              select: {
-                startDateTime: true,
-                lecture: {
-                  select: {
-                    id: true,
-                    title: true,
-                    lectureImage: { select: { imageUrl: true }, take: 1 },
-                  },
-                },
+      include: { lecture: true },
+      orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async getEnrollRegularSchedule(
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<RegularLectureSchedule[]> {
+    return await this.prismaService.regularLectureSchedule.findMany({
+      where: {
+        regularLectureStatus: { reservation: { some: { userId } } },
+        startDateTime: { gte: startDate, lte: endDate },
+      },
+      include: { regularLectureStatus: { select: { lecture: true } } },
+      orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async getDetailEnrollSchedule(
+    scheduleId: number,
+    userId: number,
+  ): Promise<Reservation> {
+    return await this.prismaService.reservation.findFirst({
+      where: { lectureScheduleId: scheduleId, userId },
+      include: {
+        lectureSchedule: {
+          include: {
+            lecture: {
+              include: {
+                lecturer: true,
+                lectureNotification: true,
+                lectureLocation: true,
               },
             },
           },
         },
-        lecturer: {
+        payment: true,
+      },
+    });
+  }
+
+  async getDetailEnrollRegularSchedule(
+    scheduleId: number,
+    userId: number,
+  ): Promise<Reservation> {
+    return await this.prismaService.reservation.findFirst({
+      where: {
+        regularLectureStatus: {
+          regularLectureSchedule: { some: { id: scheduleId } },
+        },
+        userId,
+      },
+      include: {
+        payment: true,
+        regularLectureStatus: {
           select: {
-            nickname: true,
-            profileCardImageUrl: true,
+            regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
+            lecture: {
+              include: {
+                lectureLocation: true,
+                lectureNotification: true,
+                lecturer: true,
+              },
+            },
           },
         },
       },
@@ -360,9 +397,9 @@ export class LectureRepository {
 
   async trxEnrollLectureCount(
     transaction: PrismaTransaction,
-    userId: number,
+    where,
   ): Promise<number> {
-    return await transaction.payment.count({ where: { userId } });
+    return await transaction.reservation.count({ where });
   }
 
   async trxUpsertLectureNotification(

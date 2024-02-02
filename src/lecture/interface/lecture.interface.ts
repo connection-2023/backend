@@ -4,6 +4,7 @@ import { LectureLocationDto } from '@src/common/dtos/lecture-location.dto';
 import { LectureMethodDto } from '@src/common/dtos/lecture-method.dto';
 import { LectureNotificationDto } from '@src/common/dtos/lecture-notification.dto';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
+import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
 import { LectureToDanceGenreDto } from '@src/common/dtos/lecture-to-dance-genre.dto';
 import { LectureToRegionDto } from '@src/common/dtos/lecture-to-region.dto';
 import { LectureTypeDto } from '@src/common/dtos/lecture-type.dto';
@@ -11,6 +12,7 @@ import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { LikedLectureReviewDto } from '@src/common/dtos/liked-lecture-review.dto';
 import { LikedLectureDto } from '@src/common/dtos/liked-lecture.dto';
+import { RegularLectureStatusDto } from '@src/common/dtos/regular-lecture-status.dto';
 import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { UserDto } from '@src/common/dtos/user.dto';
 
