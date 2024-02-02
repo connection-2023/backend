@@ -94,7 +94,7 @@ export class LecturerPaymentsController {
 
   @ApiGetMyPassSituation()
   @SetResponseKey('passSituationList')
-  @Get('pass/:passId')
+  @Get('passes/:passId')
   async getMyPassSituation(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('passId', ParseIntPipe) passId: number,
