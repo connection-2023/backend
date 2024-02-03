@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { LecturerModule } from './lecturer/lecturer.module';
 import { AuthModule } from './auth/auth.module';
 import { CustomConfigModule } from './common/config/config-module.config';
@@ -19,6 +19,7 @@ import { ReportModule } from '@src/report/report.module';
 import { AdminModule } from './admin/admin.module';
 import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
 import { SearchModule } from './search/search.module';
+import { LoggerMiddleware } from './common/middlewares/src/middlewares/logger.middleware';
 
 @Module({
   imports: [
@@ -45,4 +46,8 @@ import { SearchModule } from './search/search.module';
   controllers: [AppController],
   providers: [AppService, ConfigService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
