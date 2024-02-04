@@ -724,4 +724,11 @@ export class LecturerService implements OnModuleInit {
       ) || []
     );
   }
+
+  async getLecturerLearnerPassList(lecturerId: number, userId: number) {
+    const userPassList = await this.lecturerRepository.getUserPassList(
+      lecturerId,
+      userId,
+    );
+  }
 }
