@@ -1,12 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UserPass } from '@prisma/client';
-import { Exclude, Expose } from 'class-transformer';
-@Exclude()
-class PaymentDto {
-  @Expose()
-  id: number;
-}
-
+import { LecturePassDto } from '@src/common/dtos/lecture-pass.dto';
+import { Exclude, Expose, Type } from 'class-transformer';
 @Exclude()
 export class LecturerLearnerPassInfoDto
   implements Pick<UserPass, 'startAt' | 'endAt' | 'remainingUses'>
@@ -31,6 +26,14 @@ export class LecturerLearnerPassInfoDto
   })
   @Expose()
   endAt: Date;
+
+  @ApiProperty({
+    type: LecturePassDto,
+    description: '패스권 정보',
+  })
+  @Expose()
+  @Type(() => LecturePassDto)
+  lecturePass: LecturePassDto;
 
   constructor(lecturerLearnerPassInfo: Partial<LecturerLearnerPassInfoDto>) {
     Object.assign(this, lecturerLearnerPassInfo);

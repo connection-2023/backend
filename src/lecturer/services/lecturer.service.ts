@@ -36,6 +36,7 @@ import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lec
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
+import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -718,17 +719,17 @@ export class LecturerService implements OnModuleInit {
         userId,
       );
 
-    return (
-      learnerPaymentOverView?.map(
-        (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
-      ) || []
-    );
+    return learnerPaymentOverView[0]
+      ? learnerPaymentOverView.map(
+          (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
+        )
+      : [];
   }
 
-  async getLecturerLearnerPassList(lecturerId: number, userId: number) {
-    const userPassList = await this.lecturerRepository.getUserPassList(
-      lecturerId,
-      userId,
-    );
+  async getLecturerLearnerPassList(
+    lecturerId: number,
+    userId: number,
+  ): Promise<LecturerLearnerPassInfoDto[]> {
+    return await this.lecturerRepository.getUserPassList(lecturerId, userId);
   }
 }
