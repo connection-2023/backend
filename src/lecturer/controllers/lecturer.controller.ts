@@ -160,6 +160,19 @@ export class LecturerController {
     );
   }
 
+  //수강이 보유한 내 패스권 조회
+  @Get('/learners/:userId/passes')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerPassList(
+    @Param('userId', ParseIntPipe) userId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<any> {
+    return await this.lecturerService.getLecturerLearnerPassList(
+      authorizedData.lecturer.id,
+      userId,
+    );
+  }
+
   @ApiReadManyLectureWithLecturer()
   @SetResponseKey('lecture')
   @UseGuards(LecturerAccessTokenGuard)

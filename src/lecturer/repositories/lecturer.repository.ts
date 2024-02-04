@@ -395,4 +395,20 @@ export class LecturerRepository {
       },
     });
   }
+
+  async getUserPassList(lecturerId: number, userId: number) {
+    const currentDate = new Date();
+    return await this.prismaService.userPass.findMany({
+      where: {
+        userId,
+        lecturePass: { lecturerId },
+        // isEnabled: true,
+        // endAt: { gt: currentDate },
+        // remainingUses: {
+        //   not: 0,
+        // },
+      },
+      include: { lecturePass: true },
+    });
+  }
 }
