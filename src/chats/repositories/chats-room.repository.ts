@@ -37,6 +37,42 @@ export class ChatRoomRepository {
   }
 
   async getMyChatRooms(where): Promise<ChatRoom[]> {
-    return await this.chatRoomModel.find(where);
+    return await this.chatRoomModel.aggregate([
+      where,
+      {
+        $lookup: {
+          from: 'chats',
+          localField: '_id',
+          foreignField: 'chattingRoomId',
+          as: 'lastChat',
+        },
+      },
+      {
+        $unwind: { path: '$lastChat', preserveNullAndEmptyArrays: true },
+      },
+
+      {
+        $group: {
+          _id: '$_id',
+          userId: { $last: '$userId' },
+          lecturerId: { $last: '$lecturerId' },
+          roomId: { $last: '$roomId' },
+          lastChat: { $last: '$lastChat' },
+        },
+      },
+      {
+        $project: {
+          userId: 1,
+          lecturerId: 1,
+          roomId: 1,
+          lastChat: 1,
+        },
+      },
+      {
+        $sort: {
+          'lastChat.createdAt': -1,
+        },
+      },
+    ]);
   }
 }

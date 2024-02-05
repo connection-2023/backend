@@ -392,10 +392,7 @@ export class CouponService {
           filterOption === CouponFilterOptions.LATEST
             ? { id: 'desc' }
             : [{ lectureCoupon: { endAt: 'asc' } }, { id: 'asc' }];
-        endAt =
-          filterOption === CouponFilterOptions.LATEST
-            ? undefined
-            : { gt: currentTime };
+        endAt = { gt: currentTime };
         break;
 
       case UserCouponStatusOptions.USED:

@@ -14,8 +14,8 @@ import { PaymentDto } from '../dtos/payment.dto';
 export function ApiGetUserReceipt() {
   return applyDecorators(
     ApiOperation({
-      summary: '결제 영수증 조회(유저)',
-      description: 'orderId를 통한 결제 영수증 조회(유저)',
+      summary: '결제 정보 상세 조회(유저)',
+      description: 'orderId를 통한 결제 정보 상세 조회(유저)',
     }),
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'receipt', PaymentDto),

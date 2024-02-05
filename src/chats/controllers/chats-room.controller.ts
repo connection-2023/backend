@@ -31,6 +31,7 @@ export class ChatRoomController {
     return await this.chatRoomService.getSocketRoom(authorizedData);
   }
 
+  @SetResponseKey('chatRoom')
   @ApiCreateChatRoom()
   @UseGuards(AccessTokenGuard)
   @Post()

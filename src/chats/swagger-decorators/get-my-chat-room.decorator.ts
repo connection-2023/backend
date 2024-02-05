@@ -6,7 +6,7 @@ import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 export function ApiGetMyChatRoom() {
   return applyDecorators(
     ApiOperation({
-      summary: '내 채팅방 조회',
+      summary: '내 채팅방 목록 조회',
     }),
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'chatRoom', ChatRoomDto, {

@@ -1,3 +1,4 @@
+import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { ReadManyLatestLecturesResponseDto } from './../dtos/read-many-latest-lectures-response.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
@@ -8,7 +9,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, LectureHoliday, Region } from '@prisma/client';
+import {
+  Lecture,
+  LectureHoliday,
+  LecturerLearner,
+  Region,
+  Reservation,
+} from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -41,6 +48,10 @@ import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-sched
 import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
 import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
+import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
+import { EnrollLectureScheduleDto } from '../dtos/get-enroll-schedule.dto';
+import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
+import { DetailEnrollScheduleDto } from '../dtos/get-detail-enroll-schedule.dto';
 
 @Injectable()
 export class LectureService {
@@ -570,98 +581,56 @@ export class LectureService {
 
   async readManyEnrollLectureWithUserId(
     userId: number,
-    {
-      take,
-      currentPage,
-      targetPage,
-      firstItemId,
-      lastItemId,
-      enrollLectureType,
-    }: ReadManyEnrollLectureQueryDto,
+    { year, month }: ReadManyEnrollLectureQueryDto,
   ) {
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const existEnrollLecture =
-          await this.prismaService.reservation.findFirst({
-            where: { userId },
-          });
-        if (!existEnrollLecture) {
-          return;
-        }
+    const startDate = new Date(year, month - 1, 2, -15);
+    const endDate = new Date(year, month, 1, 8, 59, 59, 999);
 
-        let cursor;
-        let skip;
-        const currentTime = {};
+    const existEnrollLecture = await this.prismaService.reservation.findFirst({
+      where: { userId },
+    });
+    if (!existEnrollLecture) {
+      return;
+    }
 
-        if (enrollLectureType === '수강 완료') {
-          currentTime['reservation'] = {
-            every: {
-              lectureSchedule: {
-                startDateTime: {
-                  lt: new Date(),
-                },
-              },
-            },
-          };
-        } else if (enrollLectureType === '진행중') {
-          currentTime['reservation'] = {
-            some: {
-              lectureSchedule: {
-                startDateTime: {
-                  gt: new Date(),
-                },
-              },
-            },
-          };
-        }
-        const isPagination = currentPage && targetPage;
+    const schedules = await this.lectureRepository.getEnrollSchedule(
+      userId,
+      startDate,
+      endDate,
+    );
 
-        if (isPagination) {
-          const pageDiff = currentPage - targetPage;
-          ({ cursor, skip, take } = this.getPaginationOptions(
-            pageDiff,
-            pageDiff <= -1 ? lastItemId : firstItemId,
-            take,
-          ));
-        }
+    const regularSchedules =
+      await this.lectureRepository.getEnrollRegularSchedule(
+        userId,
+        startDate,
+        endDate,
+      );
 
-        const enrollLecture =
-          await this.lectureRepository.trxReadManyEnrollLectureWithUserId(
-            transaction,
-            userId,
-            take,
-            currentTime,
-            cursor,
-            skip,
-          );
-        const count = await this.lectureRepository.trxEnrollLectureCount(
-          transaction,
+    return new EnrollLectureScheduleDto(schedules, regularSchedules);
+  }
+
+  async getDetailEnrollSchedule(
+    scheduleId: number,
+    userId: number,
+    { type }: EnrollScheduleDetailQueryDto,
+  ) {
+    if (type === '원데이') {
+      const enrollScheduleDetail =
+        await this.lectureRepository.getDetailEnrollSchedule(
+          scheduleId,
           userId,
         );
 
-        return { count, enrollLecture };
-      },
-    );
-  }
+      return new DetailEnrollScheduleDto(enrollScheduleDetail);
+    } else {
+      const enrollScheduleDetail =
+        await this.lectureRepository.getDetailEnrollRegularSchedule(
+          scheduleId,
+          userId,
+        );
 
-  async readManyParticipantWithLectureId(lectureId: number) {
-    return await this.lectureRepository.readManyParticipantWithLectureId(
-      lectureId,
-    );
-  }
-
-  async readManyParticipantWithScheduleId(
-    lectureId: number,
-    scheduleId: number,
-  ) {
-    await this.validateScheduleId(lectureId, scheduleId);
-
-    const participant =
-      await this.lectureRepository.readManyParticipantWithScheduleId(
-        scheduleId,
-      );
-
-    return participant.reservation;
+      return new DetailEnrollScheduleDto(enrollScheduleDetail);
+    }
   }
 
   async readManyLectureSchedulesWithLecturerId(
@@ -1033,19 +1002,6 @@ export class LectureService {
     }
   }
 
-  private async validateScheduleId(lectureId: number, scheduleId: number) {
-    const schedule = await this.prismaService.lectureSchedule.findFirst({
-      where: { lectureId, id: scheduleId },
-    });
-
-    if (!schedule) {
-      throw new BadRequestException(
-        '해당 강의에 존재하지 않는 scheduleId입니다.',
-        'InvalidScheduleId',
-      );
-    }
-  }
-
   async getLectureLearnerList(
     lecturerId: number,
     { take, lastItemId }: GetLectureLearnerListDto,
@@ -1064,5 +1020,30 @@ export class LectureService {
     return lecturerLearnerList.map(
       (lecturerLearner) => new LectureLearnerDto(lecturerLearner),
     );
+  }
+
+  async getLectureScheduleLearnerList(
+    lecturerId: number,
+    scheduleId: number,
+  ): Promise<LectureLearnerInfoDto[]> {
+    const learnerList: Reservation[] =
+      await this.lectureRepository.getLectureScheduleLearnerList(
+        lecturerId,
+        scheduleId,
+      );
+    if (!learnerList[0]) {
+      return null;
+    }
+
+    const lectureLearnerInfoList: LectureLearnerInfoDto[] = await Promise.all(
+      learnerList.map(async (learner: Reservation) => {
+        const learnerInfo = await this.lectureRepository.getLecturerLearnerInfo(
+          learner.userId,
+        );
+        return new LectureLearnerInfoDto({ ...learner, ...learnerInfo });
+      }),
+    );
+
+    return lectureLearnerInfoList;
   }
 }

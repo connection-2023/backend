@@ -46,7 +46,7 @@ export class Chats {
 
   @Prop({ required: false, default: null })
   @IsNotEmpty()
-  readedAt: Date;
+  readedAt: Date | null;
 }
 
 export const ChatsSchema = SchemaFactory.createForClass(Chats);

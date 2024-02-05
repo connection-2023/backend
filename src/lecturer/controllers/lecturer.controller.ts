@@ -43,6 +43,9 @@ import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lec
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 import { ApiGetLecturerLearnerPaymentsOverview } from '../swagger-decorators/get-lecturer-leaner-payments-overview.decorator';
 import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
+import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
+import { ApiGetLecturerLearnerPassList } from '../swagger-decorators/get-lecturer-learner-pass-list.decorator';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -158,6 +161,23 @@ export class LecturerController {
       authorizedData.lecturer.id,
       userId,
     );
+  }
+
+  @ApiGetLecturerLearnerPassList()
+  @SetResponseKey('lecturerLearnerPassList')
+  @Get('/learners/:userId/passes')
+  @UseGuards(LecturerAccessTokenGuard)
+  async getLecturerLearnerPassList(
+    @Param('userId', ParseIntPipe) userId: number,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ): Promise<LecturerLearnerPassInfoDto[]> {
+    const userPassList: LecturerLearnerPassInfoDto[] =
+      await this.lecturerService.getLecturerLearnerPassList(
+        authorizedData.lecturer.id,
+        userId,
+      );
+
+    return plainToInstance(LecturerLearnerPassInfoDto, userPassList);
   }
 
   @ApiReadManyLectureWithLecturer()

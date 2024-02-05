@@ -1,67 +1,75 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Reservation } from '@prisma/client';
-import { LectureScheduleDto } from './lecture-schedule.dto';
-import { RegularLectureStatusDto } from './regular-lecture-status.dto';
+import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
+import { PaymentDto } from '@src/payments/dtos/payment.dto';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class ReservationDto implements Reservation {
   @ApiProperty({
     description: '예약 Id',
     type: Number,
   })
+  @Expose()
   id: number;
+
   userId: number;
   paymentId: number;
   lectureScheduleId: number;
+  lectureId: number;
   regularLectureStatusId: number;
 
   @ApiProperty({
     description: '예약자명',
   })
+  @Expose()
   representative: string;
 
   @ApiProperty({
     description: '예약자 전화 번호',
   })
+  @Expose()
   phoneNumber: string;
 
   @ApiProperty({
     description: '예약 인원',
   })
+  @Expose()
   participants: number;
 
   @ApiProperty({
     description: '요청 상황',
   })
+  @Expose()
   requests: string;
 
   isEnabled: boolean;
 
   @ApiProperty({
-    description: '일정',
-    type: LectureScheduleDto,
+    description: '원데이 클래스 일정',
+    type: PaymentLectureScheduleDto,
   })
-  lectureSchedule: LectureScheduleDto;
+  @Expose()
+  lectureSchedule?: PaymentLectureScheduleDto;
 
   @ApiProperty({
-    description: '일정',
-    type: RegularLectureStatusDto,
+    description: '정기 클래스 일정',
+    type: PaymentRegularLectureStatusDto,
   })
-  regularLectureStatus: RegularLectureStatusDto;
+  @Expose()
+  regularLectureStatus?: PaymentRegularLectureStatusDto;
+
+  payment?: PaymentDto;
 
   constructor(reservation: Partial<ReservationDto>) {
-    this.id = reservation.id;
-    this.representative = reservation.representative;
-    this.phoneNumber = reservation.phoneNumber;
-    this.participants = reservation.participants;
-    this.requests = reservation.requests;
+    Object.assign(this, reservation);
 
     this.lectureSchedule = reservation.lectureSchedule
-      ? new LectureScheduleDto(reservation.lectureSchedule)
+      ? new PaymentLectureScheduleDto(reservation.lectureSchedule)
       : null;
     this.regularLectureStatus = reservation.regularLectureStatus
-      ? new RegularLectureStatusDto(reservation.regularLectureStatus)
+      ? new PaymentRegularLectureStatusDto(reservation.regularLectureStatus)
       : null;
-
-    Object.seal(this);
   }
 }

@@ -71,6 +71,7 @@ export class LearnerPaymentOverviewDto
     description: '구매한 유저 패스권 정보',
   })
   userPass: LearnerPassDto;
+  secret: string;
 
   constructor(learnerOverview: Partial<LearnerPaymentOverviewDto>) {
     super();

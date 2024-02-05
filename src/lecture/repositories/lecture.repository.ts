@@ -12,6 +12,7 @@ import {
   LectureNotification,
   RegularLectureSchedule,
   RegularLectureStatus,
+  LecturerLearner,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import {
@@ -39,6 +40,8 @@ import {
   RegularLectureStatusInputData,
 } from '@src/lecture/interface/lecture.interface';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
+import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
+import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 
 @Injectable()
 export class LectureRepository {
@@ -310,47 +313,82 @@ export class LectureRepository {
     });
   }
 
-  async trxReadManyEnrollLectureWithUserId(
-    transaction: PrismaTransaction,
+  async getEnrollSchedule(
     userId: number,
-    take: number,
-    currentTime,
-    cursor?: ICursor,
-    skip?: number,
-  ): Promise<any> {
-    return await transaction.payment.findMany({
+    startDate: Date,
+    endDate: Date,
+  ): Promise<LectureScheduleDto[]> {
+    return await this.prismaService.lectureSchedule.findMany({
       where: {
-        userId,
-        ...currentTime,
+        reservation: { some: { userId } },
+        startDateTime: { gte: startDate, lte: endDate },
       },
-      take,
-      skip,
-      cursor,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        orderId: true,
-        orderName: true,
-        reservation: {
-          select: {
-            lectureSchedule: {
-              select: {
-                startDateTime: true,
-                lecture: {
-                  select: {
-                    id: true,
-                    title: true,
-                    lectureImage: { select: { imageUrl: true }, take: 1 },
-                  },
-                },
+      include: { lecture: true },
+      orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async getEnrollRegularSchedule(
+    userId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<RegularLectureSchedule[]> {
+    return await this.prismaService.regularLectureSchedule.findMany({
+      where: {
+        regularLectureStatus: { reservation: { some: { userId } } },
+        startDateTime: { gte: startDate, lte: endDate },
+      },
+      include: { regularLectureStatus: { select: { lecture: true } } },
+      orderBy: { startDateTime: 'asc' },
+    });
+  }
+
+  async getDetailEnrollSchedule(
+    scheduleId: number,
+    userId: number,
+  ): Promise<Reservation> {
+    return await this.prismaService.reservation.findFirst({
+      where: { lectureScheduleId: scheduleId, userId },
+      include: {
+        lectureSchedule: {
+          include: {
+            lecture: {
+              include: {
+                lecturer: true,
+                lectureNotification: true,
+                lectureLocation: true,
               },
             },
           },
         },
-        lecturer: {
+        payment: true,
+      },
+    });
+  }
+
+  async getDetailEnrollRegularSchedule(
+    scheduleId: number,
+    userId: number,
+  ): Promise<Reservation> {
+    return await this.prismaService.reservation.findFirst({
+      where: {
+        regularLectureStatus: {
+          regularLectureSchedule: { some: { id: scheduleId } },
+        },
+        userId,
+      },
+      include: {
+        payment: true,
+        regularLectureStatus: {
           select: {
-            nickname: true,
-            profileCardImageUrl: true,
+            regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
+            lecture: {
+              include: {
+                lectureLocation: true,
+                lectureNotification: true,
+                lecturer: true,
+              },
+            },
           },
         },
       },
@@ -359,9 +397,9 @@ export class LectureRepository {
 
   async trxEnrollLectureCount(
     transaction: PrismaTransaction,
-    userId: number,
+    where,
   ): Promise<number> {
-    return await transaction.payment.count({ where: { userId } });
+    return await transaction.reservation.count({ where });
   }
 
   async trxUpsertLectureNotification(
@@ -408,46 +446,6 @@ export class LectureRepository {
     });
   }
 
-  async readManyParticipantWithLectureId(lectureId: number): Promise<any> {
-    return await this.prismaService.lecture.findFirst({
-      where: { id: lectureId },
-      include: {
-        lectureSchedule: {
-          select: {
-            reservation: {
-              select: {
-                user: {
-                  include: { userProfileImage: { select: { imageUrl: true } } },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async readManyParticipantWithScheduleId(
-    scheduleId: number,
-  ): Promise<LectureScheduleParticipantResponseData> {
-    return await this.prismaService.lectureSchedule.findFirst({
-      where: { id: scheduleId },
-      select: {
-        reservation: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                nickname: true,
-                userProfileImage: { select: { imageUrl: true } },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
   async getLectureLearnerList(
     lecturerId: number,
     lectureId: number,
@@ -457,11 +455,20 @@ export class LectureRepository {
     return await this.prismaService.lecturerLearner.findMany({
       where: {
         lecturerId,
-        user: { reservation: { some: { lectureSchedule: { lectureId } } } },
+        OR: [
+          {
+            user: { reservation: { some: { lectureSchedule: { lectureId } } } },
+          },
+          {
+            user: {
+              reservation: { some: { regularLectureStatus: { lectureId } } },
+            },
+          },
+        ],
       },
       take,
       cursor,
-      include: { user: true },
+      include: { user: { include: { userProfileImage: true } } },
     });
   }
 
@@ -551,6 +558,21 @@ export class LectureRepository {
         lectureToRegion: { include: { region: true } },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getLectureScheduleLearnerList(lecturerId: number, scheduleId: number) {
+    return await this.prismaService.reservation.findMany({
+      where: { lectureScheduleId: scheduleId, payment: { lecturerId } },
+    });
+  }
+
+  async getLecturerLearnerInfo(userId: number) {
+    return await this.prismaService.lecturerLearner.findFirst({
+      where: {
+        userId,
+      },
+      include: { user: { include: { userProfileImage: true } } },
     });
   }
 }

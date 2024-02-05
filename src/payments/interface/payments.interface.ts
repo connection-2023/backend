@@ -1,6 +1,7 @@
 import {
   LectureSchedule,
   Payment,
+  RegularLectureStatus,
   Reservation,
   TransferPaymentInfo,
   UserPass,
@@ -10,6 +11,7 @@ import { PaymentMethods } from '@src/payments/enum/payment.enum';
 export interface ILectureSchedule {
   id?: number;
   lectureScheduleId: number;
+  regularLectureStatusId: number;
   participants: number;
 }
 
@@ -45,7 +47,9 @@ export interface PaymentInputData {
 export interface ReservationInputData {
   userId: number;
   paymentId: number;
-  lectureScheduleId: number;
+  lectureId: number;
+  lectureScheduleId?: number;
+  regularLectureStatusId?: number;
   representative: string;
   phoneNumber: string;
   participants: number;
@@ -73,6 +77,7 @@ export interface PaymentInfo {
 export interface TossPaymentsConfirmResponse {
   card?: TossPaymentCardInfo;
   virtualAccount?: TossPaymentVirtualAccountInfo;
+  secret?: string;
 }
 
 export interface TossPaymentVirtualAccountInfo {
@@ -151,7 +156,6 @@ export interface IVirtualAccountPaymentInfo {
 
 export interface VirtualAccountPaymentInfoInputData {
   paymentId: number;
-  refundStatusId: number;
   accountNumber: string;
   bankCode: string;
   customerName: string;
@@ -243,5 +247,14 @@ export interface IPayment extends Payment {
 }
 
 export interface IReservation extends Reservation {
-  lectureSchedule: LectureSchedule;
+  lectureSchedule?: LectureSchedule;
+  regularLectureStatus?: RegularLectureStatus;
+}
+
+export interface IWebHookData {
+  createdAt: string;
+  secret: string;
+  orderId: string;
+  status: string;
+  transactionKey: string;
 }

@@ -28,6 +28,7 @@ import { PrismaClientValidationError } from '@prisma/client/runtime';
 import { when } from 'joi';
 import { LectureScheduleResponseData } from '@src/lecture/interface/lecture.interface';
 import { PaymentOrderStatus } from '@src/payments/enum/payment.enum';
+import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
 
 @Injectable()
 export class LecturerRepository {
@@ -162,7 +163,7 @@ export class LecturerRepository {
     return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId, deletedAt: null },
       include: {
-        users: { include: { auth: true } },
+        users: { include: { auth: { include: { signUpType: true } } } },
       },
     });
   }
@@ -393,6 +394,25 @@ export class LecturerRepository {
         },
         userPass: true,
       },
+    });
+  }
+
+  async getUserPassList(
+    lecturerId: number,
+    userId: number,
+  ): Promise<LecturerLearnerPassInfoDto[]> {
+    // const currentDate = new Date();
+    return await this.prismaService.userPass.findMany({
+      where: {
+        userId,
+        lecturePass: { lecturerId },
+        isEnabled: true,
+        // endAt: { gt: currentDate },
+        // remainingUses: {
+        //   not: 0,
+        // },
+      },
+      include: { lecturePass: true },
     });
   }
 }

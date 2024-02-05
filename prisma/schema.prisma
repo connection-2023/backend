@@ -190,6 +190,7 @@ model Lecture {
   lecturePassTarget    LecturePassTarget[]
   lectureDay           LectureDay[]
   regularLectureStatus RegularLectureStatus[]
+  reservation          Reservation[]
 }
 
 model DanceCategory {
@@ -624,6 +625,7 @@ model Payment {
   paymentKey                String?                    @unique
   paymentProductTypeId      Int
   orderId                   String                     @unique
+  secret                    String?
   orderName                 String
   originalPrice             Int
   finalPrice                Int
@@ -690,6 +692,7 @@ model Reservation {
   id                     Int                   @id @default(autoincrement())
   userId                 Int
   paymentId              Int                   @unique
+  lectureId              Int
   lectureScheduleId      Int?
   regularLectureStatusId Int?
   //대표자
@@ -702,6 +705,7 @@ model Reservation {
   isEnabled              Boolean               @default(false)
   user                   Users                 @relation(fields: [userId], references: [id])
   lectureSchedule        LectureSchedule?      @relation(fields: [lectureScheduleId], references: [id])
+  lecture                Lecture?              @relation(fields: [lectureId], references: [id])
   regularLectureStatus   RegularLectureStatus? @relation(fields: [regularLectureStatusId], references: [id])
   payment                Payment               @relation(fields: [paymentId], references: [id])
   lectureReview          LectureReview?

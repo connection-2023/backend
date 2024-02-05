@@ -7,6 +7,7 @@ import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { CombinedChatRoomDto } from '../dtos/combined-chat-room.dto';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
+import { ChatRoom } from '../schemas/chats-room.schema';
 
 @Injectable()
 export class ChatRoomService {
@@ -35,11 +36,13 @@ export class ChatRoomService {
       targetId,
     );
 
-    return await this.chatRoomRepository.createChatRoom(
+    const chatRoom = await this.chatRoomRepository.createChatRoom(
       userId,
       lecturerId,
       roomId,
     );
+
+    return new ChatRoomDto(chatRoom);
   }
 
   async getChatRoom(authorizedData: ValidateResult, targetId: number) {
@@ -65,15 +68,16 @@ export class ChatRoomService {
   async getMyChatRoom(authorizedData: ValidateResult) {
     const where = {};
     if (authorizedData.user) {
-      where['$and'] = [{ userId: authorizedData.user.id }, { deletedAt: null }];
+      where['$match'] = { userId: authorizedData.user.id, deletedAt: null };
     } else {
-      where['$and'] = [
-        { lecturer: authorizedData.lecturer.id },
-        { deletedAt: null },
-      ];
+      where['$match'] = {
+        lecturerId: authorizedData.lecturer.id,
+        deletedAt: null,
+      };
     }
 
     const chatRooms = await this.chatRoomRepository.getMyChatRooms(where);
+
     if (!chatRooms[0]) {
       throw new NotFoundException(`chat room not found`);
     }

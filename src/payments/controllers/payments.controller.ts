@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
@@ -14,7 +15,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiCreateLecturePaymentInfo } from '@src/payments/swagger-decorators/create-lecture-payment-info-decorater';
+import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/ApiCreateLecturePaymentInfo';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { ApiConfirmPayment } from '@src/payments/swagger-decorators/confirm-payment-decorater';
 import { IPaymentResult } from '@src/payments/interface/payments.interface';
@@ -30,6 +31,8 @@ import { PaymentDto } from '../dtos/payment.dto';
 import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/create-lecture-payment-info-with-transfer-decorater';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
+import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { Request } from 'express';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -42,20 +45,18 @@ export class PaymentsController {
   // }
 
   //토스 페이먼츠로 클래스 결제
+  @SetResponseKey('pendingPaymentInfo')
   @ApiCreateLecturePaymentInfo()
   @Post('/toss/lecture')
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentWithToss(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLecturePaymentDto: CreateLecturePaymentWithTossDto,
-  ) {
-    const lecturePaymentInfo =
-      await this.paymentsService.createLecturePaymentWithToss(
-        authorizedData.user.id,
-        createLecturePaymentDto,
-      );
-
-    return { lecturePaymentInfo };
+  ): Promise<PendingPaymentInfoDto> {
+    return await this.paymentsService.createLecturePaymentWithToss(
+      authorizedData.user.id,
+      createLecturePaymentDto,
+    );
   }
 
   //토스 페이먼츠로 패스권 결제
@@ -80,17 +81,14 @@ export class PaymentsController {
   @UseGuards(UserAccessTokenGuard)
   async confirmLecturePayment(
     @Body() confirmPaymentDto: ConfirmLecturePaymentDto,
-  ) {
-    const paymentResult: IPaymentResult =
-      await this.paymentsService.confirmPayment(confirmPaymentDto);
-
-    return { paymentResult };
+  ): Promise<PaymentDto> {
+    return await this.paymentsService.confirmPayment(confirmPaymentDto);
   }
 
   @ApiCancelPayment()
   @Post('/toss/:orderId/cancel')
-  async cancelPayment(@Param('orderId') orderId: string) {
-    await this.paymentsService.cancelPayment(orderId);
+  async cancelPayment(@Param('orderId') orderId: string): Promise<void> {
+    return await this.paymentsService.cancelPayment(orderId);
   }
 
   //패스권으로 클래스 결제
@@ -141,17 +139,12 @@ export class PaymentsController {
     );
   }
 
-  @ApiGetUserReceipt()
-  @SetResponseKey('receipt')
-  @Get('/user-receipt')
-  @UseGuards(UserAccessTokenGuard)
-  async getUserReceipt(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query('orderId') orderId: string,
-  ): Promise<PaymentDto> {
-    return await this.paymentsService.getUserReceipt(
-      authorizedData.user.id,
-      orderId,
+  @Post('/toss/status')
+  async handleVirtualAccountPaymentStatusWebhook(
+    @Req() req: Request,
+  ): Promise<void> {
+    await this.paymentsService.handleVirtualAccountPaymentStatusWebhook(
+      req.body,
     );
   }
 }

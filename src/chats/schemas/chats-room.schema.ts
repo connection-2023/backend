@@ -25,9 +25,6 @@ export class ChatRoom extends Document {
 
   @Prop({ type: Date, default: null })
   deletedAt: Date | null;
-
-  @Prop({ required: true, type: Date, default: null })
-  lastChatTime: Date | null;
 }
 
 export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);

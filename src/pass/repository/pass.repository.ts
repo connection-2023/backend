@@ -145,4 +145,11 @@ export class PassRepository {
       );
     }
   }
+
+  async getPassById(lecturerId: number, passId: number) {
+    return await this.prismaService.lecturePass.findFirst({
+      where: { id: passId, lecturerId },
+      include: { lecturePassTarget: { include: { lecture: true } } },
+    });
+  }
 }

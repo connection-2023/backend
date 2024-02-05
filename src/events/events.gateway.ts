@@ -36,7 +36,7 @@ export class EventsGateway
 
     console.log('login', data.authorizedData);
 
-    newNamespace.emit('onlineList');
+    // newNamespace.emit('onlineList');
 
     // const key =
     //   data.authorizedData.tokenType === 'Lecturer'

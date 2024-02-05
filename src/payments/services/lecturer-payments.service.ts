@@ -1,25 +1,25 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
-import { PaymentDto } from '../dtos/payment.dto';
-import { PaymentRequestDto } from '../dtos/payment-request.dto';
+import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
+import { Lecture, LecturePass } from '@prisma/client';
+import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
 import {
-  Lecture,
-  Payment,
-  Reservation,
-  TransferPaymentInfo,
-} from '@prisma/client';
-import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
-import {
+  LectureMethod,
   PaymentMethods,
   PaymentOrderStatus,
   PaymentStatusForLecturer,
   RefundStatuses,
-} from '../enum/payment.enum';
+} from '@src/payments/enum/payment.enum';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { IPayment } from '../interface/payments.interface';
+import { IPayment } from '@src/payments/interface/payments.interface';
+import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -163,7 +163,7 @@ export class LecturerPaymentsService {
   private async processPaymentDoneStatus(paymentId: number): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentStatusForLecturer.DONE,
@@ -187,7 +187,7 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
           PaymentStatusForLecturer.REFUSED,
@@ -243,6 +243,17 @@ export class LecturerPaymentsService {
     lectureMaxCapacity?: number,
   ): Promise<void> {
     const { reservation } = payment;
+    let lectureMethod;
+    let numberOfParticipants;
+    if (reservation.lectureScheduleId) {
+      lectureMethod = LectureMethod.원데이;
+      numberOfParticipants = reservation.lectureSchedule.numberOfParticipants;
+    } else {
+      lectureMethod = LectureMethod.정기;
+      numberOfParticipants =
+        reservation.regularLectureStatus.numberOfParticipants;
+    }
+
     const trxUpdateParticipantsMethod = isIncrement
       ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
       : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
@@ -254,8 +265,7 @@ export class LecturerPaymentsService {
     //각 스케쥴의 현재 인원 수정
     //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
     if (isIncrement && lectureMaxCapacity) {
-      const remainingCapacity =
-        lectureMaxCapacity - reservation.lectureSchedule.numberOfParticipants;
+      const remainingCapacity = lectureMaxCapacity - numberOfParticipants;
 
       if (remainingCapacity < reservation.participants) {
         throw new BadRequestException(
@@ -265,7 +275,7 @@ export class LecturerPaymentsService {
       }
     }
 
-    await trxUpdateParticipantsMethod(transaction, reservation);
+    await trxUpdateParticipantsMethod(transaction, lectureMethod, reservation);
 
     //수강생의 신청 횟수 수정
     await trxUpdateLearnerCountMethod(
@@ -292,7 +302,7 @@ export class LecturerPaymentsService {
   private async rollbackPaymentDoneStatus(paymentId: number) {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
@@ -317,7 +327,7 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
@@ -347,5 +357,65 @@ export class LecturerPaymentsService {
     return await this.paymentsRepository.countLecturerPaymentRequestCount(
       lecturerId,
     );
+  }
+
+  async getPassSituation(
+    lecturerId: number,
+    passId: number,
+  ): Promise<PassSituationDto[]> {
+    const selectedPass: LecturePass = await this.checkPassIssuance(
+      lecturerId,
+      passId,
+    );
+
+    const userPassList = await this.paymentsRepository.getUserPassList(passId);
+    if (!userPassList[0]) {
+      return;
+    }
+
+    const passSituationList: PassSituationDto[] = await Promise.all(
+      userPassList.map(async (userPassInfo) => {
+        const { users: user, ...userPass } = userPassInfo;
+        if (selectedPass.maxUsageCount === userPassInfo.remainingUses) {
+          return new PassSituationDto({ user, userPass });
+        }
+
+        //패스권을 사용한 payment 정보
+        const userPaymentPassUsage =
+          await this.paymentsRepository.getUserPaymentPassUsage(
+            userPassInfo.userId,
+            passId,
+          );
+
+        //반환된 payment 정보들을 통해 예약 정보 조회
+        const reservations = await Promise.all(
+          userPaymentPassUsage.map(async (userPaymentPass) => {
+            return await this.paymentsRepository.getUserReservation(
+              userPaymentPass.paymentId,
+            );
+          }),
+        );
+
+        return new PassSituationDto({ user, userPass, reservations });
+      }),
+    );
+
+    return passSituationList;
+  }
+
+  private async checkPassIssuance(
+    lecturerId: number,
+    passId: number,
+  ): Promise<LecturePass> {
+    const selectedPass: LecturePass = await this.paymentsRepository.getMyPass(
+      lecturerId,
+      passId,
+    );
+
+    if (!selectedPass) {
+      throw new NotFoundException(`패스권이 존재하지 않습니다`);
+    }
+
+    return selectedPass;
   }
 }
