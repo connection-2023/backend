@@ -81,8 +81,6 @@ jobs:
 
           echo "MONGODB_URL"=${{ secrets.MONGODB_URL}}
 
-
-
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축
