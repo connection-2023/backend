@@ -79,9 +79,7 @@ jobs:
           echo "ES_USERNAME=${{ secrets.ES_USERNAME }}" >> .env
           echo "ES_PASSWORD=${{ secrets.ES_PASSWORD }}" >> .env
 
-          echo "MONGODB_URL"=${{ secrets.MONGODB_URL}}
-
-
+          echo "MONGODB_URL=${{ secrets.MONGODB_URL}}" >> .env
 
           cat .env
 
