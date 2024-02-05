@@ -50,7 +50,9 @@ export class ChatRoomRepository {
       {
         $unwind: { path: '$lastChat', preserveNullAndEmptyArrays: true },
       },
-
+      {
+        $match: { 'lastChat.readedAt': null },
+      },
       {
         $group: {
           _id: '$_id',
@@ -74,5 +76,14 @@ export class ChatRoomRepository {
         },
       },
     ]);
+  }
+
+  async countUnreadMessage(
+    chattingRoomId: mongoose.Types.ObjectId,
+  ): Promise<number> {
+    return await this.chatsModel.countDocuments({
+      chattingRoomId,
+      readedAt: null,
+    });
   }
 }

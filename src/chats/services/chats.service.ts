@@ -62,6 +62,7 @@ export class ChatsService {
 
     return chats.map((chat) => new ChatsDto(chat));
   }
+
   private createSenderAndReceiver(
     authorizedData: ValidateResult,
     targetId: number,

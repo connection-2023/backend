@@ -27,6 +27,10 @@ export class ChatRoomDto {
   @ApiProperty({ description: '마지막 채팅', type: Date })
   lastChatDateTime: Date;
 
+  @Expose()
+  @ApiProperty({ description: '채팅 안읽은 수', type: Number })
+  unreadCount: number;
+
   lastChat?: ChatsDto;
 
   deletedAt: Date | null;
@@ -37,6 +41,7 @@ export class ChatRoomDto {
     this.lecturerId = room.lecturerId;
     this.roomId = room.roomId;
     this.lastChatDateTime = room.lastChat ? room.lastChat.createdAt : undefined;
+    this.unreadCount = room.unreadCount;
 
     Object.assign(this);
   }

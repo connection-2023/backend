@@ -82,7 +82,14 @@ export class ChatRoomService {
       throw new NotFoundException(`chat room not found`);
     }
 
-    return chatRooms.map((chatRoom) => new ChatRoomDto(chatRoom));
+    return Promise.all(
+      chatRooms.map(async (chatRoom) => {
+        chatRoom['unreadCount'] =
+          await this.chatRoomRepository.countUnreadMessage(chatRoom._id);
+
+        return new ChatRoomDto(chatRoom);
+      }),
+    );
   }
 
   private createUserIdAndLecturerId(
