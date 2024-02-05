@@ -1,6 +1,4 @@
-import { InjectModel } from '@nestjs/mongoose';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
+import { ChatsRepository } from './../chats/repositories/chats.repository';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,17 +10,13 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { PrismaService } from '@src/prisma/prisma.service';
-import { Cache } from 'cache-manager';
 import { Server, Socket } from 'socket.io';
-import { ChatRoom } from '@src/chats/schemas/chats-room.schema';
-import { Model } from 'mongoose';
 
 @WebSocketGateway({ namespace: /\/chatroom\d+/ })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor() {}
 
   @WebSocketServer() public server: Server;
 

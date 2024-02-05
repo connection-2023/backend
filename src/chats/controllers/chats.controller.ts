@@ -6,6 +6,8 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -24,6 +26,7 @@ import { ChatsDto } from '@src/common/dtos/chats.dto';
 import { Chats } from '../schemas/chats.schema';
 import { ApiCreateChat } from '../swagger-decorators/create-chat-decorator';
 import { ApiGetChatsWithChatRoomId } from '../swagger-decorators/get-chat-with-chat-room-id.decorator';
+import { ApiUpdateUnreadMessage } from '../swagger-decorators/update-unread-message.decorator';
 
 @ApiTags('채팅')
 // @UseInterceptors(MongooseClassSerializerInterceptor(Chats))
@@ -50,5 +53,13 @@ export class ChatsController {
     @Param('chatRoomId', ParseObjectIdPipe) chatRoomId: mongoose.Types.ObjectId,
   ) {
     return await this.chatsService.getChatsWithChatRoomId(query, chatRoomId);
+  }
+
+  @ApiUpdateUnreadMessage()
+  @Patch('chat-rooms/:chatRoomId')
+  async updateUnreadMessage(
+    @Param('chatRoomId', ParseObjectIdPipe) chatRoomId: mongoose.Types.ObjectId,
+  ) {
+    return await this.chatsService.updateUnreadMessage(chatRoomId);
   }
 }

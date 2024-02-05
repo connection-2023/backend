@@ -52,7 +52,7 @@ import { ChatRoom, ChatRoomSchema } from './chats/schemas/chats-room.schema';
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ConfigService, EventsGateway],
+  providers: [AppService, ConfigService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer): void {

@@ -37,4 +37,13 @@ export class ChatsRepository {
       .limit(pageSize)
       .exec();
   }
+
+  async updatedUnreadChats(
+    chattingRoomId: mongoose.Types.ObjectId,
+  ): Promise<void> {
+    await this.chatsModel.updateMany(
+      { chattingRoomId, readedAt: null },
+      { $set: { readedAt: new Date() } },
+    );
+  }
 }

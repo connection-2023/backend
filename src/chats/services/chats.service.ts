@@ -39,7 +39,7 @@ export class ChatsService {
       roomObjectId,
     );
 
-    this.eventsGateway.server.to(chatRoom.roomId).emit('newChat', chat);
+    this.eventsGateway.server.to(chatRoom.roomId).emit('newChatMessage', chat);
 
     return new ChatsDto(chat);
   }
@@ -61,6 +61,16 @@ export class ChatsService {
     }
 
     return chats.map((chat) => new ChatsDto(chat));
+  }
+
+  async updateUnreadMessage(chatRoomId: mongoose.Types.ObjectId) {
+    await this.chatsRepository.updatedUnreadChats(chatRoomId);
+    const chatRoom = await this.chatRoomRepository.getChatRoomWithChatRoomId(
+      chatRoomId,
+    );
+    this.eventsGateway.server
+      .to(chatRoom.roomId)
+      .emit('updatedUnreadMessage', 'all messages are readed');
   }
 
   private createSenderAndReceiver(

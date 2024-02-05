@@ -51,9 +51,6 @@ export class ChatRoomRepository {
         $unwind: { path: '$lastChat', preserveNullAndEmptyArrays: true },
       },
       {
-        $match: { 'lastChat.readedAt': null },
-      },
-      {
         $group: {
           _id: '$_id',
           userId: { $last: '$userId' },
