@@ -27,8 +27,10 @@ import {
   DanceCategory,
   DanceMethod,
   TemporaryWeek,
+  Week,
 } from '@src/common/enum/enum';
 import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
+import { LectureMethod } from '@src/payments/enum/payment.enum';
 
 @Injectable()
 export class SearchService {
@@ -477,7 +479,6 @@ export class SearchService {
   private async detailSearchLecturesWithElasticsearch({
     value,
     take,
-    days,
     timeOfDay,
     stars,
     regions,
@@ -492,7 +493,6 @@ export class SearchService {
     const sortQuery: any[] = this.buildSortQuery(sortOption);
     const isGroupQuery = this.buildIsGroupQuery(isGroup);
     const searchQuery = this.buildSearchQuery(SearchTypes.LECTURE, value);
-    const dayQuery = this.buildDayQuery(days);
     const timeQuery = this.buildTimeQuery(timeOfDay);
     const starQuery = this.buildStarQuery(stars);
     const regionQuery = this.buildRegionQuery(regions);
@@ -507,7 +507,6 @@ export class SearchService {
         bool: {
           must: [
             searchQuery,
-            dayQuery,
             timeQuery,
             starQuery,
             regionQuery,
@@ -530,21 +529,6 @@ export class SearchService {
         }),
       );
     }
-  }
-
-  private buildDayQuery(days: TemporaryWeek[]) {
-    const dayQuery =
-      days && days.length > 0
-        ? days.map((day) => ({ match: { 'days.day': day } }))
-        : undefined;
-
-    return (
-      dayQuery && {
-        bool: {
-          should: dayQuery,
-        },
-      }
-    );
   }
 
   private buildTimeQuery(times: TimeOfDay[]) {
@@ -675,21 +659,49 @@ export class SearchService {
 
   private async filterLecturesByDate(
     lectures: IEsLecture[],
-    { lteDate, gteDate }: GetLectureSearchResultDto,
+    { lteDate, gteDate, days }: GetLectureSearchResultDto,
   ): Promise<IEsLecture[]> {
-    if (!lteDate && !gteDate) {
+    if (!lteDate && !gteDate && !days) {
       return lectures;
     }
+    const convertedDays = days?.map((day) => Week[day as keyof typeof Week]);
 
-    const selectedLectures = await this.searchRepository.getLecturesByDate(
-      lectures,
-      gteDate,
-      lteDate,
+    const formattedGteDate = gteDate
+      ? new Date(gteDate.setHours(9, 0, 0, 0))
+      : undefined;
+
+    const formattedLteDate =
+      gteDate && lteDate
+        ? new Date(lteDate.setHours(32, 59, 59, 999))
+        : gteDate
+        ? new Date(gteDate.setHours(32, 59, 59, 999))
+        : undefined;
+
+    const selectedLectures = await Promise.all(
+      lectures.map(async (lecture) => {
+        if (lecture.lecturemethod === '원데이') {
+          return await this.searchRepository.getLecturesByDate(
+            lecture.id,
+            formattedGteDate,
+            formattedLteDate,
+            convertedDays,
+          );
+        }
+
+        if (lecture.lecturemethod === '정기') {
+          return await this.searchRepository.getRegularLecturesByDate(
+            lecture.id,
+            formattedGteDate,
+            formattedLteDate,
+            days,
+          );
+        }
+      }),
     );
 
     return lectures.filter((lecture) =>
       selectedLectures.some(
-        (selectedLecture) => selectedLecture.lectureId === lecture.id,
+        (selectedLecture) => selectedLecture?.lectureId === lecture.id,
       ),
     );
   }

@@ -23,7 +23,6 @@ export interface IEsLecture {
   regions: IEsRegion[];
   isLiked: boolean | undefined;
   searchAfter: number[];
-  days: IEsEsLectureDay[];
   isactive: boolean;
 }
 
@@ -57,11 +56,6 @@ export interface IEsRegion {
   regionId?: number;
   administrativeDistrict: string;
   district: string;
-}
-
-export interface IEsEsLectureDay {
-  day: string[];
-  dateTime: string[];
 }
 
 export interface ILecturerSearchParams {
