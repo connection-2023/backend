@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { TemporaryWeek, Week } from '@src/common/enum/enum';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { IEsLecture } from '@src/search/interface/search.interface';
 
@@ -25,25 +26,47 @@ export class SearchRepository {
   }
 
   async getLecturesByDate(
-    lectures: IEsLecture[],
+    lectureId: number,
     gteDate: Date,
     lteDate?: Date,
+    days?: Week[],
   ) {
-    const formattedGteDate = new Date(gteDate.setHours(9, 0, 0, 0));
-    const formattedLteDate = lteDate
-      ? new Date(lteDate.setHours(32, 59, 59, 999))
-      : new Date(gteDate.setHours(32, 59, 59, 999));
-
-    return await this.prismaService.lectureSchedule.groupBy({
-      by: ['lectureId'],
+    return await this.prismaService.lectureSchedule.findFirst({
       where: {
-        lectureId: {
-          in: lectures.map((lecture) => lecture.id),
-        },
+        lectureId,
         startDateTime: {
-          gte: formattedGteDate,
-          lte: formattedLteDate,
+          gte: gteDate,
+          lte: lteDate,
         },
+        day: { in: days },
+      },
+      select: {
+        lectureId: true,
+      },
+    });
+  }
+
+  async getRegularLecturesByDate(
+    lectureId: number,
+    gteDate: Date,
+    lteDate?: Date,
+    days?: TemporaryWeek[],
+  ) {
+    return await this.prismaService.regularLectureStatus.findFirst({
+      where: {
+        lectureId,
+        regularLectureSchedule: {
+          some: {
+            startDateTime: {
+              gte: gteDate,
+              lte: lteDate,
+            },
+          },
+        },
+        day: { hasSome: days },
+      },
+      select: {
+        lectureId: true,
       },
     });
   }

@@ -3,7 +3,6 @@ import { IEsLecture } from '../interface/search.interface';
 import { EsGenreDto } from './es-genre.dto';
 import { EsRegionDto } from './es-region.dto';
 import { EsSimpleLecturerDto } from './es-simple-lecturer.dto';
-import { EsLectureDayDto } from './es-lecture-day.dto';
 
 export class EsLectureDto {
   @ApiProperty({
@@ -109,13 +108,6 @@ export class EsLectureDto {
   })
   genres: EsGenreDto[];
 
-  @ApiProperty({
-    type: EsLectureDayDto,
-    isArray: true,
-    description: '강의 일정',
-  })
-  days: EsLectureDayDto[];
-
   constructor(lecture: Partial<IEsLecture>) {
     this.searchAfter = lecture.searchAfter;
     this.id = lecture.id;
@@ -138,9 +130,6 @@ export class EsLectureDto {
       : null;
     this.genres = lecture.genres
       ? lecture.genres.map((genre) => new EsGenreDto(genre))
-      : null;
-    this.days = lecture.days
-      ? lecture.days.map((day) => new EsLectureDayDto(day))
       : null;
 
     Object.assign(this);
