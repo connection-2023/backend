@@ -34,13 +34,11 @@ export class SearchRepository {
     return await this.prismaService.lectureSchedule.findFirst({
       where: {
         lectureId,
-        AND: {
-          startDateTime: {
-            gte: gteDate,
-            lte: lteDate,
-          },
-          day: { in: days },
+        startDateTime: {
+          gte: gteDate,
+          lte: lteDate,
         },
+        day: { in: days },
       },
       select: {
         lectureId: true,
@@ -57,17 +55,15 @@ export class SearchRepository {
     return await this.prismaService.regularLectureStatus.findFirst({
       where: {
         lectureId,
-        AND: {
-          regularLectureSchedule: {
-            some: {
-              startDateTime: {
-                gte: gteDate,
-                lte: lteDate,
-              },
+        regularLectureSchedule: {
+          some: {
+            startDateTime: {
+              gte: gteDate,
+              lte: lteDate,
             },
           },
-          day: { hasSome: days },
         },
+        day: { hasSome: days },
       },
       select: {
         lectureId: true,
