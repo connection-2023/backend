@@ -5,7 +5,7 @@ import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
 class PrivateUser extends PartialType(
-  PickType(UserDto, ['id', 'userProfileImage', 'nickname']),
+  PickType(UserDto, ['id', 'userProfileImage', 'nickname', 'phoneNumber']),
 ) {
   constructor(user: Partial<PrivateUser>) {
     super();
@@ -39,6 +39,12 @@ export class LectureLearnerDto extends OmitType(LecturerLearnerDto, [
   @Expose()
   userProfileImage: string;
 
+  @ApiProperty({
+    description: '전화번호',
+  })
+  @Expose()
+  phoneNumber: string;
+
   user: PrivateUser;
 
   constructor(lectureLearnerDto: Partial<LectureLearnerDto>) {
@@ -49,6 +55,7 @@ export class LectureLearnerDto extends OmitType(LecturerLearnerDto, [
     this.user = new PrivateUser(lectureLearnerDto.user);
     this.userId = this.user.id;
     this.nickname = this.user.nickname;
+    this.phoneNumber = this.user.phoneNumber;
     this.userProfileImage = this.user.userProfileImage
       ? this.user.userProfileImage.imageUrl
       : null;
