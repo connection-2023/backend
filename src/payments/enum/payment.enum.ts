@@ -56,3 +56,8 @@ export enum CardTypes {
   기프트 = '기프트',
   미확인 = '미확인',
 }
+
+export enum RevenueStatisticsType {
+  MONTHLY = 'MONTHLY',
+  DAILY = 'DAILY',
+}

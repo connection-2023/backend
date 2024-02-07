@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { LecturerPaymentsService } from '@src/payments/services/lecturer-payments.service';
@@ -25,6 +26,10 @@ import { ApiUpdatePaymentRequestStatus } from '@src/payments/swagger-decorators/
 import { ApiGetPaymentRequestCount } from '@src/payments/swagger-decorators/get-lecturer-payment-request-count.decorator';
 import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
 import { ApiGetMyPassSituation } from '@src/payments/swagger-decorators/get-my-pass-situation.decorator';
+import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
+import { ApiGetRevenueStatistics } from '../swagger-decorators/get-revenue-statistics.decorator';
+import { plainToInstance } from 'class-transformer';
+import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 
 @ApiTags('강사-결제')
 @UseGuards(LecturerAccessTokenGuard)
@@ -33,6 +38,22 @@ export class LecturerPaymentsController {
   constructor(
     private readonly lecturerPaymentsService: LecturerPaymentsService,
   ) {}
+
+  @ApiGetRevenueStatistics()
+  @SetResponseKey('revenueStatistics')
+  @Get('/revenue-statistics')
+  async getRevenueStatistics(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() getRevenueStatisticsDto: GetRevenueStatisticsDto,
+  ): Promise<RevenueStatisticDto[]> {
+    const revenueStatistics: RevenueStatisticDto[] =
+      await this.lecturerPaymentsService.getRevenueStatistics(
+        authorizedData.lecturer.id,
+        getRevenueStatisticsDto,
+      );
+
+    return plainToInstance(RevenueStatisticDto, revenueStatistics);
+  }
 
   @ApiGetLecturerRecentBankAccount()
   @SetResponseKey('lecturerRecentBankAccount')

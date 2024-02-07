@@ -16,10 +16,13 @@ import {
   PaymentOrderStatus,
   PaymentStatusForLecturer,
   RefundStatuses,
+  RevenueStatisticsType,
 } from '@src/payments/enum/payment.enum';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { IPayment } from '@src/payments/interface/payments.interface';
 import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
+import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
+import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -417,5 +420,100 @@ export class LecturerPaymentsService {
     }
 
     return selectedPass;
+  }
+
+  async getRevenueStatistics(
+    lecturerId: number,
+    dto: GetRevenueStatisticsDto,
+  ): Promise<RevenueStatisticDto[]> {
+    const { statisticsType, date } = dto;
+
+    if (statisticsType === 'MONTHLY') {
+      return await this.getMonthlyRevenue(lecturerId);
+    } else if (statisticsType === 'DAILY') {
+      const endDate = date ? new Date(date) : new Date();
+      const startDate = date ? new Date(date) : new Date();
+      startDate.setDate(endDate.getDate() - 30);
+
+      return await this.getDailyRevenue(lecturerId, startDate, endDate);
+    }
+  }
+
+  private async getDailyRevenue(
+    lecturerId: number,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    const dailyRevenue = [];
+
+    while (startDate <= endDate) {
+      startDate.setHours(9, 0, 0); // startDate를 00시 00분 00초로 설정
+
+      const nextDate = new Date(startDate);
+      nextDate.setHours(32, 59, 59); // nextDate를 23시 59분 59초로 설정
+
+      const { totalSales, totalPrice } = await this.getRevenueForDate(
+        lecturerId,
+        startDate,
+        nextDate,
+      );
+
+      const formattedDate = startDate.toISOString().slice(0, 10); // "yyyy-mm-dd" 형식으로 변환
+
+      dailyRevenue.push({ date: formattedDate, totalSales, totalPrice });
+      startDate.setDate(startDate.getDate() + 1);
+    }
+
+    return dailyRevenue.reverse();
+  }
+
+  private async getMonthlyRevenue(lecturerId: number) {
+    const currentDate = new Date();
+
+    const monthlyRevenues = [];
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    for (let i = 0; i < 12; i++) {
+      const year = currentMonth - i >= 0 ? currentYear : currentYear - 1;
+      const month = (currentMonth - i + 12) % 12;
+
+      const startDate = new Date(year, month - 1, 1, 9); // 각 월의 시작일
+      const nextDate = new Date(year, month, 0, 9); // 각 월의 마지막일
+      const { totalSales, totalPrice } = await this.getRevenueForDate(
+        lecturerId,
+        startDate,
+        nextDate,
+      );
+      const formattedDate = startDate.toISOString().slice(0, 7); // "yyyy-mm" 형식으로 변환
+      monthlyRevenues.push({
+        date: formattedDate,
+        totalSales,
+        totalPrice,
+      });
+    }
+
+    return monthlyRevenues;
+  }
+
+  private async getRevenueForDate(
+    lecturerId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<{ totalSales: number; totalPrice: number }> {
+    const revenue = await this.paymentsRepository.getPaymentForDate(
+      lecturerId,
+      startDate,
+      endDate,
+    );
+
+    const totalPrice = revenue.reduce(
+      (acc, payment) => acc + payment.finalPrice,
+      0,
+    );
+
+    const totalSales = revenue.length;
+
+    return { totalSales, totalPrice };
   }
 }
