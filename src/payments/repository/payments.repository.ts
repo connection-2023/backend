@@ -1213,4 +1213,26 @@ export class PaymentsRepository {
       include: { lectureSchedule: true, lecture: true },
     });
   }
+
+  async getPaymentForDate(lecturerId: number, startDate: Date, endDate: Date) {
+    return await this.prismaService.payment.findMany({
+      where: {
+        lecturerId,
+        NOT: { paymentMethodId: PaymentMethods.패스권 },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        statusId: PaymentOrderStatus.DONE,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        finalPrice: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
 }
