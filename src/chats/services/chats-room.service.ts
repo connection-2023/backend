@@ -11,6 +11,7 @@ import { ChatRoom } from '../schemas/chats-room.schema';
 import mongoose from 'mongoose';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { OnlineListDto } from '../dtos/get-oline-list.dto';
 
 @Injectable()
 export class ChatRoomService {
@@ -116,7 +117,7 @@ export class ChatRoomService {
       : undefined;
     onlineUser ? (onlineList['user'] = chatRoom.userId) : undefined;
 
-    return onlineList;
+    return new OnlineListDto(onlineList);
   }
 
   private createUserIdAndLecturerId(

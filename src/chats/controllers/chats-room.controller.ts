@@ -20,6 +20,7 @@ import { ApiGetChatRoom } from '../swagger-decorators/get-chat-room.decorator';
 import { ApiGetMyChatRoom } from '../swagger-decorators/get-my-chat-room.decorator';
 import { ParseObjectIdPipe } from '@src/common/validator/parse-object-id.pipe';
 import mongoose from 'mongoose';
+import { ApiGetOnlineList } from '../swagger-decorators/get-online-list.decorator';
 
 @Controller('chat-rooms/:id')
 @ApiTags('채팅방')
@@ -66,6 +67,8 @@ export class ChatRoomController {
     return await this.chatRoomService.getMyChatRoom(authorizedData);
   }
 
+  @SetResponseKey('onlineList')
+  @ApiGetOnlineList()
   @Get('online-list')
   async getOnlineList(
     @Param('id', ParseObjectIdPipe) chatRoomId: mongoose.Types.ObjectId,

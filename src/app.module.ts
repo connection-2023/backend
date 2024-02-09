@@ -23,7 +23,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChatsModule } from './chats/chats.module';
 import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
-import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -49,7 +48,6 @@ import { RedisModule } from './redis/redis.module';
     SearchModule,
     ChatsModule,
     EventsModule,
-    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
