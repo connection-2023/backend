@@ -1,3 +1,4 @@
+import { Inject } from '@nestjs/common';
 import { ChatsRepository } from './../chats/repositories/chats.repository';
 import {
   ConnectedSocket,
@@ -11,36 +12,43 @@ import {
 } from '@nestjs/websockets';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { Server, Socket } from 'socket.io';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @WebSocketGateway({ namespace: /\/chatroom\d+/ })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor() {}
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
   @WebSocketServer() public server: Server;
 
   @SubscribeMessage('login')
   async handleLogin(
-    @MessageBody() data: { authorizedData: ValidateResult; rooms: string[] },
+    @MessageBody()
+    data: {
+      authorizedData: { userId?: number; lecturerId?: number };
+      rooms: string[];
+    },
     @ConnectedSocket() socket: Socket,
   ) {
-    const rooms = data.rooms;
-    const newNamespace = socket.nsp;
+    const namespace = socket.nsp;
 
     console.log('login', data.authorizedData);
 
-    // newNamespace.emit('onlineList');
+    const key = `onlineMap:${socket.id}`;
+    const value = data.authorizedData.lecturerId
+      ? { lecturerId: data.authorizedData.lecturerId }
+      : { userId: data.authorizedData.userId };
 
-    // const key =
-    //   data.authorizedData.tokenType === 'Lecturer'
-    //     ? `onlineMap:lecturerId:${data.authorizedData.lecturer.id}`
-    //     : `onlineMap:userId:${data.authorizedData.user.id}`;
-    // await this.cacheManager.set(key, data.authorizedData, 0);
-    rooms.forEach((room: string) => {
+    await this.cacheManager.set(key, value, 0);
+
+    data.rooms.forEach((room) => {
       console.log('join', room);
-      socket.join(`${room}`);
+      socket.join(room);
     });
+
+    namespace.emit('loginUser', value);
   }
 
   afterInit(server: Server): any {
@@ -51,20 +59,13 @@ export class EventsGateway
     console.log('connected', socket.nsp.name);
   }
 
-  handleDisconnect(@ConnectedSocket() socket: Socket) {
+  async handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconnected', socket.nsp.name);
+
+    const exitUser = await this.cacheManager.get(`onlineMap:${socket.id}`);
+
+    await this.cacheManager.del(`onlineMap:${socket.id}`);
+
+    socket.nsp.emit('exitUser', exitUser);
   }
-
-  // private async scanKeys(cursor: string, pattern: string): Promise<string[]> {
-  //   // const result = await this.cacheManager.scan(cursor, 'MATCH', pattern);
-
-  //   const keys = result[1];
-
-  //   if (result[0] === '0') {
-  //     return keys;
-  //   } else {
-  //     const nextKeys = await this.scanKeys(result[0], pattern);
-  //     return keys.concat(nextKeys);
-  //   }
-  // }
 }
