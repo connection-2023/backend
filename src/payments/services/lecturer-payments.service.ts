@@ -28,6 +28,7 @@ import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.
 import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
 import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
+import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -608,5 +609,28 @@ export class LecturerPaymentsService {
     }
 
     return { cursor, skip, take: updatedTake };
+  }
+
+  async getTotalRevenue(
+    lecturerId: number,
+    dto: GetTotalRevenueDto,
+  ): Promise<number> {
+    const { productType, startDate, endDate, lectureId } = dto;
+
+    const paymentProductTypeId =
+      productType === PaymentHistoryTypes.전체 ? undefined : productType;
+
+    const convertedStartDate = new Date(startDate);
+    const convertedEndDate = new Date(endDate);
+    convertedStartDate.setHours(9, 0, 0);
+    convertedEndDate.setHours(32, 59, 59);
+
+    return await this.paymentsRepository.getLecturerPaymentTotalRevenue(
+      lecturerId,
+      paymentProductTypeId,
+      convertedStartDate,
+      convertedEndDate,
+      lectureId,
+    );
   }
 }

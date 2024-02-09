@@ -1282,7 +1282,7 @@ export class PaymentsRepository {
     startDate: Date,
     endDate: Date,
     lectureId: number,
-  ): Promise<Number> {
+  ): Promise<number> {
     return await this.prismaService.payment.count({
       where: {
         lecturerId,
@@ -1302,5 +1302,32 @@ export class PaymentsRepository {
         reservation: { lectureId },
       },
     });
+  }
+
+  async getLecturerPaymentTotalRevenue(
+    lecturerId: number,
+    paymentProductTypeId: number,
+    startDate: Date,
+    endDate: Date,
+    lectureId: number,
+  ): Promise<number> {
+    const totalRevenue = await this.prismaService.payment.aggregate({
+      where: {
+        lecturerId,
+        paymentProductTypeId,
+        statusId: PaymentOrderStatus.DONE,
+        NOT: { paymentMethodId: PaymentMethods.패스권 },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        reservation: { lectureId },
+      },
+      _sum: {
+        finalPrice: true,
+      },
+    });
+
+    return totalRevenue._sum.finalPrice ?? 0;
   }
 }

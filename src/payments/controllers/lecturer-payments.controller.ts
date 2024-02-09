@@ -33,6 +33,8 @@ import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
 import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
 import { ApiGetLecturerPaymentList } from '../swagger-decorators/get-lecturer-payment-list.decorator';
+import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
+import { ApiGetTotalRevenue } from '../swagger-decorators/get-total-revenue.decorator';
 
 @ApiTags('강사-결제')
 @UseGuards(LecturerAccessTokenGuard)
@@ -64,6 +66,19 @@ export class LecturerPaymentsController {
         lecturerPaymentList,
       ),
     };
+  }
+
+  @ApiGetTotalRevenue()
+  @SetResponseKey('totalRevenue')
+  @Get('/total-revenue')
+  async getTotalRevenue(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() getTotalRevenueDto: GetTotalRevenueDto,
+  ): Promise<number> {
+    return await this.lecturerPaymentsService.getTotalRevenue(
+      authorizedData.lecturer.id,
+      getTotalRevenueDto,
+    );
   }
 
   @ApiGetRevenueStatistics()
