@@ -1242,6 +1242,7 @@ export class PaymentsRepository {
     startDate: Date,
     endDate: Date,
     { cursor, skip, take }: IPaginationParams,
+    lectureId: number,
   ) {
     return await this.prismaService.payment.findMany({
       where: {
@@ -1259,6 +1260,7 @@ export class PaymentsRepository {
           gte: startDate,
           lte: endDate,
         },
+        reservation: { lectureId },
       },
       include: {
         user: true,
@@ -1279,6 +1281,7 @@ export class PaymentsRepository {
     paymentProductTypeId: number,
     startDate: Date,
     endDate: Date,
+    lectureId: number,
   ): Promise<Number> {
     return await this.prismaService.payment.count({
       where: {
@@ -1296,6 +1299,7 @@ export class PaymentsRepository {
           gte: startDate,
           lte: endDate,
         },
+        reservation: { lectureId },
       },
     });
   }

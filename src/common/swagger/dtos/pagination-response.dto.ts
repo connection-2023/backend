@@ -10,6 +10,20 @@ export class PaginationResponseDto {
     key: string,
     type: Type,
   ) {
+    class Data {
+      @ApiProperty({
+        type: Number,
+      })
+      private readonly totalItemCount: number;
+
+      @ApiProperty({
+        type,
+        name: key,
+        isArray: true,
+      })
+      private readonly temp: string;
+    }
+
     class Temp extends this {
       @ApiProperty({
         name: 'status',
@@ -20,13 +34,16 @@ export class PaginationResponseDto {
 
       @ApiProperty({
         name: 'data',
-        type,
       })
-      private readonly data: string;
+      private readonly data: Data = new Data();
     }
 
     Object.defineProperty(Temp, 'name', {
-      value: `${key[0].toUpperCase()}${key.slice(1)}Dto`,
+      value: `${key[0].toUpperCase()}${key.slice(1)}ResponseDto`,
+    });
+
+    Object.defineProperty(Data, 'name', {
+      value: `${key[0].toUpperCase()}${key.slice(1)}DataDto`,
     });
 
     return applyDecorators(

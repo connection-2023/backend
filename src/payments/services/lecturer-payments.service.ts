@@ -23,10 +23,11 @@ import {
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
 import { IPayment } from '@src/payments/interface/payments.interface';
-import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
+import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
 import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
 import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
+import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -524,7 +525,10 @@ export class LecturerPaymentsService {
   async getLecturerPaymentList(
     lecturerId: number,
     dto: GetLecturerPaymentListDto,
-  ) {
+  ): Promise<{
+    totalItemCount: Number;
+    lecturerPaymentList?: LecturerPaymentItemDto[];
+  }> {
     const {
       currentPage,
       targetPage,
@@ -534,6 +538,7 @@ export class LecturerPaymentsService {
       productType,
       startDate,
       endDate,
+      lectureId,
     } = dto;
 
     const paymentProductTypeId =
@@ -552,21 +557,28 @@ export class LecturerPaymentsService {
       take,
     );
 
-    const [totalItemCount, lecturerPaymentList] = await Promise.all([
-      this.paymentsRepository.getLecturerPaymentCount(
+    const totalItemCount =
+      await this.paymentsRepository.getLecturerPaymentCount(
         lecturerId,
         paymentProductTypeId,
         convertedStartDate,
         convertedEndDate,
-      ),
-      this.paymentsRepository.getLecturerPaymentList(
+        lectureId,
+      );
+
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
+
+    const lecturerPaymentList =
+      await this.paymentsRepository.getLecturerPaymentList(
         lecturerId,
         paymentProductTypeId,
         convertedStartDate,
         convertedEndDate,
         paginationParams,
-      ),
-    ]);
+        lectureId,
+      );
 
     return { totalItemCount, lecturerPaymentList };
   }

@@ -61,3 +61,10 @@ export enum RevenueStatisticsType {
   MONTHLY = 'MONTHLY',
   DAILY = 'DAILY',
 }
+
+export enum LecturerPaymentStatus {
+  CANCELED = PaymentOrderStatus.CANCELED,
+  WAITING_FOR_DEPOSIT = PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+  PARTIAL_CANCELED = PaymentOrderStatus.PARTIAL_CANCELED,
+  DONE = PaymentOrderStatus.DONE,
+}

@@ -1,18 +1,18 @@
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
-import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
+import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
 
-export function ApiGetLecturerLearnerList() {
+export function ApiGetLecturerPaymentList() {
   return applyDecorators(
     ApiOperation({
-      summary: '강사 수강생 목록 조회',
+      summary: '판매 내역',
     }),
     ApiBearerAuth(),
     PaginationResponseDto.swaggerBuilder(
       HttpStatus.OK,
-      'learnerList',
-      LecturerLearnerDto,
+      'lecturerPaymentList',
+      LecturerPaymentItemDto,
     ),
   );
 }

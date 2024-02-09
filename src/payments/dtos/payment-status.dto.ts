@@ -12,7 +12,7 @@ export class PaymentStatusDto implements PaymentStatus {
   })
   name: string;
 
-  constructor(paymentStatus: Partial<PaymentStatusDto>) {
+  constructor(paymentStatus: Partial<PaymentStatusDto> = {}) {
     this.name = paymentStatus.name;
 
     Object.assign(this);

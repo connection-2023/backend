@@ -1,7 +1,7 @@
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
+import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
 
 export function ApiGetMyPassSituation() {
   return applyDecorators(
