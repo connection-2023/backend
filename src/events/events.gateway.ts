@@ -32,8 +32,6 @@ export class EventsGateway
     },
     @ConnectedSocket() socket: Socket,
   ) {
-    const namespace = socket.nsp;
-
     console.log('login', data.authorizedData);
 
     const key = `onlineMap:${socket.id}`;
@@ -48,7 +46,7 @@ export class EventsGateway
       socket.join(room);
     });
 
-    namespace.emit('loginUser', value);
+    socket.nsp.emit('loginUser', value);
   }
 
   afterInit(server: Server): any {
