@@ -4,6 +4,7 @@ import { LecturerRepository } from '@src/lecturer/repositories/lecturer.reposito
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -403,6 +404,16 @@ export class LectureService {
 
           const createNewScheduleInputData =
             this.createLectureScheduleInputData(lectureId, schedules, duration);
+
+          const existLectureSchdule =
+            await this.lectureRepository.trxExistLectureSchedule(
+              transaction,
+              createNewScheduleInputData,
+            );
+
+          if (existLectureSchdule) {
+            throw new ConflictException(schedules, 'duplicated schedules');
+          }
 
           await this.lectureRepository.trxCreateLectureSchedule(
             transaction,

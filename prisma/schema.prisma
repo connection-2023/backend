@@ -462,6 +462,8 @@ model LectureSchedule {
   numberOfParticipants Int
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
   reservation          Reservation[]
+
+  @@unique([lectureId, startDateTime])
 }
 
 model LectureDay {
