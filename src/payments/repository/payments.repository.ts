@@ -1235,4 +1235,68 @@ export class PaymentsRepository {
       },
     });
   }
+
+  async getLecturerPaymentList(
+    lecturerId: number,
+    paymentProductTypeId: number,
+    startDate: Date,
+    endDate: Date,
+    { cursor, skip, take }: IPaginationParams,
+  ) {
+    return await this.prismaService.payment.findMany({
+      where: {
+        lecturerId,
+        paymentProductTypeId,
+        statusId: {
+          in: [
+            PaymentOrderStatus.DONE,
+            PaymentOrderStatus.PARTIAL_CANCELED,
+            PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+            PaymentOrderStatus.CANCELED,
+          ],
+        },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        user: true,
+        paymentCouponUsage: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        paymentProductType: true,
+      },
+      orderBy: { id: 'desc' },
+      cursor,
+      skip,
+      take,
+    });
+  }
+
+  async getLecturerPaymentCount(
+    lecturerId: number,
+    paymentProductTypeId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Number> {
+    return await this.prismaService.payment.count({
+      where: {
+        lecturerId,
+        paymentProductTypeId,
+        statusId: {
+          in: [
+            PaymentOrderStatus.DONE,
+            PaymentOrderStatus.PARTIAL_CANCELED,
+            PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+            PaymentOrderStatus.CANCELED,
+          ],
+        },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+  }
 }
