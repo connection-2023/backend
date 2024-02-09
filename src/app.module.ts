@@ -19,12 +19,10 @@ import { ReportModule } from '@src/report/report.module';
 import { AdminModule } from './admin/admin.module';
 import { SuccessInterceptorModule } from './common/interceptors/success-interceptor.module';
 import { SearchModule } from './search/search.module';
-import { LoggerMiddleware } from './common/middlewares/src/middlewares/logger.middleware';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatsModule } from './chats/chats.module';
-import { EventsGateway } from './events/events.gateway';
 import { EventsModule } from './events/events.module';
-import { ChatRoom, ChatRoomSchema } from './chats/schemas/chats-room.schema';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 
 @Module({
   imports: [

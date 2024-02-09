@@ -575,4 +575,13 @@ export class LectureRepository {
       include: { user: { include: { userProfileImage: true } } },
     });
   }
+
+  async trxExistLectureSchedule(
+    transaction: PrismaTransaction,
+    lectureSchduleInputData: LectureScheduleInputData[],
+  ): Promise<LectureSchedule[]> {
+    return await transaction.lectureSchedule.findMany({
+      where: { OR: lectureSchduleInputData },
+    });
+  }
 }
