@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaymentCouponUsage } from '@prisma/client';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class PaymentCouponUsageDto implements PaymentCouponUsage {
   id: number;
   paymentId: number;
@@ -10,12 +12,14 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '일반 쿠폰 Id',
     nullable: true,
   })
+  @Expose()
   couponId: number;
 
   @ApiProperty({
     description: '일반 쿠폰명',
     nullable: true,
   })
+  @Expose()
   couponTitle: string;
 
   @ApiProperty({
@@ -23,6 +27,7 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '일반 쿠폰 할인률',
     nullable: true,
   })
+  @Expose()
   couponPercentage: number;
 
   @ApiProperty({
@@ -30,6 +35,7 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '일반 쿠폰 할인 금액',
     nullable: true,
   })
+  @Expose()
   couponDiscountPrice: number;
 
   @ApiProperty({
@@ -37,6 +43,7 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '일반 쿠폰 최대 할인 금액',
     nullable: true,
   })
+  @Expose()
   couponMaxDiscountPrice: number;
 
   @ApiProperty({
@@ -44,11 +51,13 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '중복 쿠폰 Id',
     nullable: true,
   })
+  @Expose()
   stackableCouponId: number;
 
   @ApiProperty({
     description: '중복 쿠폰명',
   })
+  @Expose()
   stackableCouponTitle: string;
 
   @ApiProperty({
@@ -56,6 +65,7 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '중복 쿠폰 할인률',
     nullable: true,
   })
+  @Expose()
   stackableCouponPercentage: number;
 
   @ApiProperty({
@@ -63,6 +73,7 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '중복 쿠폰 할인 금액',
     nullable: true,
   })
+  @Expose()
   stackableCouponDiscountPrice: number;
 
   @ApiProperty({
@@ -70,23 +81,10 @@ export class PaymentCouponUsageDto implements PaymentCouponUsage {
     description: '중복 쿠폰 최대 할인 금액',
     nullable: true,
   })
+  @Expose()
   stackableCouponMaxDiscountPrice: number;
 
   constructor(paymentCouponUsage: Partial<PaymentCouponUsageDto>) {
-    this.couponId = paymentCouponUsage.couponId;
-    this.couponTitle = paymentCouponUsage.couponTitle;
-    this.couponPercentage = paymentCouponUsage.couponPercentage;
-    this.couponDiscountPrice = paymentCouponUsage.couponDiscountPrice;
-    this.couponMaxDiscountPrice = paymentCouponUsage.couponMaxDiscountPrice;
-    this.stackableCouponId = paymentCouponUsage.stackableCouponId;
-    this.stackableCouponTitle = paymentCouponUsage.stackableCouponTitle;
-    this.stackableCouponPercentage =
-      paymentCouponUsage.stackableCouponPercentage;
-    this.stackableCouponDiscountPrice =
-      paymentCouponUsage.stackableCouponDiscountPrice;
-    this.stackableCouponMaxDiscountPrice =
-      paymentCouponUsage.stackableCouponMaxDiscountPrice;
-
-    Object.assign(this);
+    Object.assign(this, paymentCouponUsage);
   }
 }

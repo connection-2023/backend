@@ -24,12 +24,15 @@ import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
 import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
 import { ApiUpdatePaymentRequestStatus } from '@src/payments/swagger-decorators/update-payment-request-status.decorator';
 import { ApiGetPaymentRequestCount } from '@src/payments/swagger-decorators/get-lecturer-payment-request-count.decorator';
-import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
+import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
 import { ApiGetMyPassSituation } from '@src/payments/swagger-decorators/get-my-pass-situation.decorator';
 import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
 import { ApiGetRevenueStatistics } from '../swagger-decorators/get-revenue-statistics.decorator';
 import { plainToInstance } from 'class-transformer';
 import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
+import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
+import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
+import { ApiGetLecturerPaymentList } from '../swagger-decorators/get-lecturer-payment-list.decorator';
 
 @ApiTags('강사-결제')
 @UseGuards(LecturerAccessTokenGuard)
@@ -38,6 +41,30 @@ export class LecturerPaymentsController {
   constructor(
     private readonly lecturerPaymentsService: LecturerPaymentsService,
   ) {}
+
+  @ApiGetLecturerPaymentList()
+  @Get()
+  async getLecturerPaymentList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() getLecturerPaymentListDto: GetLecturerPaymentListDto,
+  ): Promise<{
+    totalItemCount: Number;
+    lecturerPaymentList: LecturerPaymentItemDto[];
+  }> {
+    const { totalItemCount, lecturerPaymentList } =
+      await this.lecturerPaymentsService.getLecturerPaymentList(
+        authorizedData.lecturer.id,
+        getLecturerPaymentListDto,
+      );
+
+    return {
+      totalItemCount,
+      lecturerPaymentList: plainToInstance(
+        LecturerPaymentItemDto,
+        lecturerPaymentList,
+      ),
+    };
+  }
 
   @ApiGetRevenueStatistics()
   @SetResponseKey('revenueStatistics')

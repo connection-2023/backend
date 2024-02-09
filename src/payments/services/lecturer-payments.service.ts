@@ -12,17 +12,22 @@ import { Lecture, LecturePass } from '@prisma/client';
 import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
 import {
   LectureMethod,
+  PaymentHistoryTypes,
   PaymentMethods,
   PaymentOrderStatus,
   PaymentStatusForLecturer,
   RefundStatuses,
-  RevenueStatisticsType,
 } from '@src/payments/enum/payment.enum';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  IPaginationParams,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 import { IPayment } from '@src/payments/interface/payments.interface';
-import { PassSituationDto } from '@src/payments/dtos/response/pass-situationdto';
+import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
 import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
 import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
+import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
+import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -515,5 +520,93 @@ export class LecturerPaymentsService {
     const totalSales = revenue.length;
 
     return { totalSales, totalPrice };
+  }
+
+  async getLecturerPaymentList(
+    lecturerId: number,
+    dto: GetLecturerPaymentListDto,
+  ): Promise<{
+    totalItemCount: Number;
+    lecturerPaymentList?: LecturerPaymentItemDto[];
+  }> {
+    const {
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+      productType,
+      startDate,
+      endDate,
+      lectureId,
+    } = dto;
+
+    const paymentProductTypeId =
+      productType === PaymentHistoryTypes.전체 ? undefined : productType;
+
+    const convertedStartDate = new Date(startDate);
+    const convertedEndDate = new Date(endDate);
+    convertedStartDate.setHours(9, 0, 0);
+    convertedEndDate.setHours(32, 59, 59);
+
+    const paginationParams: IPaginationParams = this.getPaginationParams(
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    );
+
+    const totalItemCount =
+      await this.paymentsRepository.getLecturerPaymentCount(
+        lecturerId,
+        paymentProductTypeId,
+        convertedStartDate,
+        convertedEndDate,
+        lectureId,
+      );
+
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
+
+    const lecturerPaymentList =
+      await this.paymentsRepository.getLecturerPaymentList(
+        lecturerId,
+        paymentProductTypeId,
+        convertedStartDate,
+        convertedEndDate,
+        paginationParams,
+        lectureId,
+      );
+
+    return { totalItemCount, lecturerPaymentList };
+  }
+
+  private getPaginationParams(
+    currentPage: number,
+    targetPage: number,
+    firstItemId: number,
+    lastItemId: number,
+    take: number,
+  ): IPaginationParams {
+    let cursor;
+    let skip;
+    let updatedTake = take;
+
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
+      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+      updatedTake = pageDiff >= 1 ? -take : take;
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    return { cursor, skip, take: updatedTake };
   }
 }
