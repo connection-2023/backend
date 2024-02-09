@@ -28,7 +28,6 @@ class LecturerLearnerPrivateUserDto extends PickType(UserDto, [
     super();
 
     Object.assign(this, user);
-    console.log(user);
 
     this.userProfileImage =
       user.userProfileImage && typeof user.userProfileImage !== 'string'
