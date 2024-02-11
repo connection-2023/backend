@@ -23,6 +23,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChatsModule } from './chats/chats.module';
 import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
     SearchModule,
     ChatsModule,
     EventsModule,
+    WebhookModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

@@ -8,11 +8,15 @@ import * as expressBasicAuth from 'express-basic-auth';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from '@src/common/exceptions/http-exception.filter';
 import { SuccessInterceptor } from '@src/common/interceptors/success.interceptor';
+import { WebhookService } from './webhook/services/webhook.service';
+import { HttpNestInternalServerErrorExceptionFilter } from './common/exceptions/http-nest-internal-server-error-excetion.filter';
+import { HttpNodeInternalServerErrorExceptionFilter } from './common/exceptions/http-node-internal-server-error.exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port: number = configService.get<number>('PORT');
+  const webhookService = app.get<WebhookService>(WebhookService);
 
   app.useGlobalInterceptors(
     app.get<SuccessInterceptor>(SuccessInterceptor),
@@ -31,7 +35,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(
+    new HttpNestInternalServerErrorExceptionFilter(webhookService),
+    new HttpNodeInternalServerErrorExceptionFilter(webhookService),
+    new HttpExceptionFilter(),
+  );
 
   app.use(
     ['/docs', '/docs-json'],
