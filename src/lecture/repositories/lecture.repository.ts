@@ -15,7 +15,7 @@ import {
   LecturerLearner,
   LectureLocation,
 } from '@prisma/client';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import {
   PrismaTransaction,
   Id,
@@ -77,9 +77,19 @@ export class LectureRepository {
     transaction: PrismaTransaction,
     lectureSchedule: LectureScheduleInputData[],
   ): Promise<void> {
-    await transaction.lectureSchedule.createMany({
-      data: lectureSchedule,
-    });
+    try {
+      await transaction.lectureSchedule.createMany({
+        data: lectureSchedule,
+      });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException(
+          'Lecture schedule with the same lectureId and startDateTime already exists.',
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 
   async trxCreateRegularLectureStatus(
