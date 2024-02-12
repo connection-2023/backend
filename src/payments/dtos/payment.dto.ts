@@ -49,6 +49,14 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   @Expose()
   finalPrice: number;
 
+  @ApiProperty({
+    type: Date,
+    description: '환불 마감일',
+    nullable: true,
+  })
+  @Expose()
+  refundableDate: Date;
+
   userId: number;
   lecturerId: number;
   paymentMethodId: number;
@@ -140,6 +148,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   })
   @Expose()
   userPass: UserPassDto;
+
   secret: string;
 
   constructor(payment: Partial<PaymentDto>) {

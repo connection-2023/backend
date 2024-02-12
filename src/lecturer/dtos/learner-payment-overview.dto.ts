@@ -32,6 +32,7 @@ export class LearnerPaymentOverviewDto
   })
   finalPrice: number;
 
+  refundableDate: Date;
   userId: number;
   lecturerId: number;
   paymentMethodId: number;

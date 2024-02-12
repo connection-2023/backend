@@ -637,6 +637,7 @@ model Payment {
   statusId                  Int
   createdAt                 DateTime                   @default(now()) @db.Timestamp(6)
   updatedAt                 DateTime                   @default(now()) @updatedAt @db.Timestamp(6)
+  refundableDate            DateTime?                  @db.Timestamp(6)
   user                      Users?                     @relation(fields: [userId], references: [id])
   lecturer                  Lecturer?                  @relation(fields: [lecturerId], references: [id])
   paymentStatus             PaymentStatus              @relation(fields: [statusId], references: [id])

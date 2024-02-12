@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -18,19 +19,13 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/ApiCreateLecturePaymentInfo';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { ApiConfirmPayment } from '@src/payments/swagger-decorators/confirm-payment-decorater';
-import { IPaymentResult } from '@src/payments/interface/payments.interface';
-import { ApiGetUserReceipt } from '@src/payments/swagger-decorators/get-user-receipt-decorator';
 import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
 import { ApiCreatePassPaymentInfo } from '@src/payments/swagger-decorators/create-pass-payment-info-decorater';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 import { ApiCreateLecturePaymentWithPass } from '@src/payments/swagger-decorators/create-lecture-payment-with-pass-decorator';
-import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { PaymentDto } from '../dtos/payment.dto';
-import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/create-lecture-payment-info-with-transfer-decorater';
-import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
-import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { Request } from 'express';
 
@@ -109,34 +104,43 @@ export class PaymentsController {
   }
 
   //일반결제(계좌이체)
-  @ApiCreateLecturePaymentWithTransfer()
-  @SetResponseKey('transferPaymentResult')
-  @Post('/transfer/lecture')
-  @UseGuards(UserAccessTokenGuard)
-  async createLecturePaymentWithTransfer(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body()
-    createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
-  ): Promise<PaymentDto> {
-    return await this.paymentsService.createLecturePaymentWithTransfer(
-      authorizedData.user.id,
-      createLecturePaymentWithTransferDto,
-    );
-  }
+  // @ApiCreateLecturePaymentWithTransfer()
+  // @SetResponseKey('transferPaymentResult')
+  // @Post('/transfer/lecture')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createLecturePaymentWithTransfer(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body()
+  //   createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
+  // ): Promise<PaymentDto> {
+  //   return await this.paymentsService.createLecturePaymentWithTransfer(
+  //     authorizedData.user.id,
+  //     createLecturePaymentWithTransferDto,
+  //   );
+  // }
 
-  @ApiCreateLecturePaymentWithDeposit()
-  @SetResponseKey('depositPaymentResult')
-  @Post('/deposit/lecture')
-  @UseGuards(UserAccessTokenGuard)
-  async createLecturePaymentWithDeposit(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body()
-    createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
+  // @ApiCreateLecturePaymentWithDeposit()
+  // @SetResponseKey('depositPaymentResult')
+  // @Post('/deposit/lecture')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createLecturePaymentWithDeposit(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body()
+  //   createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
+  // ) {
+  //   return await this.paymentsService.createLecturePaymentWithDeposit(
+  //     authorizedData.user.id,
+  //     createLecturePaymentWithDepositDto,
+  //   );
+  // }
+
+  @Post('/:paymentId/refund')
+  // @UseGuards(UserAccessTokenGuard)
+  async handleRefund(
+    // @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('paymentId', ParseIntPipe) paymentId: number,
   ) {
-    return await this.paymentsService.createLecturePaymentWithDeposit(
-      authorizedData.user.id,
-      createLecturePaymentWithDepositDto,
-    );
+    await this.paymentsService.handleRefund(1, paymentId);
   }
 
   @Post('/toss/status')
