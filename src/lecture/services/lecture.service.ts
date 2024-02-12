@@ -1,5 +1,3 @@
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
-import { ReadManyLatestLecturesResponseDto } from './../dtos/read-many-latest-lectures-response.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import {
@@ -10,22 +8,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import {
-  Lecture,
-  LectureHoliday,
-  LecturerLearner,
-  Region,
-  Reservation,
-} from '@prisma/client';
+import { Lecture, LectureHoliday, Region, Reservation } from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import {
-  PrismaTransaction,
-  Id,
-  ValidateResult,
-} from '@src/common/interface/common-interface';
+import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   LectureCouponTargetInputData,
@@ -40,13 +28,9 @@ import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
 import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
-import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
-import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
-import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
-import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturePreviewDto } from '../dtos/read-lecture-preview.dto';
 import { LectureDetailDto } from '../dtos/read-lecture-detail.dto';
 import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
@@ -87,8 +71,6 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        console.log(coupons);
-
         const lectureMethodId = await this.getLectureMethodId(lectureMethod);
         const lectureTypeId = await this.getLectureTypeId(lectureType);
 

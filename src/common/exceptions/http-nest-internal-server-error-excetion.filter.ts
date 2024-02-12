@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpStatus,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { WebhookService } from '@src/webhook/services/webhook.service';
 import { Response } from 'express';
