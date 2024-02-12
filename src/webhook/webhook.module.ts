@@ -31,14 +31,14 @@ export class WebhookModule implements OnApplicationBootstrap {
   async onApplicationBootstrap(): Promise<void> {
     const webhookService = this.moduleRef.get<WebhookService>(WebhookService);
 
-    // await webhookService
-    //   .send(this.configService.get<string>('DISCORD_WEBHOOK_URL'), {
-    //     color: '#33FF68', // 연두
-    //     title: 'Build Success',
-    //     description: 'Current Environment Variable List',
-    //   })
-    //   .catch((e) => {
-    //     console.error(e);
-    //   });
+    await webhookService
+      .send(this.configService.get<string>('DISCORD_WEBHOOK_URL'), {
+        color: '#33FF68', // 연두
+        title: 'Build Success',
+        description: 'Current Environment Variable List',
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   }
 }

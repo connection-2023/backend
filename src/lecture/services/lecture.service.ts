@@ -87,6 +87,8 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        console.log(coupons);
+
         const lectureMethodId = await this.getLectureMethodId(lectureMethod);
         const lectureTypeId = await this.getLectureTypeId(lectureType);
 
