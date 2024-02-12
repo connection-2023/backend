@@ -5,6 +5,7 @@ import {
   HttpException,
   Logger,
 } from '@nestjs/common';
+import { WebhookService } from '@src/webhook/services/webhook.service';
 import { Request, Response } from 'express';
 
 @Catch(HttpException)
