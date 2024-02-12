@@ -13,6 +13,7 @@ import {
   RegularLectureSchedule,
   RegularLectureStatus,
   LecturerLearner,
+  LectureLocation,
 } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import {
@@ -28,7 +29,6 @@ import {
   LectureHolidayInputData,
   LectureImageInputData,
   LectureInputData,
-  LectureLocation,
   LectureLocationInputData,
   LectureScheduleInputData,
   LectureScheduleParticipantResponseData,
@@ -125,7 +125,16 @@ export class LectureRepository {
     });
   }
 
-  async getRegionsId(regions: Region[]): Promise<Id[]> {
+  async trxCreateLectureToLocationRegion(
+    transaction: PrismaTransaction,
+    lectureToRegionInputData: LectureToRegionInputData,
+  ): Promise<void> {
+    await transaction.lectureToRegion.create({
+      data: lectureToRegionInputData,
+    });
+  }
+
+  async getRegionsId(regions): Promise<Id[]> {
     const regionsId: Id[] = await this.prismaService.region.findMany({
       where: { OR: regions },
       select: { id: true },

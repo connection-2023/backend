@@ -107,6 +107,8 @@ interface LectureLocation {
   address: string;
   detailAddress: string;
   buildingName: string;
+  administrativeDistrict: string;
+  district: string;
 }
 
 interface LectureLocationInputData {

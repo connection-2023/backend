@@ -140,6 +140,8 @@ export class CreateLectureDto {
       address: '서울특별시 중랑구 용마산로616',
       detailAddress: '101동 1802호',
       buildingName: '새한아파트',
+      administrativeDistrict: '서울 특별시',
+      district: '중랑구',
     },
     description: '위치 주소',
     required: false,

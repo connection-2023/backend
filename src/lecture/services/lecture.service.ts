@@ -83,10 +83,28 @@ export class LectureService {
         );
 
         if (location) {
+          const { administrativeDistrict, district, ...address } = location;
+
+          const locationArr = [{ administrativeDistrict, district }];
+
+          const regionId = await this.lectureRepository.getRegionsId(
+            locationArr,
+          );
+
           const lectureLocationInputData = {
             lectureId: newLecture.id,
-            ...location,
+            ...address,
           };
+
+          const lectureToRegionInputData = {
+            lectureId: newLecture.id,
+            regionId: regionId[0].id,
+          };
+
+          await this.lectureRepository.trxCreateLectureToLocationRegion(
+            transaction,
+            lectureToRegionInputData,
+          );
 
           await this.lectureRepository.trxCreateLectureLocation(
             transaction,
