@@ -79,9 +79,9 @@ jobs:
           echo "ES_USERNAME=${{ secrets.ES_USERNAME }}" >> .env
           echo "ES_PASSWORD=${{ secrets.ES_PASSWORD }}" >> .env
 
-          echo "MONGODB_URL=${{ secrets.MONGODB_URL}}" >> .env
+          echo "MONGODB_URL=${{ secrets.MONGODB_URL }}" >> .env
 
-          echo "DISCORD_WEBHOOK_URL=${{secrets.DISCORD_WEBHOOK_URL}}"
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
 
           cat .env
 
