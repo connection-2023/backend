@@ -118,7 +118,7 @@ export class LectureTemporarilySaveService {
           }
         }
 
-        if (regions[0]) {
+        if (regions) {
           const regionIds: Id[] = await this.getValidRegionIds(regions);
           const temporaryLectureToRegionInputData: TemporaryLectureToRegionInputData[] =
             this.createLectureToRegionInputData(lectureId, regionIds);
