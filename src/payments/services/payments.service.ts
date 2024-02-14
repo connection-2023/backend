@@ -25,6 +25,9 @@ import {
   TossPaymentsConfirmResponse,
   VirtualAccountPaymentInfoInputData,
   IWebHookData,
+  IRefundPaymentInfo,
+  IRefundReceiveAccount,
+  ICalculatedLectureRefundResult,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
@@ -36,6 +39,7 @@ import {
   PaymentProductType,
   PaymentStatus,
   Reservation,
+  UserBankAccount,
 } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ConfirmLecturePaymentDto as ConfirmPaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
@@ -54,6 +58,7 @@ import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-paym
 import { PaymentDto } from '../dtos/payment.dto';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -1039,7 +1044,7 @@ export class PaymentsService implements OnModuleInit {
           reservation,
         );
 
-        await this.paymentsRepository.trxDecrementLectureLearner(
+        await this.paymentsRepository.trxDecrementLectureLearnerEnrollmentCount(
           transaction,
           userId,
           lecturerId,
@@ -1395,20 +1400,25 @@ export class PaymentsService implements OnModuleInit {
   //   );
   // }
 
-  // private async checkUserBankAccount(
-  //   userId: number,
-  //   userBankAccountId: number,
-  // ) {
-  //   const selectedUserBankAccount =
-  //     await this.paymentsRepository.getUserBankAccount(
-  //       userId,
-  //       userBankAccountId,
-  //     );
+  private async checkUserBankAccount(
+    userId: number,
+    userBankAccountId: number,
+  ): Promise<UserBankAccount> {
+    const selectedUserBankAccount =
+      await this.paymentsRepository.getUserBankAccount(
+        userId,
+        userBankAccountId,
+      );
 
-  //   if (!selectedUserBankAccount) {
-  //     throw new BadRequestException(`유효하지 않은 환불 계좌 정보입니다.`);
-  //   }
-  // }
+    if (!selectedUserBankAccount) {
+      throw new BadRequestException(
+        `유효하지 않은 환불 계좌 정보입니다.`,
+        'InvalidRefundAccount',
+      );
+    }
+
+    return selectedUserBankAccount;
+  }
 
   // private async trxCreateLecturePaymentWithTransfer(
   //   userId: number,
@@ -1642,28 +1652,79 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  async handleRefund(userId: number, paymentId: number) {
-    const selectedPayment =
-      await this.paymentsRepository.getUserPaymentInfoById(userId, paymentId);
+  async handleLectureRefund(
+    userId: number,
+    payment: Payment,
+    reservation: Reservation,
+    dto: HandleRefundDto,
+  ): Promise<void> {
+    const { cancelReason, refundAmount, userBankAccountId } = dto;
+    let refundReceiveAccount: IRefundReceiveAccount;
 
-    if (!selectedPayment) {
-      throw new BadRequestException(`잘못된 결제 정보입니다.`);
+    if (userBankAccountId) {
+      refundReceiveAccount = await this.createRefundPaymentInfo(
+        userId,
+        userBankAccountId,
+      );
     }
 
-    const calculatedRefundPrice = await this.calculateRefundPrice(
-      selectedPayment,
+    const calculatedResult: ICalculatedLectureRefundResult =
+      await this.calculateLectureRefundPrice(payment);
+    if (calculatedResult.refundPrice !== refundAmount) {
+      throw new BadRequestException(
+        `환불 가격이 일치하지 않습니다.`,
+        'RefundAmountMismatch',
+      );
+    }
+
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        //원데이일때 또는 정기수업의 진행률이 0일때 수강 횟수 차감
+        if (reservation.lectureScheduleId || calculatedResult.progress === 0) {
+          await this.paymentsRepository.trxDecrementLectureLearnerEnrollmentCount(
+            transaction,
+            userId,
+            payment.lecturerId,
+          );
+        }
+
+        await Promise.all([
+          this.paymentsRepository.trxDecrementLectureScheduleParticipants(
+            transaction,
+            reservation.lectureScheduleId
+              ? LectureMethod.원데이
+              : LectureMethod.정기,
+            reservation,
+          ),
+
+          this.paymentsRepository.trxUpdatePaymentStatus(
+            transaction,
+            payment.id,
+            PaymentOrderStatus.CANCELED,
+          ),
+
+          this.paymentsRepository.trxUpdateReservationStatus(
+            transaction,
+            reservation.id,
+            false,
+          ),
+
+          this.paymentsRepository.trxCreateRefundPayment(transaction, {
+            paymentId: payment.id,
+            refundUserBankAccountId: userBankAccountId,
+            refundStatusId: RefundStatuses.COMPLETED,
+            cancelAmount: calculatedResult.refundPrice,
+            cancelReason,
+          }),
+
+          this.refundTossPaymentApiServer(payment, {
+            cancelReason,
+            cancelAmount: calculatedResult.refundPrice,
+            refundReceiveAccount,
+          }),
+        ]);
+      },
     );
-    console.log(calculatedRefundPrice);
-  }
-
-  private async calculateRefundPrice(payment: Payment) {
-    switch (payment.paymentProductTypeId) {
-      //결제 상품이 강의 일때
-      case PaymentHistoryTypes.클래스:
-        return await this.processClassPayment(payment);
-
-      case PaymentHistoryTypes.패스권:
-    }
   }
 
   /**
@@ -1677,37 +1738,148 @@ export class PaymentsService implements OnModuleInit {
    *
    */
 
-  private async processClassPayment(payment: Payment) {
+  private async calculateLectureRefundPrice(
+    payment: Payment,
+  ): Promise<ICalculatedLectureRefundResult> {
     const currentDate = this.getCurrentDate();
     const elapsedMilliseconds =
       currentDate.getTime() - payment.updatedAt.getTime();
 
     //결제를 취소한 시간이 cancellationAbsoluteTime에서 지정한 시간 이내일때 전액 환불
     //결제 취소 시간이 refundableTimePeriod에서 지정한 유예 시간 이내일때 전액 환불
+    //만약 정규강의가 중도 참여가 가능하다면 아래 로직은 변경되어야함
     if (
       this.cancellationAbsoluteTime >= elapsedMilliseconds ||
       payment.refundableDate >= currentDate
     ) {
-      return payment.finalPrice;
+      return { refundPrice: payment.finalPrice };
     }
 
     const selectedReservation =
       await this.paymentsRepository.getUserReservationWithSchedule(payment.id);
     if (!selectedReservation) {
-      throw new BadRequestException(`올바르지 않은 예약 정보입니다.`);
+      throw new BadRequestException(
+        `올바르지 않은 예약 정보입니다.`,
+        'InvalidReservationInformation',
+      );
     }
 
     const { lectureSchedule, regularLectureStatus } = selectedReservation;
 
     if (lectureSchedule) {
-      return 0;
+      throw new BadRequestException(
+        `환불 가능 기간이 아닙니다.`,
+        'RefundPeriodNotAvailable',
+      );
     }
+    if (regularLectureStatus) {
+      const totalSessions = regularLectureStatus.regularLectureSchedule.length;
+      const attendedSessions =
+        regularLectureStatus.regularLectureSchedule.filter(
+          (schedule) =>
+            schedule.startDateTime.getTime() <= currentDate.getTime(),
+        ).length;
+      const remainingSessions = totalSessions - attendedSessions;
 
-    //regularLectureStatus 일때 로직 구현
+      const progress = (attendedSessions / totalSessions) * 100;
+
+      if (progress <= 50) {
+        // 진행도 50% 이하일때 환불가격 = 총 가격 * (남은 횟수/전체 횟수)
+        const refundPrice =
+          payment.finalPrice * (remainingSessions / totalSessions);
+        return { refundPrice, progress };
+      } else {
+        // 50% 이상일때 환불X
+        throw new BadRequestException(
+          `환불 가능 기간이 아닙니다.`,
+          'RefundPeriodNotAvailable',
+        );
+      }
+    }
   }
 
   private getCurrentDate(): Date {
     const date = new Date();
     return new Date(date.getTime() + 9 * this.oneHour);
+  }
+
+  private async refundTossPaymentApiServer(
+    payment: Payment,
+    paymentInfo: IRefundPaymentInfo,
+  ) {
+    try {
+      const tossSkKey = Buffer.from(`${this.tossPaymentsSecretKey}:`).toString(
+        'base64',
+      );
+
+      await axios.post(
+        `${this.tossPaymentsUrl}/${payment.paymentKey}/cancel`,
+        paymentInfo,
+        {
+          headers: {
+            Authorization: `Basic ${tossSkKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    } catch (error) {
+      if (error.response.data) {
+        throw new InternalServerErrorException(
+          `${error.response.data.message}`,
+          error.response.data.code,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  private async createRefundPaymentInfo(
+    userId: number,
+    userBankAccountId: number,
+  ): Promise<IRefundReceiveAccount> {
+    const userRefundBankAccount: UserBankAccount =
+      await this.checkUserBankAccount(userId, userBankAccountId);
+
+    return {
+      bank: userRefundBankAccount.bankCode,
+      holderName: userRefundBankAccount.holderName,
+      accountNumber: userRefundBankAccount.accountNumber,
+    };
+  }
+
+  async getUserPaymentForRefund(userId: number, paymentId: number) {
+    const selectedPayment =
+      await this.paymentsRepository.getUserPaymentInfoById(userId, paymentId);
+
+    if (!selectedPayment) {
+      throw new BadRequestException(
+        `잘못된 결제 정보입니다.`,
+        'InvalidPaymentInformation',
+      );
+    }
+
+    if (selectedPayment.paymentMethodId === PaymentMethods.패스권) {
+      throw new BadRequestException(
+        `패스권으로 결제한 강의는 환불할 수 없습니다.`,
+        'CannotRefundLectureWithPass',
+      );
+    }
+
+    if (selectedPayment.statusId === PaymentOrderStatus.CANCELED) {
+      throw new BadRequestException(
+        `이미 환불 처리된 결제 정보입니다.`,
+        'AlreadyRefunded',
+      );
+    }
+
+    if (selectedPayment.statusId !== PaymentOrderStatus.DONE) {
+      throw new BadRequestException(
+        `해당 결제 정보는 결제가 완료되지 않은 결제 정보입니다.`,
+        'PaymentNotCompleted',
+      );
+    }
+
+    return selectedPayment;
   }
 }

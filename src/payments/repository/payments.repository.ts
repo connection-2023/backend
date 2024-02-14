@@ -982,7 +982,7 @@ export class PaymentsRepository {
     });
   }
 
-  async trxDecrementLectureLearner(
+  async trxDecrementLectureLearnerEnrollmentCount(
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
@@ -1034,7 +1034,10 @@ export class PaymentsRepository {
     });
   }
 
-  async getUserBankAccount(userId: number, userBankAccountId: number) {
+  async getUserBankAccount(
+    userId: number,
+    userBankAccountId: number,
+  ): Promise<UserBankAccount> {
     return await this.prismaService.userBankAccount.findFirst({
       where: { id: userBankAccountId, userId },
     });
@@ -1359,7 +1362,11 @@ export class PaymentsRepository {
 
   async getUserPaymentInfoById(userId: number, paymentId: number) {
     return await this.prismaService.payment.findFirst({
-      where: { id: paymentId },
+      where: { id: paymentId, userId },
+      include: {
+        reservation: true,
+        userPass: true,
+      },
     });
   }
 
@@ -1368,8 +1375,23 @@ export class PaymentsRepository {
       where: { id: paymentId },
       include: {
         lectureSchedule: true,
-        regularLectureStatus: { include: { regularLectureSchedule: true } },
+        regularLectureStatus: {
+          include: {
+            regularLectureSchedule: true,
+          },
+        },
       },
+    });
+  }
+
+  async trxUpdateReservationStatus(
+    transaction: PrismaTransaction,
+    reservationId: number,
+    isEnabled: boolean,
+  ) {
+    await transaction.reservation.update({
+      where: { id: reservationId },
+      data: { isEnabled },
     });
   }
 }

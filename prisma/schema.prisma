@@ -1088,16 +1088,15 @@ model RefundPaymentInfo {
   id                      Int      @id @default(autoincrement())
   paymentId               Int      @unique
   refundStatusId          Int
-  refundUserBankAccountId Int
+  refundUserBankAccountId Int?
   cancelAmount            Int?
-  reason                  String?
-  refusedReason           String?
+  cancelReason            String?
   createdAt               DateTime @default(now()) @db.Timestamp(6)
   updatedAt               DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
   payment               Payment         @relation(fields: [paymentId], references: [id])
   refundStatus          RefundStatus    @relation(fields: [refundStatusId], references: [id])
-  refundUserBankAccount UserBankAccount @relation(fields: [refundUserBankAccountId], references: [id])
+  refundUserBankAccount UserBankAccount? @relation(fields: [refundUserBankAccountId], references: [id])
 }
 
 model RegularLectureStatus {

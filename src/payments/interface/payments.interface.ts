@@ -232,7 +232,9 @@ export interface ITransferPaymentInputData {
 export interface IRefundPaymentInputData {
   paymentId: number;
   refundStatusId: number;
-  refundUserBankAccountId: number;
+  refundUserBankAccountId?: number;
+  cancelAmount: number;
+  cancelReason: string;
 }
 
 export interface IRefundPaymentUpdateData {
@@ -258,4 +260,21 @@ export interface IWebHookData {
   orderId: string;
   status: string;
   transactionKey: string;
+}
+
+export interface IRefundPaymentInfo {
+  cancelReason: string;
+  cancelAmount: number;
+  refundReceiveAccount?: IRefundReceiveAccount;
+}
+
+export interface IRefundReceiveAccount {
+  bank: string;
+  holderName: string;
+  accountNumber: string;
+}
+
+export interface ICalculatedLectureRefundResult {
+  refundPrice: number;
+  progress?: number;
 }

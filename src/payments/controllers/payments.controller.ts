@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
 import { CreateLecturePaymentWithTossDto } from '@src/payments/dtos/create-lecture-payment-with-toss.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -28,6 +29,9 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { PaymentDto } from '../dtos/payment.dto';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { Request } from 'express';
+import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
+import { PaymentHistoryTypes, PaymentMethods } from '../enum/payment.enum';
+import { ApiHandleRefund } from '../swagger-decorators/handle-refund.decorator';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -134,15 +138,42 @@ export class PaymentsController {
   //   );
   // }
 
+  @ApiHandleRefund()
   @Post('/:paymentId/refund')
-  // @UseGuards(UserAccessTokenGuard)
+  @UseGuards(UserAccessTokenGuard)
   async handleRefund(
-    // @GetAuthorizedUser() authorizedData: ValidateResult,
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('paymentId', ParseIntPipe) paymentId: number,
+    @Body() handleRefundDto: HandleRefundDto,
   ) {
-    await this.paymentsService.handleRefund(1, paymentId);
+    const { reservation, userPass, ...payment } =
+      await this.paymentsService.getUserPaymentForRefund(
+        authorizedData.user.id,
+        paymentId,
+      );
+
+    if (
+      payment.paymentMethodId === PaymentMethods.가상계좌 &&
+      !handleRefundDto.userBankAccountId
+    ) {
+      throw new BadRequestException(
+        `환불 계좌가 필요한 결제입니다.`,
+        'RefundAccountRequired',
+      );
+    }
+
+    if (payment.paymentProductTypeId === PaymentHistoryTypes.클래스) {
+      await this.paymentsService.handleLectureRefund(
+        authorizedData.user.id,
+        payment,
+        reservation,
+        handleRefundDto,
+      );
+    } else if (payment.paymentProductTypeId === PaymentHistoryTypes.패스권) {
+    }
   }
 
+  @ApiOperation({ summary: '토스 페이먼츠 계좌이체 웹훅' })
   @Post('/toss/status')
   async handleVirtualAccountPaymentStatusWebhook(
     @Req() req: Request,
