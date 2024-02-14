@@ -30,9 +30,7 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      response
-        .status(201)
-        .json({ authEmail: user.userEmail, signUpType: 'KAKAO' });
+      return { authEmail: user.userEmail, signUpType: 'KAKAO' };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
@@ -58,9 +56,7 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      response
-        .status(201)
-        .json({ authEmail: user.userEmail, signUpType: 'GOOGLE' });
+      return { authEmail: user.userEmail, signUpType: 'GOOGLE' };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
@@ -87,9 +83,7 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      response
-        .status(201)
-        .json({ authEmail: user.userEmail, signUpType: 'NAVER' });
+      return { authEmail: user.userEmail, signUpType: 'NAVER' };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
