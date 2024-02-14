@@ -14,6 +14,7 @@ import {
   TemporaryLectureHolidayInputData,
   TemporaryLectureImageInputData,
   TemporaryLectureInputData,
+  TemporaryLectureLocation,
   TemporaryLectureLocationInputData,
   TemporaryLectureScheduleInputData,
   TemporaryLectureToDanceGenreInputData,
@@ -224,12 +225,26 @@ export class LectureTemporarilySaveRepository {
 
   async trxUpsertTemporaryLectureLocation(
     transaction: PrismaTransaction,
-    temporaryLectureLocationInputData: TemporaryLectureLocationInputData,
+    lectureId: number,
+    address: string,
+    detailAddress: string,
+    buildingName: string,
   ): Promise<void> {
     await transaction.temporaryLectureLocation.upsert({
-      where: { lectureId: temporaryLectureLocationInputData.lectureId },
-      update: temporaryLectureLocationInputData,
-      create: temporaryLectureLocationInputData,
+      where: { lectureId },
+      update: { address, detailAddress, buildingName },
+      create: { lectureId, address, detailAddress, buildingName },
+    });
+  }
+
+  async trxGetTemporaryLectureRegionId(
+    transaction: PrismaTransaction,
+    administrativeDistrict: string,
+    district: string,
+  ): Promise<Id> {
+    return await transaction.region.findFirst({
+      where: { administrativeDistrict, district },
+      select: { id: true },
     });
   }
 }
