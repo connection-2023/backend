@@ -86,11 +86,36 @@ export class LectureTemporarilySaveService {
         }
 
         if (location) {
-          const temporaryLectureLocationInputData = { lectureId, ...location };
           await this.temporaryLectureRepository.trxUpsertTemporaryLectureLocation(
             transaction,
-            temporaryLectureLocationInputData,
+            lectureId,
+            location?.address,
+            location?.buildingName,
+            location?.detailAddress,
           );
+
+          await this.temporaryLectureRepository.trxDeleteTemporaryLectureToRegions(
+            transaction,
+            lectureId,
+          );
+
+          if (location.address) {
+            const region =
+              await this.temporaryLectureRepository.trxGetTemporaryLectureRegionId(
+                transaction,
+                location.administrativeDistrict,
+                location.district,
+              );
+
+            const temporaryLectureLocationRegionInputData = [
+              { lectureId, regionId: region.id },
+            ];
+
+            await this.temporaryLectureRepository.trxCreateTemporaryLectureToRegions(
+              transaction,
+              temporaryLectureLocationRegionInputData,
+            );
+          }
         }
 
         if (regions) {
