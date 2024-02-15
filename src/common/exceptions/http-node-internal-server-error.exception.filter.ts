@@ -18,6 +18,8 @@ export class HttpNodeInternalServerErrorExceptionFilter
 {
   constructor(private readonly webhookService: WebhookService) {}
 
+  private logger = new Logger(HttpNodeInternalServerErrorExceptionFilter.name);
+
   async catch(exception: any, host: ArgumentsHost): Promise<void> {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<Request>();
@@ -36,6 +38,15 @@ export class HttpNodeInternalServerErrorExceptionFilter
     } catch (e) {
       console.error(e);
     }
+
+    const log = {
+      method: request.method,
+      path: request.url,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      body: request.body,
+    };
+
+    this.logger.error(log, exception.stack);
 
     response.status(status).json({
       statusCode: status,
