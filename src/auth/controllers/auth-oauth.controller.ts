@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
 import { AuthOAuthService } from '@src/auth/services/auth-oauth.service';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { Token } from '@src/common/interface/common-interface';
@@ -30,7 +30,11 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      return { authEmail: user.userEmail, signUpType: 'KAKAO' };
+      return {
+        statusCode: HttpStatus.CREATED,
+        authEmail: user.userEmail,
+        signUpType: 'KAKAO',
+      };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
@@ -56,7 +60,11 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      return { authEmail: user.userEmail, signUpType: 'GOOGLE' };
+      return {
+        statusCode: HttpStatus.CREATED,
+        authEmail: user.userEmail,
+        signUpType: 'GOOGLE',
+      };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
@@ -83,7 +91,11 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      return { authEmail: user.userEmail, signUpType: 'NAVER' };
+      return {
+        statusCode: HttpStatus.CREATED,
+        authEmail: user.userEmail,
+        signUpType: 'NAVER',
+      };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
