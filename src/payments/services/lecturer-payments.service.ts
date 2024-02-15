@@ -269,7 +269,7 @@ export class LecturerPaymentsService {
 
     const trxUpdateLearnerCountMethod = isIncrement
       ? this.paymentsRepository.trxIncrementLectureLearner
-      : this.paymentsRepository.trxDecrementLectureLearner;
+      : this.paymentsRepository.trxDecrementLectureLearnerEnrollmentCount;
 
     //각 스케쥴의 현재 인원 수정
     //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소

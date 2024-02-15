@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -11,28 +13,25 @@ import {
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
 import { CreateLecturePaymentWithTossDto } from '@src/payments/dtos/create-lecture-payment-with-toss.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/ApiCreateLecturePaymentInfo';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { ApiConfirmPayment } from '@src/payments/swagger-decorators/confirm-payment-decorater';
-import { IPaymentResult } from '@src/payments/interface/payments.interface';
-import { ApiGetUserReceipt } from '@src/payments/swagger-decorators/get-user-receipt-decorator';
 import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
 import { ApiCreatePassPaymentInfo } from '@src/payments/swagger-decorators/create-pass-payment-info-decorater';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 import { ApiCreateLecturePaymentWithPass } from '@src/payments/swagger-decorators/create-lecture-payment-with-pass-decorator';
-import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { PaymentDto } from '../dtos/payment.dto';
-import { ApiCreateLecturePaymentWithTransfer } from '../swagger-decorators/create-lecture-payment-info-with-transfer-decorater';
-import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
-import { ApiCreateLecturePaymentWithDeposit } from '../swagger-decorators/create-lecture-payment-info-with-deposit-decorater';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { Request } from 'express';
+import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
+import { PaymentHistoryTypes, PaymentMethods } from '../enum/payment.enum';
+import { ApiHandleRefund } from '../swagger-decorators/handle-refund.decorator';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -109,36 +108,72 @@ export class PaymentsController {
   }
 
   //일반결제(계좌이체)
-  @ApiCreateLecturePaymentWithTransfer()
-  @SetResponseKey('transferPaymentResult')
-  @Post('/transfer/lecture')
-  @UseGuards(UserAccessTokenGuard)
-  async createLecturePaymentWithTransfer(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body()
-    createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
-  ): Promise<PaymentDto> {
-    return await this.paymentsService.createLecturePaymentWithTransfer(
-      authorizedData.user.id,
-      createLecturePaymentWithTransferDto,
-    );
-  }
+  // @ApiCreateLecturePaymentWithTransfer()
+  // @SetResponseKey('transferPaymentResult')
+  // @Post('/transfer/lecture')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createLecturePaymentWithTransfer(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body()
+  //   createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
+  // ): Promise<PaymentDto> {
+  //   return await this.paymentsService.createLecturePaymentWithTransfer(
+  //     authorizedData.user.id,
+  //     createLecturePaymentWithTransferDto,
+  //   );
+  // }
 
-  @ApiCreateLecturePaymentWithDeposit()
-  @SetResponseKey('depositPaymentResult')
-  @Post('/deposit/lecture')
+  // @ApiCreateLecturePaymentWithDeposit()
+  // @SetResponseKey('depositPaymentResult')
+  // @Post('/deposit/lecture')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createLecturePaymentWithDeposit(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body()
+  //   createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
+  // ) {
+  //   return await this.paymentsService.createLecturePaymentWithDeposit(
+  //     authorizedData.user.id,
+  //     createLecturePaymentWithDepositDto,
+  //   );
+  // }
+
+  @ApiHandleRefund()
+  @Post('/:paymentId/refund')
   @UseGuards(UserAccessTokenGuard)
-  async createLecturePaymentWithDeposit(
+  async handleRefund(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body()
-    createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
+    @Param('paymentId', ParseIntPipe) paymentId: number,
+    @Body() handleRefundDto: HandleRefundDto,
   ) {
-    return await this.paymentsService.createLecturePaymentWithDeposit(
-      authorizedData.user.id,
-      createLecturePaymentWithDepositDto,
-    );
+    const { reservation, userPass, ...payment } =
+      await this.paymentsService.getUserPaymentForRefund(
+        authorizedData.user.id,
+        paymentId,
+      );
+
+    if (
+      payment.paymentMethodId === PaymentMethods.가상계좌 &&
+      !handleRefundDto.userBankAccountId
+    ) {
+      throw new BadRequestException(
+        `환불 계좌가 필요한 결제입니다.`,
+        'RefundAccountRequired',
+      );
+    }
+
+    if (payment.paymentProductTypeId === PaymentHistoryTypes.클래스) {
+      await this.paymentsService.handleLectureRefund(
+        authorizedData.user.id,
+        payment,
+        reservation,
+        handleRefundDto,
+      );
+    } else if (payment.paymentProductTypeId === PaymentHistoryTypes.패스권) {
+    }
   }
 
+  @ApiOperation({ summary: '토스 페이먼츠 계좌이체 웹훅' })
   @Post('/toss/status')
   async handleVirtualAccountPaymentStatusWebhook(
     @Req() req: Request,

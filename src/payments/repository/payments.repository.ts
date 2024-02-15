@@ -42,6 +42,7 @@ import {
   Payment,
   PaymentProductType,
   PaymentStatus,
+  RegularLectureSchedule,
   RegularLectureStatus,
   UserBankAccount,
 } from '@prisma/client';
@@ -146,24 +147,49 @@ export class PaymentsRepository {
   }
 
   async getLectureSchedule(
-    lectureMethod: LectureMethod,
+    lectureScheduleId: number,
+  ): Promise<LectureSchedule> {
+    try {
+      return await this.prismaService.lectureSchedule.findFirst({
+        where: {
+          id: lectureScheduleId,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 강의 일정 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getRegularLectureStatus(
     lectureScheduleId: number,
   ): Promise<LectureSchedule | RegularLectureStatus> {
     try {
-      if (lectureMethod === LectureMethod.원데이) {
-        return await this.prismaService.lectureSchedule.findFirst({
-          where: {
-            id: lectureScheduleId,
-          },
-        });
-      }
-      if (lectureMethod === LectureMethod.정기) {
-        return await this.prismaService.regularLectureStatus.findFirst({
-          where: {
-            id: lectureScheduleId,
-          },
-        });
-      }
+      return await this.prismaService.regularLectureStatus.findFirst({
+        where: {
+          id: lectureScheduleId,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 강의 일정 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getRegularLectureSchedule(
+    lectureScheduleId: number,
+  ): Promise<RegularLectureSchedule> {
+    try {
+      return await this.prismaService.regularLectureSchedule.findFirst({
+        where: {
+          id: lectureScheduleId,
+        },
+        orderBy: { id: 'asc' },
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 강의 일정 조회 실패: ${error}`,
@@ -956,7 +982,7 @@ export class PaymentsRepository {
     });
   }
 
-  async trxDecrementLectureLearner(
+  async trxDecrementLectureLearnerEnrollmentCount(
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
@@ -1008,7 +1034,10 @@ export class PaymentsRepository {
     });
   }
 
-  async getUserBankAccount(userId: number, userBankAccountId: number) {
+  async getUserBankAccount(
+    userId: number,
+    userBankAccountId: number,
+  ): Promise<UserBankAccount> {
     return await this.prismaService.userBankAccount.findFirst({
       where: { id: userBankAccountId, userId },
     });
@@ -1329,5 +1358,40 @@ export class PaymentsRepository {
     });
 
     return totalRevenue._sum.finalPrice ?? 0;
+  }
+
+  async getUserPaymentInfoById(userId: number, paymentId: number) {
+    return await this.prismaService.payment.findFirst({
+      where: { id: paymentId, userId },
+      include: {
+        reservation: true,
+        userPass: true,
+      },
+    });
+  }
+
+  async getUserReservationWithSchedule(paymentId: number) {
+    return await this.prismaService.reservation.findUnique({
+      where: { id: paymentId },
+      include: {
+        lectureSchedule: true,
+        regularLectureStatus: {
+          include: {
+            regularLectureSchedule: true,
+          },
+        },
+      },
+    });
+  }
+
+  async trxUpdateReservationStatus(
+    transaction: PrismaTransaction,
+    reservationId: number,
+    isEnabled: boolean,
+  ) {
+    await transaction.reservation.update({
+      where: { id: reservationId },
+      data: { isEnabled },
+    });
   }
 }
