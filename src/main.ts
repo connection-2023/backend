@@ -36,8 +36,8 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(
-    new HttpNestInternalServerErrorExceptionFilter(webhookService),
     new HttpNodeInternalServerErrorExceptionFilter(webhookService),
+    new HttpNestInternalServerErrorExceptionFilter(webhookService),
     new HttpExceptionFilter(),
   );
 

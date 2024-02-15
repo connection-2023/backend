@@ -19,6 +19,8 @@ export class HttpNestInternalServerErrorExceptionFilter
 {
   constructor(private readonly webhookService: WebhookService) {}
 
+  private logger = new Logger(HttpNestInternalServerErrorExceptionFilter.name);
+
   async catch(
     exception: InternalServerErrorException,
     host: ArgumentsHost,
@@ -40,6 +42,15 @@ export class HttpNestInternalServerErrorExceptionFilter
     } catch (e) {
       console.error(e);
     }
+
+    const log = {
+      method: request.method,
+      path: request.url,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      body: request.body,
+    };
+
+    this.logger.error(log, exception.stack);
 
     response.status(status).json({
       statusCode: status,
