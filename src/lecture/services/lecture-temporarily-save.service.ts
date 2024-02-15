@@ -90,8 +90,8 @@ export class LectureTemporarilySaveService {
             transaction,
             lectureId,
             location?.address,
-            location?.buildingName,
             location?.detailAddress,
+            location?.buildingName,
           );
 
           await this.temporaryLectureRepository.trxDeleteTemporaryLectureToRegions(

@@ -67,8 +67,6 @@ export class LectureService {
       ...lecture
     } = createLectureDto;
 
-    const regionIds: Id[] = await this.getValidRegionIds(regions);
-
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const lectureMethodId = await this.getLectureMethodId(lectureMethod);
@@ -112,12 +110,15 @@ export class LectureService {
           );
         }
 
-        const lectureToRegionInputData: LectureToRegionInputData[] =
-          this.createLectureToRegionInputData(newLecture.id, regionIds);
-        await this.lectureRepository.trxCreateLectureToRegions(
-          transaction,
-          lectureToRegionInputData,
-        );
+        if (regions) {
+          const regionIds: Id[] = await this.getValidRegionIds(regions);
+          const lectureToRegionInputData: LectureToRegionInputData[] =
+            this.createLectureToRegionInputData(newLecture.id, regionIds);
+          await this.lectureRepository.trxCreateLectureToRegions(
+            transaction,
+            lectureToRegionInputData,
+          );
+        }
 
         const lectureImageInputData: LectureImageInputData[] =
           this.createLectureImageInputData(newLecture.id, images);

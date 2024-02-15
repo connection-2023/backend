@@ -11,6 +11,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  ValidateIf,
 } from 'class-validator';
 import {
   DaySchedule,
@@ -27,7 +28,24 @@ export class CreateLectureDto {
   @IsArray()
   @IsNotEmpty()
   @Type(() => Array)
-  regions: string[];
+  @ValidateIf(({ location }) => !location)
+  regions?: string[];
+
+  @ApiProperty({
+    example: {
+      address: '서울특별시 중랑구 용마산로616',
+      detailAddress: '101동 1802호',
+      buildingName: '새한아파트',
+      administrativeDistrict: '서울 특별시',
+      district: '중랑구',
+    },
+    description: '위치 주소',
+    required: false,
+  })
+  @IsNotEmpty()
+  @IsObject()
+  @ValidateIf(({ regions }) => !regions)
+  location?: LectureLocation;
 
   @ApiProperty({ example: 'dance', description: '강의 종류', required: true })
   @IsEnum(LectureType, { each: true })
@@ -76,9 +94,9 @@ export class CreateLectureDto {
     description: '강의 공지사항',
     required: true,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  notification: string;
+  notification?: string;
 
   @ApiProperty({
     example: ['K-pop', '팝핑'],
@@ -134,21 +152,6 @@ export class CreateLectureDto {
   @IsNotEmpty()
   @IsString()
   curriculum: string;
-
-  @ApiProperty({
-    example: {
-      address: '서울특별시 중랑구 용마산로616',
-      detailAddress: '101동 1802호',
-      buildingName: '새한아파트',
-      administrativeDistrict: '서울 특별시',
-      district: '중랑구',
-    },
-    description: '위치 주소',
-    required: false,
-  })
-  @IsOptional()
-  @IsObject()
-  location?: LectureLocation;
 
   @ApiProperty({ example: 2, description: '강의시간', required: true })
   @IsNotEmpty()
