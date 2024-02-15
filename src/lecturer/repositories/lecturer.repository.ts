@@ -281,7 +281,10 @@ export class LecturerRepository {
       return await this.prismaService.reservation.findFirst({
         where: { userId },
         orderBy: { id: 'desc' },
-        include: { lectureSchedule: { include: { lecture: true } } },
+        include: {
+          lectureSchedule: { include: { lecture: true } },
+          regularLectureStatus: { include: { regularLectureSchedule: true } },
+        },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -290,6 +293,7 @@ export class LecturerRepository {
       );
     }
   }
+
   async getLecturerLearnerCount(lecturerId: number, user?: object) {
     try {
       return await this.prismaService.lecturerLearner.count({
