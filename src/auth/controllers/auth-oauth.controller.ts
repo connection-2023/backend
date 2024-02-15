@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
 import { AuthOAuthService } from '@src/auth/services/auth-oauth.service';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { Token } from '@src/common/interface/common-interface';
@@ -31,7 +31,7 @@ export class AuthOAuthController {
 
     if (user.userEmail) {
       return {
-        statusCode: 201,
+        statusCode: HttpStatus.CREATED,
         authEmail: user.userEmail,
         signUpType: 'KAKAO',
       };
@@ -61,7 +61,7 @@ export class AuthOAuthController {
 
     if (user.userEmail) {
       return {
-        statusCode: 201,
+        statusCode: HttpStatus.CREATED,
         authEmail: user.userEmail,
         signUpType: 'GOOGLE',
       };
@@ -92,7 +92,7 @@ export class AuthOAuthController {
 
     if (user.userEmail) {
       return {
-        statusCode: 201,
+        statusCode: HttpStatus.CREATED,
         authEmail: user.userEmail,
         signUpType: 'NAVER',
       };
