@@ -66,7 +66,7 @@ export class PaymentRegularLectureStatusDto implements RegularLectureStatus {
   lecture?: SimpleLectureDto;
 
   @ApiProperty({
-    type: [SimpleLectureDto],
+    type: [RegularLectureScheduleDto],
     description: '강의 일정',
   })
   @Expose()
