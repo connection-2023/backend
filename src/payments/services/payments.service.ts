@@ -74,7 +74,6 @@ export class PaymentsService implements OnModuleInit {
   private oneHour: number;
   private cancellationAbsoluteTime: number;
   private passRefundableDaysPeriod: number;
-  private passRefundableHoursPeriod: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -99,9 +98,6 @@ export class PaymentsService implements OnModuleInit {
     );
     this.passRefundableDaysPeriod = this.configService.get<number>(
       'PASS_REFUNDABLE_DAYS_PERIOD',
-    );
-    this.passRefundableHoursPeriod = this.configService.get<number>(
-      'PASS_REFUNDABLE_HOURS_PERIOD',
     );
 
     this.logger.log('PaymentsService Init');
