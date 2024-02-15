@@ -30,7 +30,11 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      return { authEmail: user.userEmail, signUpType: 'KAKAO' };
+      return {
+        statusCode: 201,
+        authEmail: user.userEmail,
+        signUpType: 'KAKAO',
+      };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
@@ -56,7 +60,11 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      return { authEmail: user.userEmail, signUpType: 'GOOGLE' };
+      return {
+        statusCode: 201,
+        authEmail: user.userEmail,
+        signUpType: 'GOOGLE',
+      };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },
@@ -83,7 +91,11 @@ export class AuthOAuthController {
     );
 
     if (user.userEmail) {
-      return { authEmail: user.userEmail, signUpType: 'NAVER' };
+      return {
+        statusCode: 201,
+        authEmail: user.userEmail,
+        signUpType: 'NAVER',
+      };
     } else {
       const token: Token = await this.authTokenService.generateToken(
         { userId: user.userId },

@@ -72,6 +72,8 @@ export class UserController {
   @ApiCheckDubplicatedNickname()
   @Get('/nicknames/:nickname')
   async findByNickname(@Param('nickname') nickname: string) {
+    console.log(nickname);
+
     return this.userService.findByNickname(nickname);
   }
 
