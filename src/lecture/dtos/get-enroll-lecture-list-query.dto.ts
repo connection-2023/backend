@@ -4,7 +4,7 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class GetEnrollLectureListQueryDto {
   @ApiProperty({
-    description: '진행중 완료 여부',
+    description: '진행중,완료',
     example: '진행중',
     required: true,
   })
