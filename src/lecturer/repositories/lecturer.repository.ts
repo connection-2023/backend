@@ -283,7 +283,9 @@ export class LecturerRepository {
         orderBy: { id: 'desc' },
         include: {
           lectureSchedule: { include: { lecture: true } },
-          regularLectureStatus: { include: { regularLectureSchedule: true } },
+          regularLectureStatus: {
+            include: { regularLectureSchedule: true, lecture: true },
+          },
         },
       });
     } catch (error) {
