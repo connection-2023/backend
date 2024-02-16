@@ -41,6 +41,8 @@ import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
 import { ApiGetEnrollLectureSchedules } from '../swagger-decorators/get-enroll-lecture-schedule.decorator';
 import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
 import { ApiGetEnrollScheduleDetail } from '../swagger-decorators/get-enroll-schedule-detail.decorator';
+import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
+import { ApiGetEnrollLectureList } from '../swagger-decorators/get-enroll-lecture-list.decorator';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -167,12 +169,25 @@ export class LectureController {
 
   @ApiGetEnrollLectureSchedules()
   @UseGuards(UserAccessTokenGuard)
-  @Get('users')
+  @Get('enroll-lecture-calenders')
   async readManyEnrollLectureWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyEnrollLectureQueryDto,
   ) {
     return await this.lectureService.readManyEnrollLectureWithUserId(
+      authorizedData.user.id,
+      query,
+    );
+  }
+
+  @ApiGetEnrollLectureList()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('enroll-lecture-list')
+  async getEnrollLectureList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() query: GetEnrollLectureListQueryDto,
+  ) {
+    return await this.lectureService.getEnrollLectureList(
       authorizedData.user.id,
       query,
     );

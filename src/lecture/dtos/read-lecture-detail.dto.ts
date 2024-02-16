@@ -65,7 +65,9 @@ export class LectureDetailDto {
     this.reservationDeadline = lecture.reservationDeadline;
     this.reservationComment = lecture.reservationComment;
     this.price = lecture.price;
-    this.notification = new LectureNotificationDto(lecture.lectureNotification);
+    this.notification = lecture.lectureNotification
+      ? new LectureNotificationDto(lecture.lectureNotification)
+      : undefined;
     this.introduction = lecture.introduction;
     this.curriculum = lecture.curriculum;
     this.minCapacity = lecture.minCapacity;
