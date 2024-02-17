@@ -37,6 +37,8 @@ import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
 import { EnrollLectureScheduleDto } from '../dtos/get-enroll-schedule.dto';
 import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
 import { DetailEnrollScheduleDto } from '../dtos/get-detail-enroll-schedule.dto';
+import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
+import { EnrollLectureListDto } from '../dtos/enroll-lecture-list.dto';
 
 @Injectable()
 export class LectureService {
@@ -1059,5 +1061,68 @@ export class LectureService {
     );
 
     return lectureLearnerInfoList;
+  }
+
+  async getEnrollLectureList(
+    userId: number,
+    query: GetEnrollLectureListQueryDto,
+  ) {
+    const { type, skip, take } = query;
+    const where = { userId };
+    const currentTime = new Date();
+
+    if (type === '진행중') {
+      where['OR'] = [
+        {
+          lectureSchedule: {
+            startDateTime: {
+              gte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+            },
+          },
+        },
+        {
+          regularLectureStatus: {
+            regularLectureSchedule: {
+              some: {
+                startDateTime: {
+                  gte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+                },
+              },
+            },
+          },
+        },
+      ];
+    } else {
+      where['OR'] = [
+        {
+          lectureSchedule: {
+            startDateTime: {
+              lte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+            },
+          },
+        },
+        {
+          regularLectureStatus: {
+            regularLectureSchedule: {
+              every: {
+                startDateTime: {
+                  lte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+                },
+              },
+            },
+          },
+        },
+      ];
+    }
+
+    const enrollLectureList = await this.lectureRepository.getEnrollLectureList(
+      where,
+      skip,
+      take,
+    );
+
+    return enrollLectureList.map(
+      (enrollLecture) => new EnrollLectureListDto(enrollLecture),
+    );
   }
 }

@@ -603,4 +603,28 @@ export class LectureRepository {
       where: { OR: lectureSchduleInputData },
     });
   }
+
+  async getEnrollLectureList(
+    where,
+    skip: number,
+    take: number,
+  ): Promise<Reservation[]> {
+    return await this.prismaService.reservation.findMany({
+      where,
+      skip,
+      take,
+      include: {
+        lecture: {
+          include: { lectureImage: true, lectureMethod: true, lecturer: true },
+        },
+        lectureSchedule: true,
+        regularLectureStatus: {
+          include: {
+            regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
+          },
+        },
+      },
+      orderBy: { id: 'desc' },
+    });
+  }
 }
