@@ -77,7 +77,7 @@ export class LectureController {
 
   @ApiReadOneLectureDetail()
   @SetResponseKey('lectureDetail')
-  @Get(':lectureId/details')
+  @Get(':lectureId/detail')
   async readLectureDetail(@Param('lectureId', ParseIntPipe) lectureId: number) {
     return await this.lectureService.readLectureDetail(lectureId);
   }
