@@ -637,6 +637,10 @@ export class LectureService {
           userId,
         );
 
+      if (!enrollScheduleDetail) {
+        throw new BadRequestException('Does not exist schedule');
+      }
+
       return new DetailEnrollScheduleDto(enrollScheduleDetail);
     } else {
       const enrollScheduleDetail =
@@ -644,6 +648,10 @@ export class LectureService {
           scheduleId,
           userId,
         );
+
+      if (!enrollScheduleDetail) {
+        throw new BadRequestException('Does not exist schedule');
+      }
 
       return new DetailEnrollScheduleDto(enrollScheduleDetail);
     }
