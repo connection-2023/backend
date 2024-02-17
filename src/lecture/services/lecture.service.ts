@@ -1075,9 +1075,11 @@ export class LectureService {
     userId: number,
     query: GetEnrollLectureListQueryDto,
   ) {
-    const { type, skip, take } = query;
+    const { type, page, pageSize } = query;
     const where = { userId };
     const currentTime = new Date();
+    const skip = page * pageSize;
+    const take = pageSize;
 
     if (type === '진행중') {
       where['OR'] = [
