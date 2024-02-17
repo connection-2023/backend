@@ -618,9 +618,13 @@ export class LectureRepository {
           include: { lectureImage: true, lectureMethod: true, lecturer: true },
         },
         lectureSchedule: true,
-        regularLectureStatus: { include: { regularLectureSchedule: true } },
+        regularLectureStatus: {
+          include: {
+            regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
+          },
+        },
       },
-      orderBy: { id: 'asc' },
+      orderBy: { id: 'desc' },
     });
   }
 }

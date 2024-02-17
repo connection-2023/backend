@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumberType } from '@src/common/validator/custom-validator';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
@@ -14,13 +15,11 @@ export class GetEnrollLectureListQueryDto {
 
   @ApiProperty({ description: 'skip', example: 0, required: true })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
+  @IsNumberType()
   skip: number;
 
   @ApiProperty({ description: 'take', example: 3, required: true })
   @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
+  @IsNumberType()
   take: number;
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { EnrollSimpleLectureDto } from './enroll-simple-lecture.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
@@ -14,10 +14,12 @@ export class EnrollLectureListDto {
 
   @Expose()
   @ApiProperty({ description: '강의 정보', type: EnrollSimpleLectureDto })
+  @Type(() => EnrollSimpleLectureDto)
   lecture?: EnrollSimpleLectureDto;
 
   @Expose()
   @ApiProperty({ description: '강사 프로필', type: LecturerDto })
+  @Type(() => LecturerDto)
   lecturer?: LecturerDto;
 
   @Expose()
@@ -29,8 +31,6 @@ export class EnrollLectureListDto {
 
   constructor(enrollLecture: EnrollLectureListDto) {
     Object.assign(this, enrollLecture);
-    this.lecture = new EnrollSimpleLectureDto(enrollLecture.lecture);
-    this.lecturer = new LecturerDto(enrollLecture.lecture.lecturer);
     this.schedules = enrollLecture.regularLectureStatus
       ? enrollLecture.regularLectureStatus.regularLectureSchedule.map(
           (schedule) => schedule.startDateTime,
