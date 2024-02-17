@@ -629,4 +629,8 @@ export class LectureRepository {
       orderBy: { id: 'desc' },
     });
   }
+
+  async countEnrollLecture(where): Promise<number> {
+    return await this.prismaService.reservation.count({ where });
+  }
 }
