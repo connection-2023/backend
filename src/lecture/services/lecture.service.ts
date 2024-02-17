@@ -39,6 +39,7 @@ import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail
 import { DetailEnrollScheduleDto } from '../dtos/get-detail-enroll-schedule.dto';
 import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
 import { EnrollLectureListDto } from '../dtos/enroll-lecture-list.dto';
+import { CombinedEnrollLectureWithCountDto } from '../dtos/combined-enroll-lecture-with-count.dto';
 
 @Injectable()
 export class LectureService {
@@ -1131,8 +1132,16 @@ export class LectureService {
       take,
     );
 
-    return enrollLectureList.map(
-      (enrollLecture) => new EnrollLectureListDto(enrollLecture),
+    const countEnrollLecture = await this.lectureRepository.countEnrollLecture(
+      where,
     );
+
+    const count = countEnrollLecture;
+
+    if (!count) {
+      return new CombinedEnrollLectureWithCountDto(enrollLectureList);
+    }
+
+    return new CombinedEnrollLectureWithCountDto(enrollLectureList, count);
   }
 }
