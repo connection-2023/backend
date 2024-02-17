@@ -13,13 +13,13 @@ export class GetEnrollLectureListQueryDto {
   @IsString()
   type: string;
 
-  @ApiProperty({ description: 'skip', example: 0, required: true })
+  @ApiProperty({ description: 'page', example: 0, required: true })
   @IsNotEmpty()
   @IsNumberType()
-  skip: number;
+  page: number;
 
-  @ApiProperty({ description: 'take', example: 3, required: true })
+  @ApiProperty({ description: 'pageSize', example: 3, required: true })
   @IsNotEmpty()
   @IsNumberType()
-  take: number;
+  pageSize: number;
 }
