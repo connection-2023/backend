@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IEsGenre } from '../interface/search.interface';
+import { IEsGenre } from '../../interface/search.interface';
 
 export class EsGenreDto {
   @ApiProperty({

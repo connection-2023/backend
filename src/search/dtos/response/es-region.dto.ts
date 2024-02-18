@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IEsRegion } from '../interface/search.interface';
+import { IEsRegion } from '../../interface/search.interface';
 
 export class EsRegionDto {
   @ApiProperty({

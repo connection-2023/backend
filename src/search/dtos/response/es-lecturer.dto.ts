@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IEsLecturer } from '../interface/search.interface';
+import { IEsLecturer } from '../../interface/search.interface';
 import { EsRegionDto } from './es-region.dto';
 import { EsGenreDto } from './es-genre.dto';
 
