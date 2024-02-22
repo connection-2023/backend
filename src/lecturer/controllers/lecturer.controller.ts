@@ -45,6 +45,8 @@ import { plainToInstance } from 'class-transformer';
 import { GetMyReservationListDto } from '../dtos/request/get-my-reservation-list.dto';
 import { LecturerReservationDto } from '../dtos/response/lecturer-reservation.dto';
 import { ApiGetMyReservationList } from '../swagger-decorators/get-my-reservation.decorator';
+import { UpdateLearnerMemoDto } from '../dtos/request/update-learner-memo.dto';
+import { ApiUpdateLearnerMemo } from '../swagger-decorators/update-lecturer-learner-memo.decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -177,6 +179,21 @@ export class LecturerController {
       );
 
     return plainToInstance(LecturerLearnerPassInfoDto, userPassList);
+  }
+
+  @ApiUpdateLearnerMemo()
+  @UseGuards(LecturerAccessTokenGuard)
+  @Patch('/learners/:userId/memo')
+  async updateLearnerMemo(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() updateLearnerMemoDto: UpdateLearnerMemoDto,
+  ): Promise<void> {
+    await this.lecturerService.updateLearnerMemo(
+      authorizedData.lecturer.id,
+      userId,
+      updateLearnerMemoDto,
+    );
   }
 
   @ApiReadManyLectureWithLecturer()
