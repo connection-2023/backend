@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
@@ -40,6 +41,7 @@ import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
 import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
 import { GetMyReservationListDto } from '../dtos/request/get-my-reservation-list.dto';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
+import { UpdateLearnerMemoDto } from '../dtos/request/update-learner-memo.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -742,6 +744,27 @@ export class LecturerService implements OnModuleInit {
     return await this.lecturerRepository.getLecturerReservationList(
       lecturerId,
       paginationParams,
+    );
+  }
+
+  async updateLearnerMemo(
+    lecturerId: number,
+    userId: number,
+    { memo }: UpdateLearnerMemoDto,
+  ): Promise<void> {
+    const selectedLecturerLearner =
+      await this.lecturerRepository.getLecturerLearner(lecturerId, userId);
+
+    if (!selectedLecturerLearner) {
+      throw new NotFoundException(
+        `수강생 정보를 찾을 수 없습니다.`,
+        'LearnerInfoNotFound',
+      );
+    }
+
+    await this.lecturerRepository.updateLearnerMemo(
+      selectedLecturerLearner.id,
+      memo,
     );
   }
 }

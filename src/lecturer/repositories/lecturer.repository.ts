@@ -448,4 +448,20 @@ export class LecturerRepository {
       take,
     });
   }
+
+  async getLecturerLearner(lecturerId: number, userId: number) {
+    return await this.prismaService.lecturerLearner.findFirst({
+      where: {
+        lecturerId,
+        userId,
+      },
+    });
+  }
+
+  async updateLearnerMemo(id: number, memo: string) {
+    await this.prismaService.lecturerLearner.update({
+      where: { id },
+      data: { memo },
+    });
+  }
 }
