@@ -76,7 +76,7 @@ export class SearchRepository {
     });
   }
 
-  async getUserSearchHistory(
+  async getUserSearchHistoryByTerm(
     userId: number,
     searchTerm: string,
   ): Promise<SearchHistory> {
@@ -123,13 +123,25 @@ export class SearchRepository {
   async getUserSearchHistoryList(
     userId: number,
     { cursor, skip, take }: IPaginationParams,
-  ) {
+  ): Promise<SearchHistory[]> {
     return this.prismaService.searchHistory.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' },
       cursor,
       skip,
       take,
+    });
+  }
+
+  async getSearchHistoryById(id: number): Promise<SearchHistory> {
+    return await this.prismaService.searchHistory.findFirst({
+      where: { id },
+    });
+  }
+
+  async deleteSearchHistoryById(id: number): Promise<void> {
+    await this.prismaService.searchHistory.delete({
+      where: { id },
     });
   }
 }

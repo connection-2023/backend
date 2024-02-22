@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { SearchService } from '@src/search/services/search.service';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -20,6 +28,7 @@ import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecture
 import { SearchHistoryDto } from '../dtos/response/search-history.dto';
 import { plainToInstance } from 'class-transformer';
 import { ApiGetSearchHistory } from '../swagger-decorators/get-search-history.decorator';
+import { ApiDeleteSearchHistory } from '../swagger-decorators/delete-search-history.decorator';
 
 @ApiTags('검색')
 @Controller('search')
@@ -75,8 +84,8 @@ export class SearchController {
 
   @ApiGetSearchHistory()
   @SetResponseKey('searchHistoryList')
-  @Get('/history')
   @UseGuards(AllowUserAndLecturerGuard)
+  @Get('/history')
   async getSearchHistory(
     @GetUserId() authorizedData: ValidateResult,
     @Query() getUserSearchHistoryListDto: GetUserSearchHistoryListDto,
@@ -90,5 +99,18 @@ export class SearchController {
       );
 
     return plainToInstance(SearchHistoryDto, userHistory);
+  }
+
+  @ApiDeleteSearchHistory()
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Delete('/history/:historyId')
+  async deleteSearchHistory(
+    @GetUserId() authorizedData: ValidateResult,
+    @Param('historyId', ParseIntPipe) historyId: number,
+  ): Promise<void> {
+    return await this.searchService.deleteSearchHistory(
+      authorizedData.user.id,
+      historyId,
+    );
   }
 }
