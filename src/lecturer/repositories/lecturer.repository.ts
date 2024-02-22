@@ -421,4 +421,31 @@ export class LecturerRepository {
       include: { lecturePass: true },
     });
   }
+
+  async getLecturerReservationList(
+    lecturerId: number,
+    { cursor, skip, take }: IPaginationParams,
+  ) {
+    return await this.prismaService.reservation.findMany({
+      where: { payment: { lecturerId }, isEnabled: true },
+      include: {
+        user: { include: { userProfileImage: true } },
+        lectureSchedule: { include: { lecture: true } },
+        regularLectureStatus: {
+          include: {
+            regularLectureSchedule: true,
+            lecture: true,
+          },
+        },
+      },
+      orderBy: {
+        payment: {
+          updatedAt: 'desc',
+        },
+      },
+      cursor,
+      skip,
+      take,
+    });
+  }
 }
