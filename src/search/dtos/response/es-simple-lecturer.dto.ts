@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IEsSimpleLecturer } from '../interface/search.interface';
+import { IEsSimpleLecturer } from '../../interface/search.interface';
 
 export class EsSimpleLecturerDto {
   @ApiProperty({

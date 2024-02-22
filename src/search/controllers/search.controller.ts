@@ -1,21 +1,25 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { SearchService } from '@src/search/services/search.service';
-import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { CombinedSearchResultDto } from '@src/search/dtos/response/combined-search-result.dto';
 import { ApiGetCombinedSearchResult } from '@src/search/swagger-decorators/get-combined-search-result.decorator';
 import { ApiTags } from '@nestjs/swagger';
-import { GetCombinedSearchResultDto } from '@src/search/dtos/get-combined-search-result.dto';
-import { GetLecturerSearchResultDto } from '@src/search/dtos/get-lecturer-search-result.dto';
+import { GetCombinedSearchResultDto } from '@src/search/dtos/request/get-combined-search-result.dto';
+import { GetLecturerSearchResultDto } from '@src/search/dtos/request/get-lecturer-search-result.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiSearchLecturerList } from '@src/search/swagger-decorators/search-lecturer-list.decorator';
 import { EsLecturerDto } from '@src/search/dtos/response/es-lecturer.dto';
-import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
+import { GetLectureSearchResultDto } from '@src/search/dtos/request/get-lecture-search-result.dto';
 import { EsLectureDto } from '@src/search/dtos/response/es-lecture.dto';
 import { ApiSearchLectureList } from '@src/search/swagger-decorators/search-lecture-list.decorator';
 import { AllowUserLecturerAndGuestGuard } from '@src/common/guards/allow-user-lecturer-guest.guard';
 import { GetUserId } from '@src/common/decorator/get-user-id.decorator';
+import { GetUserSearchHistoryListDto } from '../dtos/request/get-user-search-history.dto';
+import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
+import { SearchHistoryDto } from '../dtos/response/search-history.dto';
+import { plainToInstance } from 'class-transformer';
+import { ApiGetSearchHistory } from '../swagger-decorators/get-search-history.decorator';
 
 @ApiTags('검색')
 @Controller('search')
@@ -23,8 +27,8 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @ApiGetCombinedSearchResult()
-  @Get()
   @UseGuards(AllowUserLecturerAndGuestGuard)
+  @Get()
   async getCombinedSearchResult(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() dto: GetCombinedSearchResultDto,
@@ -39,8 +43,8 @@ export class SearchController {
 
   @ApiSearchLecturerList()
   @SetResponseKey('lecturerList')
-  @Get('/lecturer')
   @UseGuards(AllowUserLecturerAndGuestGuard)
+  @Get('/lecturer')
   async searchLecturerList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() dto: GetLecturerSearchResultDto,
@@ -55,8 +59,8 @@ export class SearchController {
 
   @ApiSearchLectureList()
   @SetResponseKey('lectureList')
-  @Get('/lecture')
   @UseGuards(AllowUserLecturerAndGuestGuard)
+  @Get('/lecture')
   async searchLectureList(
     @GetUserId() authorizedData: ValidateResult,
     @Query() dto: GetLectureSearchResultDto,
@@ -67,5 +71,24 @@ export class SearchController {
     }
 
     return await this.searchService.getLectureList(userId, dto);
+  }
+
+  @ApiGetSearchHistory()
+  @SetResponseKey('searchHistoryList')
+  @Get('/history')
+  @UseGuards(AllowUserAndLecturerGuard)
+  async getSearchHistory(
+    @GetUserId() authorizedData: ValidateResult,
+    @Query() getUserSearchHistoryListDto: GetUserSearchHistoryListDto,
+  ): Promise<SearchHistoryDto[]> {
+    const userId: number = authorizedData?.user?.id;
+
+    const userHistory: SearchHistoryDto[] =
+      await this.searchService.getSearchHistory(
+        userId,
+        getUserSearchHistoryListDto,
+      );
+
+    return plainToInstance(SearchHistoryDto, userHistory);
   }
 }

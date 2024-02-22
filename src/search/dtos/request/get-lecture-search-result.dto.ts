@@ -13,7 +13,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
+import { LecturerSortOptions, TimeOfDay } from '../../enum/search.enum';
 import {
   DanceCategory,
   DanceMethod,

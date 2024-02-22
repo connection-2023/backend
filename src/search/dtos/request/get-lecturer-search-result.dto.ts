@@ -14,7 +14,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { LecturerSortOptions } from '../enum/search.enum';
+import { LecturerSortOptions } from '../../enum/search.enum';
 import { DanceCategory } from '@src/common/enum/enum';
 
 export class GetLecturerSearchResultDto {
