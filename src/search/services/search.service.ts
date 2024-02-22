@@ -36,6 +36,7 @@ import {
 } from '@src/common/enum/enum';
 import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
 import { LectureMethod } from '@src/payments/enum/payment.enum';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class SearchService {
@@ -99,24 +100,6 @@ export class SearchService {
       await this.addLecturerLikeStatus(userId, searchedLecturers);
 
     return lecturersWithLikeStatus;
-  }
-
-  private async filterBlockedLecturersInEsLecturer(
-    userId: number,
-    lecturers: IEsLecturer[],
-  ): Promise<IEsLecturer[]> {
-    const userBlockedLecturer: BlockedLecturer[] =
-      await this.searchRepository.getUserblockedLecturerList(userId);
-
-    // 유저가 차단한 강사 필터링
-    const lecturersWithoutBlocked = lecturers.filter(
-      (lecturer: IEsLecturer) =>
-        !userBlockedLecturer.some(
-          (blocked) => blocked.lecturerId === lecturer.id,
-        ),
-    );
-
-    return lecturersWithoutBlocked;
   }
 
   private async getBlockedLecturerIds(
@@ -744,6 +727,34 @@ export class SearchService {
       selectedLectures.some(
         (selectedLecture) => selectedLecture?.lectureId === lecture.id,
       ),
+    );
+  }
+
+  async saveSearchTerm(userId: number, searchTerm: string): Promise<void> {
+    const selectedHistory = await this.searchRepository.getUserSearchHistory(
+      userId,
+      searchTerm,
+    );
+
+    if (selectedHistory) {
+      return await this.searchRepository.updateUserSearchHistory(
+        selectedHistory.id,
+        searchTerm,
+      );
+    }
+
+    await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        await this.searchRepository.trxCreateSearchHistory(
+          transaction,
+          userId,
+          searchTerm,
+        );
+        await this.searchRepository.trxUpsertPopularSearch(
+          transaction,
+          searchTerm,
+        );
+      },
     );
   }
 }

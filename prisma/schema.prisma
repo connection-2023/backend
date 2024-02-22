@@ -49,6 +49,7 @@ model Users {
   likedLecturer            LikedLecturer[]
   blockedLecturer          BlockedLecturer[]
   userBankAccount          UserBankAccount[]
+  searchHistory            SearchHistory[]
 }
 
 model UserProfileImage {
@@ -1117,4 +1118,20 @@ model RegularLectureSchedule {
   endDateTime            DateTime
   day                    Int
   regularLectureStatus   RegularLectureStatus @relation(fields: [regularLectureStatusId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  searchTerm String
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  users Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PopularSearch {
+  id          Int    @id @default(autoincrement())
+  searchTerm  String @unique
+  searchCount Int    @default(1)
 }

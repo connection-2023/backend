@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { SearchHistory } from '@prisma/client';
 import { TemporaryWeek, Week } from '@src/common/enum/enum';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { IEsLecture } from '@src/search/interface/search.interface';
 
@@ -68,6 +70,50 @@ export class SearchRepository {
       select: {
         lectureId: true,
       },
+    });
+  }
+
+  async getUserSearchHistory(
+    userId: number,
+    searchTerm: string,
+  ): Promise<SearchHistory> {
+    return await this.prismaService.searchHistory.findFirst({
+      where: { userId, searchTerm },
+    });
+  }
+
+  async updateUserSearchHistory(
+    searchHistoryId: number,
+    searchTerm: string,
+  ): Promise<void> {
+    await this.prismaService.searchHistory.update({
+      where: { id: searchHistoryId },
+      data: { searchTerm },
+    });
+  }
+
+  async trxCreateSearchHistory(
+    transaction: PrismaTransaction,
+    userId: number,
+    searchTerm: string,
+  ): Promise<SearchHistory> {
+    return await transaction.searchHistory.create({
+      data: { userId, searchTerm },
+    });
+  }
+
+  async trxUpsertPopularSearch(
+    transaction: PrismaTransaction,
+    searchTerm: string,
+  ) {
+    await transaction.popularSearch.upsert({
+      where: { searchTerm },
+      update: {
+        searchCount: {
+          increment: 1,
+        },
+      },
+      create: { searchTerm },
     });
   }
 }
