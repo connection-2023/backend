@@ -8,9 +8,10 @@ import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-sche
 import { RegularLectureStatusDto } from '@src/common/dtos/regular-lecture-status.dto';
 import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { PaymentDto } from '@src/payments/dtos/payment.dto';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { scheduled } from 'rxjs';
 import { EnrollScheduleDetailPriceDto } from './enroll-schedule-detail-price.dto';
+import { DefaultSerializer } from 'v8';
 
 @Exclude()
 export class DetailEnrollScheduleDto {
@@ -32,8 +33,7 @@ export class DetailEnrollScheduleDto {
   @Expose()
   @ApiProperty({
     description: '정기 수강 일정',
-    type: RegularLectureScheduleDto,
-    isArray: true,
+    type: [RegularLectureScheduleDto],
   })
   regularLectureSchedule?: RegularLectureScheduleDto[];
 
@@ -50,11 +50,16 @@ export class DetailEnrollScheduleDto {
     description: '결제 정보',
     type: EnrollScheduleDetailPriceDto,
   })
+  @Type(() => EnrollScheduleDetailPriceDto)
   payment?: EnrollScheduleDetailPriceDto;
 
   @Expose()
   @ApiProperty({ description: '수강생 요청사항' })
   request: string;
+
+  @Expose()
+  @ApiProperty({ description: '완료 여부', type: Boolean })
+  isCompleted: boolean;
 
   regularLectureStatus?: RegularLectureStatusDto;
 
@@ -77,12 +82,32 @@ export class DetailEnrollScheduleDto {
       ? delete reservation.lectureSchedule.lecture &&
         new LectureScheduleDto(reservation.lectureSchedule)
       : undefined;
+
     this.regularLectureSchedule = reservation.regularLectureStatus
       ? reservation.regularLectureStatus.regularLectureSchedule.map(
           (schedule) => new RegularLectureScheduleDto(schedule),
         )
       : undefined;
 
-    this.payment = new EnrollScheduleDetailPriceDto(reservation.payment);
+    const currentTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+
+    this.isCompleted = true;
+
+    if (this.lectureSchedule) {
+      const startDateTime = new Date(this.lectureSchedule.startDateTime);
+
+      if (startDateTime > currentTime) {
+        this.isCompleted = false;
+      }
+    } else {
+      this.regularLectureSchedule.forEach((schedule) => {
+        const startDateTime = new Date(schedule.startDateTime);
+
+        if (startDateTime > currentTime) {
+          this.isCompleted = false;
+          return;
+        }
+      });
+    }
   }
 }
