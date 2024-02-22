@@ -8,12 +8,17 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import { SearchRepository } from '@src/search/repository/search.repository';
 import { BlockedLecturer, LikedLecture, LikedLecturer } from '@prisma/client';
 import {
+  IBlockedLecturerIdQuery,
+  IBlockedLecturerQuery,
   IEsLecture,
   IEsLecturer,
+  IEsPass,
+  IIdQuery,
   ILectureSearchParams,
   ILecturerSearchParams,
+  IPassSearchParams,
 } from '@src/search/interface/search.interface';
-import { CombinedSearchResultDto } from '@src/search/dtos/combined-search-result.dto';
+import { CombinedSearchResultDto } from '@src/search/dtos/response/combined-search-result.dto';
 import { GetCombinedSearchResultDto } from '@src/search/dtos/get-combined-search-result.dto';
 import { GetLecturerSearchResultDto } from '@src/search/dtos/get-lecturer-search-result.dto';
 import {
@@ -21,8 +26,8 @@ import {
   SearchTypes,
   TimeOfDay,
 } from '@src/search/enum/search.enum';
-import { EsLectureDto } from '@src/search/dtos/es-lecture.dto';
-import { EsLecturerDto } from '@src/search/dtos/es-lecturer.dto';
+import { EsLectureDto } from '@src/search/dtos/response/es-lecture.dto';
+import { EsLecturerDto } from '@src/search/dtos/response/es-lecturer.dto';
 import {
   DanceCategory,
   DanceMethod,
@@ -48,51 +53,51 @@ export class SearchService {
     userId: number,
     dto: GetCombinedSearchResultDto,
   ): Promise<CombinedSearchResultDto> {
+    const { idQueries, lecturerIdQueries } = await this.getBlockedLecturerIds(
+      userId,
+    );
+
     const searchedLecturers: IEsLecturer[] = await this.searchLecturers(
       userId,
       dto,
+      idQueries,
     );
     const searchedLectures: IEsLecture[] = await this.searchLectures(
       userId,
       dto,
+      lecturerIdQueries,
+    );
+    const searchedPasses: IEsPass[] = await this.searchPasses(
+      dto,
+      lecturerIdQueries,
     );
 
-    //검색결과 개수를 맞추기 위한 slice
-    const slicedLecturers = this.sliceResults(searchedLecturers, dto.take);
-    const slicedLectures = this.sliceResults(searchedLectures, dto.take);
-
     return new CombinedSearchResultDto({
-      searchedLecturers: slicedLecturers,
-      searchedLectures: slicedLectures,
+      searchedLecturers,
+      searchedLectures,
+      searchedPasses,
     });
   }
 
   private async searchLecturers(
     userId: number,
-    dto: GetCombinedSearchResultDto,
+    { value, take }: GetCombinedSearchResultDto,
+    idQueries: IIdQuery[],
   ): Promise<IEsLecturer[]> {
-    const { value, take } = dto;
     const searchedLecturers = await this.searchLecturersWithElasticsearch({
       value,
       take,
+      idQueries,
     });
 
     if (!searchedLecturers || !userId) {
       return searchedLecturers;
     }
 
-    //차단한 강사의 강의 제외
-    const lecturersWithoutBlocked: IEsLecturer[] =
-      await this.filterBlockedLecturersInEsLecturer(userId, searchedLecturers);
-    if (!lecturersWithoutBlocked) {
-      return;
-    }
-
     //isLiked 속성 추가
     const lecturersWithLikeStatus: IEsLecturer[] =
-      await this.addLecturerLikeStatus(userId, lecturersWithoutBlocked);
+      await this.addLecturerLikeStatus(userId, searchedLecturers);
 
-    //검색결과 개수를 맞추기 위한 slice
     return lecturersWithLikeStatus;
   }
 
@@ -112,6 +117,24 @@ export class SearchService {
     );
 
     return lecturersWithoutBlocked;
+  }
+
+  private async getBlockedLecturerIds(
+    userId: number,
+  ): Promise<IBlockedLecturerQuery> {
+    const blockedLecturer =
+      await this.searchRepository.getUserblockedLecturerList(userId);
+
+    return blockedLecturer.reduce(
+      (acc: IBlockedLecturerQuery, blockedInfo) => {
+        acc.idQueries.push({ term: { id: blockedInfo.lecturerId } });
+        acc.lecturerIdQueries.push({
+          term: { ['lecturer.lecturerId']: blockedInfo.lecturerId },
+        });
+        return acc;
+      },
+      { idQueries: [], lecturerIdQueries: [] },
+    );
   }
 
   private async addLecturerLikeStatus(
@@ -136,10 +159,11 @@ export class SearchService {
   private async searchLecturersWithElasticsearch({
     value,
     take,
+    idQueries,
   }: ILecturerSearchParams): Promise<IEsLecturer[]> {
     const { hits } = await this.esService.search({
       index: 'lecturer',
-      size: take * 2,
+      size: take,
       query: {
         bool: {
           should: [
@@ -154,10 +178,11 @@ export class SearchService {
             { match: { 'regions.district.nori': value } },
             { match: { 'regions.district.ngram': value } },
           ],
+          must_not: idQueries,
         },
       },
-      // search_after: lecturerSearchAfter,
       sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
+      // search_after: lecturerSearchAfter,
     });
 
     if (typeof hits.total === 'object' && hits.total.value > 0) {
@@ -172,24 +197,22 @@ export class SearchService {
 
   private async searchLectures(
     userId: number,
-    dto: GetCombinedSearchResultDto,
+    { value, take }: GetCombinedSearchResultDto,
+    lecturerIdQueries: IBlockedLecturerIdQuery[],
   ): Promise<IEsLecture[]> {
-    const searchedLectures = await this.searchLecturesWithElasticsearch(dto);
+    const searchedLectures = await this.searchLecturesWithElasticsearch({
+      value,
+      take,
+      lecturerIdQueries,
+    });
 
     if (!searchedLectures || !userId) {
       return searchedLectures;
     }
 
-    //차단한 강사 제외
-    const lecturesWithoutBlocked: IEsLecture[] =
-      await this.filterBlockedLecturersInEsLecture(userId, searchedLectures);
-    if (!lecturesWithoutBlocked) {
-      return;
-    }
-
     //isLiked 속성 추가
     const lecturesWithLikeStatus: IEsLecture[] =
-      await this.addLectureLikeStatus(userId, lecturesWithoutBlocked);
+      await this.addLectureLikeStatus(userId, searchedLectures);
 
     return lecturesWithLikeStatus;
   }
@@ -197,11 +220,12 @@ export class SearchService {
   private async searchLecturesWithElasticsearch({
     value,
     take,
-  }: GetCombinedSearchResultDto): Promise<IEsLecture[]> {
+    lecturerIdQueries,
+  }: ILectureSearchParams): Promise<IEsLecture[]> {
     try {
       const { hits } = await this.esService.search({
         index: 'lecture',
-        size: take * 2,
+        size: take,
         query: {
           bool: {
             should: [
@@ -216,6 +240,7 @@ export class SearchService {
               { match: { 'lecturer.nickname.nori': value } },
               { match: { 'lecturer.nickname.ngram': value } },
             ],
+            must_not: lecturerIdQueries,
           },
         },
         sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
@@ -237,39 +262,74 @@ export class SearchService {
     }
   }
 
+  private async searchPasses(
+    { value, take }: GetCombinedSearchResultDto,
+    lecturerIdQueries: IBlockedLecturerIdQuery[],
+  ): Promise<IEsPass[]> {
+    return await this.searchPassesWithElasticsearch({
+      value,
+      take,
+      lecturerIdQueries,
+    });
+  }
+
+  private async searchPassesWithElasticsearch({
+    value,
+    take,
+    lecturerIdQueries,
+  }: IPassSearchParams): Promise<IEsPass[]> {
+    const { hits } = await this.esService.search({
+      index: 'lecture_pass',
+      size: take,
+      query: {
+        bool: {
+          should: [
+            { match: { 'title.nori': value } },
+            { match: { 'title.ngram': value } },
+            { match: { 'lecturer.nickname.nori': value } },
+            { match: { 'lecturer.nickname.ngram': value } },
+            { match: { 'lecture.title.nori': value } },
+            { match: { 'lecture.title.ngram': value } },
+          ],
+          must_not: lecturerIdQueries,
+        },
+      },
+      sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
+    });
+
+    if (typeof hits.total === 'object' && hits.total.value > 0) {
+      return hits.hits.map(
+        (hit: any): IEsPass => ({
+          ...hit._source,
+          searchAfter: hit.sort,
+        }),
+      );
+    }
+  }
+
   async getLecturerList(
     userId: number,
     dto: GetLecturerSearchResultDto,
   ): Promise<EsLecturerDto[]> {
+    const { idQueries } = await this.getBlockedLecturerIds(userId);
+
     const searchedLecturers: IEsLecturer[] =
-      await this.detailSearchLecturersWithElasticsearch(dto);
+      await this.detailSearchLecturersWithElasticsearch({ ...dto, idQueries });
     if (!searchedLecturers) {
       return;
     }
+
     if (!userId) {
-      const slicedLecturers = this.sliceResults(searchedLecturers, dto.take);
-
-      return slicedLecturers.map((lecturer) => new EsLecturerDto(lecturer));
-    }
-
-    //차단한 강사 제외
-    const lecturersWithoutBlocked: IEsLecturer[] =
-      await this.filterBlockedLecturersInEsLecturer(userId, searchedLecturers);
-    if (!lecturersWithoutBlocked) {
-      return;
+      return searchedLecturers.map((lecturer) => new EsLecturerDto(lecturer));
     }
 
     //isLiked 속성 추가
     const lecturersWithLikeStatus: IEsLecturer[] =
-      await this.addLecturerLikeStatus(userId, lecturersWithoutBlocked);
+      await this.addLecturerLikeStatus(userId, searchedLecturers);
 
-    //검색결과 개수를 맞추기 위한 slice
-    const slicedLecturers = this.sliceResults(
-      lecturersWithLikeStatus,
-      dto.take,
+    return lecturersWithLikeStatus.map(
+      (lecturer) => new EsLecturerDto(lecturer),
     );
-
-    return slicedLecturers.map((lecturer) => new EsLecturerDto(lecturer));
   }
 
   private async detailSearchLecturersWithElasticsearch({
@@ -280,6 +340,7 @@ export class SearchService {
     searchAfter,
     stars,
     sortOption,
+    idQueries,
   }: ILecturerSearchParams): Promise<IEsLecturer[]> {
     const searchQuery = this.buildSearchQuery(SearchTypes.LECTURER, value);
     const genreQuery = this.buildGenreQuery(genres);
@@ -296,6 +357,7 @@ export class SearchService {
           must: [searchQuery, genreQuery, regionQuery, starQuery].filter(
             Boolean,
           ),
+          must_not: idQueries,
         },
       },
       search_after: searchAfter,
@@ -438,8 +500,13 @@ export class SearchService {
     userId: number,
     dto: GetLectureSearchResultDto,
   ): Promise<EsLectureDto[]> {
+    const { lecturerIdQueries } = await this.getBlockedLecturerIds(userId);
+
     const searchedLectures: IEsLecture[] =
-      await this.detailSearchLecturesWithElasticsearch(dto);
+      await this.detailSearchLecturesWithElasticsearch({
+        ...dto,
+        lecturerIdQueries,
+      });
     if (!searchedLectures) {
       return;
     }
@@ -459,21 +526,11 @@ export class SearchService {
       return slicedLectures.map((lecture) => new EsLectureDto(lecture));
     }
 
-    //차단한 강사의 강의 제외
-    const lecturesWithoutBlocked: IEsLecture[] =
-      await this.filterBlockedLecturersInEsLecture(userId, filteredLectures);
-    if (!lecturesWithoutBlocked) {
-      return;
-    }
-
     //isLiked 속성 추가
     const lecturesWithLikeStatus: IEsLecture[] =
-      await this.addLectureLikeStatus(userId, lecturesWithoutBlocked);
+      await this.addLectureLikeStatus(userId, filteredLectures);
 
-    //검색결과 개수를 맞추기 위한 slice
-    const slicedLectures = this.sliceResults(lecturesWithLikeStatus, dto.take);
-
-    return slicedLectures.map((lecture) => new EsLectureDto(lecture));
+    return lecturesWithLikeStatus.map((lecture) => new EsLectureDto(lecture));
   }
 
   private async detailSearchLecturesWithElasticsearch({
@@ -489,6 +546,7 @@ export class SearchService {
     isGroup,
     sortOption,
     searchAfter,
+    lecturerIdQueries,
   }: ILectureSearchParams): Promise<IEsLecture[]> {
     const sortQuery: any[] = this.buildSortQuery(sortOption);
     const isGroupQuery = this.buildIsGroupQuery(isGroup);
@@ -502,7 +560,7 @@ export class SearchService {
 
     const { hits } = await this.esService.search({
       index: 'lecture',
-      size: take * 2,
+      size: take,
       query: {
         bool: {
           must: [
@@ -515,6 +573,7 @@ export class SearchService {
             methodQuery,
             isGroupQuery,
           ].filter(Boolean),
+          must_not: lecturerIdQueries,
         },
       },
       search_after: searchAfter,
@@ -617,24 +676,6 @@ export class SearchService {
         should: { match: { isgroup: isGroup } },
       },
     };
-  }
-
-  private async filterBlockedLecturersInEsLecture(
-    userId: number,
-    lectures: IEsLecture[],
-  ): Promise<IEsLecture[]> {
-    const userBlockedLecturer: BlockedLecturer[] =
-      await this.searchRepository.getUserblockedLecturerList(userId);
-
-    //차단한 강사 필터링
-    const lecturesWithoutBlocked = lectures.filter(
-      (lecture: IEsLecture) =>
-        !userBlockedLecturer.some(
-          (blocked) => blocked.lecturerId === lecture.lecturer.lecturerId,
-        ),
-    );
-
-    return lecturesWithoutBlocked;
   }
 
   private async addLectureLikeStatus(

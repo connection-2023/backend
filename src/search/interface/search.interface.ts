@@ -41,6 +41,22 @@ export interface IEsLecturer {
   searchAfter: number[];
 }
 
+export interface IEsPass {
+  id: number;
+  lecturePassTarget: IEsLectureTarget[];
+  price: number;
+  salescount: number;
+  lecturer: IEsSimpleLecturer;
+  title: string;
+  updatedat: Date;
+  searchAfter: number[];
+}
+
+export interface IEsLectureTarget {
+  title: string;
+  lectureId: number;
+}
+
 export interface IEsSimpleLecturer {
   lecturerId: number;
   nickname: string;
@@ -66,6 +82,14 @@ export interface ILecturerSearchParams {
   genres?: DanceCategory[];
   stars?: number;
   sortOption?: LecturerSortOptions;
+  idQueries?: IIdQuery[];
+}
+
+export interface IPassSearchParams {
+  take: number;
+  value?: string;
+  searchAfter?: number[];
+  lecturerIdQueries?: IBlockedLecturerIdQuery[];
 }
 
 export interface ILectureSearchParams {
@@ -81,5 +105,20 @@ export interface ILectureSearchParams {
   ltePrice?: number;
   gtePrice?: number;
   lectureMethod?: DanceMethod;
-  isGroup: Boolean;
+  lecturerIdQueries?: IBlockedLecturerIdQuery[];
+  isGroup?: Boolean;
+}
+
+export interface IBlockedLecturerQuery {
+  idQueries: IIdQuery[];
+  lecturerIdQueries: IBlockedLecturerIdQuery[];
+}
+export interface IIdQuery {
+  term: {
+    id: number;
+  };
+}
+
+export interface IBlockedLecturerIdQuery {
+  term: { ['lecturer.lecturerId']: number };
 }

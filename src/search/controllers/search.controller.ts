@@ -3,16 +3,16 @@ import { SearchService } from '@src/search/services/search.service';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { CombinedSearchResultDto } from '@src/search/dtos/combined-search-result.dto';
+import { CombinedSearchResultDto } from '@src/search/dtos/response/combined-search-result.dto';
 import { ApiGetCombinedSearchResult } from '@src/search/swagger-decorators/get-combined-search-result.decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { GetCombinedSearchResultDto } from '@src/search/dtos/get-combined-search-result.dto';
 import { GetLecturerSearchResultDto } from '@src/search/dtos/get-lecturer-search-result.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiSearchLecturerList } from '@src/search/swagger-decorators/search-lecturer-list.decorator';
-import { EsLecturerDto } from '@src/search/dtos/es-lecturer.dto';
+import { EsLecturerDto } from '@src/search/dtos/response/es-lecturer.dto';
 import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
-import { EsLectureDto } from '@src/search/dtos/es-lecture.dto';
+import { EsLectureDto } from '@src/search/dtos/response/es-lecture.dto';
 import { ApiSearchLectureList } from '@src/search/swagger-decorators/search-lecture-list.decorator';
 
 @ApiTags('검색')
