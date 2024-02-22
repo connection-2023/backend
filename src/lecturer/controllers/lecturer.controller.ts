@@ -189,7 +189,7 @@ export class LecturerController {
     @Param('userId', ParseIntPipe) userId: number,
     @Body() updateLearnerMemoDto: UpdateLearnerMemoDto,
   ): Promise<void> {
-    return await this.lecturerService.updateLearnerMemo(
+    await this.lecturerService.updateLearnerMemo(
       authorizedData.lecturer.id,
       userId,
       updateLearnerMemoDto,
