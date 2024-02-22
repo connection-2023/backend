@@ -19,8 +19,8 @@ import {
   IPassSearchParams,
 } from '@src/search/interface/search.interface';
 import { CombinedSearchResultDto } from '@src/search/dtos/response/combined-search-result.dto';
-import { GetCombinedSearchResultDto } from '@src/search/dtos/get-combined-search-result.dto';
-import { GetLecturerSearchResultDto } from '@src/search/dtos/get-lecturer-search-result.dto';
+import { GetCombinedSearchResultDto } from '@src/search/dtos/request/get-combined-search-result.dto';
+import { GetLecturerSearchResultDto } from '@src/search/dtos/request/get-lecturer-search-result.dto';
 import {
   LecturerSortOptions,
   SearchTypes,
@@ -34,9 +34,14 @@ import {
   TemporaryWeek,
   Week,
 } from '@src/common/enum/enum';
-import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
+import { GetLectureSearchResultDto } from '@src/search/dtos/request/get-lecture-search-result.dto';
 import { LectureMethod } from '@src/payments/enum/payment.enum';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  IPaginationParams,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
+import { GetUserSearchHistoryListDto } from '../dtos/request/get-user-search-history.dto';
+import { SearchHistoryDto } from '../dtos/response/search-history.dto';
 
 @Injectable()
 export class SearchService {
@@ -756,5 +761,37 @@ export class SearchService {
         );
       },
     );
+  }
+
+  async getSearchHistory(
+    userId: number,
+    { take, lastItemId }: GetUserSearchHistoryListDto,
+  ): Promise<SearchHistoryDto[]> {
+    const paginationParams: IPaginationParams = this.getPaginationParams(
+      take,
+      lastItemId,
+    );
+
+    return await this.searchRepository.getUserSearchHistoryList(
+      userId,
+      paginationParams,
+    );
+  }
+
+  private getPaginationParams(
+    take: number,
+    lastItemId: number,
+  ): IPaginationParams {
+    let cursor;
+    let skip;
+
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    return { cursor, skip, take };
   }
 }

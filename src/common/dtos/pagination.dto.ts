@@ -4,7 +4,6 @@ import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class PaginationDto {
   @ApiProperty({
-    example: 15,
     description: '반환되는 결과의 개수',
     type: Number,
     required: true,
@@ -15,7 +14,6 @@ export class PaginationDto {
   take: number;
 
   @ApiProperty({
-    example: '1',
     description: '현재 페이지/첫 요청 시 0 or undefined',
     type: Number,
     required: false,
@@ -26,7 +24,6 @@ export class PaginationDto {
   currentPage: number;
 
   @ApiProperty({
-    example: 3,
     description: '이동할 페이지/첫 요청 시 0  or undefined',
     type: Number,
     required: false,
@@ -37,7 +34,6 @@ export class PaginationDto {
   targetPage: number;
 
   @ApiProperty({
-    example: 1,
     description: '반환된 내역의 첫번째 id/첫 요청 시 0  or undefined',
     type: Number,
     required: false,
@@ -48,7 +44,6 @@ export class PaginationDto {
   firstItemId: number;
 
   @ApiProperty({
-    example: 15,
     description: '반환된 내역의 마지막 id/첫 요청 시 0  or undefined',
     type: Number,
     required: false,

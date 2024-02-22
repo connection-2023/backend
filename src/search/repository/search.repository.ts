@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { SearchHistory } from '@prisma/client';
 import { TemporaryWeek, Week } from '@src/common/enum/enum';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
+import {
+  IPaginationParams,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { IEsLecture } from '@src/search/interface/search.interface';
 
@@ -114,6 +117,19 @@ export class SearchRepository {
         },
       },
       create: { searchTerm },
+    });
+  }
+
+  async getUserSearchHistoryList(
+    userId: number,
+    { cursor, skip, take }: IPaginationParams,
+  ) {
+    return this.prismaService.searchHistory.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      cursor,
+      skip,
+      take,
     });
   }
 }

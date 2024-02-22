@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IEsLecture } from '../../interface/search.interface';
 import { EsGenreDto } from './es-genre.dto';
 import { EsRegionDto } from './es-region.dto';
-import { EsSimpleLecturerDto } from '../es-simple-lecturer.dto';
+import { EsSimpleLecturerDto } from './es-simple-lecturer.dto';
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
 @Exclude()
