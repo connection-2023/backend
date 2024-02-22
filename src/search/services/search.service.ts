@@ -1,12 +1,19 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { SearchRepository } from '@src/search/repository/search.repository';
-import { BlockedLecturer, LikedLecture, LikedLecturer } from '@prisma/client';
+import {
+  BlockedLecturer,
+  LikedLecture,
+  LikedLecturer,
+  SearchHistory,
+} from '@prisma/client';
 import {
   IBlockedLecturerIdQuery,
   IBlockedLecturerQuery,
@@ -736,10 +743,11 @@ export class SearchService {
   }
 
   async saveSearchTerm(userId: number, searchTerm: string): Promise<void> {
-    const selectedHistory = await this.searchRepository.getUserSearchHistory(
-      userId,
-      searchTerm,
-    );
+    const selectedHistory =
+      await this.searchRepository.getUserSearchHistoryByTerm(
+        userId,
+        searchTerm,
+      );
 
     if (selectedHistory) {
       return await this.searchRepository.updateUserSearchHistory(
@@ -793,5 +801,26 @@ export class SearchService {
     }
 
     return { cursor, skip, take };
+  }
+
+  async deleteSearchHistory(userId: number, historyId: number): Promise<void> {
+    const selectedSearchHistory: SearchHistory =
+      await this.searchRepository.getSearchHistoryById(historyId);
+
+    if (!selectedSearchHistory) {
+      throw new NotFoundException(
+        `존재하지 않는 검색 기록입니다.`,
+        'SearchHistoryNotFound',
+      );
+    }
+
+    if (selectedSearchHistory.userId !== userId) {
+      throw new BadRequestException(
+        `유저 정보가 일치하지 않습니다.`,
+        'MismatchedUser',
+      );
+    }
+
+    return await this.searchRepository.deleteSearchHistoryById(historyId);
   }
 }

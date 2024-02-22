@@ -13,11 +13,11 @@ export class GeneralResponseDto {
   ) {
     class Temp extends this {
       @ApiProperty({
-        name: 'status',
+        name: 'statusCode',
         example: `${status}`,
         enum: HttpStatus,
       })
-      private readonly status: string;
+      private readonly statusCode: string;
 
       @ApiProperty({
         name: 'data',
