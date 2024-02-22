@@ -8,6 +8,7 @@ export class LectureScheduleDto implements LectureSchedule {
     type: Number,
   })
   id: number;
+
   lectureId: number;
   day: number;
 

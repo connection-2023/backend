@@ -23,18 +23,31 @@ export class EnrollLectureListDto {
   lecturer?: LecturerDto;
 
   @Expose()
-  @ApiProperty({ description: '클래스 일정', type: Date, isArray: true })
-  schedules?: Date[];
+  @ApiProperty({
+    description: '정기 스케쥴',
+    type: [RegularLectureScheduleDto],
+  })
+  regularLectureSchedule?: RegularLectureScheduleDto[];
 
   regularLectureStatus?: RegularLectureStatusDto;
+
+  @Expose()
+  @ApiProperty({ description: '원데이 스케쥴', type: LectureScheduleDto })
   lectureSchedule?: LectureScheduleDto;
 
   constructor(enrollLecture: EnrollLectureListDto) {
     Object.assign(this, enrollLecture);
-    this.schedules = enrollLecture.regularLectureStatus
+    this.regularLectureSchedule = enrollLecture.regularLectureStatus
       ? enrollLecture.regularLectureStatus.regularLectureSchedule.map(
-          (schedule) => schedule.startDateTime,
+          (schedule) => new RegularLectureScheduleDto(schedule),
         )
-      : [enrollLecture.lectureSchedule.startDateTime];
+      : undefined;
+
+    this.lectureSchedule = enrollLecture.lectureSchedule
+      ? delete enrollLecture.lectureSchedule.lecture &&
+        new LectureScheduleDto(enrollLecture.lectureSchedule)
+      : undefined;
+
+    console.log(this);
   }
 }
