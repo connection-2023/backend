@@ -14,6 +14,8 @@ import { EsLecturerDto } from '@src/search/dtos/response/es-lecturer.dto';
 import { GetLectureSearchResultDto } from '@src/search/dtos/get-lecture-search-result.dto';
 import { EsLectureDto } from '@src/search/dtos/response/es-lecture.dto';
 import { ApiSearchLectureList } from '@src/search/swagger-decorators/search-lecture-list.decorator';
+import { AllowUserLecturerAndGuestGuard } from '@src/common/guards/allow-user-lecturer-guest.guard';
+import { GetUserId } from '@src/common/decorator/get-user-id.decorator';
 
 @ApiTags('검색')
 @Controller('search')
@@ -22,12 +24,15 @@ export class SearchController {
 
   @ApiGetCombinedSearchResult()
   @Get()
-  @UseGuards(AllowUserAndGuestGuard)
+  @UseGuards(AllowUserLecturerAndGuestGuard)
   async getCombinedSearchResult(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() dto: GetCombinedSearchResultDto,
   ): Promise<CombinedSearchResultDto> {
     const userId: number = authorizedData?.user?.id;
+    if (userId && dto.value) {
+      await this.searchService.saveSearchTerm(userId, dto.value);
+    }
 
     return await this.searchService.getCombinedSearchResult(userId, dto);
   }
@@ -35,12 +40,15 @@ export class SearchController {
   @ApiSearchLecturerList()
   @SetResponseKey('lecturerList')
   @Get('/lecturer')
-  @UseGuards(AllowUserAndGuestGuard)
+  @UseGuards(AllowUserLecturerAndGuestGuard)
   async searchLecturerList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() dto: GetLecturerSearchResultDto,
   ): Promise<EsLecturerDto[]> {
     const userId: number = authorizedData?.user?.id;
+    if (userId && dto.value) {
+      await this.searchService.saveSearchTerm(userId, dto.value);
+    }
 
     return await this.searchService.getLecturerList(userId, dto);
   }
@@ -48,12 +56,15 @@ export class SearchController {
   @ApiSearchLectureList()
   @SetResponseKey('lectureList')
   @Get('/lecture')
-  @UseGuards(AllowUserAndGuestGuard)
+  @UseGuards(AllowUserLecturerAndGuestGuard)
   async searchLectureList(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @GetUserId() authorizedData: ValidateResult,
     @Query() dto: GetLectureSearchResultDto,
   ): Promise<EsLectureDto[]> {
     const userId: number = authorizedData?.user?.id;
+    if (userId && dto.value) {
+      await this.searchService.saveSearchTerm(userId, dto.value);
+    }
 
     return await this.searchService.getLectureList(userId, dto);
   }
