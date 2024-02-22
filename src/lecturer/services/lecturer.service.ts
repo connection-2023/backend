@@ -8,6 +8,7 @@ import {
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
+  IPaginationOptions,
   IPaginationParams,
   Id,
   PrismaTransaction,
@@ -37,6 +38,8 @@ import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto'
 import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
 import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
+import { GetMyReservationListDto } from '../dtos/request/get-my-reservation-list.dto';
+import { PaginationDto } from '@src/common/dtos/pagination.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -600,13 +603,13 @@ export class LecturerService implements OnModuleInit {
       lectureId,
     );
 
-    const paginationParams: IPaginationParams = this.getPaginationParams(
+    const paginationParams: IPaginationParams = this.getPaginationParams({
       currentPage,
       targetPage,
       firstItemId,
       lastItemId,
       take,
-    );
+    });
 
     const totalItemCount: number =
       await this.lecturerRepository.getLecturerLearnerCount(lecturerId, user);
@@ -682,13 +685,13 @@ export class LecturerService implements OnModuleInit {
     return { orderBy, user };
   }
 
-  private getPaginationParams(
-    currentPage: number,
-    targetPage: number,
-    firstItemId: number,
-    lastItemId: number,
-    take: number,
-  ): IPaginationParams {
+  private getPaginationParams({
+    currentPage,
+    targetPage,
+    firstItemId,
+    lastItemId,
+    take,
+  }: IPaginationOptions): IPaginationParams {
     let cursor;
     let skip;
     let updatedTake = take;
@@ -731,5 +734,14 @@ export class LecturerService implements OnModuleInit {
     userId: number,
   ): Promise<LecturerLearnerPassInfoDto[]> {
     return await this.lecturerRepository.getUserPassList(lecturerId, userId);
+  }
+
+  async getMyReservationList(lecturerId: number, dto: GetMyReservationListDto) {
+    const paginationParams: IPaginationParams = this.getPaginationParams(dto);
+
+    return await this.lecturerRepository.getLecturerReservationList(
+      lecturerId,
+      paginationParams,
+    );
   }
 }

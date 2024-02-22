@@ -62,7 +62,7 @@ export class ReservationDto implements Reservation {
 
   payment?: PaymentDto;
 
-  constructor(reservation: Partial<ReservationDto>) {
+  constructor(reservation: Partial<ReservationDto> = {}) {
     Object.assign(this, reservation);
 
     this.lectureSchedule = reservation.lectureSchedule

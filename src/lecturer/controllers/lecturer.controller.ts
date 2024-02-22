@@ -18,11 +18,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ApiCheckAvailableNickname } from '@src/lecturer/swagger-decorators/check-available-nickname-decorater';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import {
-  LecturerBasicProfile,
-  LecturerCoupon,
-  LecturerProfile,
-} from '@src/lecturer/interface/lecturer.interface';
+import { LecturerCoupon } from '@src/lecturer/interface/lecturer.interface';
 import { ApiGetMyCoupons } from '@src/lecturer/swagger-decorators/get-my-coupons-decorater';
 import { ApiUpdateLecturerNickname } from '@src/lecturer/swagger-decorators/update-lecturer-nickname-decorater';
 import { ApiGetLecturerProfile } from '@src/lecturer/swagger-decorators/get-my-lecturer-profile-decorater';
@@ -46,6 +42,9 @@ import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
 import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
 import { ApiGetLecturerLearnerPassList } from '../swagger-decorators/get-lecturer-learner-pass-list.decorator';
 import { plainToInstance } from 'class-transformer';
+import { GetMyReservationListDto } from '../dtos/request/get-my-reservation-list.dto';
+import { LecturerReservationDto } from '../dtos/response/lecturer-reservation.dto';
+import { ApiGetMyReservationList } from '../swagger-decorators/get-my-reservation.decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -223,5 +222,21 @@ export class LecturerController {
     );
 
     return { lectureProgress };
+  }
+
+  @ApiGetMyReservationList()
+  @SetResponseKey('myReservationList')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('/my-reservations')
+  async getMyReservationList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Query() getMyReservationListDto: GetMyReservationListDto,
+  ): Promise<LecturerReservationDto[]> {
+    const reservationList = await this.lecturerService.getMyReservationList(
+      authorizedData.lecturer.id,
+      getMyReservationListDto,
+    );
+
+    return plainToInstance(LecturerReservationDto, reservationList);
   }
 }
