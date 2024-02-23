@@ -1,17 +1,12 @@
 import { LectureWithDetailEnrollScheduleDto } from './get-lecture-with-detial-enroll-schedule.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { LectureNotificationDto } from '@src/common/dtos/lecture-notification.dto';
 import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
-import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 import { RegularLectureStatusDto } from '@src/common/dtos/regular-lecture-status.dto';
 import { ReservationDto } from '@src/common/dtos/reservation.dto';
-import { PaymentDto } from '@src/payments/dtos/payment.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
-import { scheduled } from 'rxjs';
 import { EnrollScheduleDetailPriceDto } from './enroll-schedule-detail-price.dto';
-import { DefaultSerializer } from 'v8';
 
 @Exclude()
 export class DetailEnrollScheduleDto {
