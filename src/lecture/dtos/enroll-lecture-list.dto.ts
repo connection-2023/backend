@@ -47,7 +47,5 @@ export class EnrollLectureListDto {
       ? delete enrollLecture.lectureSchedule.lecture &&
         new LectureScheduleDto(enrollLecture.lectureSchedule)
       : undefined;
-
-    console.log(this);
   }
 }
