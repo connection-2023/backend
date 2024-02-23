@@ -28,6 +28,10 @@ export class LectureWithDetailEnrollScheduleDto {
   @ApiProperty({ description: '지역', type: [RegionDto] })
   region?: RegionDto[];
 
+  @Expose()
+  @ApiProperty({ description: '위치 설명' })
+  locationDescription: string;
+
   lectureToRegion?: LectureToRegionDto[];
 
   constructor(lecture: Partial<ILecture>) {
