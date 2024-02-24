@@ -430,13 +430,13 @@ export class LecturerRepository {
       where: { payment: { lecturerId }, isEnabled: true },
       include: {
         user: { include: { userProfileImage: true } },
-        lectureSchedule: { include: { lecture: true } },
+        lectureSchedule: true,
         regularLectureStatus: {
           include: {
             regularLectureSchedule: true,
-            lecture: true,
           },
         },
+        lecture: true,
       },
       orderBy: {
         payment: {

@@ -5,26 +5,35 @@ import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { UserWithProfileImageDto } from '@src/common/dtos/user-with-profile-image.dto';
 import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
-
+@Exclude()
 class LecturerReservationOneDayScheduleDto extends OmitType(
   PaymentLectureScheduleDto,
   ['lecture'],
 ) {}
-
+@Exclude()
 class LecturerReservationRegularLectureStatusDto extends OmitType(
   PaymentRegularLectureStatusDto,
   ['lecture'],
 ) {}
+@Exclude()
+class LecturerReservationLectureDto extends SimpleLectureDto {
+  @ApiProperty({
+    type: Number,
+    description: '최대 수강생',
+  })
+  @Expose()
+  maxCapacity: number;
+}
 
 @Exclude()
 export class LecturerReservationDto extends ReservationDto {
   @ApiProperty({
-    type: SimpleLectureDto,
+    type: LecturerReservationLectureDto,
     description: '강의 정보',
   })
-  @Type(() => SimpleLectureDto)
+  @Type(() => LecturerReservationLectureDto)
   @Expose()
-  lecture: SimpleLectureDto;
+  lecture: LecturerReservationLectureDto;
 
   @ApiProperty({
     type: UserWithProfileImageDto,
