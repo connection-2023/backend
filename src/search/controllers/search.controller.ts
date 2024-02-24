@@ -29,6 +29,9 @@ import { SearchHistoryDto } from '../dtos/response/search-history.dto';
 import { plainToInstance } from 'class-transformer';
 import { ApiGetSearchHistory } from '../swagger-decorators/get-search-history.decorator';
 import { ApiDeleteSearchHistory } from '../swagger-decorators/delete-search-history.decorator';
+import { SearchPassListDto } from '../dtos/request/search-pass-list.dto';
+import { EsPassDto } from '../dtos/response/es-pass.dto ';
+import { ApiSearchPassList } from '../swagger-decorators/search-pass-list.decorator';
 
 @ApiTags('검색')
 @Controller('search')
@@ -80,6 +83,27 @@ export class SearchController {
     }
 
     return await this.searchService.getLectureList(userId, dto);
+  }
+
+  @ApiSearchPassList()
+  @SetResponseKey('searchedPassList')
+  @UseGuards(AllowUserLecturerAndGuestGuard)
+  @Get('/pass')
+  async searchPassList(
+    @GetUserId() authorizedData: ValidateResult,
+    @Query() dto: SearchPassListDto,
+  ) {
+    const userId: number = authorizedData?.user?.id;
+    if (userId && dto.value) {
+      await this.searchService.saveSearchTerm(userId, dto.value);
+    }
+
+    const passList: EsPassDto[] = await this.searchService.getPassList(
+      userId,
+      dto,
+    );
+
+    return plainToInstance(EsPassDto, passList);
   }
 
   @ApiGetSearchHistory()

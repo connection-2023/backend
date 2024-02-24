@@ -30,6 +30,7 @@ import { GetCombinedSearchResultDto } from '@src/search/dtos/request/get-combine
 import { GetLecturerSearchResultDto } from '@src/search/dtos/request/get-lecturer-search-result.dto';
 import {
   LecturerSortOptions,
+  PassSortOptions,
   SearchTypes,
   TimeOfDay,
 } from '@src/search/enum/search.enum';
@@ -49,6 +50,8 @@ import {
 } from '@src/common/interface/common-interface';
 import { GetUserSearchHistoryListDto } from '../dtos/request/get-user-search-history.dto';
 import { SearchHistoryDto } from '../dtos/response/search-history.dto';
+import { SearchPassListDto } from '../dtos/request/search-pass-list.dto';
+import { EsPassDto } from '../dtos/response/es-pass.dto ';
 
 @Injectable()
 export class SearchService {
@@ -370,46 +373,60 @@ export class SearchService {
   }
 
   private buildSearchQuery(searchType: SearchTypes, value: string) {
-    if (searchType === SearchTypes.LECTURER) {
-      return value
-        ? {
-            bool: {
-              should: [
-                { match: { 'nickname.nori': value } },
-                { match: { 'nickname.ngram': value } },
-                { match: { 'affiliation.nori': value } },
-                { match: { 'affiliation.ngram': value } },
-                { match: { 'genres.genre.nori': value } },
-                { match: { 'genres.genre.ngram': value } },
-                { match: { 'regions.administrativeDistrict.nori': value } },
-                { match: { 'regions.administrativeDistrict.ngram': value } },
-                { match: { 'regions.district.nori': value } },
-                { match: { 'regions.district.ngram': value } },
-              ],
-            },
-          }
-        : undefined;
-    }
-
-    if (searchType === SearchTypes.LECTURE) {
-      return value
-        ? {
-            bool: {
-              should: [
-                { match: { 'title.nori': value } },
-                { match: { 'title.ngram': value } },
-                { match: { 'genres.genre.nori': value } },
-                { match: { 'genres.genre.ngram': value } },
-                { match: { 'regions.administrativeDistrict.nori': value } },
-                { match: { 'regions.administrativeDistrict.ngram': value } },
-                { match: { 'regions.district.nori': value } },
-                { match: { 'regions.district.ngram': value } },
-                { match: { 'lecturer.nickname.nori': value } },
-                { match: { 'lecturer.nickname.ngram': value } },
-              ],
-            },
-          }
-        : undefined;
+    switch (searchType) {
+      case SearchTypes.LECTURER:
+        return value
+          ? {
+              bool: {
+                should: [
+                  { match: { 'nickname.nori': value } },
+                  { match: { 'nickname.ngram': value } },
+                  { match: { 'affiliation.nori': value } },
+                  { match: { 'affiliation.ngram': value } },
+                  { match: { 'genres.genre.nori': value } },
+                  { match: { 'genres.genre.ngram': value } },
+                  { match: { 'regions.administrativeDistrict.nori': value } },
+                  { match: { 'regions.administrativeDistrict.ngram': value } },
+                  { match: { 'regions.district.nori': value } },
+                  { match: { 'regions.district.ngram': value } },
+                ],
+              },
+            }
+          : undefined;
+      case SearchTypes.LECTURE:
+        return value
+          ? {
+              bool: {
+                should: [
+                  { match: { 'title.nori': value } },
+                  { match: { 'title.ngram': value } },
+                  { match: { 'genres.genre.nori': value } },
+                  { match: { 'genres.genre.ngram': value } },
+                  { match: { 'regions.administrativeDistrict.nori': value } },
+                  { match: { 'regions.administrativeDistrict.ngram': value } },
+                  { match: { 'regions.district.nori': value } },
+                  { match: { 'regions.district.ngram': value } },
+                  { match: { 'lecturer.nickname.nori': value } },
+                  { match: { 'lecturer.nickname.ngram': value } },
+                ],
+              },
+            }
+          : undefined;
+      case SearchTypes.PASS:
+        return value
+          ? {
+              bool: {
+                should: [
+                  { match: { 'title.nori': value } },
+                  { match: { 'title.ngram': value } },
+                  { match: { 'lecturer.nickname.nori': value } },
+                  { match: { 'lecturer.nickname.ngram': value } },
+                  { match: { 'lecture.title.nori': value } },
+                  { match: { 'lecture.title.ngram': value } },
+                ],
+              },
+            }
+          : undefined;
     }
   }
 
@@ -822,5 +839,72 @@ export class SearchService {
     }
 
     return await this.searchRepository.deleteSearchHistoryById(historyId);
+  }
+
+  async getPassList(
+    userId: number,
+    dto: SearchPassListDto,
+  ): Promise<EsPassDto[]> {
+    const { lecturerIdQueries } = await this.getBlockedLecturerIds(userId);
+
+    return await this.detailSearchPassesWithElasticsearch({
+      ...dto,
+      lecturerIdQueries,
+    });
+  }
+
+  private async detailSearchPassesWithElasticsearch({
+    take,
+    sortOption,
+    value,
+    searchAfter,
+    lecturerIdQueries,
+  }: IPassSearchParams): Promise<IEsPass[]> {
+    const searchQuery = this.buildSearchQuery(SearchTypes.PASS, value);
+    const sortQuery: any[] = this.buildPassSortQuery(sortOption);
+
+    const { hits } = await this.esService.search({
+      index: 'lecture_pass',
+      size: take,
+      query: {
+        bool: {
+          must: [searchQuery].filter(Boolean),
+          must_not: lecturerIdQueries,
+        },
+      },
+      search_after: searchAfter,
+      sort: sortQuery,
+    });
+
+    if (typeof hits.total === 'object' && hits.total.value > 0) {
+      return hits.hits.map(
+        (hit: any): IEsPass => ({
+          ...hit._source,
+          searchAfter: hit.sort,
+        }),
+      );
+    }
+  }
+
+  private buildPassSortQuery(sortOption: PassSortOptions) {
+    switch (sortOption) {
+      case PassSortOptions.LATEST:
+        return [
+          { updatedat: { order: 'desc' } },
+          { _score: { order: 'desc' } },
+        ];
+      case PassSortOptions.LOWEST_PRICE:
+        return [
+          { price: { order: 'asc' } },
+          { updatedat: { order: 'desc' } },
+          { _score: { order: 'desc' } },
+        ];
+      case PassSortOptions.POPULAR:
+        return [
+          { salescount: { order: 'desc' } },
+          { updatedat: { order: 'desc' } },
+          { _score: { order: 'desc' } },
+        ];
+    }
   }
 }
