@@ -3,7 +3,11 @@ import {
   DanceMethod,
   TemporaryWeek,
 } from '@src/common/enum/enum';
-import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
+import {
+  LecturerSortOptions,
+  PassSortOptions,
+  TimeOfDay,
+} from '../enum/search.enum';
 
 export interface IEsLecture {
   id: number;
@@ -87,6 +91,7 @@ export interface ILecturerSearchParams {
 
 export interface IPassSearchParams {
   take: number;
+  sortOption?: PassSortOptions;
   value?: string;
   searchAfter?: number[];
   lecturerIdQueries?: IBlockedLecturerIdQuery[];
