@@ -610,7 +610,7 @@ export class LectureService {
       return;
     }
 
-    const schedules = await this.lectureRepository.getEnrollSchedule(
+    const onedaySchedules = await this.lectureRepository.getEnrollSchedule(
       userId,
       startDate,
       endDate,
@@ -623,7 +623,9 @@ export class LectureService {
         endDate,
       );
 
-    return new EnrollLectureScheduleDto(schedules, regularSchedules);
+    const schedules = [...onedaySchedules, ...regularSchedules];
+
+    return schedules.map((schedule) => new EnrollLectureScheduleDto(schedule));
   }
 
   async getDetailEnrollSchedule(

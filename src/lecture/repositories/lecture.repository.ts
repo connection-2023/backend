@@ -343,7 +343,7 @@ export class LectureRepository {
         reservation: { some: { userId, isEnabled: true } },
         startDateTime: { gte: startDate, lte: endDate },
       },
-      include: { lecture: true },
+      include: { lecture: { include: { lectureMethod: true } } },
       orderBy: { startDateTime: 'asc' },
     });
   }
@@ -360,7 +360,11 @@ export class LectureRepository {
         },
         startDateTime: { gte: startDate, lte: endDate },
       },
-      include: { regularLectureStatus: { select: { lecture: true } } },
+      include: {
+        regularLectureStatus: {
+          select: { lecture: { include: { lectureMethod: true } } },
+        },
+      },
       orderBy: { startDateTime: 'asc' },
     });
   }

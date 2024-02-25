@@ -11,9 +11,9 @@ export function ApiGetEnrollLectureSchedules() {
       summary: '유저 신청한 클래스 스케쥴 조회',
     }),
     ApiBearerAuth(),
-    GeneralResponseDto.swaggerBuilder(
+    DetailResponseDto.swaggerBuilder(
       HttpStatus.OK,
-      'enrollSchedules',
+      'schedules',
       EnrollLectureScheduleDto,
     ),
   );
