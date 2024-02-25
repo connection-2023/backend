@@ -339,7 +339,7 @@ export class LectureRepository {
   ): Promise<LectureScheduleDto[]> {
     return await this.prismaService.lectureSchedule.findMany({
       where: {
-        reservation: { some: { userId } },
+        reservation: { some: { userId, isEnabled: true } },
         startDateTime: { gte: startDate, lte: endDate },
       },
       include: { lecture: true },
@@ -354,7 +354,9 @@ export class LectureRepository {
   ): Promise<RegularLectureSchedule[]> {
     return await this.prismaService.regularLectureSchedule.findMany({
       where: {
-        regularLectureStatus: { reservation: { some: { userId } } },
+        regularLectureStatus: {
+          reservation: { some: { userId, isEnabled: true } },
+        },
         startDateTime: { gte: startDate, lte: endDate },
       },
       include: { regularLectureStatus: { select: { lecture: true } } },

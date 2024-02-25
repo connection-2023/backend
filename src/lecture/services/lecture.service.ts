@@ -604,7 +604,7 @@ export class LectureService {
     const endDate = new Date(year, month, 1, 8, 59, 59, 999);
 
     const existEnrollLecture = await this.prismaService.reservation.findFirst({
-      where: { userId },
+      where: { userId, isEnabled: true },
     });
     if (!existEnrollLecture) {
       return;
@@ -1077,7 +1077,7 @@ export class LectureService {
     query: GetEnrollLectureListQueryDto,
   ) {
     const { type, page, pageSize } = query;
-    const where = { userId };
+    const where = { userId, isEnable: true };
     const currentTime = new Date();
     const skip = page * pageSize;
     const take = pageSize;
