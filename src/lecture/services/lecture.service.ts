@@ -646,21 +646,6 @@ export class LectureService {
       throw new BadRequestException('Does not exist schedule');
     }
 
-    const { paymentMethod } = enrollScheduleDetail['payment'];
-
-    if (paymentMethod.name === '가상계좌') {
-      const userBankAccount = await this.lectureRepository.getUserBankAccount(
-        userId,
-      );
-
-      if (!userBankAccount) {
-        throw new BadRequestException('Does not exist account');
-      }
-
-      enrollScheduleDetail['payment']['userBankAccountId'] = userBankAccount.id;
-      console.log(enrollScheduleDetail);
-    }
-
     return new DetailEnrollScheduleDto(enrollScheduleDetail);
   }
 
