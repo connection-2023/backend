@@ -1070,7 +1070,7 @@ export class LectureService {
     query: GetEnrollLectureListQueryDto,
   ) {
     const { type, page, pageSize } = query;
-    const where = { userId, isEnable: true };
+    const where = { userId, isEnabled: true };
     const currentTime = new Date();
     const skip = page * pageSize;
     const take = pageSize;

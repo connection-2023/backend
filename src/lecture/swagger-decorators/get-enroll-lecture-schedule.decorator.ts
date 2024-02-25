@@ -13,7 +13,7 @@ export function ApiGetEnrollLectureSchedules() {
     ApiBearerAuth(),
     DetailResponseDto.swaggerBuilder(
       HttpStatus.OK,
-      'schedules',
+      'enrollSchedules',
       EnrollLectureScheduleDto,
     ),
   );

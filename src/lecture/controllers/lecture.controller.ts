@@ -168,7 +168,7 @@ export class LectureController {
   }
 
   @ApiGetEnrollLectureSchedules()
-  @SetResponseKey('schedules')
+  @SetResponseKey('enrollSchedules')
   @UseGuards(UserAccessTokenGuard)
   @Get('enroll-lecture-calenders')
   async readManyEnrollLectureWithUserId(
