@@ -93,7 +93,7 @@ export class PassSituationDto {
   userPass: PassSituationUserPassDto;
 
   @ApiProperty({
-    type: [PassSituationUserPassDto],
+    type: [PassSituationReservationDto],
     description: '예약 정보',
     nullable: true,
   })
