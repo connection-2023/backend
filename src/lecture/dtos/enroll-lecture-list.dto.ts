@@ -19,7 +19,6 @@ export class EnrollLectureListDto {
 
   @Expose()
   @ApiProperty({ description: '강사 프로필', type: LecturerDto })
-  @Type(() => LecturerDto)
   lecturer?: LecturerDto;
 
   @Expose()
@@ -47,5 +46,7 @@ export class EnrollLectureListDto {
       ? delete enrollLecture.lectureSchedule.lecture &&
         new LectureScheduleDto(enrollLecture.lectureSchedule)
       : undefined;
+
+    this.lecturer = new LecturerDto(enrollLecture.lecture.lecturer);
   }
 }
