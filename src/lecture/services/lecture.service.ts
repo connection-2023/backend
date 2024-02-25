@@ -604,13 +604,13 @@ export class LectureService {
     const endDate = new Date(year, month, 1, 8, 59, 59, 999);
 
     const existEnrollLecture = await this.prismaService.reservation.findFirst({
-      where: { userId },
+      where: { userId, isEnabled: true },
     });
     if (!existEnrollLecture) {
       return;
     }
 
-    const schedules = await this.lectureRepository.getEnrollSchedule(
+    const onedaySchedules = await this.lectureRepository.getEnrollSchedule(
       userId,
       startDate,
       endDate,
@@ -623,7 +623,9 @@ export class LectureService {
         endDate,
       );
 
-    return new EnrollLectureScheduleDto(schedules, regularSchedules);
+    const schedules = [...onedaySchedules, ...regularSchedules];
+
+    return schedules.map((schedule) => new EnrollLectureScheduleDto(schedule));
   }
 
   async getDetailEnrollSchedule(
@@ -631,31 +633,22 @@ export class LectureService {
     userId: number,
     { type }: EnrollScheduleDetailQueryDto,
   ) {
-    if (type === '원데이') {
-      const enrollScheduleDetail =
-        await this.lectureRepository.getDetailEnrollSchedule(
-          scheduleId,
-          userId,
-        );
+    const enrollScheduleDetail =
+      type === '원데이'
+        ? await this.lectureRepository.getDetailEnrollSchedule(
+            scheduleId,
+            userId,
+          )
+        : await this.lectureRepository.getDetailEnrollRegularSchedule(
+            scheduleId,
+            userId,
+          );
 
-      if (!enrollScheduleDetail) {
-        throw new BadRequestException('Does not exist schedule');
-      }
-
-      return new DetailEnrollScheduleDto(enrollScheduleDetail);
-    } else {
-      const enrollScheduleDetail =
-        await this.lectureRepository.getDetailEnrollRegularSchedule(
-          scheduleId,
-          userId,
-        );
-
-      if (!enrollScheduleDetail) {
-        throw new BadRequestException('Does not exist schedule');
-      }
-
-      return new DetailEnrollScheduleDto(enrollScheduleDetail);
+    if (!enrollScheduleDetail) {
+      throw new BadRequestException('Does not exist schedule');
     }
+
+    return new DetailEnrollScheduleDto(enrollScheduleDetail);
   }
 
   async readManyLectureSchedulesWithLecturerId(
@@ -1077,7 +1070,7 @@ export class LectureService {
     query: GetEnrollLectureListQueryDto,
   ) {
     const { type, page, pageSize } = query;
-    const where = { userId };
+    const where = { userId, isEnabled: true };
     const currentTime = new Date();
     const skip = page * pageSize;
     const take = pageSize;

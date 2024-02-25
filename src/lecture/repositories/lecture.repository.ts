@@ -14,6 +14,7 @@ import {
   RegularLectureStatus,
   LecturerLearner,
   LectureLocation,
+  UserBankAccount,
 } from '@prisma/client';
 import { ConflictException, Injectable } from '@nestjs/common';
 import {
@@ -339,10 +340,10 @@ export class LectureRepository {
   ): Promise<LectureScheduleDto[]> {
     return await this.prismaService.lectureSchedule.findMany({
       where: {
-        reservation: { some: { userId } },
+        reservation: { some: { userId, isEnabled: true } },
         startDateTime: { gte: startDate, lte: endDate },
       },
-      include: { lecture: true },
+      include: { lecture: { include: { lectureMethod: true } } },
       orderBy: { startDateTime: 'asc' },
     });
   }
@@ -354,10 +355,16 @@ export class LectureRepository {
   ): Promise<RegularLectureSchedule[]> {
     return await this.prismaService.regularLectureSchedule.findMany({
       where: {
-        regularLectureStatus: { reservation: { some: { userId } } },
+        regularLectureStatus: {
+          reservation: { some: { userId, isEnabled: true } },
+        },
         startDateTime: { gte: startDate, lte: endDate },
       },
-      include: { regularLectureStatus: { select: { lecture: true } } },
+      include: {
+        regularLectureStatus: {
+          select: { lecture: { include: { lectureMethod: true } } },
+        },
+      },
       orderBy: { startDateTime: 'asc' },
     });
   }
@@ -381,7 +388,7 @@ export class LectureRepository {
             },
           },
         },
-        payment: true,
+        payment: { include: { paymentMethod: true } },
       },
     });
   }
@@ -398,7 +405,7 @@ export class LectureRepository {
         userId,
       },
       include: {
-        payment: true,
+        payment: { include: { paymentMethod: true } },
         regularLectureStatus: {
           select: {
             regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
@@ -413,6 +420,12 @@ export class LectureRepository {
           },
         },
       },
+    });
+  }
+
+  async getUserBankAccount(userId: number): Promise<UserBankAccount> {
+    return await this.prismaService.userBankAccount.findFirst({
+      where: { userId },
     });
   }
 

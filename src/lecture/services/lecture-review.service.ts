@@ -202,15 +202,6 @@ export class LectureReviewService {
       lectureId,
     }: ReadManyLecturerMyReviewQueryDto,
   ) {
-    const existMyReviewWithLecturerId =
-      await this.prismaService.lectureReview.findFirst({
-        where: { lecture: { lecturerId } },
-      });
-
-    if (!existMyReviewWithLecturerId) {
-      return;
-    }
-
     let cursor;
     let skip;
     let count: number;
