@@ -22,6 +22,10 @@ export class EnrollScheduleDetailPriceDto {
   @Type(() => Number)
   userBankAccountId?: number;
 
+  @Expose()
+  @ApiProperty({ description: 'order id' })
+  orderId: string;
+
   constructor(payment: Partial<EnrollScheduleDetailPriceDto>) {
     Object.assign(this, payment);
   }
