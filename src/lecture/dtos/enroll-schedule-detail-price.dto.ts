@@ -17,6 +17,11 @@ export class EnrollScheduleDetailPriceDto {
   @Type(() => PaymentMethodDto)
   paymentMethod: PaymentMethodDto;
 
+  @Expose()
+  @ApiProperty({ description: '유저 계좌 id', type: Number })
+  @Type(() => Number)
+  userBankAccountId?: number;
+
   constructor(payment: Partial<EnrollScheduleDetailPriceDto>) {
     Object.assign(this, payment);
   }

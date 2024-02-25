@@ -631,31 +631,37 @@ export class LectureService {
     userId: number,
     { type }: EnrollScheduleDetailQueryDto,
   ) {
-    if (type === '원데이') {
-      const enrollScheduleDetail =
-        await this.lectureRepository.getDetailEnrollSchedule(
-          scheduleId,
-          userId,
-        );
+    const enrollScheduleDetail =
+      type === '원데이'
+        ? await this.lectureRepository.getDetailEnrollSchedule(
+            scheduleId,
+            userId,
+          )
+        : await this.lectureRepository.getDetailEnrollRegularSchedule(
+            scheduleId,
+            userId,
+          );
 
-      if (!enrollScheduleDetail) {
-        throw new BadRequestException('Does not exist schedule');
-      }
-
-      return new DetailEnrollScheduleDto(enrollScheduleDetail);
-    } else {
-      const enrollScheduleDetail =
-        await this.lectureRepository.getDetailEnrollRegularSchedule(
-          scheduleId,
-          userId,
-        );
-
-      if (!enrollScheduleDetail) {
-        throw new BadRequestException('Does not exist schedule');
-      }
-
-      return new DetailEnrollScheduleDto(enrollScheduleDetail);
+    if (!enrollScheduleDetail) {
+      throw new BadRequestException('Does not exist schedule');
     }
+
+    const { paymentMethod } = enrollScheduleDetail['payment'];
+
+    if (paymentMethod.name === '가상계좌') {
+      const userBankAccount = await this.lectureRepository.getUserBankAccount(
+        userId,
+      );
+
+      if (!userBankAccount) {
+        throw new BadRequestException('Does not exist account');
+      }
+
+      enrollScheduleDetail['payment']['userBankAccountId'] = userBankAccount.id;
+      console.log(enrollScheduleDetail);
+    }
+
+    return new DetailEnrollScheduleDto(enrollScheduleDetail);
   }
 
   async readManyLectureSchedulesWithLecturerId(

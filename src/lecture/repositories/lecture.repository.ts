@@ -14,6 +14,7 @@ import {
   RegularLectureStatus,
   LecturerLearner,
   LectureLocation,
+  UserBankAccount,
 } from '@prisma/client';
 import { ConflictException, Injectable } from '@nestjs/common';
 import {
@@ -383,7 +384,7 @@ export class LectureRepository {
             },
           },
         },
-        payment: true,
+        payment: { include: { paymentMethod: true } },
       },
     });
   }
@@ -400,7 +401,7 @@ export class LectureRepository {
         userId,
       },
       include: {
-        payment: true,
+        payment: { include: { paymentMethod: true } },
         regularLectureStatus: {
           select: {
             regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
@@ -415,6 +416,12 @@ export class LectureRepository {
           },
         },
       },
+    });
+  }
+
+  async getUserBankAccount(userId: number): Promise<UserBankAccount> {
+    return await this.prismaService.userBankAccount.findFirst({
+      where: { userId },
     });
   }
 
