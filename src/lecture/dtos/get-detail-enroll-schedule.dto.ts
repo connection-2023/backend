@@ -56,6 +56,11 @@ export class DetailEnrollScheduleDto {
   @ApiProperty({ description: '완료 여부', type: Boolean })
   isCompleted: boolean;
 
+  @Expose()
+  @ApiProperty({ description: '신청 인원', type: Number })
+  @Type(() => Number)
+  participants: number;
+
   regularLectureStatus?: RegularLectureStatusDto;
 
   constructor(reservation: Partial<ReservationDto>) {
