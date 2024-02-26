@@ -31,15 +31,6 @@ import { ApiGetPass } from '../swagger-decorators/get-pass.decorator';
 export class PassController {
   constructor(private passService: PassService) {}
 
-  @ApiGetPass()
-  @SetResponseKey('pass')
-  @Get('/:passId')
-  async getPass(
-    @Param('passId', ParseIntPipe) passId: number,
-  ): Promise<PassWithLecturerDto> {
-    return await this.passService.getPass(passId);
-  }
-
   @ApiCreateLecturePass()
   @Post('/lecture')
   @UseGuards(LecturerAccessTokenGuard)
@@ -64,6 +55,15 @@ export class PassController {
       AuthorizedData.lecturer.id,
       getMyIssuedPassListDto,
     );
+  }
+
+  @ApiGetPass()
+  @SetResponseKey('pass')
+  @Get('/:passId')
+  async getPass(
+    @Param('passId', ParseIntPipe) passId: number,
+  ): Promise<PassWithLecturerDto> {
+    return await this.passService.getPass(passId);
   }
 
   @ApiGetMyIssuedPass()
