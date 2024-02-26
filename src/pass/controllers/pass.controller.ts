@@ -23,11 +23,22 @@ import { ApiGetLecturePassList } from '@src/pass/swagger-decorators/get-lecture-
 import { ApiGetLecturerPassList } from '@src/pass/swagger-decorators/get-lecturer-pass-list.decorator';
 import { MyPassDto } from '../dtos/pass.dto';
 import { ApiGetMyIssuedPass } from '../swagger-decorators/get-my-issued-pass.decorator';
+import { PassWithLecturerDto } from '../dtos/response/pass-with-lecturer.dto';
+import { ApiGetPass } from '../swagger-decorators/get-pass.decorator';
 
 @ApiTags('패스권')
 @Controller('passes')
 export class PassController {
   constructor(private passService: PassService) {}
+
+  @ApiGetPass()
+  @SetResponseKey('pass')
+  @Get('/:passId')
+  async getPass(
+    @Param('passId', ParseIntPipe) passId: number,
+  ): Promise<PassWithLecturerDto> {
+    return await this.passService.getPass(passId);
+  }
 
   @ApiCreateLecturePass()
   @Post('/lecture')
