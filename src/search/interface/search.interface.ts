@@ -40,6 +40,7 @@ export interface IEsLecturer {
   profilecardimageurl: string;
   updatedat: Date;
   reviewcount: number;
+  availablemonths: number;
   isLiked: boolean | undefined;
   lecturerImages: string[];
   searchAfter: number[];
@@ -54,6 +55,8 @@ export interface IEsPass {
   title: string;
   updatedat: Date;
   searchAfter: number[];
+  maxusagecount: number;
+  availablemonths: number;
 }
 
 export interface IEsLectureTarget {
