@@ -286,8 +286,8 @@ export class SearchService {
             { match: { 'title.ngram': value } },
             { match: { 'lecturer.nickname.nori': value } },
             { match: { 'lecturer.nickname.ngram': value } },
-            { match: { 'lecture.title.nori': value } },
-            { match: { 'lecture.title.ngram': value } },
+            { match: { 'lecturePassTarget.title.nori': value } },
+            { match: { 'lecturePassTarget.title.ngram': value } },
           ],
           must_not: lecturerIdQueries,
         },
@@ -421,8 +421,8 @@ export class SearchService {
                   { match: { 'title.ngram': value } },
                   { match: { 'lecturer.nickname.nori': value } },
                   { match: { 'lecturer.nickname.ngram': value } },
-                  { match: { 'lecture.title.nori': value } },
-                  { match: { 'lecture.title.ngram': value } },
+                  { match: { 'lecturePassTarget.title.nori': value } },
+                  { match: { 'lecturePassTarget.title.ngram': value } },
                 ],
               },
             }
@@ -844,7 +844,7 @@ export class SearchService {
   async getPassList(
     userId: number,
     dto: SearchPassListDto,
-  ): Promise<EsPassDto[]> {
+  ): Promise<IEsPass[]> {
     const { lecturerIdQueries } = await this.getBlockedLecturerIds(userId);
 
     return await this.detailSearchPassesWithElasticsearch({

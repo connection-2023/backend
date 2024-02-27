@@ -3,7 +3,7 @@ import {
   IEsPass,
   IEsSimpleLecturer,
 } from '@src/search/interface/search.interface';
-import { Exclude, Expose, Type } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
 @Exclude()
 class EsPassTargetDto {
@@ -73,10 +73,29 @@ export class EsPassDto {
   title: string;
 
   @ApiProperty({
+    description: '최대 사용 횟수',
+  })
+  @Transform(({ obj }) => obj.maxusagecount, {
+    toClassOnly: true,
+  })
+  @Expose()
+  maxUsageCount: number;
+
+  @ApiProperty({
+    description: '사용 가능 기간',
+  })
+  @Transform(({ obj }) => obj.availablemonths, {
+    toClassOnly: true,
+  })
+  @Expose()
+  availableMonths: number;
+
+  @ApiProperty({
     description: '패스권 적용 대상',
     type: [EsPassTargetDto],
   })
   @Expose()
+  @Type(() => EsPassTargetDto)
   lecturePassTarget: EsPassTargetDto[];
 
   @ApiProperty({
@@ -88,6 +107,10 @@ export class EsPassDto {
   lecturer: EsPassLecturerDto;
 
   constructor(pass: Partial<IEsPass>) {
-    Object.assign(this, pass);
+    if (pass) {
+      Object.assign(this, pass);
+      this.maxUsageCount = pass.maxusagecount;
+      this.availableMonths = pass.availablemonths;
+    }
   }
 }
