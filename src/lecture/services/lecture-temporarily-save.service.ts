@@ -327,15 +327,13 @@ export class LectureTemporarilySaveService {
         const { day } = temporaryLectureDayObj;
         const temporaryLectureDayScheduelTransFormData = {
           day,
-          startDateTime: [],
+          dateTime: [],
         };
 
         for (const {
-          startDateTime,
+          dateTime,
         } of temporaryLectureDayObj.temporaryLectureDaySchedule) {
-          temporaryLectureDayScheduelTransFormData['startDateTime'].push(
-            startDateTime,
-          );
+          temporaryLectureDayScheduelTransFormData['dateTime'].push(dateTime);
         }
         schedules.push(temporaryLectureDayScheduelTransFormData);
       }
