@@ -151,7 +151,7 @@ export class LectureTemporarilySaveService {
                 this.createLectureScheduleInputData(
                   lectureId,
                   schedule.date,
-                  schedule.startDateTime,
+                  schedule.dateTime,
                 );
 
               await this.temporaryLectureRepository.trxCreateTemporaryLectureSchedule(
@@ -174,7 +174,7 @@ export class LectureTemporarilySaveService {
             }
             for (const daySchedule of schedules) {
               const { day } = daySchedule;
-              const { startDateTime } = daySchedule;
+              const { dateTime } = daySchedule;
               const temporaryLectureDayInputData = {
                 lectureId,
                 day,
@@ -187,10 +187,7 @@ export class LectureTemporarilySaveService {
                 );
               const lectureDayId = createdTemporaryLectureDay.id;
               const temporaryLectureDayScheduleInputData =
-                this.createLectureDayScheduleInputData(
-                  lectureDayId,
-                  startDateTime,
-                );
+                this.createLectureDayScheduleInputData(lectureDayId, dateTime);
 
               await this.temporaryLectureRepository.trxCreateTemporaryLectureDaySchedule(
                 transaction,
@@ -304,11 +301,11 @@ export class LectureTemporarilySaveService {
         });
       const groupedMap = new Map();
 
-      temporaryLectureDateScheduleArr.forEach(({ dateTime, startDateTime }) => {
-        if (!groupedMap.has(dateTime)) {
-          groupedMap.set(dateTime, { dateTime, startDateTime: [] });
+      temporaryLectureDateScheduleArr.forEach(({ date, dateTime }) => {
+        if (!groupedMap.has(date)) {
+          groupedMap.set(date, { date, dateTime: [] });
         }
-        groupedMap.get(dateTime).startDateTime.push(startDateTime);
+        groupedMap.get(date).dateTime.push(dateTime);
       });
 
       const schedules = Array.from(groupedMap.values());
@@ -473,8 +470,8 @@ export class LectureTemporarilySaveService {
       schedules.map((schedule) => {
         return {
           lectureId: lectureId,
-          dateTime: date,
-          startDateTime: schedule,
+          date,
+          dateTime: schedule,
           numberOfParticipants: 0,
         };
       });
@@ -573,11 +570,11 @@ export class LectureTemporarilySaveService {
 
   private createLectureDayScheduleInputData(
     lectureDayId: number,
-    startDateTime: string[],
+    dateTime: string[],
   ) {
-    const temporaryLectureDayScheduel = startDateTime.map((time) => ({
+    const temporaryLectureDayScheduel = dateTime.map((time) => ({
       lectureDayId,
-      startDateTime: time,
+      dateTime: time,
     }));
     return temporaryLectureDayScheduel;
   }
