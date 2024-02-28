@@ -228,9 +228,9 @@ export class UpsertTemporaryLectureDto {
 
   @ApiProperty({
     example: [
-      { day: ['월', '화'], date: 'date', startDateTime: ['13:00', '14:00'] },
-      { day: ['월', '화'], date: 'date', startDateTime: ['13:00', '14:00'] },
-      { day: ['월', '화'], date: 'date', startDateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], date: 'date', dateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], date: 'date', dateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], date: 'date', dateTime: ['13:00', '14:00'] },
     ],
     description: '클래스 일정',
     required: false,
