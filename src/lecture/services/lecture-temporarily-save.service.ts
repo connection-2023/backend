@@ -304,11 +304,11 @@ export class LectureTemporarilySaveService {
         });
       const groupedMap = new Map();
 
-      temporaryLectureDateScheduleArr.forEach(({ date, startDateTime }) => {
-        if (!groupedMap.has(date)) {
-          groupedMap.set(date, { date, startDateTime: [] });
+      temporaryLectureDateScheduleArr.forEach(({ dateTime, startDateTime }) => {
+        if (!groupedMap.has(dateTime)) {
+          groupedMap.set(dateTime, { dateTime, startDateTime: [] });
         }
-        groupedMap.get(date).startDateTime.push(startDateTime);
+        groupedMap.get(dateTime).startDateTime.push(startDateTime);
       });
 
       const schedules = Array.from(groupedMap.values());
@@ -473,7 +473,7 @@ export class LectureTemporarilySaveService {
       schedules.map((schedule) => {
         return {
           lectureId: lectureId,
-          date,
+          dateTime: date,
           startDateTime: schedule,
           numberOfParticipants: 0,
         };
