@@ -6,6 +6,7 @@ export class UserPaymentsHistoryWithCountDto {
     type: Number,
   })
   totalItemCount: number;
+
   @ApiProperty({
     type: [PaymentDto],
     description: '결제 내역',
@@ -21,7 +22,7 @@ export class UserPaymentsHistoryWithCountDto {
       ? userPaymentsHistory.map(
           (paymentHistory) => new PaymentDto(paymentHistory),
         )
-      : null;
+      : [];
 
     Object.assign(this);
   }
