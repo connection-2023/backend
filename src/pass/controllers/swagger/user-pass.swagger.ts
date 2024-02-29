@@ -38,4 +38,20 @@ export const ApiUserPass: ApiOperator<keyof UserPassController> = {
       ),
     );
   },
+
+  GetUserPassByLectureId: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'usablePassList',
+        UserPassDto,
+        { isArray: true },
+      ),
+    );
+  },
 };
