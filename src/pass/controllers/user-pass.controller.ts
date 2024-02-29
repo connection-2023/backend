@@ -8,7 +8,7 @@ import { GetUserPassListDto } from '../dtos/request/get-user-pass-list.dto';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiUserPass } from './swagger/event.swagger';
+import { ApiUserPass } from './swagger/user-pass.swagger';
 
 @ApiTags('유저 패스권')
 @Controller('user-passes')
