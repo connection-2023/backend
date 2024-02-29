@@ -5,6 +5,7 @@ import { PaymentStatusDto } from '../payment-status.dto';
 import { PaymentCouponUsageDto } from '../payment-coupon-usage.dto';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
 import { LecturerPaymentStatus } from '@src/payments/enum/payment.enum';
+import { BasicUserDto } from '@src/common/dtos/basic-user.dto';
 @Exclude()
 class PrivateLecturerPaymentStatus extends PaymentStatusDto {
   @ApiProperty({
@@ -31,6 +32,14 @@ export class LecturerPaymentItemDto extends BaseReturnWithSwaggerDto {
   })
   @Expose()
   orderName: string;
+
+  @ApiProperty({
+    type: BasicUserDto,
+    description: '결제자 유저 정보',
+  })
+  @Type(() => BasicUserDto)
+  @Expose()
+  user: BasicUserDto;
 
   @ApiProperty({
     type: Number,

@@ -32,6 +32,7 @@ import { ApiDeleteSearchHistory } from '../swagger-decorators/delete-search-hist
 import { SearchPassListDto } from '../dtos/request/search-pass-list.dto';
 import { EsPassDto } from '../dtos/response/es-pass.dto ';
 import { ApiSearchPassList } from '../swagger-decorators/search-pass-list.decorator';
+import { IEsPass } from '../interface/search.interface';
 
 @ApiTags('검색')
 @Controller('search')
@@ -92,13 +93,13 @@ export class SearchController {
   async searchPassList(
     @GetUserId() authorizedData: ValidateResult,
     @Query() dto: SearchPassListDto,
-  ) {
+  ): Promise<EsPassDto[]> {
     const userId: number = authorizedData?.user?.id;
     if (userId && dto.value) {
       await this.searchService.saveSearchTerm(userId, dto.value);
     }
 
-    const passList: EsPassDto[] = await this.searchService.getPassList(
+    const passList: IEsPass[] = await this.searchService.getPassList(
       userId,
       dto,
     );
