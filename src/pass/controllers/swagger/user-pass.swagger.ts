@@ -16,7 +16,7 @@ export const ApiUserPass: ApiOperator<keyof UserPassController> = {
       ApiBearerAuth(),
       PaginationResponseDto.swaggerBuilder(
         HttpStatus.OK,
-        'GetMyEventList',
+        'userPassList',
         UserPassDto,
       ),
     );
