@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   ICursor,
+  IPaginationParams,
   Id,
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
@@ -150,6 +151,30 @@ export class PassRepository {
     return await this.prismaService.lecturePass.findFirst({
       where: { id: passId, lecturerId },
       include: { lecturePassTarget: { include: { lecture: true } } },
+    });
+  }
+
+  async getUserPassList(
+    userId: number,
+    { take, cursor, skip }: IPaginationParams,
+  ) {
+    return await this.prismaService.userPass.findMany({
+      where: { userId, isEnabled: true },
+      include: {
+        lecturePass: {
+          include: { lecturePassTarget: { include: { lecture: true } } },
+        },
+        payment: true,
+      },
+      take,
+      cursor,
+      skip,
+    });
+  }
+
+  async countUserPassList(userId: number) {
+    return await this.prismaService.userPass.count({
+      where: { userId, isEnabled: true },
     });
   }
 }

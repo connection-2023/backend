@@ -2,7 +2,7 @@ import { UserPass } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { LecturePassDto } from './lecture-pass.dto';
 import { BaseReturnDto } from './base-return.dto';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
 @Exclude()
 export class UserPassDto extends BaseReturnDto implements UserPass {
@@ -12,6 +12,7 @@ export class UserPassDto extends BaseReturnDto implements UserPass {
   })
   @Expose()
   id: number;
+
   userId: number;
   paymentId: number;
 
@@ -21,7 +22,6 @@ export class UserPassDto extends BaseReturnDto implements UserPass {
   })
   @Expose()
   remainingUses: number;
-  lecturePassId: number;
 
   @ApiProperty({
     type: Boolean,
@@ -49,22 +49,15 @@ export class UserPassDto extends BaseReturnDto implements UserPass {
     type: LecturePassDto,
     description: '패스권 정보',
   })
+  @Type(() => LecturePassDto)
   @Expose()
   lecturePass: LecturePassDto;
+
+  lecturePassId: number;
 
   constructor(userPass: Partial<UserPassDto>) {
     super();
 
-    this.id = userPass.id;
-    this.remainingUses = userPass.remainingUses;
-    this.isEnabled = userPass.isEnabled;
-    this.startAt = userPass.startAt;
-    this.endAt = userPass.endAt;
-
-    this.lecturePass = userPass.lecturePass
-      ? new LecturePassDto(userPass.lecturePass)
-      : null;
-
-    Object.assign(this);
+    Object.assign(this, userPass);
   }
 }
