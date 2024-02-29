@@ -1,4 +1,11 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UserPassService } from '../services/user-pass.service';
 import { plainToInstance } from 'class-transformer';
@@ -9,6 +16,8 @@ import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiUserPass } from './swagger/user-pass.swagger';
+import { PassReservationDto } from '../dtos/response/pass-history.dto';
+import { UserPassInfoDto } from '../dtos/response/user-pass-info.dto';
 
 @ApiTags('유저 패스권')
 @Controller('user-passes')
@@ -36,5 +45,21 @@ export class UserPassController {
       totalItemCount,
       userPassList: plainToInstance(UserPassDto, userPassList),
     };
+  }
+
+  @ApiUserPass.GetUserPassInfo({ summary: '패스권 정보 조회' })
+  @SetResponseKey('userPassInfo')
+  @Get('/:passId')
+  @UseGuards(UserAccessTokenGuard)
+  async getUserPassInfo(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('passId', ParseIntPipe) passId: number,
+  ): Promise<UserPassInfoDto> {
+    const passInfo = await this.userPassService.getPassHistory(
+      authorizedData.user.id,
+      passId,
+    );
+
+    return plainToInstance(UserPassInfoDto, passInfo);
   }
 }

@@ -13,8 +13,12 @@ export class UserPassDto extends BaseReturnDto implements UserPass {
   @Expose()
   id: number;
 
-  userId: number;
-  paymentId: number;
+  @ApiProperty({
+    type: Number,
+    description: '패스권 Id',
+  })
+  @Expose()
+  lecturePassId: number;
 
   @ApiProperty({
     type: Number,
@@ -53,7 +57,8 @@ export class UserPassDto extends BaseReturnDto implements UserPass {
   @Expose()
   lecturePass: LecturePassDto;
 
-  lecturePassId: number;
+  userId: number;
+  paymentId: number;
 
   constructor(userPass: Partial<UserPassDto>) {
     super();

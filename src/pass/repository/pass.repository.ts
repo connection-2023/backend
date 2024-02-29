@@ -11,6 +11,7 @@ import {
   LecturePassTargetInputData,
 } from '@src/pass/interface/interface';
 import { LecturePass } from '@prisma/client';
+import { PaymentMethods } from '@src/payments/enum/payment.enum';
 
 @Injectable()
 export class PassRepository {
@@ -185,6 +186,33 @@ export class PassRepository {
   async countUserPassList(userId: number) {
     return await this.prismaService.userPass.count({
       where: { userId, isEnabled: true },
+    });
+  }
+
+  async getUserPassWithPayment(userId: number, passId: number) {
+    return await this.prismaService.userPass.findFirst({
+      where: { userId, lecturePassId: passId },
+      include: { payment: true },
+    });
+  }
+
+  async getPassHistory(userId: number, passId: number) {
+    return await this.prismaService.reservation.findMany({
+      where: {
+        userId,
+        payment: {
+          paymentMethodId: PaymentMethods.패스권,
+          paymentPassUsage: { lecturePassId: passId },
+        },
+      },
+      include: {
+        payment: true,
+        lectureSchedule: {
+          include: {
+            lecture: true,
+          },
+        },
+      },
     });
   }
 }
