@@ -27,4 +27,21 @@ export class UserPassService {
 
     return { totalItemCount, userPassList };
   }
+
+  async getPassHistory(userId: number, passId: number) {
+    const pass = await this.passRepository.getUserPassWithPayment(
+      userId,
+      passId,
+    );
+    if (!pass) {
+      return null;
+    }
+
+    const reservation = await this.passRepository.getPassHistory(
+      userId,
+      passId,
+    );
+
+    return { ...pass, reservation };
+  }
 }

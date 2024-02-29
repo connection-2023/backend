@@ -3,7 +3,7 @@ import { Reservation } from '@prisma/client';
 import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
 import { PaymentDto } from '@src/payments/dtos/payment.dto';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 
 @Exclude()
 export class ReservationDto implements Reservation {
@@ -50,6 +50,7 @@ export class ReservationDto implements Reservation {
     description: '원데이 클래스 일정',
     type: PaymentLectureScheduleDto,
   })
+  @Type(() => PaymentLectureScheduleDto)
   @Expose()
   lectureSchedule?: PaymentLectureScheduleDto;
 
@@ -57,19 +58,13 @@ export class ReservationDto implements Reservation {
     description: '정기 클래스 일정',
     type: PaymentRegularLectureStatusDto,
   })
+  @Type(() => PaymentRegularLectureStatusDto)
   @Expose()
   regularLectureStatus?: PaymentRegularLectureStatusDto;
 
   payment?: PaymentDto;
 
-  constructor(reservation: Partial<ReservationDto> = {}) {
+  constructor(reservation: Partial<ReservationDto>) {
     Object.assign(this, reservation);
-
-    this.lectureSchedule = reservation.lectureSchedule
-      ? new PaymentLectureScheduleDto(reservation.lectureSchedule)
-      : null;
-    this.regularLectureStatus = reservation.regularLectureStatus
-      ? new PaymentRegularLectureStatusDto(reservation.regularLectureStatus)
-      : null;
   }
 }
