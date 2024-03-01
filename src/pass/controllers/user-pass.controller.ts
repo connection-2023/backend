@@ -62,4 +62,22 @@ export class UserPassController {
 
     return plainToInstance(UserPassInfoDto, passInfo);
   }
+
+  @ApiUserPass.GetUserPassByLectureId({
+    summary: '강의별 사용 가능한 패스권 조회',
+  })
+  @SetResponseKey('usablePassList')
+  @Get('/lectures/:lectureId')
+  @UseGuards(UserAccessTokenGuard)
+  async getUserPassByLectureId(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+  ) {
+    const usablePassList = await this.userPassService.getUsablePassList(
+      authorizedData.user.id,
+      lectureId,
+    );
+
+    return plainToInstance(UserPassDto, usablePassList);
+  }
 }

@@ -12,6 +12,7 @@ import {
 } from '@src/pass/interface/interface';
 import { LecturePass } from '@prisma/client';
 import { PaymentMethods } from '@src/payments/enum/payment.enum';
+import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @Injectable()
 export class PassRepository {
@@ -213,6 +214,19 @@ export class PassRepository {
           },
         },
       },
+    });
+  }
+
+  async getUsablePassList(userId: number, lectureId: number) {
+    return await this.prismaService.userPass.findMany({
+      where: {
+        userId,
+        isEnabled: true,
+        OR: [{ endAt: { gte: generateCurrentTime() } }, { endAt: null }],
+        remainingUses: { gt: 0 },
+        lecturePass: { lecturePassTarget: { some: { lectureId } } },
+      },
+      include: { lecturePass: true },
     });
   }
 }

@@ -44,4 +44,8 @@ export class UserPassService {
 
     return { ...pass, reservation };
   }
+
+  async getUsablePassList(userId: number, lectureId: number) {
+    return await this.passRepository.getUsablePassList(userId, lectureId);
+  }
 }
