@@ -19,10 +19,9 @@ export class RegularLectureStatusDto implements RegularLectureStatus {
   day: string[];
 
   @ApiProperty({
-    type: [String],
     description: '수업 시간',
   })
-  dateTime: string[];
+  dateTime: string;
 
   @ApiProperty({
     type: Number,
