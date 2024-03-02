@@ -7,7 +7,7 @@
 
 | **김현수** | **이재현** |
 | :------: |  :------: |
-| [<img src="https://avatars.githubusercontent.com/u/96464209?v=4" height=150 width=150> <br/> @0119Kimsoo](https://github.com/0119Kimsoo) | [<img src="https://avatars.githubusercontent.com/u/121776954?v=4" height=150 width=150> <br/> @Cheorizzang](https://github.com/Cheorizzang) |
+| [<img src="https://avatars.githubusercontent.com/u/96464209?v=4" height=150 width=150> <br/> @Kimsoo0119](https://github.com/Kimsoo0119) | [<img src="https://avatars.githubusercontent.com/u/121776954?v=4" height=150 width=150> <br/> @j-zzi](https://github.com/j-zzi) |
 
 
 <br>
