@@ -1,26 +1,16 @@
-<div><h1>💃connection-backend🕺</h1></div>
-  댄스 클래스 중개 플렛폼 connection입니다.
-<br><br>
+# 💃connection-backend🕺
+- 댄스 클래스 중개 플렛폼 connection입니다.
+
+<br>
   
-<div>
-  <h1>🛠Member</h1>
-</div>
+## 🛠Member
 
-<table>
- <tr>    
-    <td align="center"><a href="https://github.com/kimsoo0119"><img src="https://avatars.githubusercontent.com/kimsoo0119" width="130px;" alt=""></a></td>
-    <td align="center"><a href="https://github.com/j-zzi"><img src="https://avatars.githubusercontent.com/j-zzi" width="130px;" alt=""></a></td>
-  </tr>
-  <tr>
-      <td align="center"><a href="https://github.com/Eunseo-jo"><b>김현수</b></a></td>
-     <td align="center"><a href="https://github.com/hyeonjun-L"><b>이재현</b></a></td>
-  </tr>
-</table>
+| **김현수** | **이재현** |
+| :------: |  :------: |
+| [<img src="https://avatars.githubusercontent.com/u/96464209?v=4" height=150 width=150> <br/> @0119Kimsoo](https://github.com/0119Kimsoo) | [<img src="https://avatars.githubusercontent.com/u/121776954?v=4" height=150 width=150> <br/> @Cheorizzang](https://github.com/Cheorizzang) |
 
 
-
-
-<br><br>
+<br>
 <div>
     <h1>📚 TECH STACKS</h1>
     <ul>
@@ -172,8 +162,23 @@ LikedLecture }|--|| Lecture : lecture
 LikedLecture }|--|| Users : user
 ```
 
+<br>
 
-  
+## 💰 Payment Flow
+![image](https://github.com/connection-2023/backend/assets/96464209/458a55cc-5812-40cd-a05a-f084a4ca302b)
+<br>
+
+## 🔍 Search Server Data Flow
+![image](https://github.com/connection-2023/backend/assets/96464209/cdcd03c7-9d6e-467b-8c5b-59ae605a15bc)
+<br>
+
+## 🤖 CI/CD Flow
+![image](https://github.com/connection-2023/backend/assets/96464209/fbdc2122-0b70-4e44-a6a8-57d6f734e6ee)
+<br>
+
+
+<br>
+
   </div>
   <br><br>
   <div>
@@ -189,8 +194,3 @@ LikedLecture }|--|| Users : user
       - `conflict`: 충돌 해결  <br>
      </ul>
   </div>
-  
-  
-  
-
-
