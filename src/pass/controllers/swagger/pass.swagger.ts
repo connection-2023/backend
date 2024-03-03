@@ -12,7 +12,7 @@ import { PassWithLecturerDto } from '@src/pass/dtos/response/pass-with-lecturer.
 import { IssuedPassDto } from '@src/pass/dtos/response/issued-pass.dto';
 import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
 
-export const ApiPass = {
+export const ApiPass: ApiOperator<keyof PassController> = {
   CreateLecturePass: (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
