@@ -192,7 +192,7 @@ export class PassRepository {
 
   async getUserPassWithPayment(userId: number, passId: number) {
     return await this.prismaService.userPass.findFirst({
-      where: { userId, lecturePassId: passId },
+      where: { userId, lecturePassId: passId, isEnabled: true },
       include: { payment: true },
     });
   }
