@@ -108,7 +108,7 @@ export class PassService {
       lectureId,
       ...paginationOptions
     }: GetMyIssuedPassListDto,
-  ): Promise<{ totalItemCount: number; passList: IssuedPassDto[] }> {
+  ): Promise<{ totalItemCount: number; passList: LecturePass[] }> {
     const totalItemCount: number = await this.passRepository.countIssuedPasses(
       lecturerId,
     );

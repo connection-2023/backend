@@ -93,11 +93,11 @@ export class PassRepository {
           isDisabled,
           lecturePassTarget,
         },
+        include: { lecturePassTarget: { include: { lecture: true } } },
         take,
         orderBy,
         cursor,
         skip,
-        include: { lecturePassTarget: { include: { lecture: true } } },
       });
     } catch (error) {
       throw new InternalServerErrorException(
