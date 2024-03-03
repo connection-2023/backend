@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -25,6 +26,7 @@ import { MyPassDto } from '../dtos/pass.dto';
 import { ApiGetMyIssuedPass } from '../swagger-decorators/get-my-issued-pass.decorator';
 import { PassWithLecturerDto } from '../dtos/response/pass-with-lecturer.dto';
 import { ApiGetPass } from '../swagger-decorators/get-pass.decorator';
+import { ApiPass } from './swagger/pass.swagger';
 
 @ApiTags('패스권')
 @Controller('passes')
@@ -93,5 +95,15 @@ export class PassController {
     @Param('lecturerId', ParseIntPipe) lecturerId: number,
   ): Promise<LecturePassWithTargetDto[]> {
     return await this.passService.getLecturerPassList(lecturerId);
+  }
+
+  @ApiPass.DeactivatePass({ summary: '패스권 판매 비활성화' })
+  @UseGuards(LecturerAccessTokenGuard)
+  @Patch('/:passId/deactivate')
+  async deactivatePass(
+    @GetAuthorizedUser() AuthorizedData: ValidateResult,
+    @Param('passId', ParseIntPipe) passId: number,
+  ): Promise<void> {
+    await this.passService.deactivatePass(AuthorizedData.lecturer.id, passId);
   }
 }

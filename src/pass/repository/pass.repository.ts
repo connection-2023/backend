@@ -229,4 +229,17 @@ export class PassRepository {
       include: { lecturePass: true },
     });
   }
+
+  async deactivatePass(passId: number): Promise<void> {
+    await this.prismaService.lecturePass.update({
+      where: { id: passId },
+      data: { isDisabled: true },
+    });
+  }
+
+  async getPassById(passId: number) {
+    return await this.prismaService.lecturePass.findUnique({
+      where: { id: passId },
+    });
+  }
 }
