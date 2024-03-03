@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassRepository } from '@src/pass/repository/pass.repository';
 import {
   ICursor,
+  IPaginationParams,
   Id,
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
@@ -23,6 +24,8 @@ import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-tar
 import { LecturePass } from '@prisma/client';
 import { MyPassDto } from '../dtos/pass.dto';
 import { PassWithLecturerDto } from '../dtos/response/pass-with-lecturer.dto';
+import { generatePaginationParams } from '@src/common/utils/generate-pagination-params';
+import { IssuedPassDto } from '../dtos/response/issued-pass.dto';
 
 @Injectable()
 export class PassService {
@@ -98,23 +101,19 @@ export class PassService {
   }
 
   async getMyIssuedPassList(
-    lecturerId,
+    lecturerId: number,
     {
       passStatusOptions,
       filterOption,
       lectureId,
-      take,
-      currentPage,
-      targetPage,
-      firstItemId,
-      lastItemId,
+      ...paginationOptions
     }: GetMyIssuedPassListDto,
-  ) {
+  ): Promise<{ totalItemCount: number; passList: LecturePass[] }> {
     const totalItemCount: number = await this.passRepository.countIssuedPasses(
       lecturerId,
     );
     if (!totalItemCount) {
-      return;
+      return { totalItemCount, passList: [] };
     }
 
     const { orderBy, isDisabled, lecturePassTarget } =
@@ -124,33 +123,15 @@ export class PassService {
         lectureId,
       );
 
-    let cursor;
-    let skip;
+    const paginationParams: IPaginationParams =
+      generatePaginationParams(paginationOptions);
 
-    const isPagination = currentPage && targetPage;
-    const isInfiniteScroll = lastItemId && take;
-
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      ({ cursor, skip } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-      take = pageDiff >= 1 ? -take : take;
-    } else if (isInfiniteScroll) {
-      cursor = { id: lastItemId };
-      skip = 1;
-    }
-
-    const passList = await this.getIssuedPassList(
+    const passList = await this.passRepository.getIssuedLecturePasses(
       lecturerId,
-      take,
       isDisabled,
       orderBy,
       lecturePassTarget,
-      cursor,
-      skip,
+      paginationParams,
     );
 
     return { totalItemCount, passList };
@@ -181,39 +162,14 @@ export class PassService {
     return { orderBy, isDisabled, lecturePassTarget };
   }
 
-  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
-    const cursor: ICursor = { id: itemId };
-    const skip =
-      Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    const invertedTake = pageDiff >= 1 ? -take : take;
-
-    return { cursor, skip, invertedTake };
-  }
-
-  private async getIssuedPassList(
-    lecturerId: number,
-    take: number,
-    isDisabled: boolean,
-    orderBy: object,
-    lecturePassTarget: object,
-    cursor?: ICursor,
-    skip?: number,
-  ) {
-    return await this.passRepository.getIssuedLecturePasses(
-      lecturerId,
-      take,
-      isDisabled,
-      orderBy,
-      lecturePassTarget,
-      cursor,
-      skip,
-    );
-  }
-
   async getLecturePassList(
     lectureId: number,
   ): Promise<LecturePassWithTargetDto[]> {
-    return (await this.passRepository.getLecturePassList(lectureId)).map(
+    const lecturePassList = await this.passRepository.getLecturePassList(
+      lectureId,
+    );
+
+    return lecturePassList.map(
       (lecturePass) => new LecturePassWithTargetDto(lecturePass),
     );
   }

@@ -1,7 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { LecturePassTarget } from '@prisma/client';
 import { PassLectureDto } from '@src/pass/dtos/pass-lecture.dto';
+import { Exclude, Expose, Type } from 'class-transformer';
+import { BasicLectureDto } from './basic-lecture.dto';
 
+@Exclude()
 export class LecturePassTargetDto implements LecturePassTarget {
   id: number;
   lectureId: number;
@@ -9,14 +12,14 @@ export class LecturePassTargetDto implements LecturePassTarget {
 
   @ApiProperty({
     description: '적용된 강의',
-    type: PassLectureDto,
+    type: BasicLectureDto,
     isArray: true,
   })
-  lecture: PassLectureDto;
+  @Type(() => BasicLectureDto)
+  @Expose()
+  lecture: BasicLectureDto[];
 
   constructor(lecturePassTarget: Partial<LecturePassTargetDto>) {
-    this.lecture = lecturePassTarget.lecture
-      ? new PassLectureDto(lecturePassTarget.lecture)
-      : null;
+    Object.assign(this, lecturePassTarget);
   }
 }

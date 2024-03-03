@@ -5,44 +5,105 @@ import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExceptionResponseDto } from '@src/common/swagger/dtos/exeption-response.dto';
 import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto';
+import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
+import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-target.dto';
+import { MyPassDto } from '@src/pass/dtos/pass.dto';
+import { PassWithLecturerDto } from '@src/pass/dtos/response/pass-with-lecturer.dto';
+import { IssuedPassDto } from '@src/pass/dtos/response/issued-pass.dto';
+import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
 
 export const ApiPass = {
-  // CreateLecturePass: function (
-  //   apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-  //     Partial<OperationObject>,
-  // ): PropertyDecorator {
-  //   throw new Error('Function not implemented.');
-  // },
-  // GetMyIssuedPassList: function (
-  //   apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-  //     Partial<OperationObject>,
-  // ): PropertyDecorator {
-  //   throw new Error('Function not implemented.');
-  // },
-  // GetPass: function (
-  //   apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-  //     Partial<OperationObject>,
-  // ): PropertyDecorator {
-  //   throw new Error('Function not implemented.');
-  // },
-  // GetMyPass: function (
-  //   apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-  //     Partial<OperationObject>,
-  // ): PropertyDecorator {
-  //   throw new Error('Function not implemented.');
-  // },
-  // GetLecturePasses: function (
-  //   apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-  //     Partial<OperationObject>,
-  // ): PropertyDecorator {
-  //   throw new Error('Function not implemented.');
-  // },
-  // GetLecturerPasses: function (
-  //   apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-  //     Partial<OperationObject>,
-  // ): PropertyDecorator {
-  //   throw new Error('Function not implemented.');
-  // },
+  CreateLecturePass: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      StatusResponseDto.swaggerBuilder(HttpStatus.CREATED, 'createLecturePass'),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
+        {
+          error: 'InvalidClassIncluded',
+          description: '유효하지 않은 클래스가 포함되었습니다.',
+        },
+        {
+          error: 'InvalidLecturerInformation',
+          description: '유효하지 않은 강사 정보 요청입니다.',
+        },
+      ]),
+    );
+  },
+
+  GetMyIssuedPassList: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      PaginationResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'passList',
+        IssuedPassDto,
+      ),
+    );
+  },
+
+  GetPassById: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'pass',
+        PassWithLecturerDto,
+      ),
+    );
+  },
+
+  GetMyPass: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'myPass', MyPassDto),
+    );
+  },
+
+  GetLecturePasses: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'passList',
+        LecturePassWithTargetDto,
+        { isArray: true },
+      ),
+    );
+  },
+
+  GetLecturerPasses: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'passList',
+        LecturePassWithTargetDto,
+        { isArray: true },
+      ),
+    );
+  },
 
   DeactivatePass: (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &

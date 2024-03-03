@@ -81,12 +81,10 @@ export class PassRepository {
 
   async getIssuedLecturePasses(
     lecturerId: number,
-    take: number,
     isDisabled: boolean,
     orderBy: object,
     lecturePassTarget: object,
-    cursor: ICursor,
-    skip: number,
+    { take, cursor, skip }: IPaginationParams,
   ) {
     try {
       return await this.prismaService.lecturePass.findMany({
@@ -95,23 +93,11 @@ export class PassRepository {
           isDisabled,
           lecturePassTarget,
         },
+        include: { lecturePassTarget: { include: { lecture: true } } },
         take,
         orderBy,
         cursor,
         skip,
-        select: {
-          id: true,
-          title: true,
-          price: true,
-          availableMonths: true,
-          maxUsageCount: true,
-          salesCount: true,
-          lecturePassTarget: {
-            select: {
-              lecture: { select: { id: true, title: true } },
-            },
-          },
-        },
       });
     } catch (error) {
       throw new InternalServerErrorException(
