@@ -7,6 +7,20 @@ const options: SchemaOptions = {
 
 @Schema(options)
 export class Notification extends Document {
+  @Prop({
+    required: true,
+    type: {
+      userId: { type: Number, default: null },
+      lecturerId: { type: Number, default: null },
+    },
+  })
+  @IsNotEmpty()
+  target: { userId: number | null; lecturerId: number | null };
+
+  @Prop({ required: false })
+  @IsNumber()
+  lecturerId?: number;
+
   @Prop({ required: true })
   @IsNotEmpty()
   @IsString()
@@ -19,19 +33,19 @@ export class Notification extends Document {
 
   @Prop({ required: false })
   @IsNumber()
-  lectureId: number;
+  lectureId?: number;
 
   @Prop({ required: false })
   @IsNumber()
-  couponId: number;
+  couponId?: number;
 
   @Prop({ required: false })
   @IsNumber()
-  lecturePassId: number;
+  lecturePassId?: number;
 
   @Prop({ required: false })
   @IsNumber()
-  userPassId: number;
+  userPassId?: number;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
