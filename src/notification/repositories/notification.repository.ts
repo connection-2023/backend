@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Model } from 'mongoose';
@@ -11,7 +11,7 @@ import { UserNotification } from '../schemas/notification.schema';
 @Injectable()
 export class NotificationRepository {
   constructor(
-    @InjectModel(Notification.name)
+    @InjectModel(UserNotification.name)
     private readonly userNotificationModel: Model<UserNotification>,
   ) {}
 
@@ -20,10 +20,17 @@ export class NotificationRepository {
     description: string,
     source: INotificationSource,
   ): Promise<UserNotification> {
-    return await this.userNotificationModel.create({
-      ...target,
-      description,
-      ...source,
-    });
+    try {
+      return await this.userNotificationModel.create({
+        ...target,
+        description,
+        ...source,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `알림 생성 실패: ${error}`,
+        'NotificationCreateFailed',
+      );
+    }
   }
 }

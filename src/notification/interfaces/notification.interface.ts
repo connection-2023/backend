@@ -6,6 +6,6 @@ export interface INotificationTarget {
 export interface INotificationSource {
   lectureId?: number;
   couponId?: number;
-  lecturePassId: number;
-  userPassId: number;
+  lecturePassId?: number;
+  userPassId?: number;
 }
