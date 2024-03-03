@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLecturePassDto } from '@src/pass/dtos/create-lecture-pass.dto';
 import { ConfigService } from '@nestjs/config';
 import { PassRepository } from '@src/pass/repository/pass.repository';
@@ -234,5 +239,23 @@ export class PassService {
     );
 
     return new PassWithLecturerDto(selectedPass);
+  }
+
+  async deactivatePass(lecturerId: number, passId: number): Promise<void> {
+    const selectedPass = await this.passRepository.getPassById(passId);
+    if (!selectedPass) {
+      throw new NotFoundException(
+        '패스권이 존재하지 않습니다.',
+        'PassNotFound',
+      );
+    }
+    if (selectedPass.lecturerId !== lecturerId) {
+      throw new ForbiddenException(
+        '패스권을 수정할 권한이 없습니다.',
+        'PermissionDenied',
+      );
+    }
+
+    await this.passRepository.deactivatePass(passId);
   }
 }
