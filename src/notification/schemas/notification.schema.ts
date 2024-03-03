@@ -1,4 +1,6 @@
-import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, SchemaOptions } from 'mongoose';
+
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 const options: SchemaOptions = {
@@ -6,7 +8,7 @@ const options: SchemaOptions = {
 };
 
 @Schema(options)
-export class Notification extends Document {
+export class UserNotification extends Document {
   @Prop({
     required: true,
     type: {
@@ -16,15 +18,6 @@ export class Notification extends Document {
   })
   @IsNotEmpty()
   target: { userId: number | null; lecturerId: number | null };
-
-  @Prop({ required: false })
-  @IsNumber()
-  lecturerId?: number;
-
-  @Prop({ required: true })
-  @IsNotEmpty()
-  @IsString()
-  url: string;
 
   @Prop({ required: true })
   @IsNotEmpty()
@@ -48,4 +41,5 @@ export class Notification extends Document {
   userPassId?: number;
 }
 
-export const NotificationSchema = SchemaFactory.createForClass(Notification);
+export const UserNotificationSchema =
+  SchemaFactory.createForClass(UserNotification);
