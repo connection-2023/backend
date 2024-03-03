@@ -24,6 +24,7 @@ import { ChatsModule } from './chats/chats.module';
 import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { WebhookModule } from './webhook/webhook.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { WebhookModule } from './webhook/webhook.module';
     ChatsModule,
     EventsModule,
     WebhookModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
