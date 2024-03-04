@@ -50,6 +50,10 @@ export function ApiCreatePassPaymentInfo() {
           name: 'AlreadyPurchasedPass',
           example: { message: '이미 구매한 패스권입니다.' },
         },
+        {
+          name: 'ProductDisabled',
+          example: { message: '상품이 판매 중지되었습니다.' },
+        },
       ]),
     ),
   );

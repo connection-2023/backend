@@ -1125,6 +1125,12 @@ export class PaymentsService implements OnModuleInit {
         'ProductPriceMismatch',
       );
     }
+    if (pass.isDisabled === true) {
+      throw new BadRequestException(
+        `상품이 판매 중지되었습니다.`,
+        'ProductDisabled',
+      );
+    }
 
     const userPass: UserPass = await this.paymentsRepository.getUserPass(
       userId,
