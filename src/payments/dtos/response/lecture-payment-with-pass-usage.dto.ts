@@ -41,33 +41,18 @@ export class LecturePaymentWithPassUsageDto extends BasicPaymentDto {
   paymentPassUsage: PaymentPassUsageDto;
 
   @ApiProperty({
-    type: PaymentMethodDto,
-    description: '결제 방식',
-  })
-  @Type(() => PaymentMethodDto)
-  @Expose()
-  paymentMethod: PaymentMethodDto;
-
-  @ApiProperty({
-    type: PaymentProductTypeDto,
-    description: '결제 상품 타입',
-  })
-  @Type(() => PaymentProductTypeDto)
-  @Expose()
-  paymentProduct: PaymentProductTypeDto;
-
-  @ApiProperty({
     type: LecturePaymentWithPassUsageReservationsDto,
     description: '예약 정보',
   })
   @Type(() => LecturePaymentWithPassUsageReservationsDto)
   @Expose()
-  reservations: LecturePaymentWithPassUsageReservationsDto;
+  reservation: LecturePaymentWithPassUsageReservationsDto;
 
   constructor(
     lecturePaymentWithPassUsage: Partial<LecturePaymentWithPassUsageDto>,
   ) {
     super();
     Object.assign(this, lecturePaymentWithPassUsage);
+    console.log(this);
   }
 }

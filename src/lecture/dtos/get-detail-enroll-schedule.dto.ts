@@ -1,9 +1,9 @@
 import { LectureWithDetailEnrollScheduleDto } from './get-lecture-with-detial-enroll-schedule.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
+import { LectureScheduleWithLectureDto } from '@src/common/dtos/lecture-schedule-with-lecture.dto';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
-import { RegularLectureStatusDto } from '@src/common/dtos/regular-lecture-status.dto';
+import { RegularLectureStatusWithLectureDto } from '@src/common/dtos/regular-lecture-status-with-lecture.dto';
 import { ReservationDto } from '@src/common/dtos/reservation.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { EnrollScheduleDetailPriceDto } from './enroll-schedule-detail-price.dto';
@@ -22,8 +22,11 @@ export class DetailEnrollScheduleDto {
   lecturer?: LecturerDto;
 
   @Expose()
-  @ApiProperty({ description: '원데이 수강 일정', type: LectureScheduleDto })
-  lectureSchedule?: LectureScheduleDto;
+  @ApiProperty({
+    description: '원데이 수강 일정',
+    type: LectureScheduleWithLectureDto,
+  })
+  lectureSchedule?: LectureScheduleWithLectureDto;
 
   @Expose()
   @ApiProperty({
@@ -61,7 +64,7 @@ export class DetailEnrollScheduleDto {
   @Type(() => Number)
   participants: number;
 
-  regularLectureStatus?: RegularLectureStatusDto;
+  regularLectureStatus?: RegularLectureStatusWithLectureDto;
 
   constructor(reservation: Partial<ReservationDto>) {
     Object.assign(this, reservation);
@@ -80,7 +83,7 @@ export class DetailEnrollScheduleDto {
 
     this.lectureSchedule = reservation.lectureSchedule
       ? delete reservation.lectureSchedule.lecture &&
-        new LectureScheduleDto(reservation.lectureSchedule)
+        new LectureScheduleWithLectureDto(reservation.lectureSchedule)
       : undefined;
 
     this.regularLectureSchedule = reservation.regularLectureStatus

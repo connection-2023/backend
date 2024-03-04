@@ -13,39 +13,45 @@ import {
 } from '@nestjs/common';
 import { PaymentsService } from '@src/payments/services/payments.service';
 import { CreateLecturePaymentWithTossDto } from '@src/payments/dtos/create-lecture-payment-with-toss.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/ApiCreateLecturePaymentInfo';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
-import { ApiConfirmPayment } from '@src/payments/swagger-decorators/confirm-payment-decorater';
-import { ApiCancelPayment } from '@src/payments/swagger-decorators/cancle-payment-decorator';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
-import { ApiCreatePassPaymentInfo } from '@src/payments/swagger-decorators/create-pass-payment-info-decorater';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
-import { ApiCreateLecturePaymentWithPass } from '@src/payments/swagger-decorators/create-lecture-payment-with-pass-decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
-import { PaymentDto } from '../dtos/payment.dto';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { Request } from 'express';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { PaymentHistoryTypes, PaymentMethods } from '../enum/payment.enum';
-import { ApiHandleRefund } from '../swagger-decorators/handle-refund.decorator';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { ApiPayments } from './swagger/payments.swagger';
+import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 
 @ApiTags('결제')
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  // @Get('/verify-bank-account')
-  // async verifyBankAccount() {
-  //   await this.paymentsService.verifyBankAccount();
-  // }
+  @ApiPayments.GetPaymentResult({ summary: '결제 결과 조회' })
+  @SetResponseKey('paymentResult')
+  @UseGuards(UserAccessTokenGuard)
+  @Get(':orderId')
+  async getPaymentResult(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('orderId') orderId: string,
+  ): Promise<PaymentResultDto> {
+    return await this.paymentsService.getPaymentResultByOrderId(
+      authorizedData.user.id,
+      orderId,
+    );
+  }
 
-  //토스 페이먼츠로 클래스 결제
+  @ApiPayments.CreateLecturePaymentWithToss({
+    summary: '토스-강의 결제를 위한 기본 결제 정보 생성',
+  })
   @SetResponseKey('pendingPaymentInfo')
   @ApiCreateLecturePaymentInfo()
   @Post('/toss/lecture')
@@ -60,21 +66,21 @@ export class PaymentsController {
     );
   }
 
-  //토스 페이먼츠로 패스권 결제
-  @ApiCreatePassPaymentInfo()
+  @ApiPayments.ConfirmLecturePayment({
+    summary: '토스-패스권 결제를 위한 기본 결제 정보 생성',
+    description: '반환값 pendingPaymentInfo으로 변경',
+  })
+  @SetResponseKey('pendingPaymentInfo')
   @Post('/toss/pass')
   @UseGuards(UserAccessTokenGuard)
   async createPassPaymentWithToss(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createPassPaymentDto: CreatePassPaymentDto,
-  ) {
-    const passPaymentInfo =
-      await this.paymentsService.createPassPaymentWithToss(
-        authorizedData.user.id,
-        createPassPaymentDto,
-      );
-
-    return { passPaymentInfo };
+  ): Promise<PendingPaymentInfoDto> {
+    return await this.paymentsService.createPassPaymentWithToss(
+      authorizedData.user.id,
+      createPassPaymentDto,
+    );
   }
 
   @ApiPayments.ConfirmLecturePayment({
@@ -92,7 +98,7 @@ export class PaymentsController {
   @ApiPayments.CancelPayment({ summary: '결제 진행 중 취소' })
   @Post('/toss/:orderId/cancel')
   async cancelPayment(@Param('orderId') orderId: string): Promise<void> {
-    return await this.paymentsService.cancelPayment(orderId);
+    await this.paymentsService.cancelPayment(orderId);
   }
 
   @ApiPayments.CreateLecturePaymentWithPass({
@@ -118,7 +124,7 @@ export class PaymentsController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('paymentId', ParseIntPipe) paymentId: number,
     @Body() handleRefundDto: HandleRefundDto,
-  ) {
+  ): Promise<void> {
     const { reservation, userPass, ...payment } =
       await this.paymentsService.getUserPaymentForRefund(
         authorizedData.user.id,
@@ -146,7 +152,9 @@ export class PaymentsController {
     }
   }
 
-  @ApiOperation({ summary: '토스 페이먼츠 계좌이체 웹훅' })
+  @ApiPayments.HandleVirtualAccountPaymentStatusWebhook({
+    summary: '토스 페이먼츠 계좌이체 웹훅 ',
+  })
   @Post('/toss/status')
   async handleVirtualAccountPaymentStatusWebhook(
     @Req() req: Request,

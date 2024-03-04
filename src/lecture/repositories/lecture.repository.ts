@@ -41,7 +41,7 @@ import {
   RegularLectureStatusInputData,
 } from '@src/lecture/interface/lecture.interface';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
-import { LectureScheduleDto } from '@src/common/dtos/lecture-schedule.dto';
+import { LectureScheduleWithLectureDto } from '@src/common/dtos/lecture-schedule-with-lecture.dto';
 import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 
 @Injectable()
@@ -337,7 +337,7 @@ export class LectureRepository {
     userId: number,
     startDate: Date,
     endDate: Date,
-  ): Promise<LectureScheduleDto[]> {
+  ): Promise<LectureScheduleWithLectureDto[]> {
     return await this.prismaService.lectureSchedule.findMany({
       where: {
         reservation: { some: { userId, isEnabled: true } },

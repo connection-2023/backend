@@ -5,26 +5,119 @@ import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExceptionResponseDto } from '@src/common/swagger/dtos/exeption-response.dto';
 import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { LecturePassWithTargetDto } from '@src/common/dtos/lecture-pass-with-target.dto';
-import { MyPassDto } from '@src/pass/dtos/pass.dto';
-import { PassWithLecturerDto } from '@src/pass/dtos/response/pass-with-lecturer.dto';
-import { IssuedPassDto } from '@src/pass/dtos/response/issued-pass.dto';
-import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
 import { PaymentsController } from '../payments.controller';
 import { LecturePaymentWithPassUsageDto } from '@src/payments/dtos/response/lecture-payment-with-pass-usage.dto';
+import { PendingPaymentInfoDto } from '@src/payments/dtos/pending-payment-info.dto';
+import { PaymentDto } from '@src/payments/dtos/payment.dto';
+import { PaymentResultDto } from '@src/payments/dtos/response/payment-result.dto';
 
 export const ApiPayments: ApiOperator<keyof PaymentsController> = {
-  CreateLecturePaymentWithToss: function (
+  GetPaymentResult: (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
-  ): PropertyDecorator {
-    throw new Error('Function not implemented.');
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'paymentResult',
+        PaymentResultDto,
+      ),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
+        {
+          error: 'PaymentInfoNotFound',
+          description: '결제 정보가 존재하지 않습니다.',
+        },
+      ]),
+    );
   },
-  CreatePassPaymentWithToss: function (
+
+  CreateLecturePaymentWithToss: (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
-  ): PropertyDecorator {
-    throw new Error('Function not implemented.');
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.CREATED,
+        'pendingPaymentInfo',
+        PendingPaymentInfoDto,
+      ),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.BAD_REQUEST, [
+        {
+          error: 'InactiveLecture',
+          description: '활성화되지 않은 강의입니다.',
+        },
+        {
+          error: 'PaymentAlreadyExists',
+          description: '결제정보가 이미 존재합니다.',
+        },
+        {
+          error: 'CouponLimit',
+          description: '쿠폰 사용 제한 횟수를 초과했습니다.',
+        },
+        {
+          error: 'InvalidCoupon',
+          description: '쿠폰 적용 대상이 아닙니다.',
+        },
+        {
+          error: 'DuplicateDiscount',
+          description: '할인율은 중복적용이 불가능합니다.',
+        },
+        {
+          error: 'ProductPriceMismatch',
+          description: '상품 가격이 일치하지 않습니다.',
+        },
+        {
+          error: 'ExpiredDate',
+          description: '예약 마감일이 지난 강의입니다.',
+        },
+      ]),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
+        {
+          error: 'LectureNotFound',
+          description: '강의정보가 존재하지 않습니다.',
+        },
+      ]),
+    );
+  },
+
+  CreatePassPaymentWithToss: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.CREATED,
+        'pendingPaymentInfo',
+        PendingPaymentInfoDto,
+      ),
+
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.BAD_REQUEST, [
+        {
+          error: 'ProductDisabled',
+          description: '상품이 판매 중지되었습니다.',
+        },
+        {
+          error: 'ProductPriceMismatch',
+          description: '상품 가격이 일치하지 않습니다.',
+        },
+        {
+          error: 'ProductAlreadyPurchased',
+          description: '이미 구매한 패스권입니다.',
+        },
+      ]),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
+        {
+          error: 'PassInfoNotFound',
+          description: '패스권 정보가 존재하지 않습니다.',
+        },
+      ]),
+    );
   },
 
   ConfirmLecturePayment: (
@@ -34,7 +127,34 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
     return applyDecorators(
       ApiOperation(apiOperationOptions),
       ApiBearerAuth(),
-      StatusResponseDto.swaggerBuilder(HttpStatus.CREATED, 'handleRefund'),
+      StatusResponseDto.swaggerBuilder(
+        HttpStatus.CREATED,
+        'pendingPaymentInfo',
+      ),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.BAD_REQUEST, [
+        {
+          error: 'PaymentAmountMismatch',
+          description: '결제 금액이 일치하지 않습니다.',
+        },
+        {
+          error: 'AlreadyApproved',
+          description: '이미 승인된 결제 정보입니다.',
+        },
+        {
+          error: 'InvalidPaymentMethod',
+          description: '올바르지 않은 결제 방식입니다.',
+        },
+        {
+          error: 'PaymentStatusMismatch',
+          description: '결제 상태가 일치하지 않습니다.',
+        },
+      ]),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
+        {
+          error: 'PaymentInfoNotFound',
+          description: '결제 정보가 존재하지 않습니다.',
+        },
+      ]),
     );
   },
 
@@ -67,6 +187,54 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
         'paymentResultByPass',
         LecturePaymentWithPassUsageDto,
       ),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.BAD_REQUEST, [
+        {
+          error: 'PaymentExists',
+          description: '결제정보가 이미 존재합니다.',
+        },
+        {
+          error: 'LectureNotFound',
+          description: '강의정보가 존재하지 않습니다.',
+        },
+        {
+          error: 'InactiveLecture',
+          description: '활성화되지 않은 강의입니다.',
+        },
+        {
+          error: 'ExceededCapacity',
+          description: '인원 초과입니다.',
+        },
+        {
+          error: 'ExpiredDate',
+          description: '예약 마감일이 지난 강의입니다.',
+        },
+        {
+          error: 'ExceededPassUsage',
+          description: '패스권의 사용 가능 횟수를 초과했습니다.',
+        },
+        {
+          error: 'InvalidPassTarget',
+          description: '패스권 적용 대상이 아닙니다.',
+        },
+        {
+          error: 'ExpiredPass',
+          description: '사용기간이 만료된 패스권입니다.',
+        },
+      ]),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
+        {
+          error: 'LectureNotFound',
+          description: '강의정보가 존재하지 않습니다.',
+        },
+        {
+          error: 'LectureScheduleNotFound',
+          description: '해당 강의 일정이 존재하지 않습니다.',
+        },
+        {
+          error: 'PassNotFound',
+          description: '패스권이 존재하지 않습니다.',
+        },
+      ]),
     );
   },
 
@@ -118,10 +286,17 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
       ]),
     );
   },
-  HandleVirtualAccountPaymentStatusWebhook: function (
+
+  HandleVirtualAccountPaymentStatusWebhook: (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
-  ): PropertyDecorator {
-    throw new Error('Function not implemented.');
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      StatusResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'handleVirtualAccountPaymentStatusWebhook',
+      ),
+    );
   },
 };
