@@ -8,6 +8,7 @@ import {
 } from './schemas/notification.schema';
 import { NotificationRepository } from './repositories/notification.repository';
 import { NotificationHandler } from './events/notification.handler';
+import { EventsGateway } from '@src/events/events.gateway';
 
 @Module({
   imports: [
@@ -16,6 +17,11 @@ import { NotificationHandler } from './events/notification.handler';
     ]),
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, NotificationRepository, NotificationHandler],
+  providers: [
+    NotificationService,
+    NotificationRepository,
+    NotificationHandler,
+    EventsGateway,
+  ],
 })
 export class NotificationModule {}

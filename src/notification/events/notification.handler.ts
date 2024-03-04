@@ -1,15 +1,15 @@
 import { NotificationService } from './../services/notification.service';
 import { EventsHandler } from '@nestjs/cqrs';
-import { newLectureEvent, newReservationEvent } from './notification.event';
 import { PrismaService } from '@src/prisma/prisma.service';
+import { NewLectureEvent, NewReservationEvent } from './notification.event';
 
-@EventsHandler([newLectureEvent, newReservationEvent])
+@EventsHandler([NewLectureEvent, NewReservationEvent])
 export class NotificationHandler {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly prismaService: PrismaService,
   ) {}
-  async handleNewLectureEvent(event: newLectureEvent) {
+  async handleNewLectureEvent(event: NewLectureEvent) {
     const { lectureId } = event;
 
     const lecturer = await this.prismaService.lecture.findFirst({
@@ -30,5 +30,5 @@ export class NotificationHandler {
     });
   }
 
-  handleNewReservationEvent(event: newReservationEvent) {}
+  handleNewReservationEvent(event: NewReservationEvent) {}
 }

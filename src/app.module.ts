@@ -25,6 +25,7 @@ import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { WebhookModule } from './webhook/webhook.module';
 import { NotificationModule } from './notification/notification.module';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [

@@ -1,4 +1,3 @@
-import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import { LectureRepository } from '@src/lecture/repositories/lecture.repository';
 import {
   BadRequestException,
@@ -26,7 +25,6 @@ import {
 } from '@src/lecture/interface/lecture.interface';
 import { Cache } from 'cache-manager';
 import { DanceCategory } from '@src/common/enum/enum';
-import { CouponRepository } from '@src/coupon/repository/coupon.repository';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
 import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
@@ -38,18 +36,18 @@ import { EnrollLectureScheduleDto } from '../dtos/get-enroll-schedule.dto';
 import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
 import { DetailEnrollScheduleDto } from '../dtos/get-detail-enroll-schedule.dto';
 import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
-import { EnrollLectureListDto } from '../dtos/enroll-lecture-list.dto';
 import { CombinedEnrollLectureWithCountDto } from '../dtos/combined-enroll-lecture-with-count.dto';
+import { EventBus } from '@nestjs/cqrs';
+import { NewLectureEvent } from '@src/notification/events/notification.event';
 
 @Injectable()
 export class LectureService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly lectureRepository: LectureRepository,
-    private readonly lecturerRepository: LecturerRepository,
     private readonly queryFilter: QueryFilter,
     private readonly prismaService: PrismaService,
-    private readonly couponRepository: CouponRepository,
+    private readonly eventBus: EventBus,
   ) {}
 
   async createLecture(createLectureDto: CreateLectureDto, lecturerId: number) {
@@ -218,6 +216,8 @@ export class LectureService {
             lectureCouponTargetInputData,
           );
         }
+
+        this.eventBus.publish(new NewLectureEvent(newLecture.id));
 
         return {
           newLecture,

@@ -1,10 +1,10 @@
 import { INotificationTarget } from '../interfaces/notification.interface';
 
-export class newLectureEvent {
+export class NewLectureEvent {
   constructor(public readonly lectureId: number) {}
 }
 
-export class newReservationEvent {
+export class NewReservationEvent {
   constructor(
     public readonly reservationId: number,
     public readonly target: INotificationTarget,

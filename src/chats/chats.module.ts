@@ -8,7 +8,6 @@ import { ChatsService } from './services/chats.service';
 import { ChatsRepository } from './repositories/chats.repository';
 import { ChatRoomService } from './services/chats-room.service';
 import { ChatRoomRepository } from './repositories/chats-room.repository';
-import { EventsModule } from '@src/events/events.module';
 import { EventsGateway } from '@src/events/events.gateway';
 
 @Module({
