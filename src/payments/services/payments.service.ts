@@ -60,6 +60,7 @@ import { PaymentDto } from '../dtos/payment.dto';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
+import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -692,12 +693,10 @@ export class PaymentsService implements OnModuleInit {
 
     //입금 대기중 또는 결제 완료일때
     if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
-      const payment =
-        await this.paymentsRepository.getLecturePaymentResultWithToss(
-          paymentInfo.id,
-        );
-
-      return new PaymentDto(payment);
+      throw new BadRequestException(
+        `이미 승인된 결제 정보입니다.`,
+        'AlreadyApproved',
+      );
     }
 
     //결제 대기중일때
@@ -709,7 +708,7 @@ export class PaymentsService implements OnModuleInit {
           paymentKey,
         });
 
-      return await this.confirmPaymentTransaction(
+      await this.confirmPaymentTransaction(
         paymentInfo.id,
         paymentInfo.paymentProductType.name,
         paymentKey,
@@ -718,7 +717,7 @@ export class PaymentsService implements OnModuleInit {
     }
 
     throw new BadRequestException(
-      `해당 결제 정보는 ${paymentInfo.paymentStatus.name}상태 입니다.`,
+      `결제 상태가 일치하지 않습니다.`,
       'PaymentStatusMismatch',
     );
   }
@@ -994,7 +993,10 @@ export class PaymentsService implements OnModuleInit {
     const paymentInfo = await this.getPaymentInfo(orderId);
 
     if (paymentInfo.paymentStatus.id !== PaymentOrderStatus.READY) {
-      throw new BadRequestException(`취소가 불가능한 상태입니다`);
+      throw new BadRequestException(
+        `취소할 수 없는 상태입니다.`,
+        'InvalidCancelStatus',
+      );
     }
 
     if (paymentInfo.paymentProductType.name === PaymentProductTypes.클래스) {
@@ -1216,22 +1218,20 @@ export class PaymentsService implements OnModuleInit {
   }
 
   async createLecturePaymentWithPass(
-    userId,
+    userId: number,
     createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
   ) {
     const { passId, orderId, lectureId, lectureSchedule } =
       createLecturePaymentWithPassDto;
 
-    //결제 완료된 상태면 결제 내역 반환
+    //멱등성 보장을 위해 orderId로 결제정보가 존재하는지 확인
     const paymentInfo = await this.paymentsRepository.getPaymentInfoByOrderId(
       orderId,
     );
-    if (
-      paymentInfo &&
-      paymentInfo.paymentStatus.id === PaymentOrderStatus.DONE
-    ) {
-      return await this.paymentsRepository.getLecturePaymentResultWithPass(
-        paymentInfo.id,
+    if (paymentInfo) {
+      throw new BadRequestException(
+        `결제정보가 이미 존재합니다.`,
+        'PaymentExists',
       );
     }
 
@@ -1243,6 +1243,7 @@ export class PaymentsService implements OnModuleInit {
       userId,
       createLecturePaymentWithPassDto.orderId,
     );
+
     const userPass: ISelectedUserPass = await this.checkUserPassValidity(
       userId,
       passId,
@@ -1258,9 +1259,10 @@ export class PaymentsService implements OnModuleInit {
       refundableDate,
     );
 
-    return await this.paymentsRepository.getLecturePaymentResultWithPass(
-      payment.id,
-    );
+    const paymentResult =
+      await this.paymentsRepository.getLecturePaymentResultWithPass(payment.id);
+
+    return new LecturePaymentWithPassUsageDto(paymentResult);
   }
 
   private async checkUserPassValidity(

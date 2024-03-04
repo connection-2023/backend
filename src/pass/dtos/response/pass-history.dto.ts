@@ -1,7 +1,7 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { BasicLectureDto } from '@src/common/dtos/basic-lecture.dto';
 import { ReservationDto } from '@src/common/dtos/reservation.dto';
-import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { PaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
 import { PaymentDto } from '@src/payments/dtos/payment.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 @Exclude()
@@ -13,7 +13,7 @@ class PassReservationPaymentDto extends PickType(PaymentDto, [
 
 @Exclude()
 class PassReservationLectureScheduleDto extends OmitType(
-  PaymentLectureScheduleDto,
+  PaymentLectureScheduleWithLectureDto,
   ['lecture'],
 ) {
   @ApiProperty({

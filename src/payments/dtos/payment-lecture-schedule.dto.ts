@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { LectureSchedule } from '@prisma/client';
 import { LectureImageDto } from '@src/common/dtos/lecture-image.dto';
 import { SimpleLectureDto } from '@src/lecturer/dtos/simple-lecture.dto';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
+import { BasicPaymentLectureScheduleDto } from './response/basic-payment-lecture-schedule.dto';
 
 @Exclude()
 class PrivateSimpleLecture extends SimpleLectureDto {
@@ -26,49 +27,17 @@ class PrivateSimpleLecture extends SimpleLectureDto {
 }
 
 @Exclude()
-export class PaymentLectureScheduleDto implements LectureSchedule {
-  @ApiProperty({
-    description: '일정 id',
-    type: Number,
-  })
-  @Expose()
-  id: number;
-  lectureId: number;
-  day: number;
-
-  @ApiProperty({
-    description: '시작 시간',
-    type: Date,
-  })
-  @Expose()
-  startDateTime: Date;
-
-  @ApiProperty({
-    description: '종료 시간',
-    type: Date,
-  })
-  @Expose()
-  endDateTime: Date;
-
-  @ApiProperty({
-    description: '현재 인원',
-    type: Number,
-  })
-  @Expose()
-  numberOfParticipants: number;
-
+export class PaymentLectureScheduleWithLectureDto extends BasicPaymentLectureScheduleDto {
   @ApiProperty({
     description: '강의 정보',
     type: PrivateSimpleLecture,
   })
+  @Type(() => PrivateSimpleLecture)
   @Expose()
   lecture?: PrivateSimpleLecture;
 
-  constructor(lectureSchedule: Partial<PaymentLectureScheduleDto>) {
+  constructor(lectureSchedule: Partial<PaymentLectureScheduleWithLectureDto>) {
+    super();
     Object.assign(this, lectureSchedule);
-
-    this.lecture = lectureSchedule.lecture
-      ? new PrivateSimpleLecture(lectureSchedule.lecture)
-      : undefined;
   }
 }

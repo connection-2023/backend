@@ -592,43 +592,13 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.payment.findUnique({
         where: { id: paymentId },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
-          paymentPassUsage: {
-            select: {
-              usedCount: true,
-              lecturePass: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          },
+        include: {
+          paymentMethod: true,
+          paymentPassUsage: { include: { lecturePass: true } },
           reservation: {
-            select: {
-              participants: true,
-              requests: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
+            include: {
+              lectureSchedule: true,
+              lecture: true,
             },
           },
         },

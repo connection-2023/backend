@@ -32,6 +32,8 @@ import { Request } from 'express';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { PaymentHistoryTypes, PaymentMethods } from '../enum/payment.enum';
 import { ApiHandleRefund } from '../swagger-decorators/handle-refund.decorator';
+import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
+import { ApiPayments } from './swagger/payments.swagger';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -75,70 +77,41 @@ export class PaymentsController {
     return { passPaymentInfo };
   }
 
-  @ApiConfirmPayment()
+  @ApiPayments.ConfirmLecturePayment({
+    summary: '결제 승인 paymentKey사용',
+    description: ' 결제 결과는 /payments/:orderId로',
+  })
   @Patch('/toss/confirm')
   @UseGuards(UserAccessTokenGuard)
   async confirmLecturePayment(
     @Body() confirmPaymentDto: ConfirmLecturePaymentDto,
-  ): Promise<PaymentDto> {
-    return await this.paymentsService.confirmPayment(confirmPaymentDto);
+  ): Promise<void> {
+    await this.paymentsService.confirmPayment(confirmPaymentDto);
   }
 
-  @ApiCancelPayment()
+  @ApiPayments.CancelPayment({ summary: '결제 진행 중 취소' })
   @Post('/toss/:orderId/cancel')
   async cancelPayment(@Param('orderId') orderId: string): Promise<void> {
     return await this.paymentsService.cancelPayment(orderId);
   }
 
-  //패스권으로 클래스 결제
-  @ApiCreateLecturePaymentWithPass()
+  @ApiPayments.CreateLecturePaymentWithPass({
+    summary: '패스권으로 클래스 결제 반환값 paymentResultByPass로 변경',
+  })
+  @SetResponseKey('paymentResultByPass')
   @Post('/pass/lecture')
   @UseGuards(UserAccessTokenGuard)
   async createLecturePaymentWithPass(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
-  ) {
-    const paymentResult =
-      await this.paymentsService.createLecturePaymentWithPass(
-        authorizedData.user.id,
-        createLecturePaymentWithPassDto,
-      );
-
-    return { paymentResult };
+  ): Promise<LecturePaymentWithPassUsageDto> {
+    return await this.paymentsService.createLecturePaymentWithPass(
+      authorizedData.user.id,
+      createLecturePaymentWithPassDto,
+    );
   }
 
-  //일반결제(계좌이체)
-  // @ApiCreateLecturePaymentWithTransfer()
-  // @SetResponseKey('transferPaymentResult')
-  // @Post('/transfer/lecture')
-  // @UseGuards(UserAccessTokenGuard)
-  // async createLecturePaymentWithTransfer(
-  //   @GetAuthorizedUser() authorizedData: ValidateResult,
-  //   @Body()
-  //   createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
-  // ): Promise<PaymentDto> {
-  //   return await this.paymentsService.createLecturePaymentWithTransfer(
-  //     authorizedData.user.id,
-  //     createLecturePaymentWithTransferDto,
-  //   );
-  // }
-
-  // @ApiCreateLecturePaymentWithDeposit()
-  // @SetResponseKey('depositPaymentResult')
-  // @Post('/deposit/lecture')
-  // @UseGuards(UserAccessTokenGuard)
-  // async createLecturePaymentWithDeposit(
-  //   @GetAuthorizedUser() authorizedData: ValidateResult,
-  //   @Body()
-  //   createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
-  // ) {
-  //   return await this.paymentsService.createLecturePaymentWithDeposit(
-  //     authorizedData.user.id,
-  //     createLecturePaymentWithDepositDto,
-  //   );
-  // }
-
-  @ApiHandleRefund()
+  @ApiPayments.HandleRefund({ summary: '환불 처리' })
   @Post('/:paymentId/refund')
   @UseGuards(UserAccessTokenGuard)
   async handleRefund(
@@ -182,4 +155,35 @@ export class PaymentsController {
       req.body,
     );
   }
+
+  //일반결제(계좌이체)
+  // @ApiCreateLecturePaymentWithTransfer()
+  // @SetResponseKey('transferPaymentResult')
+  // @Post('/transfer/lecture')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createLecturePaymentWithTransfer(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body()
+  //   createLecturePaymentWithTransferDto: CreateLecturePaymentWithTransferDto,
+  // ): Promise<PaymentDto> {
+  //   return await this.paymentsService.createLecturePaymentWithTransfer(
+  //     authorizedData.user.id,
+  //     createLecturePaymentWithTransferDto,
+  //   );
+  // }
+
+  // @ApiCreateLecturePaymentWithDeposit()
+  // @SetResponseKey('depositPaymentResult')
+  // @Post('/deposit/lecture')
+  // @UseGuards(UserAccessTokenGuard)
+  // async createLecturePaymentWithDeposit(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body()
+  //   createLecturePaymentWithDepositDto: CreateLecturePaymentWithDepositDto,
+  // ) {
+  //   return await this.paymentsService.createLecturePaymentWithDeposit(
+  //     authorizedData.user.id,
+  //     createLecturePaymentWithDepositDto,
+  //   );
+  // }
 }

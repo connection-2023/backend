@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Reservation } from '@prisma/client';
-import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { PaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
 import { PaymentDto } from '@src/payments/dtos/payment.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
@@ -48,11 +48,11 @@ export class ReservationDto implements Reservation {
 
   @ApiProperty({
     description: '원데이 클래스 일정',
-    type: PaymentLectureScheduleDto,
+    type: PaymentLectureScheduleWithLectureDto,
   })
-  @Type(() => PaymentLectureScheduleDto)
+  @Type(() => PaymentLectureScheduleWithLectureDto)
   @Expose()
-  lectureSchedule?: PaymentLectureScheduleDto;
+  lectureSchedule?: PaymentLectureScheduleWithLectureDto;
 
   @ApiProperty({
     description: '정기 클래스 일정',
