@@ -53,6 +53,5 @@ export class LecturePaymentWithPassUsageDto extends BasicPaymentDto {
   ) {
     super();
     Object.assign(this, lecturePaymentWithPassUsage);
-    console.log(this);
   }
 }
