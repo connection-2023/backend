@@ -1,16 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { LectureSchedule } from '@prisma/client';
-import { SimpleLectureDto } from '@src/lecturer/dtos/simple-lecture.dto';
 import { Exclude, Expose } from 'class-transformer';
 @Exclude()
-export class LectureScheduleDto implements LectureSchedule {
+export class BasicPaymentLectureScheduleDto implements LectureSchedule {
   @ApiProperty({
     description: '일정 id',
     type: Number,
   })
   @Expose()
   id: number;
-
   lectureId: number;
   day: number;
 
@@ -34,8 +32,4 @@ export class LectureScheduleDto implements LectureSchedule {
   })
   @Expose()
   numberOfParticipants: number;
-
-  constructor(lectureSchedule: Partial<LectureScheduleDto>) {
-    Object.assign(this, lectureSchedule);
-  }
 }

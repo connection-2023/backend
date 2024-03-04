@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PaymentMethod } from '@prisma/client';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
 import { PaymentMethods } from '@src/payments/enum/payment.enum';
-
+import { Exclude, Expose } from 'class-transformer';
+@Exclude()
 export class PaymentMethodDto implements PaymentMethod {
   id: number;
 
@@ -10,11 +11,10 @@ export class PaymentMethodDto implements PaymentMethod {
     enum: ExtractEnumKeys(PaymentMethods),
     description: '결제 방식',
   })
+  @Expose()
   name: string;
 
   constructor(paymentMethodDto: Partial<PaymentMethodDto>) {
-    this.name = paymentMethodDto.name;
-
-    Object.assign(this);
+    Object.assign(this, paymentMethodDto);
   }
 }

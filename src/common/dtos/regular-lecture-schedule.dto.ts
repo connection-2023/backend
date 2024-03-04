@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RegularLectureSchedule, RegularLectureStatus } from '@prisma/client';
 import { SimpleLectureDto } from '@src/lecturer/dtos/simple-lecture.dto';
-import { RegularLectureStatusDto } from './regular-lecture-status.dto';
+import { RegularLectureStatusWithLectureDto } from './regular-lecture-status-with-lecture.dto';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
@@ -36,7 +36,7 @@ export class RegularLectureScheduleDto implements RegularLectureSchedule {
   })
   endDateTime: Date;
 
-  regularLectureStatus?: RegularLectureStatusDto;
+  regularLectureStatus?: RegularLectureStatusWithLectureDto;
 
   constructor(regularLectureSchedule: Partial<RegularLectureScheduleDto>) {
     Object.assign(this, regularLectureSchedule);

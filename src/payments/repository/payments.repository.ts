@@ -396,18 +396,9 @@ export class PaymentsRepository {
     secret?: string,
   ) {
     try {
-      return await transaction.payment.update({
+      await transaction.payment.update({
         where: { id: paymentId },
         data: { paymentKey, statusId, paymentMethodId, secret },
-        include: {
-          paymentStatus: true,
-          paymentProductType: true,
-          paymentMethod: true,
-          reservation: { include: { lectureSchedule: true } },
-          userPass: { include: { lecturePass: true } },
-          cardPaymentInfo: true,
-          virtualAccountPaymentInfo: { include: { bank: true } },
-        },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -592,43 +583,13 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.payment.findUnique({
         where: { id: paymentId },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
-          paymentPassUsage: {
-            select: {
-              usedCount: true,
-              lecturePass: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          },
+        include: {
+          paymentMethod: true,
+          paymentPassUsage: { include: { lecturePass: true } },
           reservation: {
-            select: {
-              participants: true,
-              requests: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
+            include: {
+              lectureSchedule: true,
+              lecture: true,
             },
           },
         },
@@ -1399,6 +1360,27 @@ export class PaymentsRepository {
   async getUserPassById(userId: number, passId: number) {
     return await this.prismaService.userPass.findFirst({
       where: { userId, lecturePassId: passId, isEnabled: true },
+    });
+  }
+
+  async getPaymentResultByOrderId(userId: number, orderId: string) {
+    return await this.prismaService.payment.findFirst({
+      where: { userId, orderId },
+      include: {
+        paymentStatus: true,
+        paymentProductType: true,
+        paymentMethod: true,
+        reservation: {
+          include: {
+            lecture: true,
+            lectureSchedule: true,
+            regularLectureStatus: { include: { regularLectureSchedule: true } },
+          },
+        },
+        userPass: { include: { lecturePass: true } },
+        cardPaymentInfo: true,
+        virtualAccountPaymentInfo: { include: { bank: true } },
+      },
     });
   }
 }

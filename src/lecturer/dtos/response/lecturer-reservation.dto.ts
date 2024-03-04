@@ -3,11 +3,11 @@ import { SimpleLectureDto } from '../simple-lecture.dto';
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { UserWithProfileImageDto } from '@src/common/dtos/user-with-profile-image.dto';
-import { PaymentLectureScheduleDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { PaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
 @Exclude()
 class LecturerReservationOneDayScheduleDto extends OmitType(
-  PaymentLectureScheduleDto,
+  PaymentLectureScheduleWithLectureDto,
   ['lecture'],
 ) {}
 @Exclude()

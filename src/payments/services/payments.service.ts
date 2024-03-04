@@ -60,6 +60,8 @@ import { PaymentDto } from '../dtos/payment.dto';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
+import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
+import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -203,10 +205,16 @@ export class PaymentsService implements OnModuleInit {
     );
 
     if (!lecture) {
-      throw new NotFoundException(`강의정보가 존재하지 않습니다.`);
+      throw new NotFoundException(
+        `강의정보가 존재하지 않습니다.`,
+        'LectureNotFound',
+      );
     }
     if (!lecture.isActive) {
-      throw new BadRequestException(`활성화되지 않은 강의입니다.`);
+      throw new BadRequestException(
+        `활성화되지 않은 강의입니다.`,
+        'InactiveLecture',
+      );
     }
 
     //강의 인원수 확인및 데드라인을 통한 환불 가능한 시간(예약 마감일) 계산
@@ -221,7 +229,10 @@ export class PaymentsService implements OnModuleInit {
 
     //현재 신청 시간이 환불 가능한 시간(예약 마감일)보다 지났을때
     if (currentDate.getTime() > refundableDate.getTime()) {
-      throw new BadRequestException(`예약 마감일이 지난 강의입니다.`);
+      throw new BadRequestException(
+        `예약 마감일이 지난 강의입니다.`,
+        'ExpiredDate',
+      );
     }
 
     return { lecture, refundableDate };
@@ -277,12 +288,15 @@ export class PaymentsService implements OnModuleInit {
       );
 
     if (!selectedOneDaySchedule) {
-      throw new NotFoundException(`해당 강의 정보가 존재하지 않습니다.`);
+      throw new NotFoundException(
+        `해당 강의 일정이 존재하지 않습니다.`,
+        'LectureScheduleNotFound',
+      );
     }
 
     const remainingCapacity = lectureMaxCapacity - lectureSchedule.participants;
     if (remainingCapacity <= selectedOneDaySchedule.numberOfParticipants) {
-      throw new BadRequestException(`인원 초과입니다.`);
+      throw new BadRequestException(`인원 초과입니다.`, 'ExceededCapacity');
     }
 
     return new Date(
@@ -311,7 +325,7 @@ export class PaymentsService implements OnModuleInit {
     if (
       remainingCapacity <= selectedRegularLectureStatus.numberOfParticipants
     ) {
-      throw new BadRequestException(`인원 초과입니다.`);
+      throw new BadRequestException(`인원 초과입니다.`, ' ExceededCapacity');
     }
 
     return new Date(
@@ -337,13 +351,19 @@ export class PaymentsService implements OnModuleInit {
       );
 
     if (couponTarget.length !== couponIds.length) {
-      throw new BadRequestException(`쿠폰 적용 대상이 아닙니다.`);
+      throw new BadRequestException(
+        `쿠폰 적용 대상이 아닙니다.`,
+        'InvalidCoupon',
+      );
     }
     for (const coupon of couponTarget) {
       if (
         coupon.lectureCoupon.maxUsageCount === coupon.lectureCoupon.usageCount
       ) {
-        throw new BadRequestException(`쿠폰 사용 제한 횟수를 초과했습니다.`);
+        throw new BadRequestException(
+          `쿠폰 사용 제한 횟수를 초과했습니다.`,
+          'CouponLimit',
+        );
       }
     }
   }
@@ -692,12 +712,10 @@ export class PaymentsService implements OnModuleInit {
 
     //입금 대기중 또는 결제 완료일때
     if (paymentOrderStatus.includes(paymentInfo.paymentStatus.id)) {
-      const payment =
-        await this.paymentsRepository.getLecturePaymentResultWithToss(
-          paymentInfo.id,
-        );
-
-      return new PaymentDto(payment);
+      throw new BadRequestException(
+        `이미 승인된 결제 정보입니다.`,
+        'AlreadyApproved',
+      );
     }
 
     //결제 대기중일때
@@ -709,7 +727,7 @@ export class PaymentsService implements OnModuleInit {
           paymentKey,
         });
 
-      return await this.confirmPaymentTransaction(
+      await this.confirmPaymentTransaction(
         paymentInfo.id,
         paymentInfo.paymentProductType.name,
         paymentKey,
@@ -718,7 +736,7 @@ export class PaymentsService implements OnModuleInit {
     }
 
     throw new BadRequestException(
-      `해당 결제 정보는 ${paymentInfo.paymentStatus.name}상태 입니다.`,
+      `결제 상태가 일치하지 않습니다.`,
       'PaymentStatusMismatch',
     );
   }
@@ -786,8 +804,8 @@ export class PaymentsService implements OnModuleInit {
     productType: string,
     paymentKey: string,
     paymentInfo: TossPaymentsConfirmResponse,
-  ): Promise<PaymentDto> {
-    const paymentResult = await this.prismaService.$transaction(
+  ): Promise<void> {
+    await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         let paymentMethodId: number;
         let statusId: number;
@@ -817,7 +835,7 @@ export class PaymentsService implements OnModuleInit {
         }
 
         // 결제 정보 업데이트
-        return await this.paymentsRepository.trxUpdatePayment(
+        await this.paymentsRepository.trxUpdatePayment(
           transaction,
           paymentId,
           paymentKey,
@@ -827,8 +845,6 @@ export class PaymentsService implements OnModuleInit {
         );
       },
     );
-
-    return new PaymentDto(paymentResult);
   }
 
   private async createCardPaymentInfo(
@@ -994,15 +1010,18 @@ export class PaymentsService implements OnModuleInit {
     const paymentInfo = await this.getPaymentInfo(orderId);
 
     if (paymentInfo.paymentStatus.id !== PaymentOrderStatus.READY) {
-      throw new BadRequestException(`취소가 불가능한 상태입니다`);
+      throw new BadRequestException(
+        `취소할 수 없는 상태입니다.`,
+        'InvalidCancelStatus',
+      );
     }
 
     if (paymentInfo.paymentProductType.name === PaymentProductTypes.클래스) {
-      return await this.trxCancelReservation(paymentInfo);
-    }
-
-    if (paymentInfo.paymentProductType.name === PaymentProductTypes.패스권) {
-      return await this.trxCancelUserPass(paymentInfo);
+      await this.trxCancelReservation(paymentInfo);
+    } else if (
+      paymentInfo.paymentProductType.name === PaymentProductTypes.패스권
+    ) {
+      await this.trxCancelUserPass(paymentInfo);
     }
   }
 
@@ -1098,11 +1117,11 @@ export class PaymentsService implements OnModuleInit {
       pass,
     );
 
-    return {
+    return new PendingPaymentInfoDto({
       orderId: createPassPaymentDto.orderId,
       orderName: createPassPaymentDto.orderName,
       value: createPassPaymentDto.finalPrice,
-    };
+    });
   }
 
   private async checkPassValidity(
@@ -1216,24 +1235,11 @@ export class PaymentsService implements OnModuleInit {
   }
 
   async createLecturePaymentWithPass(
-    userId,
+    userId: number,
     createLecturePaymentWithPassDto: CreateLecturePaymentWithPassDto,
   ) {
     const { passId, orderId, lectureId, lectureSchedule } =
       createLecturePaymentWithPassDto;
-
-    //결제 완료된 상태면 결제 내역 반환
-    const paymentInfo = await this.paymentsRepository.getPaymentInfoByOrderId(
-      orderId,
-    );
-    if (
-      paymentInfo &&
-      paymentInfo.paymentStatus.id === PaymentOrderStatus.DONE
-    ) {
-      return await this.paymentsRepository.getLecturePaymentResultWithPass(
-        paymentInfo.id,
-      );
-    }
 
     const { lecture, refundableDate } = await this.checkLectureValidity(
       lectureId,
@@ -1243,6 +1249,7 @@ export class PaymentsService implements OnModuleInit {
       userId,
       createLecturePaymentWithPassDto.orderId,
     );
+
     const userPass: ISelectedUserPass = await this.checkUserPassValidity(
       userId,
       passId,
@@ -1258,9 +1265,10 @@ export class PaymentsService implements OnModuleInit {
       refundableDate,
     );
 
-    return await this.paymentsRepository.getLecturePaymentResultWithPass(
-      payment.id,
-    );
+    const paymentResult =
+      await this.paymentsRepository.getLecturePaymentResultWithPass(payment.id);
+
+    return new LecturePaymentWithPassUsageDto(paymentResult);
   }
 
   private async checkUserPassValidity(
@@ -1274,22 +1282,34 @@ export class PaymentsService implements OnModuleInit {
     const selectedPass: ISelectedUserPass =
       await this.paymentsRepository.getUserPass(userId, passId);
     if (!selectedPass) {
-      throw new BadRequestException(`패스권이 존재하지 않습니다.`);
+      throw new NotFoundException(
+        `패스권이 존재하지 않습니다.`,
+        'PassNotFound',
+      );
     }
 
     if (selectedPass.remainingUses < lectureSchedule.participants) {
-      throw new BadRequestException(`패스권의 사용 가능 횟수를 초과했습니다.`);
+      throw new BadRequestException(
+        `패스권의 사용 가능 횟수를 초과했습니다.`,
+        'ExceededPassUsage',
+      );
     }
 
     const lectureTargetExist = selectedPass.lecturePass.lecturePassTarget.some(
       (item) => item.lectureId === lectureId,
     );
     if (!lectureTargetExist) {
-      throw new BadRequestException(`패스권 적용 대상이 아닙니다.`);
+      throw new BadRequestException(
+        `패스권 적용 대상이 아닙니다.`,
+        'InvalidPassTarget',
+      );
     }
 
     if (selectedPass.endAt && selectedPass.endAt < currentDate) {
-      throw new BadRequestException(`사용기간이 만료된 패스권입니다.`);
+      throw new BadRequestException(
+        `사용기간이 만료된 패스권입니다.`,
+        'ExpiredPass',
+      );
     }
     return selectedPass;
   }
@@ -1384,42 +1404,6 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  // async createLecturePaymentWithTransfer(
-  //   userId: number,
-  //   dto: CreateLecturePaymentWithTransferDto,
-  // ): Promise<PaymentDto> {
-  //   const { lectureId, lectureSchedule, orderId, userBankAccountId } = dto;
-
-  //   const lecture: Lecture = await this.checkLectureValidity(
-  //     lectureId,
-  //     lectureSchedule,
-  //   );
-
-  //   //올바른 환불 계좌인지 확인
-  //   await this.checkUserBankAccount(userId, userBankAccountId);
-  //   //유효한 orderId인지 확인
-  //   await this.checkUserPaymentValidity(userId, orderId);
-  //   //적용 가능한 쿠폰인지 확인
-  //   await this.checkApplicableCoupon(dto);
-  //   const coupons: Coupons = await this.comparePrice(
-  //     userId,
-  //     lecture.price,
-  //     dto,
-  //   );
-
-  //   //계좌이체 관련 정보 생성
-  //   await this.trxCreateLecturePaymentWithTransfer(
-  //     userId,
-  //     lecture,
-  //     dto,
-  //     coupons,
-  //   );
-
-  //   return new PaymentDto(
-  //     await this.paymentsRepository.getUserPaymentInfo(userId, orderId),
-  //   );
-  // }
-
   private async checkUserBankAccount(
     userId: number,
     userBankAccountId: number,
@@ -1439,191 +1423,6 @@ export class PaymentsService implements OnModuleInit {
 
     return selectedUserBankAccount;
   }
-
-  // private async trxCreateLecturePaymentWithTransfer(
-  //   userId: number,
-  //   { id: lectureId, lecturerId, lectureMethodId },
-  //   dto: CreateLecturePaymentWithTransferDto,
-  //   coupons: Coupons,
-  // ): Promise<void> {
-  //   await this.prismaService.$transaction(
-  //     async (transaction: PrismaTransaction) => {
-  //       const paymentInfo = this.createPaymentInfo(dto);
-  //       const createdLecturePayment: Payment = await this.trxCreatePayment(
-  //         transaction,
-  //         lecturerId,
-  //         userId,
-  //         paymentInfo,
-  //         PaymentProductTypes.클래스,
-  //         PaymentOrderStatus.WAITING_FOR_DEPOSIT,
-  //         PaymentMethods.선결제,
-  //       );
-
-  //       await Promise.all([
-  //         //계좌이체 정보 생성
-  //         this.trxCreateTransferPayment(
-  //           transaction,
-  //           lecturerId,
-  //           createdLecturePayment.id,
-  //           dto.senderName,
-  //           dto.userBankAccountId,
-  //         ),
-  //         //쿠폰 사용내역 생성
-  //         this.trxUpdateCouponUsage(
-  //           transaction,
-  //           userId,
-  //           createdLecturePayment.id,
-  //           coupons,
-  //         ),
-  //         //예약 내역 생성
-  //         this.trxCreateUserReservation(
-  //           transaction,
-  //           userId,
-  //           createdLecturePayment.id,
-  //           dto,
-  //           lectureMethodId,
-  //           lectureId,
-  //         ),
-  //         //수강생 추가 및 신청 횟수 증가
-  //         this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
-  //       ]);
-  //     },
-  //   );
-  // }
-
-  // private async trxCreateTransferPayment(
-  //   transaction: PrismaTransaction,
-  //   lecturerId: number,
-  //   paymentId: number,
-  //   senderName: string,
-  //   refundUserBankAccountId: number,
-  //   noShowDeposit?: number,
-  // ) {
-  //   const lecturerBankAccount =
-  //     await this.paymentsRepository.getLecturerRecentBankAccount(lecturerId);
-
-  //   await this.paymentsRepository.trxCreateTransferPayment(transaction, {
-  //     paymentId,
-  //     lecturerBankAccountId: lecturerBankAccount.id,
-  //     senderName,
-  //     noShowDeposit,
-  //   });
-  //   await this.paymentsRepository.trxCreateRefundPayment(transaction, {
-  //     paymentId,
-  //     refundUserBankAccountId,
-  //     refundStatusId: RefundStatuses.NONE,
-  //   });
-  // }
-
-  // async createLecturePaymentWithDeposit(
-  //   userId: number,
-  //   dto: CreateLecturePaymentWithDepositDto,
-  // ): Promise<PaymentDto> {
-  //   const { lectureId, lectureSchedule, orderId, userBankAccountId } = dto;
-
-  //   const lecture: Lecture = await this.checkLectureValidity(
-  //     lectureId,
-  //     lectureSchedule,
-  //   );
-
-  //   //올바른 환불 계좌인지 확인
-  //   await this.checkUserBankAccount(userId, userBankAccountId);
-  //   //유효한 orderId인지 확인
-  //   await this.checkUserPaymentValidity(userId, orderId);
-  //   //보증금 비교
-  //   this.compareDeposit(dto, lecture);
-
-  //   await this.trxCreateLecturePaymentWithDeposit(userId, lecture, dto);
-
-  //   return new PaymentDto(
-  //     await this.paymentsRepository.getUserPaymentInfo(userId, orderId),
-  //   );
-  // }
-
-  // private compareDeposit(
-  //   dto: CreateLecturePaymentWithDepositDto,
-  //   lecture: Lecture,
-  // ): void {
-  //   const {
-  //     noShowDeposit: clientDeposit,
-  //     lectureSchedule,
-  //     finalPrice: clientPrice,
-  //   } = dto;
-  //   if (
-  //     (lecture.noShowDeposit && !clientDeposit) ||
-  //     (!lecture.noShowDeposit && clientDeposit)
-  //   ) {
-  //     throw new BadRequestException(
-  //       '보증금 정보가 누락되었습니다.',
-  //       'DepositMissing',
-  //     );
-  //   } else if (lecture.noShowDeposit !== clientDeposit) {
-  //     throw new BadRequestException(
-  //       '보증금 가격이 일치하지 않습니다.',
-  //       'DepositMismatch',
-  //     );
-  //   }
-
-  //   if (clientPrice !== lecture.price * lectureSchedule.participants) {
-  //     throw new BadRequestException(
-  //       `상품 가격이 일치하지 않습니다.`,
-  //       'ProductPriceMismatch',
-  //     );
-  //   }
-  // }
-
-  // private async trxCreateLecturePaymentWithDeposit(
-  //   userId: number,
-  //   { id: lectureId, lecturerId, lectureMethodId }: Lecture,
-  //   dto:
-  //     | CreateLecturePaymentWithDepositDto
-  //     | CreateLecturePaymentWithDepositDto,
-  // ): Promise<void> {
-  //   await this.prismaService.$transaction(
-  //     async (transaction: PrismaTransaction) => {
-  //       const paymentInfo = {
-  //         orderId: dto.orderId,
-  //         orderName: dto.orderName,
-  //         originalPrice: dto.originalPrice,
-  //         finalPrice: dto.finalPrice,
-  //         noShowDeposit: dto.noShowDeposit,
-  //       };
-
-  //       const createdLecturePayment: Payment = await this.trxCreatePayment(
-  //         transaction,
-  //         lecturerId,
-  //         userId,
-  //         paymentInfo,
-  //         PaymentProductTypes.클래스,
-  //         PaymentOrderStatus.WAITING_FOR_DEPOSIT,
-  //         PaymentMethods.현장결제,
-  //       );
-
-  //       await Promise.all([
-  //         //보증금을 포함한 계좌이체 정보 생성
-  //         this.trxCreateTransferPayment(
-  //           transaction,
-  //           lecturerId,
-  //           createdLecturePayment.id,
-  //           dto.senderName,
-  //           dto.userBankAccountId,
-  //           dto.noShowDeposit,
-  //         ),
-  //         //예약 내역 생성
-  //         this.trxCreateUserReservation(
-  //           transaction,
-  //           userId,
-  //           createdLecturePayment.id,
-  //           dto,
-  //           lectureMethodId,
-  //           lectureId,
-  //         ),
-  //         //수강생 추가 및 신청 횟수 증가
-  //         this.trxCreateOrUpdateLectureLearner(transaction, userId, lecturerId),
-  //       ]);
-  //     },
-  //   );
-  // }
 
   async handleVirtualAccountPaymentStatusWebhook({
     status,
@@ -1901,5 +1700,22 @@ export class PaymentsService implements OnModuleInit {
     }
 
     return selectedPayment;
+  }
+
+  async getPaymentResultByOrderId(
+    userId: number,
+    orderId: string,
+  ): Promise<PaymentResultDto> {
+    const paymentResult =
+      await this.paymentsRepository.getPaymentResultByOrderId(userId, orderId);
+
+    if (!paymentResult) {
+      throw new NotFoundException(
+        `결제 정보가 존재하지 않습니다.`,
+        'PaymentInfoNotFound',
+      );
+    }
+
+    return new PaymentResultDto(paymentResult);
   }
 }

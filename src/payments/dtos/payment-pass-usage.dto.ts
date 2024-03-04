@@ -1,7 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { PaymentPassUsage } from '@prisma/client';
 import { LecturePassDto } from '@src/common/dtos/lecture-pass.dto';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
+class PaymentPassUsageLecturePassDto extends PickType(LecturePassDto, [
+  'id',
+  'title',
+]) {}
+@Exclude()
 export class PaymentPassUsageDto implements PaymentPassUsage {
   id: number;
   paymentId: number;
@@ -9,20 +16,19 @@ export class PaymentPassUsageDto implements PaymentPassUsage {
 
   @ApiProperty({
     type: Number,
-    description: '사용량',
+    description: '사용 횟수',
   })
+  @Expose()
   usedCount: number;
 
   @ApiProperty({
-    type: LecturePassDto,
+    type: PaymentPassUsageLecturePassDto,
     description: '사용한 패스권 정보',
   })
-  lecturePass: LecturePassDto;
+  @Expose()
+  lecturePass: PaymentPassUsageLecturePassDto;
 
   constructor(paymentPassUsage: Partial<PaymentPassUsageDto>) {
-    this.usedCount = paymentPassUsage.usedCount;
-    this.lecturePass = paymentPassUsage.lecturePass
-      ? new LecturePassDto(paymentPassUsage.lecturePass)
-      : null;
+    Object.assign(this, paymentPassUsage);
   }
 }
