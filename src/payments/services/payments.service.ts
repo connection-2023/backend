@@ -40,6 +40,7 @@ import {
   PaymentStatus,
   Reservation,
   UserBankAccount,
+  UserPass,
 } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { ConfirmLecturePaymentDto as ConfirmPaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
@@ -1085,6 +1086,7 @@ export class PaymentsService implements OnModuleInit {
     createPassPaymentDto: CreatePassPaymentDto,
   ) {
     const pass: LecturePass = await this.checkPassValidity(
+      userId,
       createPassPaymentDto.passId,
       createPassPaymentDto.finalPrice,
     );
@@ -1103,7 +1105,11 @@ export class PaymentsService implements OnModuleInit {
     };
   }
 
-  private async checkPassValidity(passId: number, clientPrice: number) {
+  private async checkPassValidity(
+    userId: number,
+    passId: number,
+    clientPrice: number,
+  ): Promise<LecturePass> {
     const pass: LecturePass = await this.paymentsRepository.getAvailablePass(
       passId,
     );
@@ -1119,6 +1125,18 @@ export class PaymentsService implements OnModuleInit {
         'ProductPriceMismatch',
       );
     }
+
+    const userPass: UserPass = await this.paymentsRepository.getUserPass(
+      userId,
+      passId,
+    );
+    if (userPass) {
+      throw new BadRequestException(
+        `이미 구매한 패스권입니다.`,
+        'AlreadyPurchasedPass',
+      );
+    }
+
     return pass;
   }
 

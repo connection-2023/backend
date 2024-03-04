@@ -46,6 +46,10 @@ export function ApiCreatePassPaymentInfo() {
           name: 'PaymentAlreadyExists',
           example: { message: '결제정보가 이미 존재합니다.' },
         },
+        {
+          name: 'AlreadyPurchasedPass',
+          example: { message: '이미 구매한 패스권입니다.' },
+        },
       ]),
     ),
   );
