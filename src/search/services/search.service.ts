@@ -289,6 +289,7 @@ export class SearchService {
             { match: { 'lecturePassTarget.title.nori': value } },
             { match: { 'lecturePassTarget.title.ngram': value } },
           ],
+          must: { match: { isdisabled: false } },
           must_not: lecturerIdQueries,
         },
       },
@@ -868,7 +869,7 @@ export class SearchService {
       size: take,
       query: {
         bool: {
-          must: [searchQuery].filter(Boolean),
+          must: [{ match: { isdisabled: false } }, searchQuery].filter(Boolean),
           must_not: lecturerIdQueries,
         },
       },
