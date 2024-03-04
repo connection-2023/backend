@@ -873,6 +873,7 @@ export class PaymentsRepository {
       );
     }
   }
+
   async getUserPass(userId: number, passId: number) {
     try {
       return await this.prismaService.userPass.findFirst({
@@ -1392,6 +1393,12 @@ export class PaymentsRepository {
     await transaction.reservation.update({
       where: { id: reservationId },
       data: { isEnabled },
+    });
+  }
+
+  async getUserPassById(userId: number, passId: number) {
+    return await this.prismaService.userPass.findFirst({
+      where: { userId, lecturePassId: passId, isEnabled: true },
     });
   }
 }
