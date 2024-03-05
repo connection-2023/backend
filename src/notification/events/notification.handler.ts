@@ -25,7 +25,7 @@ export class NotificationHandler {
       await this.notificationService.createNotification(
         target,
         { lectureId },
-        'newLecture',
+        NotificationType.NewLecture,
       );
     });
   }

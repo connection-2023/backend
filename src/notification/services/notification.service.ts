@@ -19,7 +19,7 @@ export class NotificationService {
   async createNotification(
     target: INotificationTarget,
     source: INotificationSource,
-    type: string,
+    type: NotificationType,
   ) {
     let description: string;
 
