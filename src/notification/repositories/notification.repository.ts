@@ -6,23 +6,23 @@ import {
   INotificationSource,
   INotificationTarget,
 } from '../interfaces/notification.interface';
-import { UserNotification } from '../schemas/notification.schema';
+import { Notification } from '../schemas/notification.schema';
 
 @Injectable()
 export class NotificationRepository {
   constructor(
-    @InjectModel(UserNotification.name)
-    private readonly userNotificationModel: Model<UserNotification>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<Notification>,
   ) {}
 
   async createNotification(
     target: INotificationTarget,
     description: string,
     source: INotificationSource,
-  ): Promise<UserNotification> {
+  ): Promise<Notification> {
     try {
-      return await this.userNotificationModel.create({
-        ...target,
+      return await this.notificationModel.create({
+        target,
         description,
         ...source,
       });
@@ -32,5 +32,13 @@ export class NotificationRepository {
         'NotificationCreateFailed',
       );
     }
+  }
+
+  async getMyNotification(where, pageSize: number): Promise<Notification[]> {
+    return await this.notificationModel
+      .find(where)
+      .sort({ _id: -1 })
+      .limit(pageSize)
+      .exec();
   }
 }

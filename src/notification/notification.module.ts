@@ -3,8 +3,8 @@ import { NotificationController } from './controllers/notification.controller';
 import { NotificationService } from './services/notification.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  UserNotification,
-  UserNotificationSchema,
+  Notification,
+  NotificationSchema,
 } from './schemas/notification.schema';
 import { NotificationRepository } from './repositories/notification.repository';
 import { NotificationHandler } from './events/notification.handler';
@@ -13,7 +13,7 @@ import { EventsGateway } from '@src/events/events.gateway';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: UserNotification.name, schema: UserNotificationSchema },
+      { name: Notification.name, schema: NotificationSchema },
     ]),
   ],
   controllers: [NotificationController],

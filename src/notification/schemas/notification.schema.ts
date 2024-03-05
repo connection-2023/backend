@@ -8,7 +8,7 @@ const options: SchemaOptions = {
 };
 
 @Schema(options)
-export class UserNotification extends Document {
+export class Notification extends Document {
   @Prop({
     required: true,
     type: {
@@ -41,5 +41,4 @@ export class UserNotification extends Document {
   userPassId?: number;
 }
 
-export const UserNotificationSchema =
-  SchemaFactory.createForClass(UserNotification);
+export const NotificationSchema = SchemaFactory.createForClass(Notification);

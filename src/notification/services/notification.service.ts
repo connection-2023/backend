@@ -7,6 +7,11 @@ import { NotificationRepository } from './../repositories/notification.repositor
 import { Inject, Injectable } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { ValidateResult } from '@src/common/interface/common-interface';
+import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
+import { NotificationDto } from '@src/common/dtos/notification.dto';
+import { NotificationType } from 'aws-sdk/clients/budgets';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class NotificationService {
@@ -50,6 +55,29 @@ export class NotificationService {
       target,
       description,
       source,
+    );
+  }
+
+  async getMyNotification(
+    authorizedData: ValidateResult,
+    { pageToken, pageSize }: GetPageTokenQueryDto,
+  ) {
+    const where = {};
+    authorizedData.user
+      ? (where['target.userId'] = authorizedData.user.id)
+      : (where['target.lecturerId'] = authorizedData.lecturer.id);
+
+    pageToken
+      ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(pageToken) })
+      : false;
+
+    const notifications = await this.notificationRepository.getMyNotification(
+      where,
+      pageSize,
+    );
+
+    return notifications.map(
+      (notification) => new NotificationDto(notification),
     );
   }
 }
