@@ -15,6 +15,7 @@ import {
   LecturerLearner,
   LectureLocation,
   UserBankAccount,
+  LectureDay,
 } from '@prisma/client';
 import { ConflictException, Injectable } from '@nestjs/common';
 import {
@@ -43,6 +44,7 @@ import {
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { LectureScheduleWithLectureDto } from '@src/common/dtos/lecture-schedule-with-lecture.dto';
 import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
+import { RegularLectureStatusDto } from '@src/common/dtos/regular-lecture-status.dto';
 
 @Injectable()
 export class LectureRepository {
@@ -260,9 +262,12 @@ export class LectureRepository {
   async trxReadManyRegularLectureSchedules(
     transaction: PrismaTransaction,
     lectureId: number,
-  ): Promise<RegularLectureSchedule[]> {
-    return await transaction.regularLectureSchedule.findMany({
-      where: { regularLectureStatus: { lectureId } },
+  ): Promise<RegularLectureStatusDto[]> {
+    return await transaction.regularLectureStatus.findMany({
+      where: { lectureId },
+      include: {
+        regularLectureSchedule: { orderBy: { startDateTime: 'asc' } },
+      },
     });
   }
 
@@ -535,7 +540,7 @@ export class LectureRepository {
   async trxReadDaySchedule(
     transaction: PrismaTransaction,
     lectureId: number,
-  ): Promise<DaySchedule[]> {
+  ): Promise<LectureDay[]> {
     return await transaction.lectureDay.findMany({
       where: { lectureId },
     });
