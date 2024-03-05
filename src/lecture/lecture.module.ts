@@ -24,9 +24,10 @@ import { PopularLectureRepository } from './repositories/popular-lecture.reposit
 import { PopularLectureService } from './services/popular-lecture.service';
 import { LatestLectureController } from './controllers/latest-lecture.controller';
 import { LatestLectureService } from './services/latest-lecture.service';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
-  imports: [],
+  imports: [CqrsModule],
   controllers: [
     LectureController,
     LectureLikeController,
