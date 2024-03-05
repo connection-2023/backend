@@ -165,8 +165,8 @@ LikedLecture }|--|| Users : user
 <br>
 
 ## 💰 Payment Flow
-![image](https://github.com/connection-2023/backend/assets/96464209/458a55cc-5812-40cd-a05a-f084a4ca302b)
-<br>
+![image](https://github.com/connection-2023/backend/assets/96464209/cd628c6c-0a45-4b54-957a-928ebda6e166)
+
 
 ## 🔍 Search Server Data Flow
 ![image](https://github.com/connection-2023/backend/assets/96464209/cdcd03c7-9d6e-467b-8c5b-59ae605a15bc)
