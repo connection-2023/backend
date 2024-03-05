@@ -39,6 +39,7 @@ import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-qu
 import { CombinedEnrollLectureWithCountDto } from '../dtos/combined-enroll-lecture-with-count.dto';
 import { EventBus } from '@nestjs/cqrs';
 import { NewLectureEvent } from '@src/notification/events/notification.event';
+import { CombinedScheduleDto } from '../dtos/combined-schedule.dto';
 
 @Injectable()
 export class LectureService {
@@ -549,7 +550,7 @@ export class LectureService {
           }
           return { schedule, holiday, daySchedule };
         } else {
-          const schedule =
+          const regularSchedule =
             await this.lectureRepository.trxReadManyRegularLectureSchedules(
               transaction,
               lectureId,
@@ -560,26 +561,19 @@ export class LectureService {
               lectureId,
             );
 
-          const daySchedule = await this.lectureRepository.trxReadDaySchedule(
-            transaction,
-            lectureId,
-          );
-
-          return { schedule, holiday, daySchedule };
+          return { regularSchedule, holiday };
         }
       },
     );
-    const { schedule } = calendar;
-    const { holiday } = calendar;
-    const holidayArr = this.createLectureHolidayArr(holiday);
 
-    if (!calendar.daySchedule) {
-      return { schedule, holidayArr };
-    }
+    const { schedule, daySchedule, regularSchedule, holiday } = calendar;
 
-    const { daySchedule } = calendar;
-
-    return { schedule, holidayArr, daySchedule };
+    return new CombinedScheduleDto(
+      schedule,
+      daySchedule,
+      regularSchedule,
+      holiday,
+    );
   }
 
   async readLectureReservationWithUser(userId: number, lectureId: number) {
