@@ -43,7 +43,7 @@ import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail
 import { ApiGetEnrollScheduleDetail } from '../swagger-decorators/get-enroll-schedule-detail.decorator';
 import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
 import { ApiGetEnrollLectureList } from '../swagger-decorators/get-enroll-lecture-list.decorator';
-import { ApiLecture } from '../swagger/lecture.swagger';
+import { ApiLecture } from './swagger/lecture.swagger';
 
 @ApiTags('강의')
 @Controller('lectures')
