@@ -218,7 +218,9 @@ export class LectureService {
           );
         }
 
-        this.eventBus.publish(new NewLectureEvent(newLecture.id));
+        await this.eventBus.publish(
+          new NewLectureEvent(newLecture.id, lecturerId),
+        );
 
         return {
           newLecture,

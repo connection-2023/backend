@@ -27,7 +27,7 @@ export class GeneralResponseDto {
     }
 
     Object.defineProperty(Temp, 'name', {
-      value: `${key[0].toUpperCase()}${key.slice(1)}Dto`,
+      value: `${key[0].toUpperCase()}${key.slice(1)}ResponseDto`,
     });
 
     return applyDecorators(

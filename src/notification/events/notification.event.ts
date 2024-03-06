@@ -1,7 +1,10 @@
 import { INotificationTarget } from '../interfaces/notification.interface';
 
 export class NewLectureEvent {
-  constructor(public readonly lectureId: number) {}
+  constructor(
+    public readonly lectureId: number,
+    public readonly lecturerId: number,
+  ) {}
 }
 
 export class NewReservationEvent {

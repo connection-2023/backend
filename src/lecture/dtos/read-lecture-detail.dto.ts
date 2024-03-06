@@ -79,7 +79,7 @@ export class LectureDetailDto {
       ? new LectureLocationDto(lecture.lectureLocation)
       : undefined;
 
-    this.stars = lecture.stars.toFixed(1);
+    this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
 
     Object.assign(this);
   }
