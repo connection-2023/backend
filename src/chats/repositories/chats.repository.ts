@@ -41,9 +41,11 @@ export class ChatsRepository {
   async updatedUnreadChats(
     chattingRoomId: mongoose.Types.ObjectId,
   ): Promise<void> {
-    await this.chatsModel.updateMany(
-      { chattingRoomId, readedAt: null },
-      { $set: { readedAt: new Date() } },
-    );
+    await this.chatsModel
+      .updateMany(
+        { chattingRoomId, readedAt: null },
+        { $set: { readedAt: new Date() } },
+      )
+      .exec();
   }
 }

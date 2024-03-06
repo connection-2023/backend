@@ -1,3 +1,3 @@
-enum NotificationType {
+export enum NotificationType {
   NewLecture = 'newLecture',
 }

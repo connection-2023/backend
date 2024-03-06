@@ -6,11 +6,11 @@ import { ChatsRepository } from './../repositories/chats.repository';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import mongoose from 'mongoose';
 import { EventsGateway } from '@src/events/events.gateway';
-import { GetChatsQueryDto } from '../dtos/get-chats.query.dto';
 import { ChatsDto } from '@src/common/dtos/chats.dto';
 import { Chats } from '../schemas/chats.schema';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { GetPageTokenQueryDto } from '../dtos/get-page-token.query.dto';
 
 @Injectable()
 export class ChatsService {
@@ -42,17 +42,19 @@ export class ChatsService {
       roomObjectId,
     );
 
-    this.eventsGateway.server.to(chatRoom.roomId).emit('message', chat);
+    this.eventsGateway.server.to(chatRoom.roomId).emit('messageToClient', chat);
 
     return new ChatsDto(chat);
   }
 
   async getChatsWithChatRoomId(
-    { pageToken, pageSize }: GetChatsQueryDto,
+    { lastItemId, pageSize }: GetPageTokenQueryDto,
     chatRoomId: mongoose.Types.ObjectId,
   ) {
     const where = { chattingRoomId: chatRoomId };
-    pageToken ? (where['_id'] = { $lt: pageToken }) : false;
+    lastItemId
+      ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(lastItemId) })
+      : false;
 
     const chats = await this.chatsRepository.getChatsWithChatRoomId(
       where,
