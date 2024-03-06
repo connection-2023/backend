@@ -1,7 +1,7 @@
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
-import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { LecturerLearnerDto } from '@src/common/dtos/lecturer-learner.dto';
 
 export function ApiGetLecturerLearnerList() {
   return applyDecorators(
@@ -12,7 +12,7 @@ export function ApiGetLecturerLearnerList() {
     PaginationResponseDto.swaggerBuilder(
       HttpStatus.OK,
       'learnerList',
-      LecturerLearnerListDto,
+      LecturerLearnerDto,
     ),
   );
 }

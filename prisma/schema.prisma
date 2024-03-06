@@ -49,6 +49,7 @@ model Users {
   likedLecturer            LikedLecturer[]
   blockedLecturer          BlockedLecturer[]
   userBankAccount          UserBankAccount[]
+  searchHistory            SearchHistory[]
 }
 
 model UserProfileImage {
@@ -190,6 +191,7 @@ model Lecture {
   lecturePassTarget    LecturePassTarget[]
   lectureDay           LectureDay[]
   regularLectureStatus RegularLectureStatus[]
+  reservation          Reservation[]
 }
 
 model DanceCategory {
@@ -405,13 +407,20 @@ model UserCoupon {
 }
 
 model Auth {
-  id         Int       @id @default(autoincrement())
-  userId     Int       @unique
-  email      String    @unique
-  signUpType Int
-  createdAt  DateTime  @default(now()) @db.Timestamp(6)
-  deletedAt  DateTime? @db.Timestamp(6)
-  users      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           Int        @id @default(autoincrement())
+  userId       Int        @unique
+  email        String     @unique
+  signUpTypeId Int
+  createdAt    DateTime   @default(now()) @db.Timestamp(6)
+  deletedAt    DateTime?  @db.Timestamp(6)
+  users        Users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signUpType   SignUpType @relation(fields: [signUpTypeId], references: [id])
+}
+
+model SignUpType {
+  id   Int    @id @default(autoincrement())
+  type String
+  auth Auth[]
 }
 
 model LecturerRegion {
@@ -448,11 +457,14 @@ model LecturerProfileImageUrl {
 model LectureSchedule {
   id                   Int           @id @default(autoincrement())
   lectureId            Int
+  day                  Int
   startDateTime        DateTime
   endDateTime          DateTime
   numberOfParticipants Int
   lecture              Lecture       @relation(fields: [lectureId], references: [id])
   reservation          Reservation[]
+
+  @@unique([lectureId, startDateTime])
 }
 
 model LectureDay {
@@ -549,7 +561,7 @@ model TemporaryLectureSchedule {
   id                   Int              @id @default(autoincrement())
   lectureId            Int
   date                 String?
-  startDateTime        String?
+  dateTime             String?
   numberOfParticipants Int?
   temporaryLecture     TemporaryLecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
 }
@@ -616,6 +628,7 @@ model Payment {
   paymentKey                String?                    @unique
   paymentProductTypeId      Int
   orderId                   String                     @unique
+  secret                    String?
   orderName                 String
   originalPrice             Int
   finalPrice                Int
@@ -625,12 +638,13 @@ model Payment {
   statusId                  Int
   createdAt                 DateTime                   @default(now()) @db.Timestamp(6)
   updatedAt                 DateTime                   @default(now()) @updatedAt @db.Timestamp(6)
+  refundableDate            DateTime?                  @db.Timestamp(6)
   user                      Users?                     @relation(fields: [userId], references: [id])
   lecturer                  Lecturer?                  @relation(fields: [lecturerId], references: [id])
   paymentStatus             PaymentStatus              @relation(fields: [statusId], references: [id])
   paymentMethod             PaymentMethod?             @relation(fields: [paymentMethodId], references: [id])
   paymentProductType        PaymentProductType         @relation(fields: [paymentProductTypeId], references: [id])
-  reservation               Reservation[]
+  reservation               Reservation?
   paymentCouponUsage        PaymentCouponUsage?
   cardPaymentInfo           CardPaymentInfo?
   virtualAccountPaymentInfo VirtualAccountPaymentInfo?
@@ -679,22 +693,26 @@ model PaymentProductType {
 
 //예약 정보
 model Reservation {
-  id                Int             @id @default(autoincrement())
-  userId            Int
-  paymentId         Int
-  lectureScheduleId Int
+  id                     Int                   @id @default(autoincrement())
+  userId                 Int
+  paymentId              Int                   @unique
+  lectureId              Int
+  lectureScheduleId      Int?
+  regularLectureStatusId Int?
   //대표자
-  representative    String
-  phoneNumber       String
+  representative         String
+  phoneNumber            String
   //예약 인원
-  participants      Int
+  participants           Int
   //예약 요청사항
-  requests          String?
-  isEnabled         Boolean         @default(false)
-  user              Users           @relation(fields: [userId], references: [id])
-  lectureSchedule   LectureSchedule @relation(fields: [lectureScheduleId], references: [id])
-  payment           Payment         @relation(fields: [paymentId], references: [id])
-  lectureReview     LectureReview?
+  requests               String?
+  isEnabled              Boolean               @default(false)
+  user                   Users                 @relation(fields: [userId], references: [id])
+  lectureSchedule        LectureSchedule?      @relation(fields: [lectureScheduleId], references: [id])
+  lecture                Lecture?              @relation(fields: [lectureId], references: [id])
+  regularLectureStatus   RegularLectureStatus? @relation(fields: [regularLectureStatusId], references: [id])
+  payment                Payment               @relation(fields: [paymentId], references: [id])
+  lectureReview          LectureReview?
 }
 
 //카드 결제 시 저장되는 정보
@@ -766,7 +784,7 @@ model TemporaryLectureDay {
 model TemporaryLectureDaySchedule {
   id                  Int                 @id @default(autoincrement())
   lectureDayId        Int
-  startDateTime       String?
+  dateTime            String?
   temporaryLectureDay TemporaryLectureDay @relation(fields: [lectureDayId], references: [id], onDelete: Cascade)
 }
 
@@ -1071,26 +1089,26 @@ model RefundPaymentInfo {
   id                      Int      @id @default(autoincrement())
   paymentId               Int      @unique
   refundStatusId          Int
-  refundUserBankAccountId Int
+  refundUserBankAccountId Int?
   cancelAmount            Int?
-  reason                  String?
-  refusedReason           String?
+  cancelReason            String?
   createdAt               DateTime @default(now()) @db.Timestamp(6)
   updatedAt               DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
-  payment               Payment         @relation(fields: [paymentId], references: [id])
-  refundStatus          RefundStatus    @relation(fields: [refundStatusId], references: [id])
-  refundUserBankAccount UserBankAccount @relation(fields: [refundUserBankAccountId], references: [id])
+  payment               Payment          @relation(fields: [paymentId], references: [id])
+  refundStatus          RefundStatus     @relation(fields: [refundStatusId], references: [id])
+  refundUserBankAccount UserBankAccount? @relation(fields: [refundUserBankAccountId], references: [id])
 }
 
 model RegularLectureStatus {
   id                     Int                      @id @default(autoincrement())
   lectureId              Int
   day                    String[]                 @default([])
-  dateTime               String[]                 @default([])
+  dateTime               String
   numberOfParticipants   Int                      @default(0)
   lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   regularLectureSchedule RegularLectureSchedule[]
+  reservation            Reservation[]
 }
 
 model RegularLectureSchedule {
@@ -1100,4 +1118,20 @@ model RegularLectureSchedule {
   endDateTime            DateTime
   day                    Int
   regularLectureStatus   RegularLectureStatus @relation(fields: [regularLectureStatusId], references: [id], onDelete: Cascade)
+}
+
+model SearchHistory {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  searchTerm String
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  users Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PopularSearch {
+  id          Int    @id @default(autoincrement())
+  searchTerm  String @unique
+  searchCount Int    @default(1)
 }

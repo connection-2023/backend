@@ -154,6 +154,8 @@ export class UpsertTemporaryLectureDto {
       address: '서울특별시 중랑구 용마산로616',
       detailAddress: '101동 1802호',
       buildingName: '새한아파트',
+      administrativeDistrict: '서울특별시',
+      district: '중랑구',
     },
     description: '위치 주소',
     required: false,
@@ -226,9 +228,9 @@ export class UpsertTemporaryLectureDto {
 
   @ApiProperty({
     example: [
-      { day: ['월', '화'], date: 'date', startDateTime: ['13:00', '14:00'] },
-      { day: ['월', '화'], date: 'date', startDateTime: ['13:00', '14:00'] },
-      { day: ['월', '화'], date: 'date', startDateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], date: 'date', dateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], date: 'date', dateTime: ['13:00', '14:00'] },
+      { day: ['월', '화'], date: 'date', dateTime: ['13:00', '14:00'] },
     ],
     description: '클래스 일정',
     required: false,

@@ -1,5 +1,13 @@
-import { DanceCategory, DanceMethod, Week } from '@src/common/enum/enum';
-import { LecturerSortOptions, TimeOfDay } from '../enum/search.enum';
+import {
+  DanceCategory,
+  DanceMethod,
+  TemporaryWeek,
+} from '@src/common/enum/enum';
+import {
+  LecturerSortOptions,
+  PassSortOptions,
+  TimeOfDay,
+} from '../enum/search.enum';
 
 export interface IEsLecture {
   id: number;
@@ -19,7 +27,6 @@ export interface IEsLecture {
   regions: IEsRegion[];
   isLiked: boolean | undefined;
   searchAfter: number[];
-  days: IEsEsLectureDay[];
   isactive: boolean;
 }
 
@@ -33,9 +40,28 @@ export interface IEsLecturer {
   profilecardimageurl: string;
   updatedat: Date;
   reviewcount: number;
+  availablemonths: number;
   isLiked: boolean | undefined;
   lecturerImages: string[];
   searchAfter: number[];
+}
+
+export interface IEsPass {
+  id: number;
+  lecturePassTarget: IEsLectureTarget[];
+  price: number;
+  salescount: number;
+  lecturer: IEsSimpleLecturer;
+  title: string;
+  updatedat: Date;
+  searchAfter: number[];
+  maxusagecount: number;
+  availablemonths: number;
+}
+
+export interface IEsLectureTarget {
+  title: string;
+  lectureId: number;
 }
 
 export interface IEsSimpleLecturer {
@@ -55,11 +81,6 @@ export interface IEsRegion {
   district: string;
 }
 
-export interface IEsEsLectureDay {
-  day: string[];
-  dateTime: string[];
-}
-
 export interface ILecturerSearchParams {
   take: number;
   value?: string;
@@ -68,11 +89,20 @@ export interface ILecturerSearchParams {
   genres?: DanceCategory[];
   stars?: number;
   sortOption?: LecturerSortOptions;
+  idQueries?: IIdQuery[];
+}
+
+export interface IPassSearchParams {
+  take: number;
+  sortOption?: PassSortOptions;
+  value?: string;
+  searchAfter?: number[];
+  lecturerIdQueries?: IBlockedLecturerIdQuery[];
 }
 
 export interface ILectureSearchParams {
   take: number;
-  days?: Week[];
+  days?: TemporaryWeek[];
   timeOfDay?: TimeOfDay[];
   value?: string;
   searchAfter?: number[];
@@ -83,5 +113,20 @@ export interface ILectureSearchParams {
   ltePrice?: number;
   gtePrice?: number;
   lectureMethod?: DanceMethod;
-  isGroup: Boolean;
+  lecturerIdQueries?: IBlockedLecturerIdQuery[];
+  isGroup?: Boolean;
+}
+
+export interface IBlockedLecturerQuery {
+  idQueries: IIdQuery[];
+  lecturerIdQueries: IBlockedLecturerIdQuery[];
+}
+export interface IIdQuery {
+  term: {
+    id: number;
+  };
+}
+
+export interface IBlockedLecturerIdQuery {
+  term: { ['lecturer.lecturerId']: number };
 }

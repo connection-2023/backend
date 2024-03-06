@@ -6,7 +6,6 @@ import {
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CardPaymentInfoInputData,
-  ICursor,
   ILecturerBankAccountInputData,
   IPaymentPassUsageInputData,
   ISelectedUserPass,
@@ -32,18 +31,21 @@ import {
   PaymentOrderStatus,
   PaymentMethods,
   PaymentProductTypes,
+  LectureMethod,
 } from '@src/payments/enum/payment.enum';
 import {
   Lecture,
   LecturePass,
+  LectureSchedule,
   LecturerBankAccount,
   LecturerLearner,
   Payment,
   PaymentProductType,
   PaymentStatus,
+  RegularLectureSchedule,
+  RegularLectureStatus,
   UserBankAccount,
 } from '@prisma/client';
-import { PaymentProductTypeDto } from '../dtos/payment-product-type.dto';
 
 @Injectable()
 export class PaymentsRepository {
@@ -144,12 +146,49 @@ export class PaymentsRepository {
     }
   }
 
-  async getLectureSchedule(lectureScheduleId: number) {
+  async getLectureSchedule(
+    lectureScheduleId: number,
+  ): Promise<LectureSchedule> {
     try {
       return await this.prismaService.lectureSchedule.findFirst({
         where: {
           id: lectureScheduleId,
         },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 강의 일정 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getRegularLectureStatus(
+    lectureScheduleId: number,
+  ): Promise<LectureSchedule | RegularLectureStatus> {
+    try {
+      return await this.prismaService.regularLectureStatus.findFirst({
+        where: {
+          id: lectureScheduleId,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 강의 일정 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async getRegularLectureSchedule(
+    lectureScheduleId: number,
+  ): Promise<RegularLectureSchedule> {
+    try {
+      return await this.prismaService.regularLectureSchedule.findFirst({
+        where: {
+          id: lectureScheduleId,
+        },
+        orderBy: { id: 'asc' },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -210,17 +249,30 @@ export class PaymentsRepository {
 
   async trxIncrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
+    lectureMethod: LectureMethod,
     lectureSchedule: ILectureSchedule,
   ) {
     try {
-      await transaction.lectureSchedule.update({
-        where: { id: lectureSchedule.lectureScheduleId },
-        data: {
-          numberOfParticipants: {
-            increment: lectureSchedule.participants,
+      if (lectureMethod === LectureMethod.원데이) {
+        await transaction.lectureSchedule.update({
+          where: { id: lectureSchedule.lectureScheduleId },
+          data: {
+            numberOfParticipants: {
+              increment: lectureSchedule.participants,
+            },
           },
-        },
-      });
+        });
+      }
+      if (lectureMethod === LectureMethod.정기) {
+        await transaction.regularLectureStatus.update({
+          where: { id: lectureSchedule.lectureScheduleId },
+          data: {
+            numberOfParticipants: {
+              increment: lectureSchedule.participants,
+            },
+          },
+        });
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 강의 일정 수정 실패: ${error}`,
@@ -299,31 +351,14 @@ export class PaymentsRepository {
     }
   }
 
-  async getPaymentInfo(orderId: string) {
+  async getPaymentInfoByOrderId(orderId: string) {
     try {
       return await this.prismaService.payment.findUnique({
         where: { orderId },
-        select: {
-          id: true,
-          orderId: true,
-          originalPrice: true,
-          finalPrice: true,
-          lecturerId: true,
-          userId: true,
-          paymentProductType: { select: { id: true, name: true } },
-          paymentStatus: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          reservation: {
-            select: {
-              id: true,
-              participants: true,
-              lectureScheduleId: true,
-            },
-          },
+        include: {
+          paymentStatus: true,
+          paymentProductType: true,
+          reservation: true,
           paymentCouponUsage: true,
         },
       });
@@ -358,73 +393,12 @@ export class PaymentsRepository {
     paymentKey: string,
     statusId: number,
     paymentMethodId: number,
+    secret?: string,
   ) {
     try {
-      return await transaction.payment.update({
+      await transaction.payment.update({
         where: { id: paymentId },
-        data: { paymentKey, statusId, paymentMethodId },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
-          reservation: {
-            select: {
-              participants: true,
-              requests: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
-            },
-          },
-          userPass: {
-            select: {
-              lecturePass: {
-                select: {
-                  id: true,
-                  title: true,
-                  maxUsageCount: true,
-                  availableMonths: true,
-                },
-              },
-            },
-          },
-          cardPaymentInfo: {
-            select: {
-              number: true,
-              installmentPlanMonths: true,
-              approveNo: true,
-            },
-          },
-          virtualAccountPaymentInfo: {
-            select: {
-              accountNumber: true,
-              customerName: true,
-              dueDate: true,
-              bank: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
+        data: { paymentKey, statusId, paymentMethodId, secret },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -585,66 +559,16 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.payment.findUnique({
         where: { id: paymentId },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
+        include: {
+          paymentStatus: true,
+          paymentProductType: true,
+          paymentMethod: true,
           reservation: {
-            select: {
-              participants: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
-            },
+            include: { lectureSchedule: true, regularLectureStatus: true },
           },
-          userPass: {
-            select: {
-              lecturePass: {
-                select: {
-                  id: true,
-                  title: true,
-                  maxUsageCount: true,
-                  availableMonths: true,
-                },
-              },
-            },
-          },
-          cardPaymentInfo: {
-            select: {
-              number: true,
-              installmentPlanMonths: true,
-              approveNo: true,
-            },
-          },
-          virtualAccountPaymentInfo: {
-            select: {
-              accountNumber: true,
-              customerName: true,
-              dueDate: true,
-              bank: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
-            },
-          },
+          userPass: { include: { lecturePass: true } },
+          cardPaymentInfo: true,
+          virtualAccountPaymentInfo: { include: { bank: true } },
         },
       });
     } catch (error) {
@@ -659,43 +583,13 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.payment.findUnique({
         where: { id: paymentId },
-        select: {
-          orderId: true,
-          orderName: true,
-          originalPrice: true,
-          finalPrice: true,
-          paymentProductType: {
-            select: {
-              name: true,
-            },
-          },
-          paymentMethod: {
-            select: {
-              name: true,
-            },
-          },
-          createdAt: true,
-          updatedAt: true,
-          paymentPassUsage: {
-            select: {
-              usedCount: true,
-              lecturePass: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          },
+        include: {
+          paymentMethod: true,
+          paymentPassUsage: { include: { lecturePass: true } },
           reservation: {
-            select: {
-              participants: true,
-              requests: true,
-              lectureSchedule: {
-                select: {
-                  lectureId: true,
-                  startDateTime: true,
-                },
-              },
+            include: {
+              lectureSchedule: true,
+              lecture: true,
             },
           },
         },
@@ -710,17 +604,30 @@ export class PaymentsRepository {
 
   async trxDecrementLectureScheduleParticipants(
     transaction: PrismaTransaction,
+    lectureMethod: LectureMethod,
     reservation: ILectureSchedule,
   ) {
     try {
-      await transaction.lectureSchedule.update({
-        where: { id: reservation.lectureScheduleId },
-        data: {
-          numberOfParticipants: {
-            decrement: reservation.participants,
+      if (lectureMethod === LectureMethod.원데이) {
+        await transaction.lectureSchedule.update({
+          where: { id: reservation.lectureScheduleId },
+          data: {
+            numberOfParticipants: {
+              decrement: reservation.participants,
+            },
           },
-        },
-      });
+        });
+      }
+      if (lectureMethod === LectureMethod.정기) {
+        await transaction.regularLectureStatus.update({
+          where: { id: reservation.regularLectureStatusId },
+          data: {
+            numberOfParticipants: {
+              decrement: reservation.participants,
+            },
+          },
+        });
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 강의 일정 수정 실패: ${error}`,
@@ -729,7 +636,7 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdateLecturePaymentStatus(
+  async trxUpdatePaymentStatus(
     transaction: PrismaTransaction,
     paymentId: number,
     statusId: number,
@@ -779,10 +686,16 @@ export class PaymentsRepository {
           reservation: {
             include: {
               lectureSchedule: {
+                include: {
+                  lecture: { include: { lectureImage: true } },
+                },
+              },
+              regularLectureStatus: {
                 include: { lecture: { include: { lectureImage: true } } },
               },
             },
           },
+
           cardPaymentInfo: { include: { issuer: true, acquirer: true } },
           virtualAccountPaymentInfo: { include: { bank: true } },
           paymentPassUsage: {
@@ -868,13 +781,14 @@ export class PaymentsRepository {
       );
     }
   }
+
   async trxUpdateProductEnabled(
     transaction: PrismaTransaction,
     paymentId: number,
     target: string,
-  ) {
+  ): Promise<void> {
     try {
-      return await transaction[target].updateMany({
+      await transaction[target].update({
         where: { paymentId },
         data: { isEnabled: true },
       });
@@ -920,6 +834,7 @@ export class PaymentsRepository {
       );
     }
   }
+
   async getUserPass(userId: number, passId: number) {
     try {
       return await this.prismaService.userPass.findFirst({
@@ -1003,13 +918,12 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ): Promise<void> {
     try {
       await transaction.lecturerLearner.upsert({
         where: { userId_lecturerId: { userId, lecturerId } },
-        create: { userId, lecturerId, enrollmentCount },
-        update: { enrollmentCount: { increment: enrollmentCount } },
+        create: { userId, lecturerId, enrollmentCount: 1 },
+        update: { enrollmentCount: { increment: 1 } },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -1030,15 +944,14 @@ export class PaymentsRepository {
     });
   }
 
-  async trxDecrementLectureLearner(
+  async trxDecrementLectureLearnerEnrollmentCount(
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ) {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
-      data: { enrollmentCount: { decrement: enrollmentCount } },
+      data: { enrollmentCount: { decrement: 1 } },
     });
   }
 
@@ -1083,7 +996,10 @@ export class PaymentsRepository {
     });
   }
 
-  async getUserBankAccount(userId: number, userBankAccountId: number) {
+  async getUserBankAccount(
+    userId: number,
+    userBankAccountId: number,
+  ): Promise<UserBankAccount> {
     return await this.prismaService.userBankAccount.findFirst({
       where: { id: userBankAccountId, userId },
     });
@@ -1120,7 +1036,12 @@ export class PaymentsRepository {
           include: { refundStatus: true, refundUserBankAccount: true },
         },
         reservation: {
-          include: { lectureSchedule: { include: { lecture: true } } },
+          include: {
+            lectureSchedule: { include: { lecture: true } },
+            regularLectureStatus: {
+              include: { lecture: true, regularLectureSchedule: true },
+            },
+          },
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
@@ -1143,7 +1064,18 @@ export class PaymentsRepository {
         paymentMethodId: {
           in: [PaymentMethods.현장결제, PaymentMethods.선결제],
         },
-        reservation: { some: { lectureSchedule: { lectureId } } },
+        OR: [
+          {
+            reservation: {
+              lectureSchedule: { lectureId },
+            },
+          },
+          {
+            reservation: {
+              regularLectureStatus: { lectureId },
+            },
+          },
+        ],
       },
       include: {
         user: { include: { userProfileImage: true } },
@@ -1156,7 +1088,10 @@ export class PaymentsRepository {
           include: { refundStatus: true, refundUserBankAccount: true },
         },
         reservation: {
-          include: { lectureSchedule: true },
+          include: {
+            lectureSchedule: true,
+            regularLectureStatus: { include: { regularLectureSchedule: true } },
+          },
         },
         cardPaymentInfo: { include: { issuer: true, acquirer: true } },
         virtualAccountPaymentInfo: { include: { bank: true } },
@@ -1183,7 +1118,9 @@ export class PaymentsRepository {
       },
       include: {
         transferPaymentInfo: true,
-        reservation: { include: { lectureSchedule: true } },
+        reservation: {
+          include: { lectureSchedule: true, regularLectureStatus: true },
+        },
       },
     });
   }
@@ -1216,11 +1153,10 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     userId: number,
     lecturerId: number,
-    enrollmentCount: number,
   ) {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
-      data: { enrollmentCount: { increment: enrollmentCount } },
+      data: { enrollmentCount: { increment: 1 } },
     });
   }
 
@@ -1232,6 +1168,218 @@ export class PaymentsRepository {
         paymentMethodId: {
           in: [PaymentMethods.현장결제, PaymentMethods.선결제],
         },
+      },
+    });
+  }
+
+  async trxDeleteUserPass(
+    transaction: PrismaTransaction,
+    paymentId: number,
+  ): Promise<void> {
+    await transaction.userPass.delete({ where: { paymentId } });
+  }
+
+  async getMyPass(lecturerId: number, passId: number) {
+    return await this.prismaService.lecturePass.findFirst({
+      where: { id: passId, lecturerId },
+    });
+  }
+
+  async getUserPassList(passId: number) {
+    return await this.prismaService.userPass.findMany({
+      where: { lecturePassId: passId, isEnabled: true },
+      include: { users: { include: { userProfileImage: true } } },
+    });
+  }
+
+  async getUserPaymentPassUsage(userId: number, passId: number) {
+    return await this.prismaService.paymentPassUsage.findMany({
+      where: { payment: { userId }, lecturePassId: passId },
+    });
+  }
+
+  async getUserReservation(paymentId: number) {
+    return await this.prismaService.reservation.findFirst({
+      where: { paymentId },
+      include: { lectureSchedule: true, lecture: true },
+    });
+  }
+
+  async getPaymentForDate(lecturerId: number, startDate: Date, endDate: Date) {
+    return await this.prismaService.payment.findMany({
+      where: {
+        lecturerId,
+        NOT: { paymentMethodId: PaymentMethods.패스권 },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        statusId: PaymentOrderStatus.DONE,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+        finalPrice: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  async getLecturerPaymentList(
+    lecturerId: number,
+    paymentProductTypeId: number,
+    startDate: Date,
+    endDate: Date,
+    { cursor, skip, take }: IPaginationParams,
+    lectureId: number,
+  ) {
+    return await this.prismaService.payment.findMany({
+      where: {
+        lecturerId,
+        paymentProductTypeId,
+        statusId: {
+          in: [
+            PaymentOrderStatus.DONE,
+            PaymentOrderStatus.PARTIAL_CANCELED,
+            PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+            PaymentOrderStatus.CANCELED,
+          ],
+        },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        reservation: { lectureId },
+      },
+      include: {
+        user: true,
+        paymentCouponUsage: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        paymentProductType: true,
+      },
+      orderBy: { id: 'desc' },
+      cursor,
+      skip,
+      take,
+    });
+  }
+
+  async getLecturerPaymentCount(
+    lecturerId: number,
+    paymentProductTypeId: number,
+    startDate: Date,
+    endDate: Date,
+    lectureId: number,
+  ): Promise<number> {
+    return await this.prismaService.payment.count({
+      where: {
+        lecturerId,
+        paymentProductTypeId,
+        statusId: {
+          in: [
+            PaymentOrderStatus.DONE,
+            PaymentOrderStatus.PARTIAL_CANCELED,
+            PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+            PaymentOrderStatus.CANCELED,
+          ],
+        },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        reservation: { lectureId },
+      },
+    });
+  }
+
+  async getLecturerPaymentTotalRevenue(
+    lecturerId: number,
+    paymentProductTypeId: number,
+    startDate: Date,
+    endDate: Date,
+    lectureId: number,
+  ): Promise<number> {
+    const totalRevenue = await this.prismaService.payment.aggregate({
+      where: {
+        lecturerId,
+        paymentProductTypeId,
+        statusId: PaymentOrderStatus.DONE,
+        NOT: { paymentMethodId: PaymentMethods.패스권 },
+        updatedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        reservation: { lectureId },
+      },
+      _sum: {
+        finalPrice: true,
+      },
+    });
+
+    return totalRevenue._sum.finalPrice ?? 0;
+  }
+
+  async getUserPaymentInfoById(userId: number, paymentId: number) {
+    return await this.prismaService.payment.findFirst({
+      where: { id: paymentId, userId },
+      include: {
+        reservation: true,
+        userPass: true,
+      },
+    });
+  }
+
+  async getUserReservationWithSchedule(paymentId: number) {
+    return await this.prismaService.reservation.findUnique({
+      where: { id: paymentId },
+      include: {
+        lectureSchedule: true,
+        regularLectureStatus: {
+          include: {
+            regularLectureSchedule: true,
+          },
+        },
+      },
+    });
+  }
+
+  async trxUpdateReservationStatus(
+    transaction: PrismaTransaction,
+    reservationId: number,
+    isEnabled: boolean,
+  ) {
+    await transaction.reservation.update({
+      where: { id: reservationId },
+      data: { isEnabled },
+    });
+  }
+
+  async getUserPassById(userId: number, passId: number) {
+    return await this.prismaService.userPass.findFirst({
+      where: { userId, lecturePassId: passId, isEnabled: true },
+    });
+  }
+
+  async getPaymentResultByOrderId(userId: number, orderId: string) {
+    return await this.prismaService.payment.findFirst({
+      where: { userId, orderId },
+      include: {
+        paymentStatus: true,
+        paymentProductType: true,
+        paymentMethod: true,
+        reservation: {
+          include: {
+            lecture: true,
+            lectureSchedule: true,
+            regularLectureStatus: { include: { regularLectureSchedule: true } },
+          },
+        },
+        userPass: { include: { lecturePass: true } },
+        cardPaymentInfo: true,
+        virtualAccountPaymentInfo: { include: { bank: true } },
       },
     });
   }

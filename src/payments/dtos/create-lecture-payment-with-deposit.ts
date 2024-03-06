@@ -37,15 +37,14 @@ export class CreateLecturePaymentWithDepositDto {
   orderId: string;
 
   @ApiProperty({
-    type: [SwaggerLectureScheduleDto],
+    type: SwaggerLectureScheduleDto,
     description: '강의스케쥴',
     required: true,
   })
   @ValidateNested({ each: true })
   @Type(() => SwaggerLectureScheduleDto)
-  @IsArray()
   @IsNotEmpty()
-  lectureSchedules: ILectureSchedule[];
+  lectureSchedule: ILectureSchedule;
 
   @ApiProperty({
     type: Number,

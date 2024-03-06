@@ -1,6 +1,7 @@
 import {
   LectureSchedule,
   Payment,
+  RegularLectureStatus,
   Reservation,
   TransferPaymentInfo,
   UserPass,
@@ -10,6 +11,7 @@ import { PaymentMethods } from '@src/payments/enum/payment.enum';
 export interface ILectureSchedule {
   id?: number;
   lectureScheduleId: number;
+  regularLectureStatusId: number;
   participants: number;
 }
 
@@ -40,12 +42,15 @@ export interface PaymentInputData {
   finalPrice: number;
   paymentProductTypeId: number;
   paymentMethodId?: number;
+  refundableDate: Date;
 }
 
 export interface ReservationInputData {
   userId: number;
   paymentId: number;
-  lectureScheduleId: number;
+  lectureId: number;
+  lectureScheduleId?: number;
+  regularLectureStatusId?: number;
   representative: string;
   phoneNumber: string;
   participants: number;
@@ -73,6 +78,7 @@ export interface PaymentInfo {
 export interface TossPaymentsConfirmResponse {
   card?: TossPaymentCardInfo;
   virtualAccount?: TossPaymentVirtualAccountInfo;
+  secret?: string;
 }
 
 export interface TossPaymentVirtualAccountInfo {
@@ -129,7 +135,7 @@ export interface IPaymentResult {
   };
   cardPaymentInfo: ICardPaymentInfo | null;
   virtualAccountPaymentInfo: IVirtualAccountPaymentInfo | null;
-  reservation: IReservationInfo[];
+  reservation: IReservationInfo;
   userPass: IUserPass;
 }
 
@@ -151,7 +157,6 @@ export interface IVirtualAccountPaymentInfo {
 
 export interface VirtualAccountPaymentInfoInputData {
   paymentId: number;
-  refundStatusId: number;
   accountNumber: string;
   bankCode: string;
   customerName: string;
@@ -227,7 +232,9 @@ export interface ITransferPaymentInputData {
 export interface IRefundPaymentInputData {
   paymentId: number;
   refundStatusId: number;
-  refundUserBankAccountId: number;
+  refundUserBankAccountId?: number;
+  cancelAmount: number;
+  cancelReason: string;
 }
 
 export interface IRefundPaymentUpdateData {
@@ -239,9 +246,35 @@ export interface IRefundPaymentUpdateData {
 
 export interface IPayment extends Payment {
   transferPaymentInfo: TransferPaymentInfo;
-  reservation: IReservation[];
+  reservation: IReservation;
 }
 
 export interface IReservation extends Reservation {
-  lectureSchedule: LectureSchedule;
+  lectureSchedule?: LectureSchedule;
+  regularLectureStatus?: RegularLectureStatus;
+}
+
+export interface IWebHookData {
+  createdAt: string;
+  secret: string;
+  orderId: string;
+  status: string;
+  transactionKey: string;
+}
+
+export interface IRefundPaymentInfo {
+  cancelReason: string;
+  cancelAmount: number;
+  refundReceiveAccount?: IRefundReceiveAccount;
+}
+
+export interface IRefundReceiveAccount {
+  bank: string;
+  holderName: string;
+  accountNumber: string;
+}
+
+export interface ICalculatedLectureRefundResult {
+  refundPrice: number;
+  progress?: number;
 }

@@ -1,25 +1,34 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
-import { PaymentDto } from '../dtos/payment.dto';
-import { PaymentRequestDto } from '../dtos/payment-request.dto';
+import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
+import { Lecture, LecturePass } from '@prisma/client';
+import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
 import {
-  Lecture,
-  Payment,
-  Reservation,
-  TransferPaymentInfo,
-} from '@prisma/client';
-import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
-import {
+  LectureMethod,
+  PaymentHistoryTypes,
   PaymentMethods,
   PaymentOrderStatus,
   PaymentStatusForLecturer,
   RefundStatuses,
-} from '../enum/payment.enum';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
-import { IPayment } from '../interface/payments.interface';
+} from '@src/payments/enum/payment.enum';
+import {
+  IPaginationParams,
+  PrismaTransaction,
+} from '@src/common/interface/common-interface';
+import { IPayment } from '@src/payments/interface/payments.interface';
+import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
+import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
+import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
+import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
+import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
+import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -163,7 +172,7 @@ export class LecturerPaymentsService {
   private async processPaymentDoneStatus(paymentId: number): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentStatusForLecturer.DONE,
@@ -187,7 +196,7 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
           PaymentStatusForLecturer.REFUSED,
@@ -242,38 +251,46 @@ export class LecturerPaymentsService {
     isIncrement: boolean,
     lectureMaxCapacity?: number,
   ): Promise<void> {
+    const { reservation } = payment;
+    let lectureMethod;
+    let numberOfParticipants;
+    if (reservation.lectureScheduleId) {
+      lectureMethod = LectureMethod.원데이;
+      numberOfParticipants = reservation.lectureSchedule.numberOfParticipants;
+    } else {
+      lectureMethod = LectureMethod.정기;
+      numberOfParticipants =
+        reservation.regularLectureStatus.numberOfParticipants;
+    }
+
     const trxUpdateParticipantsMethod = isIncrement
       ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
       : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
 
     const trxUpdateLearnerCountMethod = isIncrement
       ? this.paymentsRepository.trxIncrementLectureLearner
-      : this.paymentsRepository.trxDecrementLectureLearner;
+      : this.paymentsRepository.trxDecrementLectureLearnerEnrollmentCount;
 
     //각 스케쥴의 현재 인원 수정
-    for (const reservation of payment.reservation) {
-      //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
-      if (isIncrement && lectureMaxCapacity) {
-        const remainingCapacity =
-          lectureMaxCapacity - reservation.lectureSchedule.numberOfParticipants;
+    //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
+    if (isIncrement && lectureMaxCapacity) {
+      const remainingCapacity = lectureMaxCapacity - numberOfParticipants;
 
-        if (remainingCapacity < reservation.participants) {
-          throw new BadRequestException(
-            `최대 인원 초과로 인해 취소할 수 없습니다.`,
-            'ExceededMaxParticipants',
-          );
-        }
+      if (remainingCapacity < reservation.participants) {
+        throw new BadRequestException(
+          `최대 인원 초과로 인해 취소할 수 없습니다.`,
+          'ExceededMaxParticipants',
+        );
       }
-
-      await trxUpdateParticipantsMethod(transaction, reservation);
     }
+
+    await trxUpdateParticipantsMethod(transaction, lectureMethod, reservation);
 
     //수강생의 신청 횟수 수정
     await trxUpdateLearnerCountMethod(
       transaction,
       payment.userId,
       payment.lecturerId,
-      payment.reservation.length,
     );
   }
 
@@ -294,7 +311,7 @@ export class LecturerPaymentsService {
   private async rollbackPaymentDoneStatus(paymentId: number) {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           paymentId,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
@@ -319,7 +336,7 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdateLecturePaymentStatus(
+        await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
@@ -348,6 +365,272 @@ export class LecturerPaymentsService {
   async getPaymentRequestCount(lecturerId: number): Promise<number> {
     return await this.paymentsRepository.countLecturerPaymentRequestCount(
       lecturerId,
+    );
+  }
+
+  async getPassSituation(
+    lecturerId: number,
+    passId: number,
+  ): Promise<PassSituationDto[]> {
+    const selectedPass: LecturePass = await this.checkPassIssuance(
+      lecturerId,
+      passId,
+    );
+
+    const userPassList = await this.paymentsRepository.getUserPassList(passId);
+    if (!userPassList[0]) {
+      return;
+    }
+
+    const passSituationList: PassSituationDto[] = await Promise.all(
+      userPassList.map(async (userPassInfo) => {
+        const { users: user, ...userPass } = userPassInfo;
+        if (selectedPass.maxUsageCount === userPassInfo.remainingUses) {
+          return new PassSituationDto({ user, userPass });
+        }
+
+        //패스권을 사용한 payment 정보
+        const userPaymentPassUsage =
+          await this.paymentsRepository.getUserPaymentPassUsage(
+            userPassInfo.userId,
+            passId,
+          );
+
+        //반환된 payment 정보들을 통해 예약 정보 조회
+        const reservations = await Promise.all(
+          userPaymentPassUsage.map(async (userPaymentPass) => {
+            return await this.paymentsRepository.getUserReservation(
+              userPaymentPass.paymentId,
+            );
+          }),
+        );
+
+        return new PassSituationDto({ user, userPass, reservations });
+      }),
+    );
+
+    return passSituationList;
+  }
+
+  private async checkPassIssuance(
+    lecturerId: number,
+    passId: number,
+  ): Promise<LecturePass> {
+    const selectedPass: LecturePass = await this.paymentsRepository.getMyPass(
+      lecturerId,
+      passId,
+    );
+
+    if (!selectedPass) {
+      throw new NotFoundException(`패스권이 존재하지 않습니다`);
+    }
+
+    return selectedPass;
+  }
+
+  async getRevenueStatistics(
+    lecturerId: number,
+    dto: GetRevenueStatisticsDto,
+  ): Promise<RevenueStatisticDto[]> {
+    const { statisticsType, date } = dto;
+
+    if (statisticsType === 'MONTHLY') {
+      return await this.getMonthlyRevenue(lecturerId);
+    } else if (statisticsType === 'DAILY') {
+      const endDate = date ? new Date(date) : new Date();
+      const startDate = date ? new Date(date) : new Date();
+      startDate.setDate(endDate.getDate() - 30);
+
+      return await this.getDailyRevenue(lecturerId, startDate, endDate);
+    }
+  }
+
+  private async getDailyRevenue(
+    lecturerId: number,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    const dailyRevenue = [];
+
+    while (startDate <= endDate) {
+      startDate.setHours(9, 0, 0); // startDate를 00시 00분 00초로 설정
+
+      const nextDate = new Date(startDate);
+      nextDate.setHours(32, 59, 59); // nextDate를 23시 59분 59초로 설정
+
+      const { totalSales, totalPrice } = await this.getRevenueForDate(
+        lecturerId,
+        startDate,
+        nextDate,
+      );
+
+      const formattedDate = startDate.toISOString().slice(0, 10); // "yyyy-mm-dd" 형식으로 변환
+
+      dailyRevenue.push({ date: formattedDate, totalSales, totalPrice });
+      startDate.setDate(startDate.getDate() + 1);
+    }
+
+    return dailyRevenue.reverse();
+  }
+
+  private async getMonthlyRevenue(lecturerId: number) {
+    const currentDate = new Date();
+
+    const monthlyRevenues = [];
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    for (let i = 0; i < 12; i++) {
+      const year = currentMonth - i >= 0 ? currentYear : currentYear - 1;
+      const month = (currentMonth - i + 12) % 12;
+
+      const startDate = new Date(year, month - 1, 1, 9); // 각 월의 시작일
+      const nextDate = new Date(year, month, 0, 9); // 각 월의 마지막일
+      const { totalSales, totalPrice } = await this.getRevenueForDate(
+        lecturerId,
+        startDate,
+        nextDate,
+      );
+      const formattedDate = startDate.toISOString().slice(0, 7); // "yyyy-mm" 형식으로 변환
+      monthlyRevenues.push({
+        date: formattedDate,
+        totalSales,
+        totalPrice,
+      });
+    }
+
+    return monthlyRevenues;
+  }
+
+  private async getRevenueForDate(
+    lecturerId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<{ totalSales: number; totalPrice: number }> {
+    const revenue = await this.paymentsRepository.getPaymentForDate(
+      lecturerId,
+      startDate,
+      endDate,
+    );
+
+    const totalPrice = revenue.reduce(
+      (acc, payment) => acc + payment.finalPrice,
+      0,
+    );
+
+    const totalSales = revenue.length;
+
+    return { totalSales, totalPrice };
+  }
+
+  async getLecturerPaymentList(
+    lecturerId: number,
+    dto: GetLecturerPaymentListDto,
+  ): Promise<{
+    totalItemCount: Number;
+    lecturerPaymentList?: LecturerPaymentItemDto[];
+  }> {
+    const {
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+      productType,
+      startDate,
+      endDate,
+      lectureId,
+    } = dto;
+
+    const paymentProductTypeId =
+      productType === PaymentHistoryTypes.전체 ? undefined : productType;
+
+    const convertedStartDate = new Date(startDate);
+    const convertedEndDate = new Date(endDate);
+    convertedStartDate.setHours(9, 0, 0);
+    convertedEndDate.setHours(32, 59, 59);
+
+    const paginationParams: IPaginationParams = this.getPaginationParams(
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    );
+
+    const totalItemCount =
+      await this.paymentsRepository.getLecturerPaymentCount(
+        lecturerId,
+        paymentProductTypeId,
+        convertedStartDate,
+        convertedEndDate,
+        lectureId,
+      );
+
+    if (!totalItemCount) {
+      return { totalItemCount };
+    }
+
+    const lecturerPaymentList =
+      await this.paymentsRepository.getLecturerPaymentList(
+        lecturerId,
+        paymentProductTypeId,
+        convertedStartDate,
+        convertedEndDate,
+        paginationParams,
+        lectureId,
+      );
+
+    return { totalItemCount, lecturerPaymentList };
+  }
+
+  private getPaginationParams(
+    currentPage: number,
+    targetPage: number,
+    firstItemId: number,
+    lastItemId: number,
+    take: number,
+  ): IPaginationParams {
+    let cursor;
+    let skip;
+    let updatedTake = take;
+
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
+
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
+      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+      updatedTake = pageDiff >= 1 ? -take : take;
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
+
+    return { cursor, skip, take: updatedTake };
+  }
+
+  async getTotalRevenue(
+    lecturerId: number,
+    dto: GetTotalRevenueDto,
+  ): Promise<number> {
+    const { productType, startDate, endDate, lectureId } = dto;
+
+    const paymentProductTypeId =
+      productType === PaymentHistoryTypes.전체 ? undefined : productType;
+
+    const convertedStartDate = new Date(startDate);
+    const convertedEndDate = new Date(endDate);
+    convertedStartDate.setHours(9, 0, 0);
+    convertedEndDate.setHours(32, 59, 59);
+
+    return await this.paymentsRepository.getLecturerPaymentTotalRevenue(
+      lecturerId,
+      paymentProductTypeId,
+      convertedStartDate,
+      convertedEndDate,
+      lectureId,
     );
   }
 }

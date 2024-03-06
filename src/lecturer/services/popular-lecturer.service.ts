@@ -16,9 +16,7 @@ export class PopularLecturerService {
       async (trasaction: PrismaTransaction) => {
         const where = { deletedAt: null };
 
-        if (userId) {
-          where['blockedLecturer'] = { none: { userId } };
-        }
+        userId ? (where['blockedLecturer'] = { none: { userId } }) : false;
 
         const popularScores = [];
         const lecturers = await trasaction.lecturer.findMany({

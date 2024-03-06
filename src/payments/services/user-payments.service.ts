@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PaymentsRepository } from '@src/payments/repository/payments.repository';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -8,6 +13,7 @@ import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { IPaginationParams } from '@src/common/interface/common-interface';
 import { PaymentHistoryTypes } from '../enum/payment.enum';
 import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
+import { PaymentDto } from '../dtos/payment.dto';
 
 @Injectable()
 export class UserPaymentsService implements OnModuleInit {
@@ -119,5 +125,20 @@ export class UserPaymentsService implements OnModuleInit {
     }
 
     return { cursor, skip, take: updatedTake };
+  }
+
+  async getUserReceipt(userId: number, orderId: string): Promise<PaymentDto> {
+    const receipt = await this.paymentsRepository.getUserPaymentInfo(
+      userId,
+      orderId,
+    );
+    if (!receipt) {
+      throw new NotFoundException(
+        `결제정보가 존재하지 않습니다.`,
+        `NotFoundPaymentInfo`,
+      );
+    }
+
+    return new PaymentDto(receipt);
   }
 }

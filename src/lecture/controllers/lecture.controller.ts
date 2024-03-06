@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,28 +11,21 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiReadOneLecture } from '../swagger-decorators/read-one-lecture-decorator';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
-import { ApiReadOneLectureByNonMember } from '../swagger-decorators/read-one-lecture-by-lecturer-non-member-decorator';
-import { ApiReadManyLectureWithLecturer } from '../swagger-decorators/read-many-lecture-with-lecturers-decorator';
-import { ApiReadManyEnrollLecture } from '../swagger-decorators/read-many-enroll-lecture-decorator';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
-import { ApiReadManyLectureProgress } from '../swagger-decorators/read-many-lecture-progress-decorator';
-import { ReadManyLectureProgressQueryDto } from '../dtos/read-many-lecture-progress-query.dto';
 import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
 import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
-import { ApiReadManyLectureByNonMemeber } from '../swagger-decorators/read-many-lecture-by-non-member-decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiGetLectureLearnerList } from '../swagger-decorators/get-lecture-learner-list.decorator';
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
@@ -39,6 +33,17 @@ import { GetLectureLearnerListDto } from '../dtos/get-lecture-learner-list.dto';
 import { ApiReadManyLectureSchedulesWithLecturerId } from '../swagger-decorators/read-many-lecture-schedules-with-lecturer-id-decorator';
 import { ReadManyLectureScheduleQueryDto } from '../dtos/read-many-lecture-schedule-query.dto';
 import { ApiReadManyDailySchedules } from '../swagger-decorators/read-many-daily-schedules.decorator';
+import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
+import { ApiReadOneLectureDetail } from '../swagger-decorators/read-one-lectire-detail.decorator';
+import { ApiReadOneLecturePreview } from '../swagger-decorators/read-one-lecture-preview.decorator';
+import { ApiGetScheduleLearnerList } from '../swagger-decorators/get-schedule-learner-list.decorator';
+import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
+import { ApiGetEnrollLectureSchedules } from '../swagger-decorators/get-enroll-lecture-schedule.decorator';
+import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
+import { ApiGetEnrollScheduleDetail } from '../swagger-decorators/get-enroll-schedule-detail.decorator';
+import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
+import { ApiGetEnrollLectureList } from '../swagger-decorators/get-enroll-lecture-list.decorator';
+import { ApiLecture } from './swagger/lecture.swagger';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -58,27 +63,24 @@ export class LectureController {
     );
   }
 
-  @ApiReadOneLecture()
-  @UseGuards(UserAccessTokenGuard)
-  @Get(':lectureId/users')
-  async readLectureWithUserId(
+  @ApiReadOneLecturePreview()
+  @SetResponseKey('lecturePreview')
+  @UseGuards(AllowUserAndGuestGuard)
+  @Get(':lectureId/previews')
+  async readLecturePreview(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    const lecture = await this.lectureService.readLectureWithUserId(
-      authorizedData.user.id,
-      lectureId,
-    );
+    const userId = authorizedData?.user?.id;
 
-    return lecture;
+    return await this.lectureService.readLecturePreview(lectureId, userId);
   }
 
-  @ApiReadOneLectureByNonMember()
-  @Get(':lectureId/non-members')
-  async readLecture(@Param('lectureId', ParseIntPipe) lectureId: number) {
-    const lecture = await this.lectureService.readLecture(lectureId);
-
-    return lecture;
+  @ApiReadOneLectureDetail()
+  @SetResponseKey('lectureDetail')
+  @Get(':lectureId/detail')
+  async readLectureDetail(@Param('lectureId', ParseIntPipe) lectureId: number) {
+    return await this.lectureService.readLectureDetail(lectureId);
   }
 
   @ApiOperation({ summary: '강의 모두 보기' })
@@ -111,9 +113,9 @@ export class LectureController {
     return { updatedLecture };
   }
 
-  @ApiReadManyLectureSchedule()
+  @ApiLecture.GetLectureSchedule({ summary: '강의 스케쥴 조회' })
   @Get(':lectureId/schedules')
-  async readLectureSchedule(
+  async getLectureSchedule(
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
     const schedules = await this.lectureService.readManyLectureSchedule(
@@ -121,6 +123,20 @@ export class LectureController {
     );
 
     return schedules;
+  }
+
+  @ApiGetScheduleLearnerList()
+  @SetResponseKey('scheduleLearnerList')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get('schedules/:scheduleId/learners')
+  async readLectureScheduleLearnerList(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('scheduleId', ParseIntPipe) scheduleId: number,
+  ): Promise<LectureLearnerInfoDto[]> {
+    return await this.lectureService.getLectureScheduleLearnerList(
+      authorizedData.lecturer.id,
+      scheduleId,
+    );
   }
 
   @ApiReadLectureReservationWithUser()
@@ -152,34 +168,10 @@ export class LectureController {
     );
   }
 
-  @ApiReadManyLectureWithLecturer()
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers')
-  async readManyLectureWithLecturerId(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    const lecture = await this.lectureService.readManyLectureWithLecturerId(
-      authorizedData.lecturer.id,
-    );
-
-    return { lecture };
-  }
-
-  @ApiReadManyLectureByNonMemeber()
-  @Get('lecturers/:lecturerId/non-members')
-  async readManyLectureByNonMember(
-    @Param('lecturerId', ParseIntPipe) lecturerId: number,
-  ) {
-    const lecture = await this.lectureService.readManyLectureWithLecturerId(
-      lecturerId,
-    );
-
-    return { lecture };
-  }
-
-  @ApiReadManyEnrollLecture()
+  @ApiGetEnrollLectureSchedules()
+  @SetResponseKey('enrollSchedules')
   @UseGuards(UserAccessTokenGuard)
-  @Get('users')
+  @Get('enroll-lecture-calenders')
   async readManyEnrollLectureWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyEnrollLectureQueryDto,
@@ -190,45 +182,17 @@ export class LectureController {
     );
   }
 
-  @ApiReadManyLectureProgress()
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('lecturers/in-progress')
-  async readManyLectureProgress(
+  @ApiGetEnrollLectureList()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('enroll-lecture-list')
+  async getEnrollLectureList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() query: ReadManyLectureProgressQueryDto,
+    @Query() query: GetEnrollLectureListQueryDto,
   ) {
-    const lectureProgress = await this.lectureService.readManyLectureProgress(
-      authorizedData.lecturer.id,
+    return await this.lectureService.getEnrollLectureList(
+      authorizedData.user.id,
       query,
     );
-
-    return { lectureProgress };
-  }
-
-  @ApiOperation({ summary: '강의 전체 수강생 조회' })
-  @Get(':lectureId/participants')
-  async readManyParticipantWithLectureId(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-  ) {
-    const participant =
-      await this.lectureService.readManyParticipantWithLectureId(lectureId);
-
-    return { participant };
-  }
-
-  @ApiReadManyParticipantWithScheduleId()
-  @Get(':lectureId/schedules/:scheduleId/participants')
-  async readManyParticipantWithScheduleId(
-    @Param('lectureId', ParseIntPipe) lectureId: number,
-    @Param('scheduleId', ParseIntPipe) scheduleId: number,
-  ) {
-    const participant =
-      await this.lectureService.readManyParticipantWithScheduleId(
-        lectureId,
-        scheduleId,
-      );
-
-    return { participant };
   }
 
   @ApiReadManyLectureSchedulesWithLecturerId()
@@ -261,5 +225,20 @@ export class LectureController {
       );
 
     return { schedules };
+  }
+
+  @ApiGetEnrollScheduleDetail()
+  @UseGuards(UserAccessTokenGuard)
+  @Get('enroll-schedule-detail/:scheduleId')
+  async getEnrollScheduleDetail(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('scheduleId', ParseIntPipe) scheduleId: number,
+    @Query() query: EnrollScheduleDetailQueryDto,
+  ) {
+    return await this.lectureService.getDetailEnrollSchedule(
+      scheduleId,
+      authorizedData.user.id,
+      query,
+    );
   }
 }

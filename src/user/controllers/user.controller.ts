@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UploadedFile,
   UseGuards,
@@ -22,7 +23,10 @@ import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { Users } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiReadMyProfile } from '../swagger-decorators/read-my-profile';
+import { ApiGetUserMyProfile } from '../swagger-decorators/read-my-profile';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+import { ApiUpdateUser } from '../swagger-decorators/update-user.decorator';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 
 @ApiTags('유저')
 @Controller('users')
@@ -71,16 +75,24 @@ export class UserController {
     return this.userService.findByNickname(nickname);
   }
 
-  @ApiReadMyProfile()
+  @SetResponseKey('myProfile')
+  @ApiGetUserMyProfile()
   @UseGuards(UserAccessTokenGuard)
   @Get('my-pages')
   async getMyProfile(@GetAuthorizedUser() authorizedData: ValidateResult) {
-    const myProfile = await this.userService.getMyProfile(
-      authorizedData.user.id,
-    );
-
-    return { myProfile };
+    return await this.userService.getMyProfile(authorizedData.user.id);
   }
 
-  // @ApiOperation({summary:'유저 정보 수정'})
+  @ApiUpdateUser()
+  @UseGuards(UserAccessTokenGuard)
+  @Patch('my-pages')
+  async updateUser(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() updateMyProfileDto: UpdateUserDto,
+  ) {
+    return await this.userService.updateUser(
+      authorizedData.user.id,
+      updateMyProfileDto,
+    );
+  }
 }

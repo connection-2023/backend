@@ -32,6 +32,7 @@ export class LearnerPaymentOverviewDto
   })
   finalPrice: number;
 
+  refundableDate: Date;
   userId: number;
   lecturerId: number;
   paymentMethodId: number;
@@ -53,11 +54,11 @@ export class LearnerPaymentOverviewDto
   paymentCouponUsage: PaymentCouponUsageDto;
 
   @ApiProperty({
-    type: [ReservationDto],
+    type: ReservationDto,
     description: '예약 정보',
     nullable: true,
   })
-  reservation: ReservationDto[];
+  reservation: ReservationDto;
 
   @ApiProperty({
     type: PaymentPassUsageDto,
@@ -71,6 +72,7 @@ export class LearnerPaymentOverviewDto
     description: '구매한 유저 패스권 정보',
   })
   userPass: LearnerPassDto;
+  secret: string;
 
   constructor(learnerOverview: Partial<LearnerPaymentOverviewDto>) {
     super();
@@ -86,14 +88,11 @@ export class LearnerPaymentOverviewDto
     );
 
     this.reservation = learnerOverview.reservation
-      ? learnerOverview.reservation.map(
-          (reservation) => new ReservationDto(reservation),
-        )
+      ? new ReservationDto(learnerOverview.reservation)
       : null;
     this.paymentCouponUsage = learnerOverview.paymentCouponUsage
       ? new PaymentCouponUsageDto(learnerOverview.paymentCouponUsage)
       : null;
-
     this.paymentPassUsage = learnerOverview.paymentPassUsage
       ? new PaymentPassUsageDto(learnerOverview.paymentPassUsage)
       : null;

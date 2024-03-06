@@ -84,3 +84,11 @@ export interface IPaginationParams {
   skip: number | null;
   take: number | null;
 }
+
+export interface IPaginationOptions {
+  take: number;
+  currentPage?: number;
+  targetPage?: number;
+  firstItemId?: number;
+  lastItemId?: number;
+}

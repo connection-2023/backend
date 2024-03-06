@@ -19,8 +19,15 @@ export class SuccessInterceptor implements NestInterceptor {
     );
 
     const statusCode = context.getArgByIndex(1).statusCode;
+
     return next.handle().pipe(
       map((data) => {
+        if (data && data.statusCode) {
+          const { statusCode, ...etc } = data;
+
+          return { statusCode, data: etc };
+        }
+
         if (key) {
           return { statusCode, data: { [key]: data } };
         }

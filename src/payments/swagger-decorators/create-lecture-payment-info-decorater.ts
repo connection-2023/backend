@@ -6,8 +6,10 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { applyDecorators } from '@nestjs/common';
+import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
+import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
+import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 
 export function ApiCreateLecturePaymentInfo() {
   return applyDecorators(
@@ -16,17 +18,10 @@ export function ApiCreateLecturePaymentInfo() {
       description: '반환받은 결제 정보를 통해 토스에게 요청',
     }),
     ApiBearerAuth(),
-    ApiCreatedResponse(
-      SwaggerApiResponse.success('결제에 필요한 정보 반환', {
-        statusCode: 201,
-        data: {
-          lecturePaymentInfo: {
-            orderId: 'adkqmg12222dd1',
-            orderName: '단스강의',
-            value: 40000,
-          },
-        },
-      }),
+    DetailResponseDto.swaggerBuilder(
+      HttpStatus.CREATED,
+      'pendingPaymentInfo',
+      PendingPaymentInfoDto,
     ),
     ApiBadRequestResponse(
       SwaggerApiResponse.exception([

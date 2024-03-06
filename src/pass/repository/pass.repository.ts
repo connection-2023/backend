@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   ICursor,
+  IPaginationParams,
   Id,
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
@@ -10,6 +11,8 @@ import {
   LecturePassTargetInputData,
 } from '@src/pass/interface/interface';
 import { LecturePass } from '@prisma/client';
+import { PaymentMethods } from '@src/payments/enum/payment.enum';
+import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @Injectable()
 export class PassRepository {
@@ -78,12 +81,10 @@ export class PassRepository {
 
   async getIssuedLecturePasses(
     lecturerId: number,
-    take: number,
     isDisabled: boolean,
     orderBy: object,
     lecturePassTarget: object,
-    cursor: ICursor,
-    skip: number,
+    { take, cursor, skip }: IPaginationParams,
   ) {
     try {
       return await this.prismaService.lecturePass.findMany({
@@ -92,23 +93,11 @@ export class PassRepository {
           isDisabled,
           lecturePassTarget,
         },
+        include: { lecturePassTarget: { include: { lecture: true } } },
         take,
         orderBy,
         cursor,
         skip,
-        select: {
-          id: true,
-          title: true,
-          price: true,
-          availableMonths: true,
-          maxUsageCount: true,
-          salesCount: true,
-          lecturePassTarget: {
-            select: {
-              lecture: { select: { id: true, title: true } },
-            },
-          },
-        },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -144,5 +133,99 @@ export class PassRepository {
         'PrismaFindFailed',
       );
     }
+  }
+
+  async getPassByIdAndLecturerId(lecturerId: number, passId: number) {
+    return await this.prismaService.lecturePass.findFirst({
+      where: { id: passId, lecturerId },
+      include: { lecturePassTarget: { include: { lecture: true } } },
+    });
+  }
+
+  async getPassWithLecturerById(passId: number) {
+    return await this.prismaService.lecturePass.findFirst({
+      where: { id: passId },
+      include: {
+        lecturePassTarget: { include: { lecture: true } },
+        lecturer: true,
+      },
+    });
+  }
+
+  async getUserPassList(
+    userId: number,
+    { take, cursor, skip }: IPaginationParams,
+  ) {
+    return await this.prismaService.userPass.findMany({
+      where: { userId, isEnabled: true },
+      include: {
+        lecturePass: {
+          include: { lecturePassTarget: { include: { lecture: true } } },
+        },
+        payment: true,
+      },
+      take,
+      cursor,
+      skip,
+    });
+  }
+
+  async countUserPassList(userId: number) {
+    return await this.prismaService.userPass.count({
+      where: { userId, isEnabled: true },
+    });
+  }
+
+  async getUserPassWithPayment(userId: number, passId: number) {
+    return await this.prismaService.userPass.findFirst({
+      where: { userId, lecturePassId: passId, isEnabled: true },
+      include: { payment: true },
+    });
+  }
+
+  async getPassHistory(userId: number, passId: number) {
+    return await this.prismaService.reservation.findMany({
+      where: {
+        userId,
+        payment: {
+          paymentMethodId: PaymentMethods.패스권,
+          paymentPassUsage: { lecturePassId: passId },
+        },
+      },
+      include: {
+        payment: true,
+        lectureSchedule: {
+          include: {
+            lecture: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getUsablePassList(userId: number, lectureId: number) {
+    return await this.prismaService.userPass.findMany({
+      where: {
+        userId,
+        isEnabled: true,
+        OR: [{ endAt: { gte: generateCurrentTime() } }, { endAt: null }],
+        remainingUses: { gt: 0 },
+        lecturePass: { lecturePassTarget: { some: { lectureId } } },
+      },
+      include: { lecturePass: true },
+    });
+  }
+
+  async deactivatePass(passId: number): Promise<void> {
+    await this.prismaService.lecturePass.update({
+      where: { id: passId },
+      data: { isDisabled: true },
+    });
+  }
+
+  async getPassById(passId: number) {
+    return await this.prismaService.lecturePass.findUnique({
+      where: { id: passId },
+    });
   }
 }

@@ -7,6 +7,7 @@ import {
   RegisterConsentAgreeList,
   RegisterConsentInputData,
 } from '@src/user/interface/user.interface';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 
 @Injectable()
 export class UserRepository {
@@ -49,8 +50,8 @@ export class UserRepository {
     return await this.prismaService.users.findUnique({
       where: { id: userId },
       include: {
-        auth: { select: { email: true, signUpType: true } },
-        userProfileImage: { select: { imageUrl: true } },
+        auth: { include: { signUpType: true } },
+        userProfileImage: true,
       },
     });
   }
@@ -70,6 +71,27 @@ export class UserRepository {
     return await this.prismaService.registerConsent.findMany({
       where: { OR: registerConsentList },
       select: { id: true },
+    });
+  }
+
+  async updateUser(
+    userId: number,
+    updateUserSetData: UpdateUserDto,
+  ): Promise<Users> {
+    return await this.prismaService.users.update({
+      where: { id: userId },
+      data: updateUserSetData,
+    });
+  }
+
+  async updateUserImage(
+    userId: number,
+    imageUrl: string,
+  ): Promise<UserProfileImage> {
+    return await this.prismaService.userProfileImage.upsert({
+      where: { userId },
+      create: { userId, imageUrl },
+      update: { imageUrl },
     });
   }
 }

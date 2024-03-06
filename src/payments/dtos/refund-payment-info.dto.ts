@@ -29,15 +29,9 @@ export class RefundPaymentInfoDto
 
   @ApiProperty({
     description: '환불 사유',
-    nullable: true,
   })
-  reason: string;
+  cancelReason: string;
 
-  @ApiProperty({
-    description: '거절 이유',
-    nullable: true,
-  })
-  refusedReason: string;
   createdAt: Date;
 
   @ApiProperty({
@@ -57,12 +51,11 @@ export class RefundPaymentInfoDto
     this.id = refundPaymentInfo.id;
     this.refundStatus = refundPaymentInfo.refundStatus;
     this.cancelAmount = refundPaymentInfo.cancelAmount;
-    this.reason = refundPaymentInfo.reason;
-    this.refusedReason = refundPaymentInfo.refusedReason;
+    this.cancelReason = refundPaymentInfo.cancelReason;
 
-    this.refundUserBankAccount = new UserBankAccountDto(
-      refundPaymentInfo.refundUserBankAccount,
-    );
+    this.refundUserBankAccount = refundPaymentInfo.refundUserBankAccount
+      ? new UserBankAccountDto(refundPaymentInfo.refundUserBankAccount)
+      : null;
 
     Object.assign(this);
   }

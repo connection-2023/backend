@@ -27,11 +27,11 @@ export class DetailResponseDto {
 
     class Temp extends this {
       @ApiProperty({
-        name: 'status',
+        name: 'statusCode',
         example: `${status}`,
         enum: HttpStatus,
       })
-      private readonly status: string;
+      private readonly statusCode: string;
 
       @ApiProperty({
         name: 'data',
@@ -40,7 +40,7 @@ export class DetailResponseDto {
     }
 
     Object.defineProperty(Temp, 'name', {
-      value: `${key[0].toUpperCase()}${key.slice(1)}Dto`,
+      value: `${key[0].toUpperCase()}${key.slice(1)}ResponseDto`,
     });
 
     Object.defineProperty(Data, 'name', {

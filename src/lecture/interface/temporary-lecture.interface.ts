@@ -27,14 +27,14 @@ interface TemporaryLectureToRegionInputData {
 interface TemporaryLectureScheduleInputData {
   lectureId: number;
   date?: string;
-  startDateTime?: string;
+  dateTime?: string;
   numberOfParticipants?: number;
 }
 
 interface RegularTemporaryLectureScheduleInputData {
   lectureId: number;
   team?: string;
-  startDateTime?: string;
+  dateTime?: string;
   numberOfParticipants?: number;
 }
 
@@ -66,7 +66,7 @@ interface TemporaryLectureCouponTargetInputData {
 interface TemporaryLectureSchedules {
   day?: string[];
   date?: string;
-  startDateTime?: string[];
+  dateTime?: string[];
 }
 
 interface TemporaryLectureDayInputData {
@@ -76,13 +76,15 @@ interface TemporaryLectureDayInputData {
 
 interface TemporaryLectureDayScheduleInpuData {
   lectureDayId: number;
-  startDateTime: string;
+  dateTime: string;
 }
 
 interface TemporaryLectureLocation {
   address?: string;
   detailAddress?: string;
   buildingName?: string;
+  administrativeDistrict?: string;
+  district?: string;
 }
 
 interface TemporaryLectureLocationInputData {

@@ -79,7 +79,12 @@ jobs:
           echo "ES_USERNAME=${{ secrets.ES_USERNAME }}" >> .env
           echo "ES_PASSWORD=${{ secrets.ES_PASSWORD }}" >> .env
 
+          echo "MONGODB_URL=${{ secrets.MONGODB_URL }}" >> .env
 
+          echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
+
+          echo "PASS_REFUNDABLE_DAYS_PERIOD=${{ secrets.PASS_REFUNDABLE_DAYS_PERIOD }}" >> .env
+          echo "CANCELLATION_ABSOLUTE_TIME=${{ secrets.CANCELLATION_ABSOLUTE_TIME }}" >> .env
 
           cat .env
 

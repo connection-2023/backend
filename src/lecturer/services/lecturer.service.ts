@@ -3,11 +3,13 @@ import {
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateLecturerDto } from '@src/lecturer/dtos/create-lecturer.dto';
 import { LecturerRepository } from '@src/lecturer/repositories/lecturer.repository';
 import {
+  IPaginationOptions,
   IPaginationParams,
   Id,
   PrismaTransaction,
@@ -32,7 +34,14 @@ import { LecturerDetailProfileDto } from '../dtos/lecturer-detail-profile.dto';
 import { GetLecturerLearnerListDto } from '../dtos/get-lecturer-learner-list.dto';
 import { FilterOptions, SortOptions } from '../enum/lecturer.enum';
 import { LecturerLearnerListDto } from '../dtos/lecturer-learner-list.dto';
+import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
+import { LecturerBasicProfileDto } from '../dtos/lecturer-basic-profile.dto';
+import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
+import { GetMyReservationListDto } from '../dtos/request/get-my-reservation-list.dto';
+import { PaginationDto } from '@src/common/dtos/pagination.dto';
+import { UpdateLearnerMemoDto } from '../dtos/request/update-learner-memo.dto';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -285,8 +294,12 @@ export class LecturerService implements OnModuleInit {
 
   async getLecturerBasicProfile(
     lecturerId: number,
-  ): Promise<LecturerBasicProfile> {
-    return await this.lecturerRepository.getLecturerBasicProfile(lecturerId);
+  ): Promise<LecturerBasicProfileDto> {
+    const lecturer = await this.lecturerRepository.getLecturerBasicProfile(
+      lecturerId,
+    );
+
+    return lecturer ? new LecturerBasicProfileDto(lecturer) : null;
   }
 
   async updateMyLecturerProfile(
@@ -329,6 +342,61 @@ export class LecturerService implements OnModuleInit {
             instagramPostUrls,
           ),
         ]);
+      },
+    );
+  }
+
+  async readManyLectureWithLecturerId(lecturerId: number, userId?: number) {
+    const lectures =
+      await this.lecturerRepository.readManyLectureWithLectruerId(
+        lecturerId,
+        userId,
+      );
+    return lectures.map((lecture) => new LectureDto(lecture));
+  }
+
+  async readManyLectureProgress(
+    lecturerId: number,
+    query: ReadManyLectureProgressQueryDto,
+  ) {
+    const { progressType } = query;
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        if (progressType === '진행중') {
+          const lectures =
+            await this.lecturerRepository.trxReadManyLectureProgress(
+              transaction,
+              lecturerId,
+            );
+          const inprogressLecture = [];
+
+          for (const lecture of lectures) {
+            const currentTime = new Date();
+            const completedLectureSchedule =
+              await this.lecturerRepository.trxReadManyCompletedLectureScheduleCount(
+                transaction,
+                lecture.id,
+                currentTime,
+              );
+            const progress = Math.round(
+              (completedLectureSchedule / lecture._count.lectureSchedule) * 100,
+            );
+            const inprogressLectureData = {
+              ...lecture,
+              progress,
+              allSchedule: lecture._count.lectureSchedule,
+              completedSchedule: completedLectureSchedule,
+            };
+
+            inprogressLecture.push(inprogressLectureData);
+          }
+
+          return inprogressLecture;
+        } else if (progressType === '마감된 클래스') {
+          return await this.lecturerRepository.readManyCompletedLectureWithLecturerId(
+            lecturerId,
+          );
+        }
       },
     );
   }
@@ -537,13 +605,13 @@ export class LecturerService implements OnModuleInit {
       lectureId,
     );
 
-    const paginationParams: IPaginationParams = this.getPaginationParams(
+    const paginationParams: IPaginationParams = this.getPaginationParams({
       currentPage,
       targetPage,
       firstItemId,
       lastItemId,
       take,
-    );
+    });
 
     const totalItemCount: number =
       await this.lecturerRepository.getLecturerLearnerCount(lecturerId, user);
@@ -619,13 +687,13 @@ export class LecturerService implements OnModuleInit {
     return { orderBy, user };
   }
 
-  private getPaginationParams(
-    currentPage: number,
-    targetPage: number,
-    firstItemId: number,
-    lastItemId: number,
-    take: number,
-  ): IPaginationParams {
+  private getPaginationParams({
+    currentPage,
+    targetPage,
+    firstItemId,
+    lastItemId,
+    take,
+  }: IPaginationOptions): IPaginationParams {
     let cursor;
     let skip;
     let updatedTake = take;
@@ -656,10 +724,47 @@ export class LecturerService implements OnModuleInit {
         userId,
       );
 
-    return (
-      learnerPaymentOverView?.map(
-        (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
-      ) || []
+    return learnerPaymentOverView[0]
+      ? learnerPaymentOverView.map(
+          (learnerPayment) => new LearnerPaymentOverviewDto(learnerPayment),
+        )
+      : [];
+  }
+
+  async getLecturerLearnerPassList(
+    lecturerId: number,
+    userId: number,
+  ): Promise<LecturerLearnerPassInfoDto[]> {
+    return await this.lecturerRepository.getUserPassList(lecturerId, userId);
+  }
+
+  async getMyReservationList(lecturerId: number, dto: GetMyReservationListDto) {
+    const paginationParams: IPaginationParams = this.getPaginationParams(dto);
+
+    return await this.lecturerRepository.getLecturerReservationList(
+      lecturerId,
+      paginationParams,
+    );
+  }
+
+  async updateLearnerMemo(
+    lecturerId: number,
+    userId: number,
+    { memo }: UpdateLearnerMemoDto,
+  ): Promise<void> {
+    const selectedLecturerLearner =
+      await this.lecturerRepository.getLecturerLearner(lecturerId, userId);
+
+    if (!selectedLecturerLearner) {
+      throw new NotFoundException(
+        `수강생 정보를 찾을 수 없습니다.`,
+        'LearnerInfoNotFound',
+      );
+    }
+
+    await this.lecturerRepository.updateLearnerMemo(
+      selectedLecturerLearner.id,
+      memo,
     );
   }
 }

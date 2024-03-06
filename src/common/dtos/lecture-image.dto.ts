@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { LectureImage } from '@prisma/client';
+import { Exclude, Expose } from 'class-transformer';
 
+@Exclude()
 export class LectureImageDto implements LectureImage {
   id: number;
   lectureId: number;
@@ -8,12 +10,10 @@ export class LectureImageDto implements LectureImage {
   @ApiProperty({
     description: '강의 이미지 url',
   })
+  @Expose()
   imageUrl: string;
 
   constructor(lectureImage: Partial<LectureImageDto>) {
-    this.id = lectureImage.id;
-    this.imageUrl = lectureImage.imageUrl;
-
-    Object.assign(this);
+    Object.assign(this, lectureImage);
   }
 }
