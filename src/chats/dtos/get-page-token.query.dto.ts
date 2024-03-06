@@ -11,7 +11,7 @@ export class GetPageTokenQueryDto {
   })
   @IsString()
   @IsOptional()
-  pageToken: string;
+  lastItemId?: string;
 
   @ApiProperty({ description: '불러올 수', type: Number })
   @IsNumber()

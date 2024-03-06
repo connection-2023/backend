@@ -60,15 +60,15 @@ export class NotificationService {
 
   async getMyNotification(
     authorizedData: ValidateResult,
-    { pageToken, pageSize }: GetPageTokenQueryDto,
+    { lastItemId, pageSize }: GetPageTokenQueryDto,
   ) {
     const where = {};
     authorizedData.user
       ? (where['target.userId'] = authorizedData.user.id)
       : (where['target.lecturerId'] = authorizedData.lecturer.id);
 
-    pageToken
-      ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(pageToken) })
+    lastItemId
+      ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(lastItemId) })
       : false;
 
     const notifications = await this.notificationRepository.getMyNotification(

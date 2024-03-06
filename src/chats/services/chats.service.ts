@@ -48,12 +48,12 @@ export class ChatsService {
   }
 
   async getChatsWithChatRoomId(
-    { pageToken, pageSize }: GetPageTokenQueryDto,
+    { lastItemId, pageSize }: GetPageTokenQueryDto,
     chatRoomId: mongoose.Types.ObjectId,
   ) {
     const where = { chattingRoomId: chatRoomId };
-    pageToken
-      ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(pageToken) })
+    lastItemId
+      ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(lastItemId) })
       : false;
 
     const chats = await this.chatsRepository.getChatsWithChatRoomId(
