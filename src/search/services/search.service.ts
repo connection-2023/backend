@@ -43,7 +43,7 @@ import {
   Week,
 } from '@src/common/enum/enum';
 import { GetLectureSearchResultDto } from '@src/search/dtos/request/get-lecture-search-result.dto';
-import { LectureMethod } from '@src/payments/enum/payment.enum';
+import { LectureMethod } from '@src/payments/constants/enum';
 import {
   IPaginationParams,
   PrismaTransaction,

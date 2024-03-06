@@ -27,7 +27,7 @@ import {
 import { PrismaClientValidationError } from '@prisma/client/runtime';
 import { when } from 'joi';
 import { LectureScheduleResponseData } from '@src/lecture/interface/lecture.interface';
-import { PaymentOrderStatus } from '@src/payments/enum/payment.enum';
+import { PaymentOrderStatus } from '@src/payments/constants/enum';
 import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
 
 @Injectable()

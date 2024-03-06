@@ -3,7 +3,7 @@ import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
 import { TransformEnumValue } from '@src/common/utils/enum-value-extractor';
 import { IsNumberType } from '@src/common/validator/custom-validator';
-import { PaymentHistoryTypes } from '@src/payments/enum/payment.enum';
+import { PaymentHistoryTypes } from '@src/payments/constants/enum';
 import { IsEndDateAfterStartDate } from '@src/payments/validators/is-end-date-after-start-date.validator';
 import { Transform } from 'class-transformer';
 import { IsDateString, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';

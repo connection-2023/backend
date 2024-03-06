@@ -11,7 +11,7 @@ import {
   LecturePassTargetInputData,
 } from '@src/pass/interface/interface';
 import { LecturePass } from '@prisma/client';
-import { PaymentMethods } from '@src/payments/enum/payment.enum';
+import { PaymentMethods } from '@src/payments/constants/enum';
 import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @Injectable()

@@ -4,7 +4,7 @@ import { Exclude, Expose, Type } from 'class-transformer';
 import { PaymentStatusDto } from '../payment-status.dto';
 import { PaymentCouponUsageDto } from '../payment-coupon-usage.dto';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
-import { LecturerPaymentStatus } from '@src/payments/enum/payment.enum';
+import { LecturerPaymentStatus } from '@src/payments/constants/enum';
 import { BasicUserDto } from '@src/common/dtos/basic-user.dto';
 @Exclude()
 class PrivateLecturerPaymentStatus extends PaymentStatusDto {

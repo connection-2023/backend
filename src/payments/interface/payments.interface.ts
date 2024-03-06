@@ -1,4 +1,5 @@
 import {
+  LectureCoupon,
   LectureSchedule,
   Payment,
   RegularLectureStatus,
@@ -6,17 +7,13 @@ import {
   TransferPaymentInfo,
   UserPass,
 } from '@prisma/client';
-import { PaymentMethods } from '@src/payments/enum/payment.enum';
+import { PaymentMethods } from '@src/payments/constants/enum';
 
 export interface ILectureSchedule {
   id?: number;
   lectureScheduleId: number;
   regularLectureStatusId: number;
   participants: number;
-}
-
-export interface LectureCoupon {
-  lectureCoupon: Coupon;
 }
 
 export interface Coupon {
@@ -27,9 +24,9 @@ export interface Coupon {
   maxDiscountPrice: number | null;
 }
 
-export interface Coupons {
-  coupon?: Coupon;
-  stackableCoupon?: Coupon;
+export interface ICoupons {
+  coupon?: LectureCoupon;
+  stackableCoupon?: LectureCoupon;
 }
 
 export interface PaymentInputData {
