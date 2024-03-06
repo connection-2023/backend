@@ -118,11 +118,7 @@ export class LectureController {
   async getLectureSchedule(
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    const schedules = await this.lectureService.readManyLectureSchedule(
-      lectureId,
-    );
-
-    return schedules;
+    return await this.lectureService.readManyLectureSchedule(lectureId);
   }
 
   @ApiGetScheduleLearnerList()
