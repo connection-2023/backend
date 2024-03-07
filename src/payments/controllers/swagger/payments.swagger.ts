@@ -145,8 +145,8 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
           description: '올바르지 않은 결제 방식입니다.',
         },
         {
-          error: 'PaymentStatusMismatch',
-          description: '결제 상태가 일치하지 않습니다.',
+          error: 'InvalidPaymentStatus',
+          description: '결제 진행이 불가능한 상태입니다.',
         },
       ]),
       ExceptionResponseDto.swaggerBuilder(HttpStatus.NOT_FOUND, [
