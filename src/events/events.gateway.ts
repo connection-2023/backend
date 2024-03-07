@@ -14,6 +14,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { Server, Socket } from 'socket.io';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { RedisClientType } from 'redis';
 
 @WebSocketGateway({ namespace: /\/chatroom\d+/ })
 export class EventsGateway
@@ -46,7 +47,9 @@ export class EventsGateway
       socket.join(room);
     });
 
-    const onlineMapKeys = await this.cacheManager.store.keys('onlineMap:*');
+    const onlineMapKeys = await this.findKeysByOnlineMap();
+
+    console.log(onlineMapKeys);
 
     const onlineMap = await this.cacheManager.store.mget(...onlineMapKeys);
 
@@ -64,14 +67,20 @@ export class EventsGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconnected', socket.nsp.name);
 
-    const exitUser = await this.cacheManager.get(`onlineMap:${socket.id}`);
-
     await this.cacheManager.del(`onlineMap:${socket.id}`);
 
-    const onlineMapKeys = await this.cacheManager.store.keys('onlineMap:*');
+    const onlineMapKeys = await this.findKeysByOnlineMap();
 
     const onlineMap = await this.cacheManager.store.mget(...onlineMapKeys);
 
     socket.nsp.emit('onlineMap', onlineMap);
+  }
+
+  async findKeysByOnlineMap(): Promise<string[]> {
+    const keys: string[] = await this.cacheManager.store.keys();
+    const onlineMapKeys: string[] = keys.filter((key) =>
+      key.startsWith('onlineMap:'),
+    );
+    return onlineMapKeys;
   }
 }
