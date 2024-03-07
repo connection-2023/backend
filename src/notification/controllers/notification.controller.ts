@@ -13,10 +13,7 @@ import { Cache } from 'cache-manager';
 @ApiTags('알림')
 @Controller('notifications')
 export class NotificationController {
-  constructor(
-    private readonly notificationService: NotificationService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  constructor(private readonly notificationService: NotificationService) {}
 
   @ApiNotification.GetMyNotification({ summary: '내 알림 조회' })
   @SetResponseKey('notifications')
@@ -26,11 +23,6 @@ export class NotificationController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() getPageTokenQueryDto: GetPageTokenQueryDto,
   ) {
-    const keys = await this.cacheManager.store.keys('onlineMap:*');
-    const onlineMap = await this.cacheManager.store.mget(...keys);
-
-    console.log(keys, onlineMap);
-
     return await this.notificationService.getMyNotification(
       authorizedData,
       getPageTokenQueryDto,
