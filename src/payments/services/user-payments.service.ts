@@ -11,7 +11,7 @@ import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { IPaginationParams } from '@src/common/interface/common-interface';
-import { PaymentHistoryTypes } from '../enum/payment.enum';
+import { PaymentHistoryTypes } from '../constants/enum';
 import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
 import { PaymentDto } from '../dtos/payment.dto';
 

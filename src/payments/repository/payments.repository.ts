@@ -10,7 +10,6 @@ import {
   IPaymentPassUsageInputData,
   ISelectedUserPass,
   IUserBankAccountInputData,
-  LectureCoupon,
   LectureCouponUseage,
   LecturePaymentUpdateData,
   ILectureSchedule,
@@ -32,9 +31,10 @@ import {
   PaymentMethods,
   PaymentProductTypes,
   LectureMethod,
-} from '@src/payments/enum/payment.enum';
+} from '@src/payments/constants/enum';
 import {
   Lecture,
+  LectureCoupon,
   LecturePass,
   LectureSchedule,
   LecturerBankAccount,
@@ -45,41 +45,37 @@ import {
   RegularLectureSchedule,
   RegularLectureStatus,
   UserBankAccount,
+  UserCoupon,
 } from '@prisma/client';
+import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @Injectable()
 export class PaymentsRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getUserCoupon(
-    userId,
-    lectureCouponId,
-    isStackable,
+    userId: number,
+    lectureId: number,
+    couponId: number,
+    isStackable: boolean,
   ): Promise<LectureCoupon> {
     try {
-      const currentDate = new Date();
+      const currentDate = generateCurrentTime();
 
-      return await this.prismaService.userCoupon.findFirst({
+      return await this.prismaService.lectureCoupon.findFirst({
         where: {
-          userId,
-          lectureCouponId,
-          isUsed: false,
-          lectureCoupon: {
-            isStackable,
-            isDisabled: false,
-            endAt: {
-              gte: currentDate,
-            },
+          id: couponId,
+          userCoupon: {
+            some: { userId, isUsed: false },
           },
-        },
-        select: {
-          lectureCoupon: {
-            select: {
-              id: true,
-              title: true,
-              percentage: true,
-              discountPrice: true,
-              maxDiscountPrice: true,
+          isStackable,
+          isDisabled: false,
+          endAt: {
+            gte: currentDate,
+          },
+          lectureCouponTarget: {
+            some: {
+              lectureId,
             },
           },
         },
@@ -300,6 +296,8 @@ export class PaymentsRepository {
     couponIds: number[],
   ) {
     try {
+      console.log(couponIds);
+
       await transaction.lectureCoupon.updateMany({
         where: { id: { in: couponIds } },
         data: {
@@ -320,11 +318,15 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     paymentCouponUsageInputData,
   ) {
+    console.log(paymentCouponUsageInputData);
+
     try {
       await transaction.paymentCouponUsage.create({
         data: paymentCouponUsageInputData,
       });
     } catch (error) {
+      console.log(error);
+
       throw new InternalServerErrorException(
         `Prisma 쿠폰 사용내역 생성 실패: ${error}`,
         'PrismaCreateFailed',

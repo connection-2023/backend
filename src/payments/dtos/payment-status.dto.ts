@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PaymentStatus } from '@prisma/client';
-import { PaymentOrderStatus } from '@src/payments/enum/payment.enum';
+import { PaymentOrderStatus } from '@src/payments/constants/enum';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
 import { Exclude, Expose } from 'class-transformer';
 

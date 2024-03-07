@@ -7,7 +7,7 @@ import {
   IsNumber,
   IsOptional,
 } from 'class-validator';
-import { PaymentHistoryTypes } from '../enum/payment.enum';
+import { PaymentHistoryTypes } from '../constants/enum';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
 import { BadRequestException, Type as t } from '@nestjs/common';

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CardPaymentInfo } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
-import { CardTypes } from '../enum/payment.enum';
+import { CardTypes } from '../constants/enum';
 
 @Exclude()
 export class CardPaymentInfoDto implements CardPaymentInfo {
