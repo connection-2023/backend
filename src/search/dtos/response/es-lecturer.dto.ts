@@ -96,7 +96,8 @@ export class EsLecturerDto {
   constructor(lecturer: Partial<IEsLecturer>) {
     Object.assign(this, lecturer);
 
-    this.stars = lecturer.stars.toFixed(1);
+    this.stars = lecturer.stars ? lecturer.stars.toFixed(1) : '0';
+
     this.isLiked = lecturer.isLiked ? true : false;
   }
 }
