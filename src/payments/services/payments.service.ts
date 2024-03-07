@@ -692,9 +692,7 @@ export class PaymentsService implements OnModuleInit {
     }
   }
 
-  async confirmPayment(
-    confirmPaymentDto: ConfirmPaymentDto,
-  ): Promise<PaymentDto> {
+  async confirmPayment(confirmPaymentDto: ConfirmPaymentDto): Promise<void> {
     const { orderId, amount, paymentKey } = confirmPaymentDto;
     const paymentInfo = await this.getPaymentInfo(orderId);
 
@@ -733,12 +731,12 @@ export class PaymentsService implements OnModuleInit {
         paymentKey,
         authorizedPaymentInfo,
       );
+    } else {
+      throw new BadRequestException(
+        '결제 진행이 불가능한 상태입니다.',
+        'InvalidPaymentStatus',
+      );
     }
-
-    throw new BadRequestException(
-      `결제 상태가 일치하지 않습니다.`,
-      'PaymentStatusMismatch',
-    );
   }
 
   // 카드 결제 정보 처리
