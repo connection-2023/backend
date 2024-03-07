@@ -62,6 +62,7 @@ import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
+import { CouponStackability } from '../constants/const';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -351,22 +352,20 @@ export class PaymentsService implements OnModuleInit {
     { lectureId, couponId, stackableCouponId }: CreateLecturePaymentWithTossDto,
   ) {
     const [coupon, stackableCoupon] = await Promise.all([
-      couponId
-        ? this.getAndValidateCoupon(
-            userId,
-            lectureId,
-            couponId,
-            CouponStackability.REGULAR,
-          )
-        : undefined,
-      stackableCouponId
-        ? this.getAndValidateCoupon(
-            userId,
-            lectureId,
-            stackableCouponId,
-            CouponStackability.STACKABLE,
-          )
-        : undefined,
+      couponId &&
+        this.getAndValidateCoupon(
+          userId,
+          lectureId,
+          couponId,
+          CouponStackability.REGULAR,
+        ),
+      stackableCouponId &&
+        this.getAndValidateCoupon(
+          userId,
+          lectureId,
+          stackableCouponId,
+          CouponStackability.STACKABLE,
+        ),
     ]);
 
     const hasDuplicateDiscount = [coupon, stackableCoupon].every(
@@ -393,25 +392,24 @@ export class PaymentsService implements OnModuleInit {
       maxDiscountPrice: number | null,
     ): number => {
       const discountAmount = (price * percentage) / 100;
-      return maxDiscountPrice !== null
+      return maxDiscountPrice
         ? price - Math.min(discountAmount, maxDiscountPrice)
         : price - discountAmount;
     };
 
     const applyCoupon = (price: number, coupon: Coupon | null): number => {
-      if (coupon) {
-        if (coupon.percentage !== null) {
-          price = applyPercentageDiscount(
-            price,
-            coupon.percentage,
-            coupon.maxDiscountPrice,
-          );
-        }
-        if (coupon.discountPrice !== null) {
-          price -= coupon.discountPrice;
-        }
+      if (coupon?.percentage) {
+        price = applyPercentageDiscount(
+          price,
+          coupon.percentage,
+          coupon.maxDiscountPrice,
+        );
       }
-      return price;
+      if (coupon?.discountPrice) {
+        price -= coupon.discountPrice;
+      }
+
+      return Math.max(0, price);
     };
 
     const { coupon, stackableCoupon } = coupons;
@@ -424,6 +422,7 @@ export class PaymentsService implements OnModuleInit {
 
     let firstPrice = applyCoupon(initialPrice, firstCoupon);
     const finalPrice = applyCoupon(firstPrice, secondCoupon);
+
     if (finalPrice !== clientPrice) {
       throw new BadRequestException(
         `결제 금액이 일치하지 않습니다.`,
@@ -562,7 +561,7 @@ export class PaymentsService implements OnModuleInit {
 
     const couponIds: number[] = Object.values(coupons)
       .map((coupon) => coupon?.id)
-      .filter((id: number) => id !== null);
+      .filter((id: number) => id);
 
     const paymentCouponUsageInputData = { paymentId };
 

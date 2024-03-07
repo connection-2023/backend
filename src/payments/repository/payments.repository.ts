@@ -296,6 +296,8 @@ export class PaymentsRepository {
     couponIds: number[],
   ) {
     try {
+      console.log(couponIds);
+
       await transaction.lectureCoupon.updateMany({
         where: { id: { in: couponIds } },
         data: {
@@ -316,11 +318,15 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     paymentCouponUsageInputData,
   ) {
+    console.log(paymentCouponUsageInputData);
+
     try {
       await transaction.paymentCouponUsage.create({
         data: paymentCouponUsageInputData,
       });
     } catch (error) {
+      console.log(error);
+
       throw new InternalServerErrorException(
         `Prisma 쿠폰 사용내역 생성 실패: ${error}`,
         'PrismaCreateFailed',
