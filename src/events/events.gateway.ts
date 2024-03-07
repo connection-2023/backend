@@ -47,10 +47,7 @@ export class EventsGateway
       socket.join(room);
     });
 
-    const onlineMapKeys = await this.findKeysByOnlineMap();
-    const onlineMap = await this.cacheManager.store.mget(...onlineMapKeys);
-
-    socket.nsp.emit('onlineMap', onlineMap);
+    socket.nsp.emit('joinUser', value);
   }
 
   afterInit(server: Server): any {
@@ -64,20 +61,10 @@ export class EventsGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconnected', socket.nsp.name);
 
+    const exitUser = await this.cacheManager.get(`onlineMap:${socket.id}`);
+
     await this.cacheManager.del(`onlineMap:${socket.id}`);
 
-    const onlineMapKeys = await this.findKeysByOnlineMap();
-
-    const onlineMap = await this.cacheManager.store.mget(...onlineMapKeys);
-
-    socket.nsp.emit('onlineMap', onlineMap);
-  }
-
-  async findKeysByOnlineMap(): Promise<string[]> {
-    const keys: string[] = await this.cacheManager.store.keys();
-    const onlineMapKeys: string[] = keys.filter((key) =>
-      key.startsWith('onlineMap:'),
-    );
-    return onlineMapKeys;
+    socket.nsp.emit('exitUser', exitUser);
   }
 }
