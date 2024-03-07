@@ -48,9 +48,6 @@ export class EventsGateway
     });
 
     const onlineMapKeys = await this.findKeysByOnlineMap();
-
-    console.log(onlineMapKeys);
-
     const onlineMap = await this.cacheManager.store.mget(...onlineMapKeys);
 
     socket.nsp.emit('onlineMap', onlineMap);
