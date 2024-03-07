@@ -14,6 +14,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { Server, Socket } from 'socket.io';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { RedisClientType } from 'redis';
 
 @WebSocketGateway({ namespace: /\/chatroom\d+/ })
 export class EventsGateway
@@ -46,7 +47,7 @@ export class EventsGateway
       socket.join(room);
     });
 
-    socket.nsp.emit('loginUser', value);
+    socket.nsp.emit('joinUser', value);
   }
 
   afterInit(server: Server): any {

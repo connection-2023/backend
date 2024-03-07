@@ -7,7 +7,7 @@ import {
   IsOptional,
   ValidateIf,
 } from 'class-validator';
-import { PaymentStatusForLecturer } from '../enum/payment.enum';
+import { PaymentStatusForLecturer } from '../constants/enum';
 import { IsNumberType } from '@src/common/validator/custom-validator';
 import { Transform } from 'class-transformer';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';

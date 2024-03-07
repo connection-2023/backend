@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -7,6 +7,8 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { ApiNotification } from './swagger/notification.swagger';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @ApiTags('알림')
 @Controller('notifications')

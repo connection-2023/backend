@@ -17,7 +17,7 @@ import {
   PaymentOrderStatus,
   PaymentStatusForLecturer,
   RefundStatuses,
-} from '@src/payments/enum/payment.enum';
+} from '@src/payments/constants/enum';
 import {
   IPaginationParams,
   PrismaTransaction,

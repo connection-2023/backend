@@ -25,7 +25,7 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { Request } from 'express';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
-import { PaymentHistoryTypes, PaymentMethods } from '../enum/payment.enum';
+import { PaymentHistoryTypes, PaymentMethods } from '../constants/enum';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { ApiPayments } from './swagger/payments.swagger';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';

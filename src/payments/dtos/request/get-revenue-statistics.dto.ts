@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { RevenueStatisticsType } from '@src/payments/enum/payment.enum';
+import { RevenueStatisticsType } from '@src/payments/constants/enum';
 import { Transform } from 'class-transformer';
 import {
   IsDateString,

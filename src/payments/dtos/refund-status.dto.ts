@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RefundStatus } from '@prisma/client';
 import { ExtractEnumKeys } from '@src/common/utils/enum-key-extractor';
-import { RefundStatuses } from '@src/payments/enum/payment.enum';
+import { RefundStatuses } from '@src/payments/constants/enum';
 
 export class RefundStatusDto implements RefundStatus {
   id: number;
