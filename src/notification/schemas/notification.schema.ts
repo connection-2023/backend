@@ -39,6 +39,12 @@ export class Notification extends Document {
   @Prop({ required: false })
   @IsNumber()
   userPassId?: number;
+
+  @Prop({ type: Date, default: null })
+  readedAt: Date | null;
+
+  @Prop({ type: Date, default: null })
+  deletedAt: Date | null;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
