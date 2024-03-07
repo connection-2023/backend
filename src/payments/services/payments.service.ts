@@ -307,7 +307,7 @@ export class PaymentsService implements OnModuleInit {
     }
 
     const remainingCapacity = lectureMaxCapacity - lectureSchedule.participants;
-    if (remainingCapacity <= selectedOneDaySchedule.numberOfParticipants) {
+    if (selectedOneDaySchedule.numberOfParticipants > remainingCapacity) {
       throw new BadRequestException(`인원 초과입니다.`, 'ExceededCapacity');
     }
 
@@ -334,9 +334,7 @@ export class PaymentsService implements OnModuleInit {
       ]);
 
     const remainingCapacity = lectureMaxCapacity - lectureSchedule.participants;
-    if (
-      remainingCapacity <= selectedRegularLectureStatus.numberOfParticipants
-    ) {
+    if (selectedRegularLectureStatus.numberOfParticipants > remainingCapacity) {
       throw new BadRequestException(`인원 초과입니다.`, ' ExceededCapacity');
     }
 
