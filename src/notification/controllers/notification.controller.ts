@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -7,11 +7,16 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { ApiNotification } from './swagger/notification.swagger';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @ApiTags('알림')
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   @ApiNotification.GetMyNotification({ summary: '내 알림 조회' })
   @SetResponseKey('notifications')
@@ -21,6 +26,11 @@ export class NotificationController {
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() getPageTokenQueryDto: GetPageTokenQueryDto,
   ) {
+    const keys = await this.cacheManager.store.keys('onlineMap:*');
+    const onlineMap = await this.cacheManager.store.mget(...keys);
+
+    console.log(keys, onlineMap);
+
     return await this.notificationService.getMyNotification(
       authorizedData,
       getPageTokenQueryDto,
