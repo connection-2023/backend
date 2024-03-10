@@ -5,36 +5,19 @@ import {
   LecturerDanceGenreInputData,
   LecturerProfileImageInputData,
   LecturerCoupon,
-  LecturerProfile,
   LecturerInputData,
   LecturerUpdateData,
   LecturerInstagramPostInputData,
-  LecturerBasicProfile,
 } from '@src/lecturer/interface/lecturer.interface';
 import {
-  ICursor,
   IPaginationParams,
   Id,
   PrismaTransaction,
   Region,
 } from '@src/common/interface/common-interface';
-import {
-  Lecture,
-  LectureLocation,
-  LectureSchedule,
-  Lecturer,
-  LikedLecturer,
-} from '@prisma/client';
-import { PrismaClientValidationError } from '@prisma/client/runtime';
-import { when } from 'joi';
-import {
-  ILecture,
-  LectureScheduleResponseData,
-} from '@src/lecture/interface/lecture.interface';
+import { Lecture, Lecturer, LikedLecturer } from '@prisma/client';
 import { PaymentOrderStatus } from '@src/payments/constants/enum';
 import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pass-item';
-import { LectureDto } from '@src/common/dtos/lecture.dto';
-import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @Injectable()
 export class LecturerRepository {

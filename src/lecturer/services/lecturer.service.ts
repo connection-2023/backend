@@ -419,13 +419,13 @@ export class LecturerService implements OnModuleInit {
       return inprogressLecture;
     } else if (progressType === '마감된 클래스') {
       where['lectureSchedule'] = {
-        every: { startDateTime: { lt: currentTime } },
+        every: { startDateTime: { lte: currentTime } },
       };
 
       where['regularLectureStatus'] = {
         every: {
           regularLectureSchedule: {
-            every: { startDateTime: { lt: currentTime } },
+            every: { startDateTime: { lte: currentTime } },
           },
         },
       };

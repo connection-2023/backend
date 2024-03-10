@@ -228,17 +228,16 @@ export class LecturerController {
 
   @ApiReadManyLectureProgress()
   @UseGuards(LecturerAccessTokenGuard)
+  @SetResponseKey('lectureProgress')
   @Get('/in-progress')
   async readManyLectureProgress(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureProgressQueryDto,
   ) {
-    const lectureProgress = await this.lecturerService.readManyLectureProgress(
+    return await this.lecturerService.readManyLectureProgress(
       authorizedData.lecturer.id,
       query,
     );
-
-    return { lectureProgress };
   }
 
   @ApiGetMyReservationList()
