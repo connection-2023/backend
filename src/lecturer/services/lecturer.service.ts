@@ -42,6 +42,7 @@ import { LecturerLearnerPassInfoDto } from '../dtos/response/lecturer-learner-pa
 import { GetMyReservationListDto } from '../dtos/request/get-my-reservation-list.dto';
 import { PaginationDto } from '@src/common/dtos/pagination.dto';
 import { UpdateLearnerMemoDto } from '../dtos/request/update-learner-memo.dto';
+import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @Injectable()
 export class LecturerService implements OnModuleInit {
@@ -371,7 +372,7 @@ export class LecturerService implements OnModuleInit {
           const inprogressLecture = [];
 
           for (const lecture of lectures) {
-            const currentTime = new Date();
+            const currentTime = generateCurrentTime();
             const completedLectureSchedule =
               await this.lecturerRepository.trxReadManyCompletedLectureScheduleCount(
                 transaction,
