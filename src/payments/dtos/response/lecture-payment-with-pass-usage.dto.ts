@@ -1,34 +1,8 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { BasicPaymentDto } from './basic-payment.dto';
 import { PaymentPassUsageDto } from '../payment-pass-usage.dto';
-import { PaymentMethodDto } from '../payment-method.dto';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
-import { PaymentProductTypeDto } from '../payment-product-type.dto';
-import { BasicPaymentLectureScheduleDto } from './basic-payment-lecture-schedule.dto';
-import { BasicLectureDto } from '@src/common/dtos/basic-lecture.dto';
-
-@Exclude()
-class LecturePaymentWithPassUsageReservationsDto extends OmitType(
-  ReservationDto,
-  ['regularLectureStatus', 'lectureSchedule'],
-) {
-  @ApiProperty({
-    type: BasicPaymentLectureScheduleDto,
-    description: '강의 일정',
-  })
-  @Type(() => BasicPaymentLectureScheduleDto)
-  @Expose()
-  lectureSchedule: BasicPaymentLectureScheduleDto;
-
-  @ApiProperty({
-    type: BasicLectureDto,
-    description: '강의 정보',
-  })
-  @Type(() => BasicLectureDto)
-  @Expose()
-  lecture: BasicLectureDto;
-}
+import { ReservationWithLectureDto } from '@src/common/dtos/reservation-with-lecture.dto';
 
 @Exclude()
 export class LecturePaymentWithPassUsageDto extends BasicPaymentDto {
@@ -41,12 +15,12 @@ export class LecturePaymentWithPassUsageDto extends BasicPaymentDto {
   paymentPassUsage: PaymentPassUsageDto;
 
   @ApiProperty({
-    type: LecturePaymentWithPassUsageReservationsDto,
+    type: ReservationWithLectureDto,
     description: '예약 정보',
   })
-  @Type(() => LecturePaymentWithPassUsageReservationsDto)
+  @Type(() => ReservationWithLectureDto)
   @Expose()
-  reservation: LecturePaymentWithPassUsageReservationsDto;
+  reservation: ReservationWithLectureDto;
 
   constructor(
     lecturePaymentWithPassUsage: Partial<LecturePaymentWithPassUsageDto>,

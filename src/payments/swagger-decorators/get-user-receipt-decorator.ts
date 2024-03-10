@@ -1,15 +1,13 @@
 import {
-  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { PaymentDto } from '../dtos/payment.dto';
+import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
 
 export function ApiGetUserReceipt() {
   return applyDecorators(
@@ -18,7 +16,11 @@ export function ApiGetUserReceipt() {
       description: 'orderId를 통한 결제 정보 상세 조회(유저)',
     }),
     ApiBearerAuth(),
-    DetailResponseDto.swaggerBuilder(HttpStatus.OK, 'receipt', PaymentDto),
+    DetailResponseDto.swaggerBuilder(
+      HttpStatus.OK,
+      'receipt',
+      DetailPaymentInfo,
+    ),
     ApiNotFoundResponse(
       SwaggerApiResponse.exception([
         {

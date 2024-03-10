@@ -13,7 +13,7 @@ import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { LikedLectureReviewDto } from '@src/common/dtos/liked-lecture-review.dto';
 import { LikedLectureDto } from '@src/common/dtos/liked-lecture.dto';
 import { RegularLectureStatusWithLectureDto } from '@src/common/dtos/regular-lecture-status-with-lecture.dto';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
 import { UserDto } from '@src/common/dtos/user.dto';
 
 interface ILecture extends Omit<LectureDto, 'stars'> {
@@ -31,7 +31,7 @@ interface ILectureReview
   users: UserDto;
   lecture: Lecture;
   likedLectureReview?: LikedLectureReviewDto[];
-  reservation: ReservationDto;
+  reservation: LegacyReservationDto;
   _count: { [likedLectureReview: string]: number };
 }
 

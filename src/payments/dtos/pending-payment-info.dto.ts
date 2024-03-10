@@ -1,9 +1,9 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
-import { PaymentDto } from './payment.dto';
+import { LegacyPaymentDto } from './legacy-payment.dto';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
-export class PendingPaymentInfoDto extends PickType(PaymentDto, [
+export class PendingPaymentInfoDto extends PickType(LegacyPaymentDto, [
   'orderId',
   'orderName',
 ]) {

@@ -6,7 +6,7 @@ import { PaymentStatusDto } from '@src/payments/dtos/payment-status.dto';
 import { PaymentMethodDto } from '@src/payments/dtos/payment-method.dto';
 import { PaymentCouponUsageDto } from '@src/payments/dtos/payment-coupon-usage.dto';
 import { RefundPaymentInfoDto } from '@src/payments/dtos/refund-payment-info.dto';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
 import { BaseReturnWithSwaggerDto } from '@src/common/dtos/base-return-with-swagger.dto';
 import { PaymentPassUsageDto } from './payment-pass-usage.dto';
 import { UserPassDto } from '@src/common/dtos/user-pass.dto';
@@ -15,7 +15,10 @@ import { CardPaymentInfoDto } from './card-payment-info.dto';
 import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
-export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
+export class LegacyPaymentDto
+  extends BaseReturnWithSwaggerDto
+  implements Payment
+{
   @ApiProperty({
     type: Number,
     description: '결제 Id',
@@ -126,12 +129,12 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
   refundPaymentInfo: RefundPaymentInfoDto;
 
   @ApiProperty({
-    type: ReservationDto,
+    type: LegacyReservationDto,
     description: '예약 정보',
     nullable: true,
   })
   @Expose()
-  reservation: ReservationDto;
+  reservation: LegacyReservationDto;
 
   @ApiProperty({
     type: PaymentPassUsageDto,
@@ -151,7 +154,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
 
   secret: string;
 
-  constructor(payment: Partial<PaymentDto>) {
+  constructor(payment: Partial<LegacyPaymentDto>) {
     super();
     Object.assign(this, payment);
 
@@ -163,7 +166,7 @@ export class PaymentDto extends BaseReturnWithSwaggerDto implements Payment {
       ? new PaymentMethodDto(payment.paymentMethod)
       : null;
     this.reservation = payment.reservation
-      ? new ReservationDto(payment.reservation)
+      ? new LegacyReservationDto(payment.reservation)
       : null;
     this.paymentCouponUsage = payment.paymentCouponUsage
       ? new PaymentCouponUsageDto(payment.paymentCouponUsage)

@@ -56,7 +56,7 @@ import axios from 'axios';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
-import { PaymentDto } from '../dtos/payment.dto';
+import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
 import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';

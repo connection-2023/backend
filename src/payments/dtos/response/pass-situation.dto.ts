@@ -1,31 +1,11 @@
 import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
+import { ReservationWithLectureDto } from '@src/common/dtos/reservation-with-lecture.dto';
 import { UserPassDto } from '@src/common/dtos/user-pass.dto';
 import { UserProfileImageDto } from '@src/common/dtos/user-profile-image.dto';
 import { UserDto } from '@src/common/dtos/user.dto';
 import { SimpleLectureDto } from '@src/lecturer/dtos/simple-lecture.dto';
-import { Exclude, Expose } from 'class-transformer';
-
-@Exclude()
-class PassSituationReservationDto extends OmitType(ReservationDto, [
-  'lectureSchedule',
-  'regularLectureStatus',
-]) {
-  @ApiProperty({
-    type: SimpleLectureDto,
-    description: '사용한 강의 정보',
-  })
-  @Expose()
-  lecture: SimpleLectureDto;
-
-  constructor(reservation: Partial<PassSituationReservationDto>) {
-    super();
-
-    Object.assign(this, reservation);
-
-    this.lecture = new SimpleLectureDto(reservation.lecture);
-  }
-}
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
 @Exclude()
 class PassSituationUserPassDto extends PickType(UserPassDto, [
@@ -60,8 +40,12 @@ class PassSituationUserDto extends PickType(UserDto, ['id', 'nickname']) {
   @ApiProperty({
     description: '프로필 이미지',
   })
+  @Transform(
+    ({ obj }) => (obj.userProfileImageUrl ? obj.userProfileImageUrl : null),
+    { toPlainOnly: true },
+  )
   @Expose()
-  userProfileImageUrl?: string;
+  userProfileImageUrl?: string | null;
 
   userProfileImage: UserProfileImageDto;
 
@@ -69,10 +53,6 @@ class PassSituationUserDto extends PickType(UserDto, ['id', 'nickname']) {
     super();
 
     Object.assign(this, user);
-
-    this.userProfileImageUrl = user.userProfileImage
-      ? user.userProfileImage.imageUrl
-      : null;
   }
 }
 
@@ -82,6 +62,7 @@ export class PassSituationDto {
     type: PassSituationUserDto,
     description: '유저 정보',
   })
+  @Type(() => PassSituationUserDto)
   @Expose()
   user: PassSituationUserDto;
 
@@ -89,27 +70,20 @@ export class PassSituationDto {
     type: PassSituationUserPassDto,
     description: '패스권 정보',
   })
+  @Type(() => PassSituationUserPassDto)
   @Expose()
   userPass: PassSituationUserPassDto;
 
   @ApiProperty({
-    type: [PassSituationReservationDto],
+    type: [ReservationWithLectureDto],
     description: '예약 정보',
     nullable: true,
   })
+  @Type(() => ReservationWithLectureDto)
   @Expose()
-  reservations?: PassSituationReservationDto[];
+  reservations?: ReservationWithLectureDto[];
 
   constructor(passSituation: Partial<PassSituationDto>) {
     Object.assign(this, passSituation);
-
-    this.user = new PassSituationUserDto(passSituation.user);
-    this.userPass = new PassSituationUserPassDto(passSituation.userPass);
-    this.reservations =
-      passSituation.reservations && passSituation.reservations[0]
-        ? passSituation.reservations.map(
-            (reservation) => new PassSituationReservationDto(reservation),
-          )
-        : null;
   }
 }

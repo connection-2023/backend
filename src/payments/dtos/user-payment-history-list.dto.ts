@@ -1,29 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PaymentDto } from './payment.dto';
+import { Exclude, Expose, Type } from 'class-transformer';
+import { DetailPaymentInfo } from './response/detail-payment.dto';
 
+@Exclude()
 export class UserPaymentsHistoryWithCountDto {
   @ApiProperty({
     type: Number,
   })
+  @Expose()
   totalItemCount: number;
 
   @ApiProperty({
-    type: [PaymentDto],
+    type: [DetailPaymentInfo],
     description: '결제 내역',
   })
-  userPaymentsHistory: PaymentDto[];
+  @Type(() => DetailPaymentInfo)
+  @Expose()
+  userPaymentsHistory: DetailPaymentInfo[];
 
-  constructor({
-    totalItemCount,
-    userPaymentsHistory,
-  }: Partial<UserPaymentsHistoryWithCountDto>) {
-    this.totalItemCount = totalItemCount;
-    this.userPaymentsHistory = userPaymentsHistory
-      ? userPaymentsHistory.map(
-          (paymentHistory) => new PaymentDto(paymentHistory),
-        )
-      : [];
-
-    Object.assign(this);
+  constructor(
+    userPaymentsHistoryWithCount: Partial<UserPaymentsHistoryWithCountDto>,
+  ) {
+    Object.assign(this, userPaymentsHistoryWithCount);
   }
 }

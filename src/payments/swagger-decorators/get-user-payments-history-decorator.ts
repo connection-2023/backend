@@ -6,7 +6,7 @@ import {
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
-import { PaymentDto } from '../dtos/payment.dto';
+import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
 
 export function ApiGetUserPaymentsHistory() {
   return applyDecorators(
@@ -18,7 +18,7 @@ export function ApiGetUserPaymentsHistory() {
     PaginationResponseDto.swaggerBuilder(
       HttpStatus.OK,
       'userPaymentsHistory',
-      PaymentDto,
+      DetailPaymentInfo,
     ),
     ApiUnauthorizedResponse(
       SwaggerApiResponse.exception([

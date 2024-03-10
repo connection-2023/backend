@@ -9,7 +9,7 @@ import {
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { PaymentDto } from '../dtos/payment.dto';
+import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
 
 export function ApiCreateLecturePaymentWithTransfer() {
   return applyDecorators(
@@ -21,7 +21,7 @@ export function ApiCreateLecturePaymentWithTransfer() {
     DetailResponseDto.swaggerBuilder(
       HttpStatus.CREATED,
       'transferPaymentResult',
-      PaymentDto,
+      LegacyPaymentDto,
     ),
     ApiBadRequestResponse(
       SwaggerApiResponse.exception([

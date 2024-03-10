@@ -1,5 +1,5 @@
 import { LearnerPassDto } from './learner-pass.dto';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
 import { PaymentCouponUsageDto } from '@src/payments/dtos/payment-coupon-usage.dto';
 import { PaymentPassUsageDto } from '@src/payments/dtos/payment-pass-usage.dto';
 import { PaymentProductTypeDto } from '@src/payments/dtos/payment-product-type.dto';
@@ -54,11 +54,11 @@ export class LearnerPaymentOverviewDto
   paymentCouponUsage: PaymentCouponUsageDto;
 
   @ApiProperty({
-    type: ReservationDto,
+    type: LegacyReservationDto,
     description: '예약 정보',
     nullable: true,
   })
-  reservation: ReservationDto;
+  reservation: LegacyReservationDto;
 
   @ApiProperty({
     type: PaymentPassUsageDto,
@@ -88,7 +88,7 @@ export class LearnerPaymentOverviewDto
     );
 
     this.reservation = learnerOverview.reservation
-      ? new ReservationDto(learnerOverview.reservation)
+      ? new LegacyReservationDto(learnerOverview.reservation)
       : null;
     this.paymentCouponUsage = learnerOverview.paymentCouponUsage
       ? new PaymentCouponUsageDto(learnerOverview.paymentCouponUsage)

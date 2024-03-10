@@ -4,7 +4,7 @@ import { LectureScheduleWithLectureDto } from '@src/common/dtos/lecture-schedule
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 import { RegularLectureStatusWithLectureDto } from '@src/common/dtos/regular-lecture-status-with-lecture.dto';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 import { EnrollScheduleDetailPriceDto } from './enroll-schedule-detail-price.dto';
 
@@ -66,7 +66,7 @@ export class DetailEnrollScheduleDto {
 
   regularLectureStatus?: RegularLectureStatusWithLectureDto;
 
-  constructor(reservation: Partial<ReservationDto>) {
+  constructor(reservation: Partial<LegacyReservationDto>) {
     Object.assign(this, reservation);
 
     this.lecture = reservation.lectureSchedule
