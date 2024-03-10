@@ -681,37 +681,22 @@ export class PaymentsRepository {
           paymentStatus: true,
           paymentMethod: true,
           paymentCouponUsage: true,
-          transferPaymentInfo: { include: { lecturerBankAccount: true } },
           refundPaymentInfo: {
             include: { refundStatus: true, refundUserBankAccount: true },
           },
           reservation: {
             include: {
-              lectureSchedule: {
-                include: {
-                  lecture: { include: { lectureImage: true } },
-                },
-              },
+              lecture: { include: { lectureImage: true } },
+              lectureSchedule: true,
               regularLectureStatus: {
-                include: { lecture: { include: { lectureImage: true } } },
+                include: { regularLectureSchedule: true },
               },
             },
           },
-
           cardPaymentInfo: { include: { issuer: true, acquirer: true } },
           virtualAccountPaymentInfo: { include: { bank: true } },
-          paymentPassUsage: {
-            include: {
-              lecturePass: true,
-            },
-          },
-          userPass: {
-            include: {
-              lecturePass: {
-                include: { lecturePassTarget: { include: { lecture: true } } },
-              },
-            },
-          },
+          paymentPassUsage: { include: { lecturePass: true } },
+          userPass: { include: { lecturePass: true } },
         },
         orderBy: {
           id: 'desc',
@@ -1033,15 +1018,15 @@ export class PaymentsRepository {
         paymentStatus: true,
         paymentMethod: true,
         paymentCouponUsage: true,
-        transferPaymentInfo: { include: { lecturerBankAccount: true } },
         refundPaymentInfo: {
           include: { refundStatus: true, refundUserBankAccount: true },
         },
         reservation: {
           include: {
-            lectureSchedule: { include: { lecture: true } },
+            lecture: { include: { lectureImage: true } },
+            lectureSchedule: true,
             regularLectureStatus: {
-              include: { lecture: true, regularLectureSchedule: true },
+              include: { regularLectureSchedule: true },
             },
           },
         },

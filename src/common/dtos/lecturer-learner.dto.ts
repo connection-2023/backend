@@ -1,7 +1,7 @@
 import { LecturerLearner } from '@prisma/client';
 import { BaseReturnDto } from './base-return.dto';
 import { UserDto } from './user.dto';
-import { ReservationDto } from './reservation.dto';
+import { LegacyReservationDto } from './legacy-reservation.dto';
 import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import { UserProfileImageDto } from './user-profile-image.dto';
@@ -71,10 +71,10 @@ export class LecturerLearnerDto
 
   @ApiProperty({
     description: '예약 정보',
-    type: ReservationDto,
+    type: LegacyReservationDto,
   })
   @Expose()
-  reservation?: ReservationDto;
+  reservation?: LegacyReservationDto;
 
   constructor(lecturerLearner: Partial<LecturerLearnerDto>) {
     super();
@@ -85,7 +85,7 @@ export class LecturerLearnerDto
       : undefined;
 
     this.reservation = lecturerLearner.reservation
-      ? new ReservationDto(lecturerLearner.reservation)
+      ? new LegacyReservationDto(lecturerLearner.reservation)
       : undefined;
   }
 }

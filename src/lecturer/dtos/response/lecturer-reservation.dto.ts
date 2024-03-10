@@ -1,13 +1,13 @@
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
 import { SimpleLectureDto } from '../simple-lecture.dto';
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { UserWithProfileImageDto } from '@src/common/dtos/user-with-profile-image.dto';
-import { PaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { LegacyPaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/legacy-payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
 @Exclude()
 class LecturerReservationOneDayScheduleDto extends OmitType(
-  PaymentLectureScheduleWithLectureDto,
+  LegacyPaymentLectureScheduleWithLectureDto,
   ['lecture'],
 ) {}
 @Exclude()
@@ -26,7 +26,7 @@ class LecturerReservationLectureDto extends SimpleLectureDto {
 }
 
 @Exclude()
-export class LecturerReservationDto extends ReservationDto {
+export class LecturerReservationDto extends LegacyReservationDto {
   @ApiProperty({
     type: LecturerReservationLectureDto,
     description: '강의 정보',

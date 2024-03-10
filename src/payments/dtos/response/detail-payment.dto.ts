@@ -1,15 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type, Expose, Exclude } from 'class-transformer';
-import { PaymentPassUsageDto } from '../payment-pass-usage.dto';
-import { BasicPaymentDto } from './basic-payment.dto';
-import { LecturePaymentWithPassUsageDto } from './lecture-payment-with-pass-usage.dto';
-import { ReservationWithLectureDto } from '@src/common/dtos/reservation-with-lecture.dto';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { CardPaymentInfoDto } from '../card-payment-info.dto';
 import { PaymentCouponUsageDto } from '../payment-coupon-usage.dto';
+import { PaymentPassUsageDto } from '../payment-pass-usage.dto';
+import { RefundPaymentInfoDto } from '../refund-payment-info.dto';
 import { VirtualAccountPaymentInfoDto } from '../virtual-account-payment-info.dto';
+import { BasicPaymentDto } from './basic-payment.dto';
+import { ReservationWithLectureImageDto } from '@src/common/dtos/reservation-with-lecture-image.dto';
+import { UserPassDto } from '@src/common/dtos/user-pass.dto';
 
 @Exclude()
-export class PaymentResultDto extends BasicPaymentDto {
+export class DetailPaymentInfo extends BasicPaymentDto {
   @ApiProperty({
     type: PaymentPassUsageDto,
     description: '패스권 사용 내역',
@@ -28,12 +29,12 @@ export class PaymentResultDto extends BasicPaymentDto {
   paymentCouponUsage: PaymentCouponUsageDto;
 
   @ApiProperty({
-    type: ReservationWithLectureDto,
+    type: ReservationWithLectureImageDto,
     description: '예약 정보',
   })
-  @Type(() => ReservationWithLectureDto)
+  @Type(() => ReservationWithLectureImageDto)
   @Expose()
-  reservation: ReservationWithLectureDto;
+  reservation: ReservationWithLectureImageDto;
 
   @ApiProperty({
     type: CardPaymentInfoDto,
@@ -53,10 +54,19 @@ export class PaymentResultDto extends BasicPaymentDto {
   @Expose()
   virtualAccountPaymentInfo: VirtualAccountPaymentInfoDto;
 
-  constructor(
-    lecturePaymentWithPassUsage: Partial<LecturePaymentWithPassUsageDto>,
-  ) {
-    super();
-    Object.assign(this, lecturePaymentWithPassUsage);
-  }
+  @ApiProperty({
+    type: RefundPaymentInfoDto,
+    description: '환불 정보',
+  })
+  @Type(() => RefundPaymentInfoDto)
+  refundPaymentInfo: RefundPaymentInfoDto;
+
+  @ApiProperty({
+    type: UserPassDto,
+    description: '구매한 유저 패스권 정보',
+    nullable: true,
+  })
+  @Type(() => UserPassDto)
+  @Expose()
+  userPass: UserPassDto;
 }

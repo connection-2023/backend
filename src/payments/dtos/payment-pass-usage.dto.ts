@@ -1,7 +1,7 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { PaymentPassUsage } from '@prisma/client';
 import { LecturePassDto } from '@src/common/dtos/lecture-pass.dto';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 
 @Exclude()
 class PaymentPassUsageLecturePassDto extends PickType(LecturePassDto, [
@@ -25,6 +25,7 @@ export class PaymentPassUsageDto implements PaymentPassUsage {
     type: PaymentPassUsageLecturePassDto,
     description: '사용한 패스권 정보',
   })
+  @Type(() => PaymentPassUsageLecturePassDto)
   @Expose()
   lecturePass: PaymentPassUsageLecturePassDto;
 

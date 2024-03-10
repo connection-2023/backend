@@ -1,11 +1,11 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { BasicLectureDto } from '@src/common/dtos/basic-lecture.dto';
-import { ReservationDto } from '@src/common/dtos/reservation.dto';
-import { PaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
-import { PaymentDto } from '@src/payments/dtos/payment.dto';
+import { LegacyReservationDto } from '@src/common/dtos/legacy-reservation.dto';
+import { LegacyPaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/legacy-payment-lecture-schedule.dto';
+import { LegacyPaymentDto } from '@src/payments/dtos/legacy-payment.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 @Exclude()
-class PassReservationPaymentDto extends PickType(PaymentDto, [
+class PassReservationPaymentDto extends PickType(LegacyPaymentDto, [
   'id',
   'createdAt',
   'updatedAt',
@@ -13,7 +13,7 @@ class PassReservationPaymentDto extends PickType(PaymentDto, [
 
 @Exclude()
 class PassReservationLectureScheduleDto extends OmitType(
-  PaymentLectureScheduleWithLectureDto,
+  LegacyPaymentLectureScheduleWithLectureDto,
   ['lecture'],
 ) {
   @ApiProperty({
@@ -26,7 +26,7 @@ class PassReservationLectureScheduleDto extends OmitType(
 }
 
 @Exclude()
-export class PassReservationDto extends OmitType(ReservationDto, [
+export class PassReservationDto extends OmitType(LegacyReservationDto, [
   'regularLectureStatus',
   'lectureSchedule',
   'payment',

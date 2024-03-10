@@ -13,7 +13,9 @@ import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { IPaginationParams } from '@src/common/interface/common-interface';
 import { PaymentHistoryTypes } from '../constants/enum';
 import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
-import { PaymentDto } from '../dtos/payment.dto';
+import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
+import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserPaymentsService implements OnModuleInit {
@@ -127,7 +129,10 @@ export class UserPaymentsService implements OnModuleInit {
     return { cursor, skip, take: updatedTake };
   }
 
-  async getUserReceipt(userId: number, orderId: string): Promise<PaymentDto> {
+  async getUserReceipt(
+    userId: number,
+    orderId: string,
+  ): Promise<DetailPaymentInfo> {
     const receipt = await this.paymentsRepository.getUserPaymentInfo(
       userId,
       orderId,
@@ -139,6 +144,6 @@ export class UserPaymentsService implements OnModuleInit {
       );
     }
 
-    return new PaymentDto(receipt);
+    return plainToInstance(DetailPaymentInfo, receipt);
   }
 }

@@ -27,7 +27,7 @@ class PrivateSimpleLecture extends SimpleLectureDto {
 }
 
 @Exclude()
-export class PaymentLectureScheduleWithLectureDto extends BasicPaymentLectureScheduleDto {
+export class LegacyPaymentLectureScheduleWithLectureDto extends BasicPaymentLectureScheduleDto {
   @ApiProperty({
     description: '강의 정보',
     type: PrivateSimpleLecture,
@@ -36,7 +36,9 @@ export class PaymentLectureScheduleWithLectureDto extends BasicPaymentLectureSch
   @Expose()
   lecture?: PrivateSimpleLecture;
 
-  constructor(lectureSchedule: Partial<PaymentLectureScheduleWithLectureDto>) {
+  constructor(
+    lectureSchedule: Partial<LegacyPaymentLectureScheduleWithLectureDto>,
+  ) {
     super();
     Object.assign(this, lectureSchedule);
   }

@@ -23,7 +23,8 @@ import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-a
 import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-recent-bank-account.decorator';
 import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
 import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorator';
-import { PaymentDto } from '../dtos/payment.dto';
+import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
+import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
 
 @ApiTags('유저-결제')
 @Controller('user-payments')
@@ -50,7 +51,7 @@ export class UserPaymentsController {
   async getUserReceipt(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('orderId') orderId: string,
-  ): Promise<PaymentDto> {
+  ): Promise<DetailPaymentInfo> {
     return await this.userPaymentsService.getUserReceipt(
       authorizedData.user.id,
       orderId,

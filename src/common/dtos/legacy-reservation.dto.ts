@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Reservation } from '@prisma/client';
-import { PaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/payment-lecture-schedule.dto';
+import { LegacyPaymentLectureScheduleWithLectureDto } from '@src/payments/dtos/legacy-payment-lecture-schedule.dto';
 import { PaymentRegularLectureStatusDto } from '@src/payments/dtos/payment-regular-lecture-status.dto';
-import { PaymentDto } from '@src/payments/dtos/payment.dto';
+import { LegacyPaymentDto } from '@src/payments/dtos/legacy-payment.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 
 @Exclude()
-export class ReservationDto implements Reservation {
+export class LegacyReservationDto implements Reservation {
   @ApiProperty({
     description: '예약 Id',
     type: Number,
@@ -48,11 +48,11 @@ export class ReservationDto implements Reservation {
 
   @ApiProperty({
     description: '원데이 클래스 일정',
-    type: PaymentLectureScheduleWithLectureDto,
+    type: LegacyPaymentLectureScheduleWithLectureDto,
   })
-  @Type(() => PaymentLectureScheduleWithLectureDto)
+  @Type(() => LegacyPaymentLectureScheduleWithLectureDto)
   @Expose()
-  lectureSchedule?: PaymentLectureScheduleWithLectureDto;
+  lectureSchedule?: LegacyPaymentLectureScheduleWithLectureDto;
 
   @ApiProperty({
     description: '정기 클래스 일정',
@@ -62,9 +62,9 @@ export class ReservationDto implements Reservation {
   @Expose()
   regularLectureStatus?: PaymentRegularLectureStatusDto;
 
-  payment?: PaymentDto;
+  payment?: LegacyPaymentDto;
 
-  constructor(reservation: Partial<ReservationDto>) {
+  constructor(reservation: Partial<LegacyReservationDto>) {
     Object.assign(this, reservation);
   }
 }
