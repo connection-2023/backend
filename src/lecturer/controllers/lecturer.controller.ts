@@ -34,7 +34,6 @@ import { ApiGetLecturerLearnerList } from '../swagger-decorators/get-lecturer-le
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { ApiReadManyLectureWithLecturer } from '@src/lecturer/swagger-decorators/read-many-lecture-with-lecturer.decorator';
 import { ApiReadManyLecture } from '@src/lecturer/swagger-decorators/read-many-lecture.decorator';
-import { ApiReadManyLectureProgress } from '@src/lecture/swagger-decorators/read-many-lecture-progress-decorator';
 import { ReadManyLectureProgressQueryDto } from '@src/lecture/dtos/read-many-lecture-progress-query.dto';
 import { LearnerPaymentOverviewDto } from '../dtos/learner-payment-overview.dto';
 import { ApiGetLecturerLearnerPaymentsOverview } from '../swagger-decorators/get-lecturer-leaner-payments-overview.decorator';
@@ -47,6 +46,7 @@ import { LecturerReservationDto } from '../dtos/response/lecturer-reservation.dt
 import { ApiGetMyReservationList } from '../swagger-decorators/get-my-reservation.decorator';
 import { UpdateLearnerMemoDto } from '../dtos/request/update-learner-memo.dto';
 import { ApiUpdateLearnerMemo } from '../swagger-decorators/update-lecturer-learner-memo.decorator';
+import { ApiGetLectureProgress } from '@src/lecture/swagger-decorators/read-many-lecture-progress-decorator';
 
 @ApiTags('강사')
 @Controller('lecturers')
@@ -226,7 +226,7 @@ export class LecturerController {
     return { lecture };
   }
 
-  @ApiReadManyLectureProgress()
+  @ApiGetLectureProgress()
   @UseGuards(LecturerAccessTokenGuard)
   @SetResponseKey('lectureProgress')
   @Get('/in-progress')
