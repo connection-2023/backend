@@ -87,7 +87,7 @@ export class LectureDto extends BaseReturnDto {
   locationDescription: string;
   deletedAt: Date;
 
-  lectureType: LectureTypeDto;
+  lectureType?: LectureTypeDto;
 
   constructor(lecture: Partial<ILecture>) {
     super();
