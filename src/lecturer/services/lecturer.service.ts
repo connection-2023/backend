@@ -386,7 +386,7 @@ export class LecturerService implements OnModuleInit {
       const lectures = await this.lecturerRepository.getLecturesWithLecturerId(
         where,
       );
-      const inprogressLecture = [];
+      const inProgressLecture = [];
 
       for (const lecture of lectures) {
         if (lecture['lectureMethod']['name'] === '원데이') {
@@ -403,20 +403,48 @@ export class LecturerService implements OnModuleInit {
             (countCompletedLectureSchedules / countLectureSchedules) * 100,
           );
 
-          const inprogressLectureData = {
+          const inProgressLectureData = {
             ...lecture,
             progress,
             schedulesCount: countLectureSchedules,
             completedSchedulesCount: countCompletedLectureSchedules,
           };
 
-          inprogressLecture.push(
-            new LectureInProgressDto(inprogressLectureData),
+          inProgressLecture.push(
+            new LectureInProgressDto(inProgressLectureData),
+          );
+        } else {
+          const countRegularLectureSchedules =
+            await this.lecturerRepository.countRegularLectureSchedules(
+              lecture.id,
+            );
+
+          const countCompletedRegularLectureSchedules =
+            await this.lecturerRepository.countCompletedRegularLectureSchedules(
+              lecture.id,
+              currentTime,
+            );
+
+          const progress = Math.round(
+            (countCompletedRegularLectureSchedules /
+              countRegularLectureSchedules) *
+              100,
+          );
+
+          const inProgressLectureData = {
+            ...lecture,
+            progress,
+            schedulesCount: countRegularLectureSchedules,
+            completedSchedulesCount: countCompletedRegularLectureSchedules,
+          };
+
+          inProgressLecture.push(
+            new LectureInProgressDto(inProgressLectureData),
           );
         }
       }
 
-      return inprogressLecture;
+      return inProgressLecture;
     } else if (progressType === '마감된 클래스') {
       where['lectureSchedule'] = {
         every: { startDateTime: { lte: currentTime } },
