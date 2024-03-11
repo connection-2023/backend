@@ -22,7 +22,7 @@ import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-pay
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
-import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { PendingPaymentInfoDto } from '../dtos/response/pending-payment-info.dto';
 import { Request } from 'express';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { PaymentHistoryTypes, PaymentMethods } from '../constants/enum';

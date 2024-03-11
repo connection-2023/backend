@@ -7,8 +7,7 @@ import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto'
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { PaymentsController } from '../payments.controller';
 import { LecturePaymentWithPassUsageDto } from '@src/payments/dtos/response/lecture-payment-with-pass-usage.dto';
-import { PendingPaymentInfoDto } from '@src/payments/dtos/pending-payment-info.dto';
-import { LegacyPaymentDto } from '@src/payments/dtos/legacy-payment.dto';
+import { PendingPaymentInfoDto } from '@src/payments/dtos/response/pending-payment-info.dto';
 import { PaymentResultDto } from '@src/payments/dtos/response/payment-result.dto';
 
 export const ApiPayments: ApiOperator<keyof PaymentsController> = {

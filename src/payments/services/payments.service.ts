@@ -58,7 +58,7 @@ import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lectu
 import { CreateLecturePaymentWithTransferDto } from '../dtos/create-lecture-payment-with-transfer.dto';
 import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
 import { CreateLecturePaymentWithDepositDto } from '../dtos/create-lecture-payment-with-deposit';
-import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
+import { PendingPaymentInfoDto } from '../dtos/response/pending-payment-info.dto';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';

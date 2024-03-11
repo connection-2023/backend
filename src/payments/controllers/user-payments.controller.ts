@@ -14,7 +14,6 @@ import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiGetUserPaymentsHistory } from '@src/payments/swagger-decorators/get-user-payments-history-decorator';
 import { ApiPaymentVirtualAccount } from '@src/payments/swagger-decorators/get-payment-virtual-account-decorator';
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
@@ -22,16 +21,15 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
 import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-recent-bank-account.decorator';
 import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
-import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorator';
-import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
 import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
+import { ApiUserPayments } from './swagger/user-payment.swagger';
 
 @ApiTags('유저-결제')
 @Controller('user-payments')
 export class UserPaymentsController {
   constructor(private readonly userPaymentsService: UserPaymentsService) {}
 
-  @ApiGetUserPaymentsHistory()
+  @ApiUserPayments.GetUserPaymentsHistory({ summary: '결제 내역 조회' })
   @Get('/history')
   @UseGuards(UserAccessTokenGuard)
   async GetUserPaymentsHistory(
@@ -44,7 +42,7 @@ export class UserPaymentsController {
     );
   }
 
-  @ApiGetUserReceipt()
+  @ApiUserPayments.GetUserReceipt({ summary: '결제 정보 상세 조회(유저)' })
   @SetResponseKey('receipt')
   @Get('/history/:orderId')
   @UseGuards(UserAccessTokenGuard)
