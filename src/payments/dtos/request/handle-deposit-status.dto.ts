@@ -16,7 +16,7 @@ export class HandleDepositStatusDto {
         `상태가 올바르지 않습니다. input: ${value}`,
       );
     }
-    return value.toUpperCase();
+    return PaymentOrderStatus[value.toUpperCase()];
   })
   @IsNotEmpty()
   status: PaymentOrderStatus;

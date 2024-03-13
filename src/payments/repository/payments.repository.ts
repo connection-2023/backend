@@ -297,8 +297,6 @@ export class PaymentsRepository {
     couponIds: number[],
   ) {
     try {
-      console.log(couponIds);
-
       await transaction.lectureCoupon.updateMany({
         where: { id: { in: couponIds } },
         data: {
@@ -1391,7 +1389,7 @@ export class PaymentsRepository {
     updateTarget: TrxUpdateTarget,
   ): Promise<void> {
     try {
-      await transaction[updateTarget]({
+      await transaction[updateTarget].update({
         where: { paymentId },
         data: { isEnabled: true },
       });
