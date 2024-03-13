@@ -15,12 +15,18 @@ import { Server, Socket } from 'socket.io';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { RedisClientType } from 'redis';
+import { InjectModel } from '@nestjs/mongoose';
+import { OnlineMap } from './schemas/online-map.schema';
+import { Model } from 'mongoose';
 
 @WebSocketGateway({ namespace: /\/chatroom\d+/ })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    @InjectModel(OnlineMap.name)
+    private readonly onlineMapModel: Model<OnlineMap>,
+  ) {}
 
   @WebSocketServer() public server: Server;
 
@@ -35,19 +41,18 @@ export class EventsGateway
   ) {
     console.log('login', data.authorizedData);
 
-    const key = `onlineMap:${socket.id}`;
-    const value = data.authorizedData.lecturerId
-      ? { lecturerId: data.authorizedData.lecturerId }
-      : { userId: data.authorizedData.userId };
-
-    await this.cacheManager.set(key, value, 0);
+    const socketId = socket.id;
 
     data.rooms.forEach((room) => {
       console.log('join', room);
       socket.join(room);
     });
 
-    socket.nsp.emit('joinUser', value);
+    const onlineMapInputData = { ...data.authorizedData, socketId };
+
+    await this.onlineMapModel.create(onlineMapInputData);
+
+    socket.nsp.emit('joinUser', data.authorizedData);
   }
 
   afterInit(server: Server): any {
