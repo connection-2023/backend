@@ -24,6 +24,7 @@ import { ApiCreateChat } from '../swagger-decorators/create-chat-decorator';
 import { ApiGetChatsWithChatRoomId } from '../swagger-decorators/get-chat-with-chat-room-id.decorator';
 import { ApiUpdateUnreadMessage } from '../swagger-decorators/update-unread-message.decorator';
 import { GetPageTokenQueryDto } from '../dtos/get-page-token.query.dto';
+import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 
 @ApiTags('채팅')
 // @UseInterceptors(MongooseClassSerializerInterceptor(Chats))
@@ -33,7 +34,7 @@ export class ChatsController {
 
   @ApiCreateChat()
   @SetResponseKey('chat')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AllowUserAndLecturerGuard)
   @Post()
   async createChats(
     @GetAuthorizedUser() authorizedData: ValidateResult,
