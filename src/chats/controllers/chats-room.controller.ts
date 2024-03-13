@@ -21,6 +21,7 @@ import { ApiGetMyChatRoom } from '../swagger-decorators/get-my-chat-room.decorat
 import { ParseObjectIdPipe } from '@src/common/validator/parse-object-id.pipe';
 import mongoose from 'mongoose';
 import { ApiGetOnlineList } from '../swagger-decorators/get-online-list.decorator';
+import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 
 @Controller('chat-rooms/:id')
 @ApiTags('채팅방')
@@ -28,7 +29,7 @@ export class ChatRoomController {
   constructor(private readonly chatRoomService: ChatRoomService) {}
 
   @ApiGetSocketRoom()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AllowUserAndLecturerGuard)
   @Get('socket-rooms')
   async getSocketRoom(@GetAuthorizedUser() authorizedData: ValidateResult) {
     return await this.chatRoomService.getSocketRoom(authorizedData);
@@ -36,7 +37,7 @@ export class ChatRoomController {
 
   @SetResponseKey('chatRoom')
   @ApiCreateChatRoom()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AllowUserAndLecturerGuard)
   @Post()
   async createChatRoom(
     @GetAuthorizedUser() authorizedData: ValidateResult,
@@ -50,7 +51,7 @@ export class ChatRoomController {
 
   @SetResponseKey('chatRoom')
   @ApiGetChatRoom()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AllowUserAndLecturerGuard)
   @Get('targets/:targetId')
   async getChatRoom(
     @GetAuthorizedUser() authorizedData: ValidateResult,
@@ -61,7 +62,7 @@ export class ChatRoomController {
 
   @SetResponseKey('chatRoom')
   @ApiGetMyChatRoom()
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AllowUserAndLecturerGuard)
   @Get()
   async getMyChatRooms(@GetAuthorizedUser() authorizedData: ValidateResult) {
     return await this.chatRoomService.getMyChatRoom(authorizedData);
