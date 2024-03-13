@@ -18,6 +18,7 @@ import { RedisClientType } from 'redis';
 import { InjectModel } from '@nestjs/mongoose';
 import { OnlineMap } from './schemas/online-map.schema';
 import { Model } from 'mongoose';
+import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @WebSocketGateway({ namespace: /\/chatroom\d+/ })
 export class EventsGateway
@@ -42,17 +43,20 @@ export class EventsGateway
     console.log('login', data.authorizedData);
 
     const socketId = socket.id;
+    console.log(socketId);
 
     data.rooms.forEach((room) => {
       console.log('join', room);
       socket.join(room);
     });
 
-    const onlineMapInputData = { ...data.authorizedData, socketId };
+    const joinUser = await this.onlineMapModel.findOneAndUpdate(
+      { ...data.authorizedData },
+      { lastLogin: null, socketId },
+      { upsert: true, new: true },
+    );
 
-    await this.onlineMapModel.create(onlineMapInputData);
-
-    socket.nsp.emit('joinUser', data.authorizedData);
+    socket.nsp.emit('joinUser', joinUser);
   }
 
   afterInit(server: Server): any {
@@ -66,9 +70,14 @@ export class EventsGateway
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
     console.log('disconnected', socket.nsp.name);
 
-    const exitUser = await this.cacheManager.get(`onlineMap:${socket.id}`);
+    const socketId = socket.id;
+    const currentTime = generateCurrentTime();
 
-    await this.cacheManager.del(`onlineMap:${socket.id}`);
+    const exitUser = await this.onlineMapModel.findOneAndUpdate(
+      { socketId },
+      { lastLogin: currentTime },
+      { new: true },
+    );
 
     socket.nsp.emit('exitUser', exitUser);
   }

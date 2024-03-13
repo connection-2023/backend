@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose';
 import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Document } from 'mongoose';
 
 const options: SchemaOptions = {
   timestamps: true,
@@ -20,8 +21,7 @@ export class OnlineMap extends Document {
   @IsString()
   socketId: string;
 
-  @Prop()
-  @IsDate()
+  @Prop({ default: null })
   lastLogin: Date | null;
 }
 

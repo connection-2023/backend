@@ -9,6 +9,7 @@ import { ChatsRepository } from './repositories/chats.repository';
 import { ChatRoomService } from './services/chats-room.service';
 import { ChatRoomRepository } from './repositories/chats-room.repository';
 import { EventsGateway } from '@src/events/events.gateway';
+import { EventsModule } from '@src/events/events.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EventsGateway } from '@src/events/events.gateway';
       { name: Chats.name, schema: ChatsSchema },
       { name: ChatRoom.name, schema: ChatRoomSchema },
     ]),
+    EventsModule,
   ],
   controllers: [ChatRoomController, ChatsController],
   providers: [
@@ -23,7 +25,6 @@ import { EventsGateway } from '@src/events/events.gateway';
     ChatsRepository,
     ChatRoomService,
     ChatRoomRepository,
-    EventsGateway,
   ],
 })
 export class ChatsModule {}
