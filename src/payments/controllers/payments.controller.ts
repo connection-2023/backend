@@ -29,6 +29,7 @@ import { PaymentHistoryTypes, PaymentMethods } from '../constants/enum';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { ApiPayments } from './swagger/payments.swagger';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
+import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -155,12 +156,12 @@ export class PaymentsController {
   @ApiPayments.HandleVirtualAccountPaymentStatusWebhook({
     summary: '토스 페이먼츠 계좌이체 웹훅 ',
   })
-  @Post('/toss/status')
+  @Post('/toss/deposit-status')
   async handleVirtualAccountPaymentStatusWebhook(
-    @Req() req: Request,
+    @Body() handleDepositStatusDto: HandleDepositStatusDto,
   ): Promise<void> {
     await this.paymentsService.handleVirtualAccountPaymentStatusWebhook(
-      req.body,
+      handleDepositStatusDto,
     );
   }
 

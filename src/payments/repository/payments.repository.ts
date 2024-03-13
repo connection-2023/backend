@@ -31,6 +31,7 @@ import {
   PaymentMethods,
   PaymentProductTypes,
   LectureMethod,
+  TrxUpdateTarget,
 } from '@src/payments/constants/enum';
 import {
   Lecture,
@@ -296,8 +297,6 @@ export class PaymentsRepository {
     couponIds: number[],
   ) {
     try {
-      console.log(couponIds);
-
       await transaction.lectureCoupon.updateMany({
         where: { id: { in: couponIds } },
         data: {
@@ -353,7 +352,7 @@ export class PaymentsRepository {
     }
   }
 
-  async getPaymentInfoByOrderId(orderId: string) {
+  async getPaymentDetailsByOrderId(orderId: string) {
     try {
       return await this.prismaService.payment.findUnique({
         where: { orderId },
@@ -1369,5 +1368,36 @@ export class PaymentsRepository {
         virtualAccountPaymentInfo: { include: { bank: true } },
       },
     });
+  }
+
+  async getPaymentByOrderId(orderId: string): Promise<Payment> {
+    try {
+      return await this.prismaService.payment.findUnique({
+        where: { orderId },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 결제정보 조회 실패: ${error}`,
+        'PrismaFindFailed',
+      );
+    }
+  }
+
+  async trxUpdatePaymentProductEnabled(
+    transaction: PrismaTransaction,
+    paymentId: number,
+    updateTarget: TrxUpdateTarget,
+  ): Promise<void> {
+    try {
+      await transaction[updateTarget].update({
+        where: { paymentId },
+        data: { isEnabled: true },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Prisma 타겟 데이터 수정 실패: ${error}`,
+        'PrismaUpdateFailed',
+      );
+    }
   }
 }
