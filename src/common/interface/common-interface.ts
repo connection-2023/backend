@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { TokenTypes } from '@src/auth/enums/token-enums';
 import { PrismaService } from '@src/prisma/prisma.service';
 

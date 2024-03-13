@@ -68,3 +68,8 @@ export enum LecturerPaymentStatus {
   PARTIAL_CANCELED = PaymentOrderStatus.PARTIAL_CANCELED,
   DONE = PaymentOrderStatus.DONE,
 }
+
+export enum TrxUpdateTarget {
+  Reservation = 'Reservation',
+  UserPass = 'UserPass',
+}

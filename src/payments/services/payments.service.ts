@@ -51,6 +51,7 @@ import {
   RefundStatuses,
   LectureMethod,
   PaymentHistoryTypes,
+  TrxUpdateTarget,
 } from '@src/payments/constants/enum';
 import axios from 'axios';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
@@ -63,6 +64,7 @@ import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 import { CouponStackability } from '../constants/const';
+import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -799,9 +801,8 @@ export class PaymentsService implements OnModuleInit {
   }
 
   private async getPaymentInfo(orderId: string) {
-    const paymentInfo = await this.paymentsRepository.getPaymentInfoByOrderId(
-      orderId,
-    );
+    const paymentInfo =
+      await this.paymentsRepository.getPaymentDetailsByOrderId(orderId);
 
     if (!paymentInfo) {
       throw new NotFoundException(
@@ -1339,43 +1340,48 @@ export class PaymentsService implements OnModuleInit {
     status,
     secret,
     orderId,
-  }: IWebHookData): Promise<void> {
-    const selectedPayment =
-      await this.paymentsRepository.getPaymentInfoByOrderId(orderId);
-    // secret 키가 다르면 반환
-    if (!selectedPayment) {
-      return;
-    }
-    if (selectedPayment.secret !== secret) {
+  }: HandleDepositStatusDto): Promise<void> {
+    const selectedPayment = await this.paymentsRepository.getPaymentByOrderId(
+      orderId,
+    );
+    if (!selectedPayment || selectedPayment.secret !== secret) {
       return;
     }
 
-    const convertedStatus =
-      PaymentOrderStatus[
-        status.toUpperCase() as unknown as keyof typeof PaymentOrderStatus
-      ];
+    const updateTarget: TrxUpdateTarget = this.determineUpdateTarget(
+      selectedPayment.paymentProductTypeId,
+    );
 
-    // status가 다르면 반환
-    if (convertedStatus !== PaymentOrderStatus.DONE) {
-      return;
+    const IsPaymentCompleted: boolean =
+      selectedPayment.statusId === PaymentOrderStatus.WAITING_FOR_DEPOSIT &&
+      status === PaymentOrderStatus.DONE;
+
+    if (IsPaymentCompleted) {
+      await this.completePayment(selectedPayment, updateTarget);
     }
+  }
 
+  private determineUpdateTarget(paymentProductTypeId: number): TrxUpdateTarget {
+    return paymentProductTypeId === PaymentHistoryTypes.클래스
+      ? TrxUpdateTarget.Reservation
+      : TrxUpdateTarget.UserPass;
+  }
+
+  private async completePayment(
+    payment: Payment,
+    updateTarget: TrxUpdateTarget,
+  ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const trxUpdateProductTarget =
-          selectedPayment.paymentProductType.name === PaymentProductTypes.클래스
-            ? 'reservation'
-            : 'userPass';
-
-        await this.paymentsRepository.trxUpdateProductEnabled(
+        await this.paymentsRepository.trxUpdatePaymentProductEnabled(
           transaction,
-          selectedPayment.id,
-          trxUpdateProductTarget,
+          payment.id,
+          updateTarget,
         );
 
         await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
-          selectedPayment.id,
+          payment.id,
           PaymentOrderStatus.DONE,
         );
       },
