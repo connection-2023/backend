@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { LecturerMyReviewType } from '@src/common/enum/enum';
+import { LecturerMyReviewType, OrderByEnum } from '@src/common/enum/enum';
 import { Type } from 'class-transformer';
 
 export class ReadManyLecturerMyReviewQueryDto {
@@ -71,13 +71,11 @@ export class ReadManyLecturerMyReviewQueryDto {
   lastItemId: number;
 
   @ApiProperty({
-    example: '최신순,좋아요순,평점 높은순,평점 낮은순',
-    description: '조회 정렬',
-    required: true,
+    enum: OrderByEnum,
   })
+  @IsEnum(OrderByEnum, { each: true })
   @IsNotEmpty()
-  @IsString()
-  orderBy: string;
+  orderBy: OrderByEnum;
 
   @ApiProperty({ example: 1, description: '강의 id', required: false })
   @IsOptional()
