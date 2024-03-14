@@ -48,7 +48,7 @@ export enum LecturerMyReviewType {
   '종료된 클래스' = '종료된 클래스',
 }
 
-export enum LecturerReviewType {
+export enum OrderByEnum {
   '최신순' = '최신순',
   '좋아요순' = '좋아요순',
   '평점 높은순' = '평점 높은순',

@@ -1,4 +1,8 @@
-import { ValidateResult } from './../../common/interface/common-interface';
+import {
+  IPaginationOptions,
+  IPaginationParams,
+  ValidateResult,
+} from './../../common/interface/common-interface';
 import { CreateLectureCouponDto } from './../../coupon/dtos/create-lecture-coupon.dto';
 import { PrismaService } from './../../prisma/prisma.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -64,7 +68,14 @@ export class LectureReviewService {
 
   async readManyLectureReviewWithUserId(
     lectureId: number,
-    orderBy: string,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      orderBy,
+    }: ReadManyLecturerReviewQueryDto,
     userId?: number,
   ) {
     const order = [];
@@ -91,10 +102,19 @@ export class LectureReviewService {
 
     order.push({ id: 'desc' });
 
+    const paginationParams: IPaginationParams = this.getPaginationParams({
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    });
+
     const readedReviews =
       await this.lectureReviewRepository.readManyLectureReview(
         lectureId,
         order,
+        paginationParams,
         userId,
       );
 
@@ -202,8 +222,6 @@ export class LectureReviewService {
       lectureId,
     }: ReadManyLecturerMyReviewQueryDto,
   ) {
-    let cursor;
-    let skip;
     let count: number;
     const where = { lecture: { lecturerId } };
 
@@ -251,24 +269,19 @@ export class LectureReviewService {
 
     order.push({ id: 'desc' });
 
-    const isPagination = currentPage && targetPage;
-
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      ({ cursor, skip, take } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-    }
+    const paginationParams: IPaginationParams = this.getPaginationParams({
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    });
 
     const review =
       await this.lectureReviewRepository.readManyMyReviewWithLecturerId(
         where,
         order,
-        take,
-        cursor,
-        skip,
+        paginationParams,
       );
 
     return { count, review };
@@ -282,7 +295,7 @@ export class LectureReviewService {
       targetPage,
       firstItemId,
       lastItemId,
-      lecturerReviewType,
+      orderBy,
     }: ReadManyLecturerReviewQueryDto,
     userId?: number,
   ) {
@@ -294,49 +307,42 @@ export class LectureReviewService {
       return;
     }
 
-    let cursor;
-    let skip;
-    const orderBy = [];
+    const order = [];
 
-    if (lecturerReviewType === '최신순') {
-      orderBy.push({
+    if (orderBy === '최신순') {
+      order.push({
         reservation: {
           lectureSchedule: {
             startDateTime: 'desc',
           },
         },
       });
-    } else if (lecturerReviewType === '좋아요순') {
-      orderBy.push({
+    } else if (orderBy === '좋아요순') {
+      order.push({
         likedLectureReview: {
           _count: 'desc',
         },
       });
-    } else if (lecturerReviewType === '평점 높은순') {
-      orderBy.push({ stars: 'desc' });
-    } else if (lecturerReviewType === '평점 낮은순') {
-      orderBy.push({ stars: 'asc' });
+    } else if (orderBy === '평점 높은순') {
+      order.push({ stars: 'desc' });
+    } else if (orderBy === '평점 낮은순') {
+      order.push({ stars: 'asc' });
     }
 
-    orderBy.push({ id: 'desc' });
+    order.push({ id: 'desc' });
 
-    const isPagination = currentPage && targetPage;
-
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      ({ cursor, skip, take } = this.getPaginationOptions(
-        pageDiff,
-        pageDiff <= -1 ? lastItemId : firstItemId,
-        take,
-      ));
-    }
+    const paginationParams: IPaginationParams = this.getPaginationParams({
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    });
 
     const reviews = await this.lectureReviewRepository.readManyLecturerReview(
       lecturerId,
-      take,
-      orderBy,
-      cursor,
-      skip,
+      order,
+      paginationParams,
       userId,
     );
     const reviewCount = await this.prismaService.lectureReview.count({
@@ -346,16 +352,31 @@ export class LectureReviewService {
     return new LecturerReviewResultDto({ reviews, reviewCount });
   }
 
-  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
-    const cursor = { id: itemId };
+  private getPaginationParams({
+    currentPage,
+    targetPage,
+    firstItemId,
+    lastItemId,
+    take,
+  }: IPaginationOptions): IPaginationParams {
+    let cursor;
+    let skip;
+    let updatedTake = take;
 
-    const calculateSkipValue = (pageDiff: number) => {
-      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    };
+    const isPagination = currentPage && targetPage;
+    const isInfiniteScroll = lastItemId && take;
 
-    const skip = calculateSkipValue(pageDiff);
+    if (isPagination) {
+      const pageDiff = currentPage - targetPage;
+      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
+      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
+      updatedTake = pageDiff >= 1 ? -take : take;
+    } else if (isInfiniteScroll) {
+      cursor = { id: lastItemId };
+      skip = 1;
+    }
 
-    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
+    return { cursor, skip, take: updatedTake };
   }
 
   private async increaseLectureStars(
