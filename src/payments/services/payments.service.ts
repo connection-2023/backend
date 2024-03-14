@@ -63,7 +63,7 @@ import { PendingPaymentInfoDto } from '../dtos/pending-payment-info.dto';
 import { HandleRefundDto } from '../dtos/request/handle-refund.dto';
 import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment-with-pass-usage.dto';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
-import { CouponStackability } from '../constants/const';
+import { CouponStackability, IsPaymentApproved } from '../constants/const';
 import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
 
 @Injectable()
@@ -1352,12 +1352,28 @@ export class PaymentsService implements OnModuleInit {
       selectedPayment.paymentProductTypeId,
     );
 
-    const IsPaymentCompleted: boolean =
+    const isPaymentCompleted: boolean =
       selectedPayment.statusId === PaymentOrderStatus.WAITING_FOR_DEPOSIT &&
       status === PaymentOrderStatus.DONE;
 
-    if (IsPaymentCompleted) {
-      await this.completePayment(selectedPayment, updateTarget);
+    if (isPaymentCompleted) {
+      return await this.updateDepositPayment(
+        selectedPayment,
+        updateTarget,
+        IsPaymentApproved.APPROVED,
+      );
+    }
+
+    const requiresDepositRetry: boolean =
+      selectedPayment.statusId === PaymentOrderStatus.DONE &&
+      status === PaymentOrderStatus.WAITING_FOR_DEPOSIT;
+
+    if (requiresDepositRetry) {
+      return await this.updateDepositPayment(
+        selectedPayment,
+        updateTarget,
+        IsPaymentApproved.DENIED,
+      );
     }
   }
 
@@ -1367,9 +1383,10 @@ export class PaymentsService implements OnModuleInit {
       : TrxUpdateTarget.UserPass;
   }
 
-  private async completePayment(
+  private async updateDepositPayment(
     payment: Payment,
     updateTarget: TrxUpdateTarget,
+    isEnabled: boolean,
   ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -1377,12 +1394,15 @@ export class PaymentsService implements OnModuleInit {
           transaction,
           payment.id,
           updateTarget,
+          isEnabled,
         );
 
         await this.paymentsRepository.trxUpdatePaymentStatus(
           transaction,
           payment.id,
-          PaymentOrderStatus.DONE,
+          isEnabled
+            ? PaymentOrderStatus.DONE
+            : PaymentOrderStatus.WAITING_FOR_DEPOSIT,
         );
       },
     );

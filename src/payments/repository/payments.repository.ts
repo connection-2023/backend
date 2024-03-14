@@ -1387,11 +1387,12 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     paymentId: number,
     updateTarget: TrxUpdateTarget,
+    isEnabled: boolean,
   ): Promise<void> {
     try {
       await transaction[updateTarget].update({
         where: { paymentId },
-        data: { isEnabled: true },
+        data: { isEnabled },
       });
     } catch (error) {
       throw new InternalServerErrorException(
