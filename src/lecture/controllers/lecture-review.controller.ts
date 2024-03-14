@@ -75,11 +75,10 @@ export class LectureReviewController {
     @Query() query: ReadManyLectureReviewQueryDto,
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
-    const { orderBy } = query;
     const userId = authorizedData?.user?.id;
     return await this.lectureReviewService.readManyLectureReviewWithUserId(
       lectureId,
-      orderBy,
+      query,
       userId,
     );
   }

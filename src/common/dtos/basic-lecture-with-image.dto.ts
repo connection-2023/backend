@@ -20,11 +20,17 @@ export class BasicLectureWithImageDto implements Pick<Lecture, 'id' | 'title'> {
   @ApiProperty({
     description: '강의 이미지 url',
   })
-  @Transform(({ obj }) => obj && obj.lectureImage[0]?.imageUrl, {
-    toPlainOnly: true,
-  })
+  @Transform(
+    ({ obj }) =>
+      Array.isArray(obj.lectureImage) && obj.lectureImage[0]
+        ? obj.lectureImage[0].imageUrl
+        : null,
+    {
+      toClassOnly: true,
+    },
+  )
   @Expose()
   imageUrl?: string;
 
-  lectureImage?: LectureImage[];
+  lectureImage: LectureImage[];
 }

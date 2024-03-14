@@ -48,11 +48,11 @@ export enum LecturerMyReviewType {
   '종료된 클래스' = '종료된 클래스',
 }
 
-export enum LecturerReviewType {
-  '최신순' = '최신순',
-  '좋아요순' = '좋아요순',
-  '평점 높은순' = '평점 높은순',
-  '평점 낮은순' = '평점 낮은순',
+export enum OrderByEnum {
+  LATEST = '최신순',
+  LIKES_DESC = '좋아요순',
+  STARS_DESC = '평점 높은순',
+  STARS_ASC = '평점 낮은순',
 }
 
 export enum TemporaryWeek {

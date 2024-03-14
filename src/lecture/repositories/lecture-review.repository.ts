@@ -5,6 +5,7 @@ import { CreateLectureReviewDto } from '../dtos/create-lecture-review.dto';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import {
   ICursor,
+  IPaginationParams,
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
 import { ILectureReview } from '../interface/lecture.interface';
@@ -110,6 +111,7 @@ export class LectureReviewRepository {
   async readManyLectureReview(
     lectureId: number,
     order,
+    { cursor, skip, take }: IPaginationParams,
     userId?: number,
   ): Promise<LectureReview[]> {
     const include = {
@@ -127,6 +129,9 @@ export class LectureReviewRepository {
 
     return await this.prismaService.lectureReview.findMany({
       where: { lectureId, deletedAt: null },
+      take,
+      skip,
+      cursor,
       include,
       orderBy: order,
     });
@@ -216,9 +221,7 @@ export class LectureReviewRepository {
   async readManyMyReviewWithLecturerId(
     where,
     orderBy,
-    take: number,
-    cursor?: ICursor,
-    skip?: number,
+    { cursor, skip, take }: IPaginationParams,
   ): Promise<LectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
       where,
@@ -257,10 +260,8 @@ export class LectureReviewRepository {
 
   async readManyLecturerReview(
     lecturerId: number,
-    take: number,
     orderBy,
-    cursor?: ICursor,
-    skip?: number,
+    { cursor, skip, take }: IPaginationParams,
     userId?: number,
   ): Promise<ILectureReview[]> {
     const include = {
