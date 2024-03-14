@@ -28,7 +28,7 @@ import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecture
 import { SearchHistoryDto } from '../dtos/response/search-history.dto';
 import { plainToInstance } from 'class-transformer';
 import { ApiGetSearchHistory } from '../swagger-decorators/get-search-history.decorator';
-import { ApiDeleteSearchHistory } from '../swagger-decorators/delete-search-history.decorator';
+import { ApiDeleteSingleSearchHistory } from '../swagger-decorators/delete-single-search-history.decorator';
 import { SearchPassListDto } from '../dtos/request/search-pass-list.dto';
 import { EsPassDto } from '../dtos/response/es-pass.dto ';
 import { ApiSearchPassList } from '../swagger-decorators/search-pass-list.decorator';
@@ -138,7 +138,7 @@ export class SearchController {
     );
   }
 
-  @ApiDeleteSearchHistory()
+  @ApiDeleteSingleSearchHistory()
   @UseGuards(AllowUserAndLecturerGuard)
   @Delete('/history/:historyId')
   async deleteSingleSearchHistory(
