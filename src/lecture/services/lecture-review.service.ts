@@ -16,6 +16,7 @@ import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 import { LecturerReviewResultDto } from '../dtos/read-lecturer-review.dto';
+import { OrderByEnum } from '@src/common/enum/enum';
 
 @Injectable()
 export class LectureReviewService {
@@ -78,29 +79,7 @@ export class LectureReviewService {
     }: ReadManyLecturerReviewQueryDto,
     userId?: number,
   ) {
-    const order = [];
-
-    if (orderBy === '최신순') {
-      order.push({
-        reservation: {
-          lectureSchedule: {
-            startDateTime: 'desc',
-          },
-        },
-      });
-    } else if (orderBy === '좋아요순') {
-      order.push({
-        likedLectureReview: {
-          _count: 'desc',
-        },
-      });
-    } else if (orderBy === '평점 높은순') {
-      order.push({ stars: 'desc' });
-    } else if (orderBy === '평점 낮은순') {
-      order.push({ stars: 'asc' });
-    }
-
-    order.push({ id: 'desc' });
+    const order = this.getLectureReviewSortOption(orderBy);
 
     const paginationParams: IPaginationParams = this.getPaginationParams({
       currentPage,
@@ -173,29 +152,8 @@ export class LectureReviewService {
     query: ReadManyLectureReviewQueryDto,
   ) {
     const { orderBy } = query;
-    const order = [];
 
-    if (orderBy === '최신순') {
-      order.push({
-        reservation: {
-          lectureSchedule: {
-            startDateTime: 'desc',
-          },
-        },
-      });
-    } else if (orderBy === '좋아요순') {
-      order.push({
-        likedLectureReview: {
-          _count: 'desc',
-        },
-      });
-    } else if (orderBy === '평점 높은순') {
-      order.push({ stars: 'desc' });
-    } else if (orderBy === '평점 낮은순') {
-      order.push({ stars: 'asc' });
-    }
-
-    order.push({ id: 'desc' });
+    const order = this.getLectureReviewSortOption(orderBy);
 
     return await this.lectureReviewRepository.readManyMyReviewWithUserId(
       userId,
@@ -245,29 +203,7 @@ export class LectureReviewService {
       where['lectureId'] = lectureId;
     }
 
-    const order = [];
-
-    if (orderBy === '최신순') {
-      order.push({
-        reservation: {
-          lectureSchedule: {
-            startDateTime: 'desc',
-          },
-        },
-      });
-    } else if (orderBy === '좋아요순') {
-      order.push({
-        likedLectureReview: {
-          _count: 'desc',
-        },
-      });
-    } else if (orderBy === '평점 높은순') {
-      order.push({ stars: 'desc' });
-    } else if (orderBy === '평점 낮은순') {
-      order.push({ stars: 'asc' });
-    }
-
-    order.push({ id: 'desc' });
+    const order = this.getLectureReviewSortOption(orderBy);
 
     const paginationParams: IPaginationParams = this.getPaginationParams({
       currentPage,
@@ -307,30 +243,6 @@ export class LectureReviewService {
       return;
     }
 
-    const order = [];
-
-    if (orderBy === '최신순') {
-      order.push({
-        reservation: {
-          lectureSchedule: {
-            startDateTime: 'desc',
-          },
-        },
-      });
-    } else if (orderBy === '좋아요순') {
-      order.push({
-        likedLectureReview: {
-          _count: 'desc',
-        },
-      });
-    } else if (orderBy === '평점 높은순') {
-      order.push({ stars: 'desc' });
-    } else if (orderBy === '평점 낮은순') {
-      order.push({ stars: 'asc' });
-    }
-
-    order.push({ id: 'desc' });
-
     const paginationParams: IPaginationParams = this.getPaginationParams({
       currentPage,
       targetPage,
@@ -338,6 +250,8 @@ export class LectureReviewService {
       lastItemId,
       take,
     });
+
+    const order = this.getLectureReviewSortOption(orderBy);
 
     const reviews = await this.lectureReviewRepository.readManyLecturerReview(
       lecturerId,
@@ -377,6 +291,42 @@ export class LectureReviewService {
     }
 
     return { cursor, skip, take: updatedTake };
+  }
+
+  private getLectureReviewSortOption(orderBy: OrderByEnum) {
+    const order = [];
+
+    switch (orderBy) {
+      case OrderByEnum.LATEST:
+        order.push({
+          reservation: {
+            lectureSchedule: {
+              startDateTime: 'desc',
+            },
+          },
+        });
+        break;
+
+      case OrderByEnum.LIKES_DESC:
+        order.push({
+          likedLectureReview: {
+            _count: 'desc',
+          },
+        });
+        break;
+
+      case OrderByEnum.STARS_DESC:
+        order.push({ stars: 'desc' });
+        break;
+
+      case OrderByEnum.STARS_ASC:
+        order.push({ stars: 'asc' });
+        break;
+    }
+
+    order.push({ id: 'desc' });
+
+    return order;
   }
 
   private async increaseLectureStars(
