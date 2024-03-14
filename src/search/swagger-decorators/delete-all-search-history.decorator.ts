@@ -1,5 +1,5 @@
 import { HttpStatus, applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto';
 
 export function ApiDeleteAllSearchHistory() {
@@ -7,6 +7,7 @@ export function ApiDeleteAllSearchHistory() {
     ApiOperation({
       summary: '검색 기록 삭제',
     }),
+    ApiBearerAuth(),
     StatusResponseDto.swaggerBuilder(HttpStatus.OK, 'deleteAllSearchHistory'),
   );
 }

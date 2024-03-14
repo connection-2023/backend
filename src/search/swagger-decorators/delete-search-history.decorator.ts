@@ -1,13 +1,14 @@
 import { HttpStatus, applyDecorators } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ExceptionResponseDto } from '@src/common/swagger/dtos/exeption-response.dto';
 import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto';
 
 export function ApiDeleteSearchHistory() {
   return applyDecorators(
     ApiOperation({
-      summary: '검색 기록 삭제',
+      summary: '검색 단일 기록 삭제',
     }),
+    ApiBearerAuth(),
     StatusResponseDto.swaggerBuilder(HttpStatus.OK, 'deleteSearchHistory'),
     ExceptionResponseDto.swaggerBuilder(HttpStatus.BAD_REQUEST, [
       {
