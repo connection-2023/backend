@@ -73,3 +73,7 @@ export enum TrxUpdateTarget {
   Reservation = 'Reservation',
   UserPass = 'UserPass',
 }
+
+export enum WebhookEventTypes {
+  PAYMENT_STATUS_CHANGED = 'PAYMENT_STATUS_CHANGED',
+}

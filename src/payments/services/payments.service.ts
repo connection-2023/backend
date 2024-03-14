@@ -27,6 +27,7 @@ import {
   IRefundPaymentInfo,
   IRefundReceiveAccount,
   ICalculatedLectureRefundResult,
+  IPaymentWebhookData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
@@ -65,6 +66,7 @@ import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 import { CouponStackability, IsPaymentApproved } from '../constants/const';
 import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
+import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
@@ -918,22 +920,31 @@ export class PaymentsService implements OnModuleInit {
     );
   }
 
-  async cancelPayment(orderId: string): Promise<void> {
+  async cancelPayment(
+    orderId: string,
+    paymentStatus: PaymentOrderStatus = PaymentOrderStatus.CANCELED,
+  ): Promise<void> {
     const paymentInfo = await this.getPaymentInfo(orderId);
 
-    if (paymentInfo.paymentStatus.id !== PaymentOrderStatus.READY) {
+    const paymentOrderStatus = [
+      PaymentOrderStatus.READY,
+      PaymentOrderStatus.IN_PROGRESS,
+      PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+    ];
+
+    if (!paymentOrderStatus.includes(paymentInfo.statusId)) {
       throw new BadRequestException(
         `취소할 수 없는 상태입니다.`,
         'InvalidCancelStatus',
       );
     }
 
-    if (paymentInfo.paymentProductType.name === PaymentProductTypes.클래스) {
-      await this.trxCancelReservation(paymentInfo);
+    if (paymentInfo.paymentProductTypeId === PaymentHistoryTypes.클래스) {
+      await this.trxCancelReservation(paymentInfo, paymentStatus);
     } else if (
-      paymentInfo.paymentProductType.name === PaymentProductTypes.패스권
+      paymentInfo.paymentProductTypeId === PaymentHistoryTypes.패스권
     ) {
-      await this.trxCancelUserPass(paymentInfo);
+      await this.trxCancelUserPass(paymentInfo, paymentStatus);
     }
   }
 
@@ -944,6 +955,7 @@ export class PaymentsService implements OnModuleInit {
       paymentProductType: PaymentProductType;
       reservation: Reservation;
     },
+    paymentStatus: PaymentOrderStatus,
   ) {
     const {
       id: paymentId,
@@ -987,26 +999,29 @@ export class PaymentsService implements OnModuleInit {
           );
         }
 
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           paymentId,
-          PaymentOrderStatus.CANCELED,
+          paymentStatus,
+          transaction,
         );
       },
     );
   }
 
-  private async trxCancelUserPass(paymentInfo: Payment): Promise<void> {
+  private async trxCancelUserPass(
+    paymentInfo: Payment,
+    paymentStatus: PaymentOrderStatus,
+  ): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         await this.paymentsRepository.trxDeleteUserPass(
           transaction,
           paymentInfo.id,
         );
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           paymentInfo.id,
-          PaymentOrderStatus.CANCELED,
+          paymentStatus,
+          transaction,
         );
       },
     );
@@ -1397,12 +1412,12 @@ export class PaymentsService implements OnModuleInit {
           isEnabled,
         );
 
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           payment.id,
           isEnabled
             ? PaymentOrderStatus.DONE
             : PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+          transaction,
         );
       },
     );
@@ -1453,10 +1468,10 @@ export class PaymentsService implements OnModuleInit {
             reservation,
           ),
 
-          this.paymentsRepository.trxUpdatePaymentStatus(
-            transaction,
+          this.paymentsRepository.updatePaymentStatus(
             payment.id,
             PaymentOrderStatus.CANCELED,
+            transaction,
           ),
 
           this.paymentsRepository.trxUpdateReservationStatus(
@@ -1654,5 +1669,31 @@ export class PaymentsService implements OnModuleInit {
     }
 
     return new PaymentResultDto(paymentResult);
+  }
+
+  async handlePaymentStatusWebhook({
+    status,
+    orderId,
+  }: IPaymentWebhookData): Promise<void> {
+    const convertedStatus = PaymentOrderStatus[status.toUpperCase()];
+    if (!PaymentOrderStatus.hasOwnProperty(convertedStatus)) {
+      throw new BadRequestException(
+        `상태가 올바르지 않습니다. input: ${status}`,
+      );
+    }
+
+    const selectedPayment = await this.getPaymentInfo(orderId);
+    const paymentOrderStatus = [
+      PaymentOrderStatus.READY,
+      PaymentOrderStatus.IN_PROGRESS,
+      PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+    ];
+    if (!paymentOrderStatus.includes(selectedPayment.statusId)) {
+      return;
+    }
+
+    if (convertedStatus === PaymentOrderStatus.EXPIRED) {
+      await this.cancelPayment(orderId, convertedStatus);
+    }
   }
 }

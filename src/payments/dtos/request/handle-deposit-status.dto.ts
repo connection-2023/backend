@@ -11,7 +11,7 @@ export class HandleDepositStatusDto {
   secret: string;
 
   @Transform(({ value }) => {
-    if (!(value.toUpperCase() in PaymentOrderStatus)) {
+    if (!PaymentOrderStatus.hasOwnProperty(value.toUpperCase())) {
       throw new BadRequestException(
         `상태가 올바르지 않습니다. input: ${value}`,
       );

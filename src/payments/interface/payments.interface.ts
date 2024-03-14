@@ -275,3 +275,17 @@ export interface ICalculatedLectureRefundResult {
   refundPrice: number;
   progress?: number;
 }
+
+export interface IPaymentWebhookData {
+  mId: string;
+  version: string;
+  lastTransactionKey: string;
+  paymentKey: string;
+  orderId: string;
+  status: string;
+  requestedAt: Date;
+  approvedAt: Date;
+  useEscrow: boolean;
+  virtualAccount: TossPaymentVirtualAccountInfo;
+  card: TossPaymentCardInfo;
+}
