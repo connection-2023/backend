@@ -839,7 +839,7 @@ export class SearchService {
       );
     }
 
-    return await this.searchRepository.deleteSearchHistoryById(historyId);
+    await this.searchRepository.deleteSearchHistoryById(historyId);
   }
 
   async getPassList(
@@ -907,5 +907,9 @@ export class SearchService {
           { _score: { order: 'desc' } },
         ];
     }
+  }
+
+  async deleteAllSearchHistory(userId: number): Promise<void> {
+    await this.searchRepository.deleteSearchHistoryByUserId(userId);
   }
 }
