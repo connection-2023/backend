@@ -15,7 +15,6 @@ import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-
 import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
-import { LecturerReviewResultDto } from '../dtos/read-lecturer-review.dto';
 import { OrderByEnum } from '@src/common/enum/enum';
 import { CombinedLectureReviewWithCountDto } from '../dtos/combined-lecture-review-with-count.dto';
 
@@ -101,10 +100,7 @@ export class LectureReviewService {
       lectureId,
     );
 
-    return new CombinedLectureReviewWithCountDto({
-      reviews,
-      reviewCount,
-    });
+    return new CombinedLectureReviewWithCountDto(reviews, reviewCount);
   }
 
   async updateLectureReview(
@@ -270,7 +266,7 @@ export class LectureReviewService {
       where: { lecture: { lecturerId } },
     });
 
-    return new LecturerReviewResultDto({ reviews, reviewCount });
+    return new CombinedLectureReviewWithCountDto(reviews, reviewCount);
   }
 
   private getPaginationParams({

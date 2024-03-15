@@ -135,7 +135,6 @@ export class LectureReviewController {
     );
   }
 
-  @SetResponseKey('lecturerReviews')
   @ApiReadManyLecturerReview()
   @UseGuards(AllowUserAndGuestGuard)
   @Get('lecturers/:lecturerId')
