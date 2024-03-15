@@ -317,15 +317,11 @@ export class PaymentsRepository {
     transaction: PrismaTransaction,
     paymentCouponUsageInputData,
   ) {
-    console.log(paymentCouponUsageInputData);
-
     try {
       await transaction.paymentCouponUsage.create({
         data: paymentCouponUsageInputData,
       });
     } catch (error) {
-      console.log(error);
-
       throw new InternalServerErrorException(
         `Prisma 쿠폰 사용내역 생성 실패: ${error}`,
         'PrismaCreateFailed',
@@ -637,13 +633,13 @@ export class PaymentsRepository {
     }
   }
 
-  async trxUpdatePaymentStatus(
-    transaction: PrismaTransaction,
+  async updatePaymentStatus(
     paymentId: number,
     statusId: number,
+    transaction?: PrismaTransaction,
   ) {
     try {
-      await transaction.payment.update({
+      await (transaction ?? this.prismaService).payment.update({
         where: { id: paymentId },
         data: { statusId },
       });

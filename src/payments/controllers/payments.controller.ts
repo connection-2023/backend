@@ -30,6 +30,7 @@ import { LecturePaymentWithPassUsageDto } from '../dtos/response/lecture-payment
 import { ApiPayments } from './swagger/payments.swagger';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
+import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
 
 @ApiTags('결제')
 @Controller('payments')
@@ -151,6 +152,18 @@ export class PaymentsController {
       );
     } else if (payment.paymentProductTypeId === PaymentHistoryTypes.패스권) {
     }
+  }
+
+  @ApiPayments.HandlePaymentStatusWebhook({
+    summary: '토스 페이먼츠 웹훅 ',
+  })
+  @Post('/toss/status')
+  async handlePaymentStatusWebhook(
+    @Body() handlePaymentDto: HandlePaymentDto,
+  ): Promise<void> {
+    await this.paymentsService.handlePaymentStatusWebhook(
+      handlePaymentDto.data,
+    );
   }
 
   @ApiPayments.HandleVirtualAccountPaymentStatusWebhook({

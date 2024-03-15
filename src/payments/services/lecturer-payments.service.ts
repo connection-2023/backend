@@ -172,10 +172,10 @@ export class LecturerPaymentsService {
   private async processPaymentDoneStatus(paymentId: number): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           paymentId,
           PaymentStatusForLecturer.DONE,
+          transaction,
         );
 
         await this.paymentsRepository.trxUpdateReservationEnabled(
@@ -196,10 +196,10 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           payment.id,
           PaymentStatusForLecturer.REFUSED,
+          transaction,
         );
 
         await this.paymentsRepository.trxUpdateTransferPayment(
@@ -311,10 +311,10 @@ export class LecturerPaymentsService {
   private async rollbackPaymentDoneStatus(paymentId: number) {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           paymentId,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+          transaction,
         );
 
         await this.paymentsRepository.trxUpdateReservationEnabled(
@@ -336,10 +336,10 @@ export class LecturerPaymentsService {
 
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.trxUpdatePaymentStatus(
-          transaction,
+        await this.paymentsRepository.updatePaymentStatus(
           payment.id,
           PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+          transaction,
         );
 
         await this.paymentsRepository.trxUpdateTransferPayment(

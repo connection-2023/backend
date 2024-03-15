@@ -299,4 +299,17 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
       ),
     );
   },
+
+  HandlePaymentStatusWebhook: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      StatusResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'handleVirtualAccountPaymentStatusWebhook',
+      ),
+    );
+  },
 };

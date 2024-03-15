@@ -142,7 +142,6 @@ export class EsLectureDto {
 
   constructor(lecture: Partial<IEsLecture>) {
     Object.assign(this, lecture);
-    console.log(lecture);
 
     this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
   }
