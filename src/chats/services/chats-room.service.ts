@@ -1,24 +1,17 @@
 import { ChatsRepository } from './../repositories/chats.repository';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { GetSocketRoomIdDto } from '../dtos/get-socket-room-id.dto';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { CombinedChatRoomDto } from '../dtos/combined-chat-room.dto';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
-import { ChatRoom } from '../schemas/chats-room.schema';
-import mongoose from 'mongoose';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { OnlineListDto } from '../dtos/chat-room-header.dto';
 
 @Injectable()
 export class ChatRoomService {
   constructor(
     private readonly chatRoomRepository: ChatRoomRepository,
     private readonly chatsRepository: ChatsRepository,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async getSocketRoom(authorizedData: ValidateResult) {
@@ -97,29 +90,6 @@ export class ChatRoomService {
     );
   }
 
-  async getOnlineList(chatRoomId: mongoose.Types.ObjectId) {
-    const chatRoom = await this.chatRoomRepository.getChatRoomWithChatRoomId(
-      chatRoomId,
-    );
-
-    const keys = await this.cacheManager.store.keys();
-
-    const onlineList = {};
-
-    const onlineLecturer = this.findKeyByValue(keys, {
-      lecturerId: chatRoom.lecturerId,
-    });
-
-    const onlineUser = this.findKeyByValue(keys, { userId: chatRoom.userId });
-
-    onlineLecturer
-      ? (onlineList['lecturerId'] = chatRoom.lecturerId)
-      : undefined;
-    onlineUser ? (onlineList['user'] = chatRoom.userId) : undefined;
-
-    return new OnlineListDto(onlineList);
-  }
-
   private createUserIdAndLecturerId(
     authorizedData: ValidateResult,
     targetId: number,
@@ -136,18 +106,5 @@ export class ChatRoomService {
     }
 
     return { userId, lecturerId };
-  }
-
-  async findKeyByValue(
-    keys: string[],
-    value: { [key: string]: number },
-  ): Promise<string | null> {
-    for (const key of keys) {
-      const cachedValue = await this.cacheManager.get(key);
-      if (JSON.stringify(cachedValue) === JSON.stringify(value)) {
-        return key;
-      }
-    }
-    return null;
   }
 }

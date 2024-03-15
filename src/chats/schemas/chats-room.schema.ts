@@ -28,4 +28,5 @@ export class ChatRoom extends Document {
 }
 
 export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);
+
 ChatRoomSchema.index({ userId: 1, lecturerId: 1 }, { unique: true });
