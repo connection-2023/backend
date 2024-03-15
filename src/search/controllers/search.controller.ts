@@ -34,6 +34,8 @@ import { EsPassDto } from '../dtos/response/es-pass.dto ';
 import { ApiSearchPassList } from '../swagger-decorators/search-pass-list.decorator';
 import { IEsPass } from '../interface/search.interface';
 import { ApiDeleteAllSearchHistory } from '../swagger-decorators/delete-all-search-history.decorator';
+import { PopularSearchTermDto } from '../dtos/response/popular-search-term.dto';
+import { ApiGetPopularSearchTerms } from '../swagger-decorators/get-popular-search-terms.decorator';
 
 @ApiTags('검색')
 @Controller('search')
@@ -125,6 +127,15 @@ export class SearchController {
       );
 
     return plainToInstance(SearchHistoryDto, userHistory);
+  }
+
+  @ApiGetPopularSearchTerms()
+  @SetResponseKey('popularSearchTerms')
+  @Get('/popular-terms')
+  async getPopularSearchTerms(): Promise<PopularSearchTermDto[]> {
+    const popularSearchTerms = await this.searchService.getPopularSearchTerms();
+
+    return plainToInstance(PopularSearchTermDto, popularSearchTerms);
   }
 
   @ApiDeleteAllSearchHistory()
