@@ -9,6 +9,7 @@ import {
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
 import { ILectureReview } from '../interface/lecture.interface';
+import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 
 @Injectable()
 export class LectureReviewRepository {
@@ -113,7 +114,7 @@ export class LectureReviewRepository {
     order,
     { cursor, skip, take }: IPaginationParams,
     userId?: number,
-  ): Promise<LectureReview[]> {
+  ): Promise<ILectureReview[]> {
     const include = {
       reservation: {
         include: { lectureSchedule: true },
@@ -134,6 +135,12 @@ export class LectureReviewRepository {
       cursor,
       include,
       orderBy: order,
+    });
+  }
+
+  async countLectureReview(lectureId: number): Promise<number> {
+    return await this.prismaService.lectureReview.count({
+      where: { lectureId },
     });
   }
 

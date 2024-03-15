@@ -2,6 +2,8 @@ import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
+import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dto';
+import { CombinedLectureReviewWithCountDto } from '../dtos/combined-lecture-review-with-count.dto';
 
 export function ApiReadManyLectureReview() {
   return applyDecorators(
@@ -9,13 +11,10 @@ export function ApiReadManyLectureReview() {
       summary: '회원/비회원 강의 리뷰 조회',
     }),
     ApiBearerAuth(),
-    DetailResponseDto.swaggerBuilder(
+    GeneralResponseDto.swaggerBuilder(
       HttpStatus.OK,
-      'review',
-      LectureReviewDto,
-      {
-        isArray: true,
-      },
+      'combinedLectureReviewWithCount',
+      CombinedLectureReviewWithCountDto,
     ),
   );
 }

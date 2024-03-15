@@ -28,6 +28,8 @@ import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-revie
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-review.decorator';
+import { plainToInstance } from 'class-transformer';
+import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -67,7 +69,6 @@ export class LectureReviewController {
   }
 
   @ApiReadManyLectureReview()
-  @SetResponseKey('review')
   @UseGuards(AllowUserAndGuestGuard)
   @Get('lectures/:lectureId')
   async readManyLectureReviewWithUserId(
@@ -136,7 +137,6 @@ export class LectureReviewController {
     );
   }
 
-  @SetResponseKey('lecturerReviews')
   @ApiReadManyLecturerReview()
   @UseGuards(AllowUserAndGuestGuard)
   @Get('lecturers/:lecturerId')
