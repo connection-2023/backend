@@ -96,11 +96,10 @@ export class LectureReviewService {
       userId,
     );
 
-    const reviewCount = await this.lectureReviewRepository.countLectureReview(
-      lectureId,
-    );
+    const totalItemCount =
+      await this.lectureReviewRepository.countLectureReview(lectureId);
 
-    return new CombinedLectureReviewWithCountDto(reviews, reviewCount);
+    return new CombinedLectureReviewWithCountDto(reviews, totalItemCount);
   }
 
   async updateLectureReview(
@@ -262,11 +261,12 @@ export class LectureReviewService {
       paginationParams,
       userId,
     );
-    const reviewCount = await this.prismaService.lectureReview.count({
+
+    const totalItemCount = await this.prismaService.lectureReview.count({
       where: { lecture: { lecturerId } },
     });
 
-    return new CombinedLectureReviewWithCountDto(reviews, reviewCount);
+    return new CombinedLectureReviewWithCountDto(reviews, totalItemCount);
   }
 
   private getPaginationParams({

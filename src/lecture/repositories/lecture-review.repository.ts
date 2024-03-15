@@ -9,6 +9,7 @@ import {
   PrismaTransaction,
 } from '@src/common/interface/common-interface';
 import { ILectureReview } from '../interface/lecture.interface';
+import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 
 @Injectable()
 export class LectureReviewRepository {
