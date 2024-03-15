@@ -17,6 +17,7 @@ import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-revie
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 import { LecturerReviewResultDto } from '../dtos/read-lecturer-review.dto';
 import { OrderByEnum } from '@src/common/enum/enum';
+import { CombinedLectureReviewWithCountDto } from '../dtos/combined-lecture-review-with-count.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -89,15 +90,21 @@ export class LectureReviewService {
       take,
     });
 
-    const readedReviews =
-      await this.lectureReviewRepository.readManyLectureReview(
-        lectureId,
-        order,
-        paginationParams,
-        userId,
-      );
+    const reviews = await this.lectureReviewRepository.readManyLectureReview(
+      lectureId,
+      order,
+      paginationParams,
+      userId,
+    );
 
-    return readedReviews.map((review) => new LectureReviewDto(review));
+    const reviewCount = await this.lectureReviewRepository.countLectureReview(
+      lectureId,
+    );
+
+    return new CombinedLectureReviewWithCountDto({
+      reviews,
+      reviewCount,
+    });
   }
 
   async updateLectureReview(
