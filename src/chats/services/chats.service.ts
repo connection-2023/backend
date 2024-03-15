@@ -42,9 +42,7 @@ export class ChatsService {
       roomObjectId,
     );
 
-    this.eventsGateway.server
-      .to(chatRoom.roomId)
-      .emit('messageToClient', new ChatsDto(chat));
+    this.eventsGateway.server.to(chatRoom.roomId).emit('messageToClient', chat);
 
     return new ChatsDto(chat);
   }
@@ -95,7 +93,7 @@ export class ChatsService {
       sender['userId'] = authorizedData.user.id;
       receiver['lecturerId'] = targetId;
     } else {
-      sender['lecturerId'] = authorizedData.user.id;
+      sender['lecturerId'] = authorizedData.lecturer.id;
       receiver['userId'] = targetId;
     }
 
