@@ -144,4 +144,10 @@ export class SearchRepository {
       where: { id },
     });
   }
+
+  async deleteSearchHistoryByUserId(userId: number): Promise<void> {
+    await this.prismaService.searchHistory.deleteMany({
+      where: { userId },
+    });
+  }
 }
