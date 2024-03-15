@@ -150,4 +150,11 @@ export class SearchRepository {
       where: { userId },
     });
   }
+
+  async getPopularSearchTerms() {
+    return this.prismaService.popularSearch.findMany({
+      orderBy: { searchCount: 'desc' },
+      take: 10,
+    });
+  }
 }

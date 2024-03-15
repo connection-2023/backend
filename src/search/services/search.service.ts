@@ -912,4 +912,8 @@ export class SearchService {
   async deleteAllSearchHistory(userId: number): Promise<void> {
     await this.searchRepository.deleteSearchHistoryByUserId(userId);
   }
+
+  async getPopularSearchTerms() {
+    return await this.searchRepository.getPopularSearchTerms();
+  }
 }
