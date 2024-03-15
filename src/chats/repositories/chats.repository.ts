@@ -38,6 +38,10 @@ export class ChatsRepository {
       .exec();
   }
 
+  async countChats(chattingRoomId: mongoose.Types.ObjectId): Promise<number> {
+    return await this.chatsModel.countDocuments({ chattingRoomId });
+  }
+
   async updatedUnreadChats(
     chattingRoomId: mongoose.Types.ObjectId,
   ): Promise<void> {

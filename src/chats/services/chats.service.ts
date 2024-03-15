@@ -1,16 +1,13 @@
-import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ChatsRepository } from './../repositories/chats.repository';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import mongoose from 'mongoose';
 import { EventsGateway } from '@src/events/events.gateway';
 import { ChatsDto } from '@src/common/dtos/chats.dto';
-import { Chats } from '../schemas/chats.schema';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import { GetPageTokenQueryDto } from '../dtos/get-page-token.query.dto';
+import { CombinedChatWithCountDto } from '../dtos/responses/combined-chat-with-count.dto';
 
 @Injectable()
 export class ChatsService {
@@ -65,15 +62,13 @@ export class ChatsService {
       pageSize,
     );
 
+    const totalItemCount = await this.chatsRepository.countChats(chatRoomId);
+
     if (!chats[0]) {
       throw new NotFoundException(`chat not found`);
     }
 
-    const chatRoom = await this.chatRoomRepository.getChatRoomWithChatRoomId(
-      chatRoomId,
-    );
-
-    return chats.map((chat) => new ChatsDto(chat));
+    return new CombinedChatWithCountDto(chats, totalItemCount);
   }
 
   async updateUnreadMessage(chatRoomId: mongoose.Types.ObjectId) {

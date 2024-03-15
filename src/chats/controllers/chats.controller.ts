@@ -25,6 +25,8 @@ import { ApiGetChatsWithChatRoomId } from '../swagger-decorators/get-chat-with-c
 import { ApiUpdateUnreadMessage } from '../swagger-decorators/update-unread-message.decorator';
 import { GetPageTokenQueryDto } from '../dtos/get-page-token.query.dto';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
+import { plainToInstance } from 'class-transformer';
+import { ChatsDto } from '@src/common/dtos/chats.dto';
 
 @ApiTags('채팅')
 // @UseInterceptors(MongooseClassSerializerInterceptor(Chats))
@@ -44,7 +46,6 @@ export class ChatsController {
   }
 
   @ApiGetChatsWithChatRoomId()
-  @SetResponseKey('chats')
   @Get('chat-rooms/:chatRoomId')
   async getChats(
     @Query() query: GetPageTokenQueryDto,

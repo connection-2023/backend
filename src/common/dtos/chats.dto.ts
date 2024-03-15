@@ -16,7 +16,7 @@ class SenderAndReceiver {
 
 @Exclude()
 export class ChatsDto {
-  _id: mongoose.Types.ObjectId;
+  _id?: mongoose.Types.ObjectId;
 
   @Expose()
   @ApiProperty({ description: '채팅방 id' })
@@ -25,7 +25,7 @@ export class ChatsDto {
 
   @Expose()
   @ApiProperty({ description: '채팅 id' })
-  id: string;
+  id?: string;
 
   @Expose()
   @ApiProperty({
