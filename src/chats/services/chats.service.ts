@@ -42,9 +42,13 @@ export class ChatsService {
       roomObjectId,
     );
 
-    this.eventsGateway.server.to(chatRoom.roomId).emit('messageToClient', chat);
+    const serializedChat = new ChatsDto(chat);
 
-    return new ChatsDto(chat);
+    this.eventsGateway.server
+      .to(chatRoom.roomId)
+      .emit('messageToClient', serializedChat);
+
+    return serializedChat;
   }
 
   async getChatsWithChatRoomId(
