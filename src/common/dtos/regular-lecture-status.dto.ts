@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { RegularLectureStatus } from '@prisma/client';
 import { RegularLectureScheduleDto } from './regular-lecture-schedule.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
+import { LectureDto } from './lecture.dto';
 @Exclude()
 export class RegularLectureStatusDto implements RegularLectureStatus {
   @ApiProperty({
@@ -41,6 +42,7 @@ export class RegularLectureStatusDto implements RegularLectureStatus {
   regularLectureSchedule: RegularLectureScheduleDto[];
 
   lectureId: number;
+  lecture?: LectureDto;
 
   constructor(lectureSchedule: Partial<RegularLectureStatusDto>) {
     Object.assign(this, lectureSchedule);
