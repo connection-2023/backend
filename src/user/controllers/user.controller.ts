@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   UploadedFile,
@@ -27,6 +28,7 @@ import { ApiGetUserMyProfile } from '../swagger-decorators/read-my-profile';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { ApiUpdateUser } from '../swagger-decorators/update-user.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
+import { ApiUser } from './swagger/user.swagger';
 
 @ApiTags('유저')
 @Controller('users')
@@ -94,5 +96,12 @@ export class UserController {
       authorizedData.user.id,
       updateMyProfileDto,
     );
+  }
+
+  @ApiUser.GetUser({ summary: '유저 정보 조회' })
+  @SetResponseKey('user')
+  @Get(':userId')
+  async getUser(@Param('userId', ParseIntPipe) userId: number) {
+    return await this.userService.getUser(userId);
   }
 }

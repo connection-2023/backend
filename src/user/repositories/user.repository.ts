@@ -94,4 +94,11 @@ export class UserRepository {
       update: { imageUrl },
     });
   }
+
+  async getUser(userId: number): Promise<Users> {
+    return await this.prismaService.users.findFirst({
+      where: { id: userId, deletedAt: null },
+      include: { userProfileImage: true },
+    });
+  }
 }
