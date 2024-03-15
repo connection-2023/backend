@@ -67,7 +67,6 @@ export class LectureReviewController {
   }
 
   @ApiReadManyLectureReview()
-  @SetResponseKey('review')
   @UseGuards(AllowUserAndGuestGuard)
   @Get('lectures/:lectureId')
   async readManyLectureReviewWithUserId(
