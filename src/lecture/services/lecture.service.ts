@@ -695,18 +695,17 @@ export class LectureService {
       targetId,
     );
 
-    const lectureSchedule = await this.lectureRepository.getLastSchedule(
-      userId,
-      lecturerId,
-    );
-
-    const regularLectureSchedule =
-      await this.lectureRepository.getLastRegularSchedule(userId, lecturerId);
+    const [lectureSchedule, regularLectureSchedule] = await Promise.all([
+      this.lectureRepository.getLastSchedule(userId, lecturerId),
+      this.lectureRepository.getLastRegularSchedule(userId, lecturerId),
+    ]);
 
     if (lectureSchedule && !regularLectureSchedule) {
       return new RegistLectureScheduleDto(lectureSchedule);
     } else if (!lectureSchedule && regularLectureSchedule) {
       return new RegistLectureScheduleDto(regularLectureSchedule);
+    } else if (!lectureSchedule && !regularLectureSchedule) {
+      throw new NotFoundException('Last schedule was not found');
     }
 
     const lastSchedule =
