@@ -1,4 +1,4 @@
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { ChatRoomService } from './../services/chats-room.service';
 import {
   Body,
@@ -11,16 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiGetSocketRoom } from '../swagger-decorators/get-scoket-room-id.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
-import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { ApiCreateChatRoom } from '../swagger-decorators/create-chat-room.decorator';
 import { ApiGetChatRoom } from '../swagger-decorators/get-chat-room.decorator';
 import { ApiGetMyChatRoom } from '../swagger-decorators/get-my-chat-room.decorator';
-import { ParseObjectIdPipe } from '@src/common/validator/parse-object-id.pipe';
-import mongoose from 'mongoose';
-import { ApiGetOnlineList } from '../swagger-decorators/get-online-list.decorator';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 
 @Controller('chat-rooms/:id')
@@ -66,14 +62,5 @@ export class ChatRoomController {
   @Get()
   async getMyChatRooms(@GetAuthorizedUser() authorizedData: ValidateResult) {
     return await this.chatRoomService.getMyChatRoom(authorizedData);
-  }
-
-  @SetResponseKey('onlineList')
-  @ApiGetOnlineList()
-  @Get('online-list')
-  async getOnlineList(
-    @Param('id', ParseObjectIdPipe) chatRoomId: mongoose.Types.ObjectId,
-  ) {
-    return await this.chatRoomService.getOnlineList(chatRoomId);
   }
 }

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LectureService } from '@src/lecture/services/lecture.service';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
 import { ApiCreateLecture } from '../swagger-decorators/create-lecture-decorator';
@@ -20,12 +19,10 @@ import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-tok
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ReadManyLectureQueryDto } from '../dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '../dtos/update-lecture.dto';
-import { ApiReadManyLectureSchedule } from '../swagger-decorators/read-many-lecture-schedule-decorator';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ApiReadLectureReservationWithUser } from '../swagger-decorators/read-reservation-with-user-id-decorator';
 import { ReadManyEnrollLectureQueryDto } from '../dtos/read-many-enroll-lecture-query.dto';
 import { ApiUpdateLecture } from '../swagger-decorators/update-lecture-decorator';
-import { ApiReadManyParticipantWithScheduleId } from '../swagger-decorators/read-many-participant-with-schedule';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiGetLectureLearnerList } from '../swagger-decorators/get-lecture-learner-list.decorator';
 import { LectureLearnerDto } from '../dtos/lecture-learner.dto';
@@ -44,6 +41,7 @@ import { ApiGetEnrollScheduleDetail } from '../swagger-decorators/get-enroll-sch
 import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
 import { ApiGetEnrollLectureList } from '../swagger-decorators/get-enroll-lecture-list.decorator';
 import { ApiLecture } from './swagger/lecture.swagger';
+import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 
 @ApiTags('강의')
 @Controller('lectures')
@@ -235,6 +233,20 @@ export class LectureController {
       scheduleId,
       authorizedData.user.id,
       query,
+    );
+  }
+
+  @ApiLecture.GetLastRegistSchedule({ summary: '수강한 마지막 스케쥴 조회' })
+  @SetResponseKey('lastRegistSchedule')
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Get('last-enrolled-schedules/targets/:targetId')
+  async getLastRegistSchedule(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('targetId', ParseIntPipe) targetId: number,
+  ) {
+    return await this.lectureService.getLastRegistSchedule(
+      authorizedData,
+      targetId,
     );
   }
 }

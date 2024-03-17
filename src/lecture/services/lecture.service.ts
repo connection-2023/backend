@@ -12,7 +12,11 @@ import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-que
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
 import { PrismaService } from '@src/prisma/prisma.service';
-import { PrismaTransaction, Id } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  Id,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   LectureCouponTargetInputData,
@@ -40,6 +44,7 @@ import { CombinedEnrollLectureWithCountDto } from '../dtos/combined-enroll-lectu
 import { EventBus } from '@nestjs/cqrs';
 import { NewLectureEvent } from '@src/notification/events/notification.event';
 import { CombinedScheduleDto } from '../dtos/combined-schedule.dto';
+import { EnrolledLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
 
 @Injectable()
 export class LectureService {
@@ -681,16 +686,52 @@ export class LectureService {
     );
   }
 
-  private getPaginationOptions(pageDiff: number, itemId: number, take: number) {
-    const cursor = { id: itemId };
+  async getLastRegistSchedule(
+    authorizedData: ValidateResult,
+    targetId: number,
+  ) {
+    const { userId, lecturerId } = this.createUserIdAndLecturerId(
+      authorizedData,
+      targetId,
+    );
 
-    const calculateSkipValue = (pageDiff: number) => {
-      return Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-    };
+    const [lectureSchedule, regularLectureSchedule] = await Promise.all([
+      this.lectureRepository.getLastSchedule(userId, lecturerId),
+      this.lectureRepository.getLastRegularSchedule(userId, lecturerId),
+    ]);
 
-    const skip = calculateSkipValue(pageDiff);
+    if (lectureSchedule && !regularLectureSchedule) {
+      return new EnrolledLectureScheduleDto(lectureSchedule);
+    } else if (!lectureSchedule && regularLectureSchedule) {
+      return new EnrolledLectureScheduleDto(regularLectureSchedule);
+    } else if (!lectureSchedule && !regularLectureSchedule) {
+      throw new NotFoundException('Last schedule was not found');
+    }
 
-    return { cursor, skip, take: pageDiff >= 1 ? -take : take };
+    const lastSchedule =
+      lectureSchedule.startDateTime > regularLectureSchedule.startDateTime
+        ? lectureSchedule
+        : regularLectureSchedule;
+
+    return new EnrolledLectureScheduleDto(lastSchedule);
+  }
+
+  private createUserIdAndLecturerId(
+    authorizedData: ValidateResult,
+    targetId: number,
+  ) {
+    let userId: number;
+    let lecturerId: number;
+
+    if (authorizedData.user) {
+      userId = authorizedData.user.id;
+      lecturerId = targetId;
+    } else {
+      userId = targetId;
+      lecturerId = authorizedData.lecturer.id;
+    }
+
+    return { userId, lecturerId };
   }
 
   private async getValidRegionIds(regions: string[]): Promise<Id[]> {

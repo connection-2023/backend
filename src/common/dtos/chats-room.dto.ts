@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import mongoose from 'mongoose';
 import { ChatsDto } from './chats.dto';
 
@@ -25,6 +25,9 @@ export class ChatRoomDto {
 
   @Expose()
   @ApiProperty({ description: '마지막 채팅', type: Date })
+  @Transform(
+    ({ value }) => new Date(new Date(value).getTime() + 9 * 60 * 60 * 1000),
+  )
   lastChatDateTime: Date;
 
   @Expose()

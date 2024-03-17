@@ -651,4 +651,32 @@ export class LectureRepository {
   async countEnrollLecture(where): Promise<number> {
     return await this.prismaService.reservation.count({ where });
   }
+
+  async getLastSchedule(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LectureSchedule> {
+    return await this.prismaService.lectureSchedule.findFirst({
+      where: { reservation: { some: { userId, lecture: { lecturerId } } } },
+      include: { lecture: true },
+      orderBy: { startDateTime: 'desc' },
+      take: 1,
+    });
+  }
+
+  async getLastRegularSchedule(
+    userId: number,
+    lecturerId: number,
+  ): Promise<RegularLectureSchedule> {
+    return await this.prismaService.regularLectureSchedule.findFirst({
+      where: {
+        regularLectureStatus: {
+          reservation: { some: { userId, lecture: { lecturerId } } },
+        },
+      },
+      include: { regularLectureStatus: { include: { lecture: true } } },
+      orderBy: { startDateTime: 'desc' },
+      take: 1,
+    });
+  }
 }

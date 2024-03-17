@@ -5,6 +5,7 @@ import { Chats } from '../schemas/chats.schema';
 import { ChatRoom } from '../schemas/chats-room.schema';
 import { uuid } from 'aws-sdk/clients/customerprofiles';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
+import { OnlineMap } from '@src/events/schemas/online-map.schema';
 
 @Injectable()
 export class ChatRoomRepository {

@@ -1,38 +1,47 @@
+import { ISenderAndReceiver } from './../../chats/interfaces/chats.interface';
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import mongoose from 'mongoose';
 
 @Exclude()
-export class ChatsDto {
-  _id: mongoose.Types.ObjectId;
+class SenderAndReceiver {
+  @Expose()
+  @ApiProperty({ description: '강사 id', type: Number })
+  lecturerId?: number;
 
+  @Expose()
+  @ApiProperty({ description: '유저 Id', type: Number })
+  userId?: number;
+}
+
+@Exclude()
+export class ChatsDto {
+  _id?: mongoose.Types.ObjectId;
+
+  @Expose()
+  @ApiProperty({ description: '채팅방 id' })
+  @Type(() => String)
   chattingRoomId: mongoose.Types.ObjectId;
 
   @Expose()
   @ApiProperty({ description: '채팅 id' })
-  id: string;
+  id?: string;
 
   @Expose()
   @ApiProperty({
     description: 'sender',
-    type: Object,
-    example: { userId: 1 },
+    type: SenderAndReceiver,
   })
-  sender: {
-    userId?: number;
-    lecturerId?: number;
-  };
+  @Type(() => SenderAndReceiver)
+  sender: SenderAndReceiver;
 
   @Expose()
   @ApiProperty({
     description: 'receiver',
-    type: Object,
-    example: { lecturerId: 14 },
+    type: SenderAndReceiver,
   })
-  receiver: {
-    userId?: number;
-    lecturerId?: number;
-  };
+  @Type(() => SenderAndReceiver)
+  receiver: SenderAndReceiver;
 
   @Expose()
   @ApiProperty({ description: '내용' })
@@ -44,19 +53,13 @@ export class ChatsDto {
 
   @Expose()
   @ApiProperty({ description: '보낸시간', type: Date })
+  @Transform(
+    ({ value }) => new Date(new Date(value).getTime() + 9 * 60 * 60 * 1000),
+  )
   createdAt?: Date;
 
   constructor(chat: Partial<ChatsDto>) {
+    Object.assign(this, chat['_doc']);
     this.id = chat._id.toString();
-    this.sender = chat.sender.lecturerId
-      ? { lecturerId: chat.sender.lecturerId }
-      : { userId: chat.sender.userId };
-    this.receiver = chat.receiver.lecturerId
-      ? { lecturerId: chat.receiver.lecturerId }
-      : { userId: chat.receiver.userId };
-    this.content = chat.content;
-    this.readedAt = chat.readedAt;
-
-    Object.assign(this);
   }
 }
