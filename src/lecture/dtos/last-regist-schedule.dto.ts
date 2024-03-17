@@ -7,7 +7,7 @@ import { LectureDto } from '@src/common/dtos/lecture.dto';
 import { SimpleLectureDto } from '@src/lecturer/dtos/simple-lecture.dto';
 
 @Exclude()
-export class RegistLectureScheduleDto {
+export class EnrolledLectureScheduleDto {
   @Expose()
   @ApiProperty({ description: '강의 정보', type: SimpleLectureDto })
   @Type(() => SimpleLectureDto)
@@ -19,7 +19,7 @@ export class RegistLectureScheduleDto {
 
   regularLectureStatus?: RegularLectureStatusDto;
 
-  constructor(schedule: Partial<RegistLectureScheduleDto>) {
+  constructor(schedule: Partial<EnrolledLectureScheduleDto>) {
     Object.assign(this, schedule);
   }
 }

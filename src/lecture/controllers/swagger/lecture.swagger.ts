@@ -6,7 +6,7 @@ import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dto';
 import { CombinedScheduleDto } from '../../dtos/combined-schedule.dto';
-import { RegistLectureScheduleDto } from '@src/lecture/dtos/last-regist-schedule.dto';
+import { EnrolledLectureScheduleDto } from '@src/lecture/dtos/last-regist-schedule.dto';
 
 export const ApiLecture: ApiOperator<keyof LectureController> = {
   GetLectureSchedule: (
@@ -116,7 +116,7 @@ export const ApiLecture: ApiOperator<keyof LectureController> = {
       DetailResponseDto.swaggerBuilder(
         HttpStatus.OK,
         'lastRegistSchedule',
-        RegistLectureScheduleDto,
+        EnrolledLectureScheduleDto,
       ),
     );
   },

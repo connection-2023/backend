@@ -239,7 +239,7 @@ export class LectureController {
   @ApiLecture.GetLastRegistSchedule({ summary: '수강한 마지막 스케쥴 조회' })
   @SetResponseKey('lastRegistSchedule')
   @UseGuards(AllowUserAndLecturerGuard)
-  @Get('last-regist-schedules/targets/:targetId')
+  @Get('last-enrolled-schedules/targets/:targetId')
   async getLastRegistSchedule(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('targetId', ParseIntPipe) targetId: number,

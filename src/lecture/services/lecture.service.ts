@@ -44,7 +44,7 @@ import { CombinedEnrollLectureWithCountDto } from '../dtos/combined-enroll-lectu
 import { EventBus } from '@nestjs/cqrs';
 import { NewLectureEvent } from '@src/notification/events/notification.event';
 import { CombinedScheduleDto } from '../dtos/combined-schedule.dto';
-import { RegistLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
+import { EnrolledLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
 
 @Injectable()
 export class LectureService {
@@ -701,9 +701,9 @@ export class LectureService {
     ]);
 
     if (lectureSchedule && !regularLectureSchedule) {
-      return new RegistLectureScheduleDto(lectureSchedule);
+      return new EnrolledLectureScheduleDto(lectureSchedule);
     } else if (!lectureSchedule && regularLectureSchedule) {
-      return new RegistLectureScheduleDto(regularLectureSchedule);
+      return new EnrolledLectureScheduleDto(regularLectureSchedule);
     } else if (!lectureSchedule && !regularLectureSchedule) {
       throw new NotFoundException('Last schedule was not found');
     }
@@ -713,7 +713,7 @@ export class LectureService {
         ? lectureSchedule
         : regularLectureSchedule;
 
-    return new RegistLectureScheduleDto(lastSchedule);
+    return new EnrolledLectureScheduleDto(lastSchedule);
   }
 
   private createUserIdAndLecturerId(
