@@ -71,11 +71,10 @@ export class EventsGateway
     console.log('disconnected', socket.nsp.name);
 
     const socketId = socket.id;
-    const currentTime = generateCurrentTime();
 
     const exitUser = await this.onlineMapModel.findOneAndUpdate(
       { socketId },
-      { lastLogin: currentTime },
+      { lastLogin: new Date() },
       { new: true },
     );
 
