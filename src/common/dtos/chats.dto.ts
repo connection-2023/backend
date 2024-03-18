@@ -53,9 +53,6 @@ export class ChatsDto {
 
   @Expose()
   @ApiProperty({ description: '보낸시간', type: Date })
-  @Transform(
-    ({ value }) => new Date(new Date(value).getTime() + 9 * 60 * 60 * 1000),
-  )
   createdAt?: Date;
 
   constructor(chat: Partial<ChatsDto>) {
