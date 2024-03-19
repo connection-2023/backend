@@ -10,7 +10,7 @@ import { ReservationWithLectureImageDto } from '@src/common/dtos/reservation-wit
 import { UserPassDto } from '@src/common/dtos/user-pass.dto';
 
 @Exclude()
-export class DetailPaymentInfo extends BasicPaymentDto {
+export class DetailPaymentInfoDto extends BasicPaymentDto {
   @ApiProperty({
     type: PaymentPassUsageDto,
     description: '패스권 사용 내역',

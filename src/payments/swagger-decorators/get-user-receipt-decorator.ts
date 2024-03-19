@@ -7,7 +7,7 @@ import {
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { SwaggerApiResponse } from '@src/common/swagger/swagger-response';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
-import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
+import { DetailPaymentInfoDto } from '../dtos/response/detail-payment.dto';
 
 export function ApiGetUserReceipt() {
   return applyDecorators(
@@ -19,7 +19,7 @@ export function ApiGetUserReceipt() {
     DetailResponseDto.swaggerBuilder(
       HttpStatus.OK,
       'receipt',
-      DetailPaymentInfo,
+      DetailPaymentInfoDto,
     ),
     ApiNotFoundResponse(
       SwaggerApiResponse.exception([

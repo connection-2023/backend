@@ -21,10 +21,11 @@ export class BasicLectureWithImageDto implements Pick<Lecture, 'id' | 'title'> {
     description: '강의 이미지 url',
   })
   @Transform(
-    ({ obj }) =>
-      Array.isArray(obj.lectureImage) && obj.lectureImage[0]
-        ? obj.lectureImage[0].imageUrl
-        : null,
+    ({ obj }) => {
+      if (Array.isArray(obj.lectureImage) && obj.lectureImage[0]) {
+        return obj.lectureImage[0].imageUrl;
+      }
+    },
     {
       toClassOnly: true,
     },

@@ -2,15 +2,15 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from '@src/app.module';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as expressBasicAuth from 'express-basic-auth';
+import expressBasicAuth from 'express-basic-auth';
 import { ConfigService } from '@nestjs/config';
 import { HttpExceptionFilter } from '@src/common/exceptions/http-exception.filter';
 import { SuccessInterceptor } from '@src/common/interceptors/success.interceptor';
 import { WebhookService } from './webhook/services/webhook.service';
 import { HttpNestInternalServerErrorExceptionFilter } from './common/exceptions/http-nest-internal-server-error-excetion.filter';
 import { HttpNodeInternalServerErrorExceptionFilter } from './common/exceptions/http-node-internal-server-error.exception.filter';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

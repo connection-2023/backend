@@ -21,10 +21,9 @@ import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
 import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-recent-bank-account.decorator';
-import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
 import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorator';
-import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
-import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
+import { DetailPaymentInfoDto } from '../dtos/response/detail-payment.dto';
+import { plainToInstance } from 'class-transformer';
 
 @ApiTags('유저-결제')
 @Controller('user-payments')
@@ -37,11 +36,23 @@ export class UserPaymentsController {
   async GetUserPaymentsHistory(
     @Query() getUserPaymentsHistoryDto: GetUserPaymentsHistoryDto,
     @GetAuthorizedUser() authorizedData: ValidateResult,
-  ): Promise<UserPaymentsHistoryWithCountDto> {
-    return await this.userPaymentsService.getUserPaymentsHistory(
-      getUserPaymentsHistoryDto,
-      authorizedData.user.id,
-    );
+  ): Promise<{
+    totalItemCount: Number;
+    userPaymentsHistory?: DetailPaymentInfoDto[];
+  }> {
+    const { totalItemCount, userPaymentsHistory } =
+      await this.userPaymentsService.getUserPaymentsHistory(
+        getUserPaymentsHistoryDto,
+        authorizedData.user.id,
+      );
+
+    return {
+      totalItemCount,
+      userPaymentsHistory: plainToInstance(
+        DetailPaymentInfoDto,
+        userPaymentsHistory,
+      ),
+    };
   }
 
   @ApiGetUserReceipt()
@@ -51,7 +62,7 @@ export class UserPaymentsController {
   async getUserReceipt(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('orderId') orderId: string,
-  ): Promise<DetailPaymentInfo> {
+  ): Promise<DetailPaymentInfoDto> {
     return await this.userPaymentsService.getUserReceipt(
       authorizedData.user.id,
       orderId,
