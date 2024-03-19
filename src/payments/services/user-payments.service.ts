@@ -12,9 +12,7 @@ import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { IPaginationParams } from '@src/common/interface/common-interface';
 import { PaymentHistoryTypes } from '../constants/enum';
-import { UserPaymentsHistoryWithCountDto } from '../dtos/user-payment-history-list.dto';
-import { LegacyPaymentDto } from '../dtos/legacy-payment.dto';
-import { DetailPaymentInfo } from '../dtos/response/detail-payment.dto';
+import { DetailPaymentInfoDto } from '../dtos/response/detail-payment.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
@@ -41,7 +39,10 @@ export class UserPaymentsService implements OnModuleInit {
       paymentHistoryType,
     }: GetUserPaymentsHistoryDto,
     userId: number,
-  ): Promise<UserPaymentsHistoryWithCountDto> {
+  ): Promise<{
+    totalItemCount: Number;
+    userPaymentsHistory?: DetailPaymentInfoDto[];
+  }> {
     const paymentTypeId =
       paymentHistoryType === PaymentHistoryTypes.전체
         ? undefined
@@ -53,7 +54,7 @@ export class UserPaymentsService implements OnModuleInit {
         paymentTypeId,
       );
     if (!totalItemCount) {
-      return new UserPaymentsHistoryWithCountDto({ totalItemCount });
+      return { totalItemCount };
     }
 
     const paginationParams: IPaginationParams = this.getPaginationParams(
@@ -71,10 +72,10 @@ export class UserPaymentsService implements OnModuleInit {
         paginationParams,
       );
 
-    return new UserPaymentsHistoryWithCountDto({
+    return {
       totalItemCount,
       userPaymentsHistory,
-    });
+    };
   }
 
   async getPaymentVirtualAccount(userId: number, paymentId: number) {
@@ -132,7 +133,7 @@ export class UserPaymentsService implements OnModuleInit {
   async getUserReceipt(
     userId: number,
     orderId: string,
-  ): Promise<DetailPaymentInfo> {
+  ): Promise<DetailPaymentInfoDto> {
     const receipt = await this.paymentsRepository.getUserPaymentInfo(
       userId,
       orderId,
@@ -144,6 +145,6 @@ export class UserPaymentsService implements OnModuleInit {
       );
     }
 
-    return plainToInstance(DetailPaymentInfo, receipt);
+    return plainToInstance(DetailPaymentInfoDto, receipt);
   }
 }
