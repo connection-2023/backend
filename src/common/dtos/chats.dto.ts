@@ -45,7 +45,11 @@ export class ChatsDto {
 
   @Expose()
   @ApiProperty({ description: '내용' })
-  content: string;
+  content?: string;
+
+  @Expose()
+  @ApiProperty({ description: '이미지 url' })
+  imageUrl?: string;
 
   @Expose()
   @ApiProperty({ description: '읽음 여부', type: Date })
