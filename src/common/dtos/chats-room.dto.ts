@@ -24,13 +24,11 @@ export class ChatRoomDto {
   roomId: string;
 
   @Expose()
-  @ApiProperty({ description: '마지막 채팅', type: Date })
-  lastChatDateTime: Date;
-
-  @Expose()
   @ApiProperty({ description: '채팅 안읽은 수', type: Number })
   unreadCount: number;
 
+  @Expose()
+  @ApiProperty({ description: '마지막 채팅', type: ChatsDto })
   lastChat?: ChatsDto;
 
   deletedAt: Date | null;
@@ -40,8 +38,8 @@ export class ChatRoomDto {
     this.userId = room.userId;
     this.lecturerId = room.lecturerId;
     this.roomId = room.roomId;
-    this.lastChatDateTime = room.lastChat ? room.lastChat.createdAt : undefined;
     this.unreadCount = room.unreadCount;
+    this.lastChat = room.lastChat ? new ChatsDto(room.lastChat) : undefined;
 
     Object.assign(this);
   }

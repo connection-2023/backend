@@ -37,7 +37,7 @@ export class ChatRoomRepository {
     return await this.chatRoomModel.findById(chatRoomId);
   }
 
-  async getMyChatRooms(where): Promise<ChatRoom[]> {
+  async getMyChatRooms(where): Promise<ChatRoomDto[]> {
     return await this.chatRoomModel.aggregate([
       where,
       {

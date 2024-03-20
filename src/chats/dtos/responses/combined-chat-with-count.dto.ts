@@ -18,6 +18,7 @@ export class CombinedChatWithCountDto {
       ? chatsResult.map((chat) => new ChatsDto(chat))
       : undefined;
     this.totalItemCount = count;
+
     Object.assign(this);
   }
 }

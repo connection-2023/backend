@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiGetSocketRoom } from '../swagger-decorators/get-scoket-room-id.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
