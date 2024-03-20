@@ -40,10 +40,10 @@ export class Chats {
   @IsNotEmpty()
   receiver: { userId: number | null; lecturerId: number | null };
 
-  @Prop({ required: true })
+  @Prop()
   content?: string;
 
-  @Prop({ required: true })
+  @Prop()
   imageUrl?: string;
 
   @Prop({ required: false, default: null })

@@ -19,7 +19,7 @@ export class ChatsService {
 
   async createChats(
     authorizedData: ValidateResult,
-    { receiverId, content, chatRoomId }: CreateChatsDto,
+    { receiverId, content, imageUrl, chatRoomId }: CreateChatsDto,
   ) {
     const { sender, receiver } = this.createSenderAndReceiver(
       authorizedData,
@@ -28,12 +28,15 @@ export class ChatsService {
 
     const roomObjectId = new mongoose.Types.ObjectId(chatRoomId);
 
-    const chat = await this.chatsRepository.createChats(
-      sender,
+    const chatInpuData = {
       receiver,
+      sender,
       content,
-      roomObjectId,
-    );
+      imageUrl,
+      chattingRoomId: roomObjectId,
+    };
+
+    const chat = await this.chatsRepository.createChats(chatInpuData);
 
     const chatRoom = await this.chatRoomRepository.getChatRoomWithChatRoomId(
       roomObjectId,
