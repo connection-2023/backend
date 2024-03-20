@@ -25,9 +25,6 @@ export class ChatRoomDto {
 
   @Expose()
   @ApiProperty({ description: '마지막 채팅', type: Date })
-  @Transform(
-    ({ value }) => new Date(new Date(value).getTime() + 9 * 60 * 60 * 1000),
-  )
   lastChatDateTime: Date;
 
   @Expose()
