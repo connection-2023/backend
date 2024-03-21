@@ -3,7 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Chats } from '../schemas/chats.schema';
 import mongoose, { Model } from 'mongoose';
 import { ChatRoom } from '../schemas/chats-room.schema';
-import { ISenderAndReceiver } from '../interfaces/chats.interface';
+import {
+  ChatInputData,
+  ISenderAndReceiver,
+} from '../interfaces/chats.interface';
 import { ChatsDto } from '@src/common/dtos/chats.dto';
 
 @Injectable()
@@ -14,18 +17,8 @@ export class ChatsRepository {
     private readonly chatRoomModel: Model<ChatRoom>,
   ) {}
 
-  async createChats(
-    sender: ISenderAndReceiver,
-    receiver: ISenderAndReceiver,
-    content: string,
-    roomObjectId: mongoose.Types.ObjectId,
-  ): Promise<Chats> {
-    return await this.chatsModel.create({
-      chattingRoomId: roomObjectId,
-      sender,
-      receiver,
-      content,
-    });
+  async createChats(chatInputData: ChatInputData): Promise<Chats> {
+    return await this.chatsModel.create(chatInputData);
   }
 
   async getChatsWithChatRoomId(where, pageSize: number): Promise<Chats[]> {

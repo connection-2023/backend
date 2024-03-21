@@ -6,6 +6,7 @@ import { GetSocketRoomIdDto } from '../dtos/get-socket-room-id.dto';
 import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
+import { ChatsDto } from '@src/common/dtos/chats.dto';
 
 @Injectable()
 export class ChatRoomService {
@@ -80,14 +81,16 @@ export class ChatRoomService {
       throw new NotFoundException(`chat room not found`);
     }
 
-    return Promise.all(
-      chatRooms.map(async (chatRoom) => {
-        chatRoom['unreadCount'] =
-          await this.chatRoomRepository.countUnreadMessage(chatRoom._id);
+    const serializedChatRooms = [];
 
-        return new ChatRoomDto(chatRoom);
-      }),
-    );
+    for (const chatRoom of chatRooms) {
+      chatRoom['unreadCount'] =
+        await this.chatRoomRepository.countUnreadMessage(chatRoom._id);
+
+      serializedChatRooms.push(new ChatRoomDto(chatRoom));
+    }
+
+    return serializedChatRooms;
   }
 
   private createUserIdAndLecturerId(
