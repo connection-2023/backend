@@ -241,7 +241,7 @@ export class PaymentsService implements OnModuleInit {
       lecture.reservationDeadline,
     );
 
-    const currentDate = this.getCurrentDate();
+    const currentDate = new Date();
 
     //현재 신청 시간이 환불 가능한 시간(예약 마감일)보다 지났을때
     if (currentDate.getTime() > refundableDate.getTime()) {
@@ -1098,7 +1098,7 @@ export class PaymentsService implements OnModuleInit {
     createPassPaymentDto: CreatePassPaymentDto,
     pass: LecturePass,
   ): Promise<void> {
-    const currentDate = this.getCurrentDate();
+    const currentDate = new Date();
     currentDate.setDate(currentDate.getDate() + 10);
 
     const refundableDate = new Date(currentDate);
@@ -1204,7 +1204,7 @@ export class PaymentsService implements OnModuleInit {
     lectureId: number,
     lectureSchedule: ILectureSchedule,
   ) {
-    const currentDate = this.getCurrentDate();
+    const currentDate = new Date();
 
     const selectedPass: ISelectedUserPass =
       await this.paymentsRepository.getUserPass(userId, passId);
@@ -1512,7 +1512,7 @@ export class PaymentsService implements OnModuleInit {
   private async calculateLectureRefundPrice(
     payment: Payment,
   ): Promise<ICalculatedLectureRefundResult> {
-    const currentDate = this.getCurrentDate();
+    const currentDate = new Date();
     const elapsedMilliseconds =
       currentDate.getTime() - payment.updatedAt.getTime();
 
@@ -1567,11 +1567,6 @@ export class PaymentsService implements OnModuleInit {
         );
       }
     }
-  }
-
-  private getCurrentDate(): Date {
-    const date = new Date();
-    return new Date(date.getTime() + 9 * this.oneHour);
   }
 
   private async refundTossPaymentApiServer(
