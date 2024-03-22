@@ -45,4 +45,11 @@ export class ChatsRepository {
       )
       .exec();
   }
+
+  async countTotalUnreadMessage(receiver): Promise<number> {
+    return await this.chatsModel.countDocuments({
+      ...receiver,
+      readedAt: null,
+    });
+  }
 }

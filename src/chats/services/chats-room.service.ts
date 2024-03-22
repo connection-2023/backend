@@ -66,26 +66,35 @@ export class ChatRoomService {
 
   async getMyChatRoom(authorizedData: ValidateResult) {
     const where = {};
+    const receiver = {};
+
     if (authorizedData.user) {
       where['$match'] = { userId: authorizedData.user.id, deletedAt: null };
+
+      receiver['receiver.userId'] = authorizedData.user.id;
     } else {
       where['$match'] = {
         lecturerId: authorizedData.lecturer.id,
         deletedAt: null,
       };
+
+      receiver['receiver.lecturerId'] = authorizedData.lecturer.id;
     }
 
     const chatRooms = await this.chatRoomRepository.getMyChatRooms(where);
 
     if (!chatRooms[0]) {
-      throw new NotFoundException(`chat room not found`);
+      throw new NotFoundException(`Chat room was not found`);
     }
 
     const serializedChatRooms = [];
 
     for (const chatRoom of chatRooms) {
       chatRoom['unreadCount'] =
-        await this.chatRoomRepository.countUnreadMessage(chatRoom._id);
+        await this.chatRoomRepository.countUnreadMessage(
+          chatRoom._id,
+          receiver,
+        );
 
       serializedChatRooms.push(new ChatRoomDto(chatRoom));
     }

@@ -1,19 +1,15 @@
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatsService } from './../services/chats.service';
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
-import { AccessTokenGuard } from '@src/common/guards/access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateChatsDto } from '../dtos/create-chats.dto';
@@ -25,8 +21,7 @@ import { ApiGetChatsWithChatRoomId } from '../swagger-decorators/get-chat-with-c
 import { ApiUpdateUnreadMessage } from '../swagger-decorators/update-unread-message.decorator';
 import { GetPageTokenQueryDto } from '../dtos/get-page-token.query.dto';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
-import { plainToInstance } from 'class-transformer';
-import { ChatsDto } from '@src/common/dtos/chats.dto';
+import { ApiChats } from './swagger/chats.swagger';
 
 @ApiTags('채팅')
 // @UseInterceptors(MongooseClassSerializerInterceptor(Chats))
@@ -60,5 +55,15 @@ export class ChatsController {
     @Param('chatRoomId', ParseObjectIdPipe) chatRoomId: mongoose.Types.ObjectId,
   ) {
     return await this.chatsService.updateUnreadMessage(chatRoomId);
+  }
+
+  @ApiChats.CountTotalUnreadMessage({ summary: '안읽은 채팅 전체 수 조회' })
+  @SetResponseKey('totalUnreadCount')
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Get('total-unread-count')
+  async countTotalUnreadMessage(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.chatsService.countTotalUnreadMessage(authorizedData);
   }
 }

@@ -84,6 +84,22 @@ export class ChatsService {
       .emit('updatedUnreadMessage', 'all messages are readed');
   }
 
+  async countTotalUnreadMessage(authorizedData: ValidateResult) {
+    const receiver = {};
+
+    if (authorizedData.user) {
+      receiver['receiver.userId'] = authorizedData.user.id;
+    } else {
+      receiver['receiver.lecturerId'] = authorizedData.lecturer.id;
+    }
+
+    const totalUnreadCount = await this.chatsRepository.countTotalUnreadMessage(
+      receiver,
+    );
+
+    return totalUnreadCount;
+  }
+
   private createSenderAndReceiver(
     authorizedData: ValidateResult,
     targetId: number,
