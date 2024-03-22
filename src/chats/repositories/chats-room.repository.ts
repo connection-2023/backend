@@ -79,7 +79,7 @@ export class ChatRoomRepository {
 
   async countUnreadMessage(
     chattingRoomId: mongoose.Types.ObjectId,
-    receiver: SenderAndReceiver,
+    receiver,
   ): Promise<number> {
     return await this.chatsModel.countDocuments({
       chattingRoomId,
