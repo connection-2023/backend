@@ -183,7 +183,7 @@ export class PaymentsRepository {
     try {
       return await this.prismaService.regularLectureSchedule.findFirst({
         where: {
-          id: lectureScheduleId,
+          regularLectureStatusId: lectureScheduleId,
         },
         orderBy: { id: 'asc' },
       });
