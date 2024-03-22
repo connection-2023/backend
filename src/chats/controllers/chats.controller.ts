@@ -21,6 +21,7 @@ import { ApiGetChatsWithChatRoomId } from '../swagger-decorators/get-chat-with-c
 import { ApiUpdateUnreadMessage } from '../swagger-decorators/update-unread-message.decorator';
 import { GetPageTokenQueryDto } from '../dtos/get-page-token.query.dto';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
+import { ApiChats } from './swagger/chats.swagger';
 
 @ApiTags('채팅')
 // @UseInterceptors(MongooseClassSerializerInterceptor(Chats))
@@ -56,9 +57,8 @@ export class ChatsController {
     return await this.chatsService.updateUnreadMessage(chatRoomId);
   }
 
-  @ApiOperation({ summary: '전체 안읽은 개수 조회' })
+  @ApiChats.CountTotalUnreadMessage({ summary: '안읽은 채팅 전체 수 조회' })
   @SetResponseKey('totalUnreadCount')
-  @ApiBearerAuth()
   @UseGuards(AllowUserAndLecturerGuard)
   @Get('total-unread-count')
   async countTotalUnreadMessage(
