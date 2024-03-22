@@ -4,7 +4,7 @@ import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import mongoose from 'mongoose';
 
 @Exclude()
-class SenderAndReceiver {
+export class SenderAndReceiver {
   @Expose()
   @ApiProperty({ description: '강사 id', type: Number })
   lecturerId?: number;
