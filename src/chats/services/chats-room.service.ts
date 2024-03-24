@@ -7,6 +7,7 @@ import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 import { ChatsDto } from '@src/common/dtos/chats.dto';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class ChatRoomService {
@@ -105,6 +106,22 @@ export class ChatRoomService {
     }
 
     return serializedChatRooms;
+  }
+
+  async leaveChatRoom(
+    authorizedData: ValidateResult,
+    chattingRoomId: mongoose.Types.ObjectId,
+  ) {
+    const updateData = authorizedData.user
+      ? { $set: { 'user.participation': false } }
+      : { $set: { 'lecturer.participation': false } };
+
+    const updatedChatRoom = await this.chatRoomRepository.leaveChatRoom(
+      chattingRoomId,
+      updateData,
+    );
+
+    return new ChatRoomDto(updatedChatRoom);
   }
 
   private createUserIdAndLecturerId(

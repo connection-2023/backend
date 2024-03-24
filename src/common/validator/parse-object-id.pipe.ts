@@ -1,5 +1,6 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
 import mongoose from 'mongoose';
+import { ApiParam } from '@nestjs/swagger';
 
 @Injectable()
 export class ParseObjectIdPipe

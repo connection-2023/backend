@@ -42,7 +42,10 @@ export class ChatRoomRepository {
   }
 
   async getChatRoom(userId: number, lecturerId: number): Promise<ChatRoom> {
-    return await this.chatRoomModel.findOne({ userId, lecturerId });
+    return await this.chatRoomModel.findOne({
+      'user.id': userId,
+      'lecturer.id': lecturerId,
+    });
   }
 
   async getChatRoomWithChatRoomId(
@@ -99,5 +102,15 @@ export class ChatRoomRepository {
       ...receiver,
       readedAt: null,
     });
+  }
+
+  async leaveChatRoom(chattingRoomId: mongoose.Types.ObjectId, updateData) {
+    return await this.chatRoomModel.findByIdAndUpdate(
+      chattingRoomId,
+      updateData,
+      {
+        new: true,
+      },
+    );
   }
 }
