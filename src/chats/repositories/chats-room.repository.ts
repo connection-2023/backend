@@ -104,7 +104,10 @@ export class ChatRoomRepository {
     });
   }
 
-  async leaveChatRoom(chattingRoomId: mongoose.Types.ObjectId, updateData) {
+  async leaveChatRoom(
+    chattingRoomId: mongoose.Types.ObjectId,
+    updateData,
+  ): Promise<ChatRoom> {
     return await this.chatRoomModel.findByIdAndUpdate(
       chattingRoomId,
       updateData,
