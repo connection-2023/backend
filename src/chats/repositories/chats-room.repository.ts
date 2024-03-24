@@ -68,16 +68,16 @@ export class ChatRoomRepository {
       {
         $group: {
           _id: '$_id',
-          userId: { $last: '$userId' },
-          lecturerId: { $last: '$lecturerId' },
+          user: { $last: '$user' },
+          lecturer: { $last: '$lecturer' },
           roomId: { $last: '$roomId' },
           lastChat: { $last: '$lastChat' },
         },
       },
       {
         $project: {
-          userId: 1,
-          lecturerId: 1,
+          user: 1,
+          lecturer: 1,
           roomId: 1,
           lastChat: 1,
         },

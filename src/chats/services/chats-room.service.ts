@@ -69,12 +69,17 @@ export class ChatRoomService {
     const receiver = {};
 
     if (authorizedData.user) {
-      where['$match'] = { userId: authorizedData.user.id, deletedAt: null };
+      where['$match'] = {
+        'user.id': authorizedData.user.id,
+        'user.participation': true,
+        deletedAt: null,
+      };
 
       receiver['receiver.userId'] = authorizedData.user.id;
     } else {
       where['$match'] = {
-        lecturerId: authorizedData.lecturer.id,
+        'lecturer.id': authorizedData.lecturer.id,
+        'lecturer.participation': true,
         deletedAt: null,
       };
 
