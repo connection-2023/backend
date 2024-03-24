@@ -17,8 +17,8 @@ export class ChatRoomService {
 
   async getSocketRoom(authorizedData: ValidateResult) {
     const where = authorizedData.user
-      ? { userId: authorizedData.user.id }
-      : { lecturerId: authorizedData.lecturer.id };
+      ? { 'user.id': authorizedData.user.id }
+      : { 'lecturer.id': authorizedData.lecturer.id };
 
     const rooms = await this.chatRoomRepository.getSocketRoom(where);
 
