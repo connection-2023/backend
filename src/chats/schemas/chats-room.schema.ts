@@ -8,15 +8,25 @@ const options: SchemaOptions = {
 
 @Schema(options)
 export class ChatRoom extends Document {
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    type: {
+      id: { type: Number },
+      participation: { type: Boolean, default: true },
+    },
+  })
   @IsNotEmpty()
-  @IsNumber()
-  userId: number;
+  user: { id: number; participation: boolean };
 
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    type: {
+      id: { type: Number },
+      participation: { type: Boolean, default: true },
+    },
+  })
   @IsNotEmpty()
-  @IsNumber()
-  lecturerId: number;
+  lecturer: { id: number; participation: boolean };
 
   @Prop({ required: true, unique: true })
   @IsNotEmpty()
@@ -28,5 +38,4 @@ export class ChatRoom extends Document {
 }
 
 export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);
-
-ChatRoomSchema.index({ userId: 1, lecturerId: 1 }, { unique: true });
+ChatRoomSchema.index({ 'user.id': 1, 'lecturer.id': 1 }, { unique: true });
