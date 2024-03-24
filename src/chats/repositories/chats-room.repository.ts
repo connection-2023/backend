@@ -25,7 +25,11 @@ export class ChatRoomRepository {
     lecturerId: number,
     roomId: uuid,
   ): Promise<ChatRoom> {
-    return await this.chatRoomModel.create({ userId, lecturerId, roomId });
+    return await this.chatRoomModel.create({
+      user: { id: userId },
+      lecturer: { id: lecturerId },
+      roomId,
+    });
   }
 
   async getChatRoom(userId: number, lecturerId: number): Promise<ChatRoom> {
