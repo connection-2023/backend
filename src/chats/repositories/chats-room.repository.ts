@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Chats } from '../schemas/chats.schema';
@@ -25,11 +25,20 @@ export class ChatRoomRepository {
     lecturerId: number,
     roomId: uuid,
   ): Promise<ChatRoom> {
-    return await this.chatRoomModel.create({
-      user: { id: userId },
-      lecturer: { id: lecturerId },
-      roomId,
-    });
+    try {
+      const createdChatRoom = await this.chatRoomModel.create({
+        user: { id: userId, participation: true },
+        lecturer: { id: lecturerId, participation: true },
+        roomId: roomId,
+      });
+      return createdChatRoom;
+    } catch (error) {
+      if (error.code === 11000 || error.code === 11001) {
+        throw new ConflictException(
+          'Duplicate key error. Please provide unique values.',
+        );
+      }
+    }
   }
 
   async getChatRoom(userId: number, lecturerId: number): Promise<ChatRoom> {
