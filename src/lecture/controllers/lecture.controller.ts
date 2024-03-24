@@ -33,7 +33,6 @@ import { ApiReadManyDailySchedules } from '../swagger-decorators/read-many-daily
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
 import { ApiReadOneLectureDetail } from '../swagger-decorators/read-one-lectire-detail.decorator';
 import { ApiReadOneLecturePreview } from '../swagger-decorators/read-one-lecture-preview.decorator';
-import { ApiGetScheduleLearnerList } from '../swagger-decorators/get-schedule-learner-list.decorator';
 import { LectureLearnerInfoDto } from '../dtos/lecture-learner-info.dto';
 import { ApiGetEnrollLectureSchedules } from '../swagger-decorators/get-enroll-lecture-schedule.decorator';
 import { EnrollScheduleDetailQueryDto } from '../dtos/get-enroll-schedule-detail-query.dto';
@@ -117,20 +116,6 @@ export class LectureController {
     @Param('lectureId', ParseIntPipe) lectureId: number,
   ) {
     return await this.lectureService.readManyLectureSchedule(lectureId);
-  }
-
-  @ApiGetScheduleLearnerList()
-  @SetResponseKey('scheduleLearnerList')
-  @UseGuards(LecturerAccessTokenGuard)
-  @Get('schedules/:scheduleId/learners')
-  async readLectureScheduleLearnerList(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Param('scheduleId', ParseIntPipe) scheduleId: number,
-  ): Promise<LectureLearnerInfoDto[]> {
-    return await this.lectureService.getLectureScheduleLearnerList(
-      authorizedData.lecturer.id,
-      scheduleId,
-    );
   }
 
   @ApiReadLectureReservationWithUser()
@@ -247,6 +232,25 @@ export class LectureController {
     return await this.lectureService.getLastRegistSchedule(
       authorizedData,
       targetId,
+    );
+  }
+
+  @ApiLecture.GetLectureScheduleLearnersInfo({
+    summary: '스케쥴ID를 통한 수강생 목록 조회',
+    description: '**scheduleId= 원데이-scheduleId / 정기-regularStatusId**',
+  })
+  @SetResponseKey('scheduleLearnerList')
+  @UseGuards(LecturerAccessTokenGuard)
+  @Get(':lectureId/schedules/:scheduleId/learners')
+  async getLectureScheduleLearnersInfo(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('lectureId', ParseIntPipe) lectureId: number,
+    @Param('scheduleId', ParseIntPipe) scheduleId: number,
+  ): Promise<LectureLearnerInfoDto[]> {
+    return await this.lectureService.getLectureScheduleLearnersInfo(
+      authorizedData.lecturer.id,
+      lectureId,
+      scheduleId,
     );
   }
 }

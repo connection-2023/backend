@@ -7,6 +7,7 @@ import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto'
 import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dto';
 import { CombinedScheduleDto } from '../../dtos/combined-schedule.dto';
 import { EnrolledLectureScheduleDto } from '@src/lecture/dtos/last-regist-schedule.dto';
+import { LectureLearnerInfoDto } from '@src/lecture/dtos/lecture-learner-info.dto';
 
 export const ApiLecture: ApiOperator<keyof LectureController> = {
   GetLectureSchedule: (
@@ -58,12 +59,7 @@ export const ApiLecture: ApiOperator<keyof LectureController> = {
   ): PropertyDecorator {
     throw new Error('Function not implemented.');
   },
-  ReadLectureScheduleLearnerList: function (
-    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
-      Partial<OperationObject>,
-  ): PropertyDecorator {
-    throw new Error('Function not implemented.');
-  },
+
   ReadLectureReservation: function (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
@@ -106,6 +102,7 @@ export const ApiLecture: ApiOperator<keyof LectureController> = {
   ): PropertyDecorator {
     throw new Error('Function not implemented.');
   },
+
   GetLastRegistSchedule: function (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
@@ -117,6 +114,22 @@ export const ApiLecture: ApiOperator<keyof LectureController> = {
         HttpStatus.OK,
         'lastRegistSchedule',
         EnrolledLectureScheduleDto,
+      ),
+    );
+  },
+
+  GetLectureScheduleLearnersInfo: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'scheduleLearnerList',
+        LectureLearnerInfoDto,
+        { isArray: true },
       ),
     );
   },
