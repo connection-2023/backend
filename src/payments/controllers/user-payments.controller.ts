@@ -24,6 +24,8 @@ import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-rece
 import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorator';
 import { DetailPaymentInfoDto } from '../dtos/response/detail-payment.dto';
 import { plainToInstance } from 'class-transformer';
+import { VirtualAccountDepositDetailsDto } from '../dtos/response/virtual-account-deposit-details.dto';
+import { ApiUserPayments } from './swagger/user-payments.swagger';
 
 @ApiTags('유저-결제')
 @Controller('user-payments')
@@ -69,14 +71,17 @@ export class UserPaymentsController {
     );
   }
 
-  @ApiPaymentVirtualAccount()
+  @ApiUserPayments.GetVirtualAccountDepositDetails({
+    summary: '가상 계좌 입금 정보 조회',
+  })
+  @SetResponseKey('virtualAccountDepositDetails')
   @Get('/:paymentId/virtual-account')
   @UseGuards(UserAccessTokenGuard)
-  async getPaymentVirtualAccount(
+  async getVirtualAccountDepositDetails(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('paymentId', ParseIntPipe) paymentId: number,
-  ) {
-    return await this.userPaymentsService.getPaymentVirtualAccount(
+  ): Promise<VirtualAccountDepositDetailsDto> {
+    return await this.userPaymentsService.getVirtualAccountDepositDetails(
       authorizedData.user.id,
       paymentId,
     );

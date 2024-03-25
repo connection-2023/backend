@@ -3,7 +3,9 @@ import { RefundPaymentInfo } from '@prisma/client';
 import { BaseReturnDto } from '@src/common/dtos/base-return.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { RefundStatusDto } from '@src/payments/dtos/refund-status.dto';
+import { Exclude, Expose, Type } from 'class-transformer';
 
+@Exclude()
 export class RefundPaymentInfoDto
   extends BaseReturnDto
   implements RefundPaymentInfo
@@ -12,12 +14,14 @@ export class RefundPaymentInfoDto
     type: Number,
     description: '환불 정보 Id',
   })
+  @Expose()
   id: number;
 
   @ApiProperty({
     type: RefundStatusDto,
     description: '환불 상태',
   })
+  @Expose()
   refundStatus: RefundStatusDto;
 
   @ApiProperty({
@@ -25,38 +29,31 @@ export class RefundPaymentInfoDto
     description: '환불 금액',
     nullable: true,
   })
+  @Expose()
   cancelAmount: number;
 
   @ApiProperty({
     description: '환불 사유',
   })
+  @Expose()
   cancelReason: string;
-
-  createdAt: Date;
 
   @ApiProperty({
     type: UserBankAccountDto,
     description: '환불 받을 계좌 정보',
     nullable: true,
   })
+  @Expose()
+  @Type(() => UserBankAccountDto)
   refundUserBankAccount: UserBankAccountDto;
 
+  createdAt: Date;
   paymentId: number;
   refundStatusId: number;
   refundUserBankAccountId: number;
 
   constructor(refundPaymentInfo: Partial<RefundPaymentInfoDto>) {
     super();
-
-    this.id = refundPaymentInfo.id;
-    this.refundStatus = refundPaymentInfo.refundStatus;
-    this.cancelAmount = refundPaymentInfo.cancelAmount;
-    this.cancelReason = refundPaymentInfo.cancelReason;
-
-    this.refundUserBankAccount = refundPaymentInfo.refundUserBankAccount
-      ? new UserBankAccountDto(refundPaymentInfo.refundUserBankAccount)
-      : null;
-
-    Object.assign(this);
+    Object.assign(this, refundPaymentInfo);
   }
 }

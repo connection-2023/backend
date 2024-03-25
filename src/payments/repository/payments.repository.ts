@@ -705,7 +705,7 @@ export class PaymentsRepository {
     }
   }
 
-  async getPaymentVirtualAccount(userId: number, paymentId: number) {
+  async getVirtualAccountPayment(userId: number, paymentId: number) {
     try {
       return await this.prismaService.payment.findFirst({
         where: {
@@ -713,22 +713,8 @@ export class PaymentsRepository {
           userId,
           paymentMethodId: PaymentMethods.가상계좌,
         },
-        select: {
-          originalPrice: true,
-          finalPrice: true,
-          virtualAccountPaymentInfo: {
-            select: {
-              accountNumber: true,
-              customerName: true,
-              dueDate: true,
-              bank: {
-                select: {
-                  code: true,
-                  name: true,
-                },
-              },
-            },
-          },
+        include: {
+          virtualAccountPaymentInfo: true,
         },
       });
     } catch (error) {
@@ -738,6 +724,7 @@ export class PaymentsRepository {
       );
     }
   }
+
   async getAvailablePass(passId: number): Promise<LecturePass> {
     try {
       return this.prismaService.lecturePass.findUnique({
