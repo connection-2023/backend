@@ -36,6 +36,8 @@ export class ChatRoomService {
       targetId,
     );
 
+    console.log(userId, lecturerId);
+
     const chatRoom = await this.chatRoomRepository.createChatRoom(
       userId,
       lecturerId,

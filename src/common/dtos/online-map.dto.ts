@@ -12,6 +12,7 @@ export class OnlineMapDto {
   lecturerId?: number;
   socketId?: string;
   constructor(onlineMap: OnlineMapDto) {
-    Object.assign(this, onlineMap['_doc']);
+    this.lastLogin = onlineMap.lastLogin;
+    Object.assign(this);
   }
 }
