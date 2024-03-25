@@ -14,6 +14,7 @@ import { IPaginationParams } from '@src/common/interface/common-interface';
 import { PaymentHistoryTypes } from '../constants/enum';
 import { DetailPaymentInfoDto } from '../dtos/response/detail-payment.dto';
 import { plainToInstance } from 'class-transformer';
+import { VirtualAccountDepositDetailsDto } from '../dtos/response/virtual-account-deposit-details.dto';
 
 @Injectable()
 export class UserPaymentsService implements OnModuleInit {
@@ -78,10 +79,22 @@ export class UserPaymentsService implements OnModuleInit {
     };
   }
 
-  async getPaymentVirtualAccount(userId: number, paymentId: number) {
-    return await this.paymentsRepository.getPaymentVirtualAccount(
-      userId,
-      paymentId,
+  async getVirtualAccountDepositDetails(
+    userId: number,
+    paymentId: number,
+  ): Promise<VirtualAccountDepositDetailsDto> {
+    const selectedVirtualPaymentInfo =
+      await this.paymentsRepository.getVirtualAccountPayment(userId, paymentId);
+    if (!selectedVirtualPaymentInfo) {
+      throw new NotFoundException(
+        `결제 정보가 존재하지 않습니다.`,
+        `PaymentInfoNotFound`,
+      );
+    }
+
+    return plainToInstance(
+      VirtualAccountDepositDetailsDto,
+      selectedVirtualPaymentInfo,
     );
   }
 
@@ -89,18 +102,17 @@ export class UserPaymentsService implements OnModuleInit {
     userId: number,
     dto: CreateBankAccountDto,
   ): Promise<UserBankAccountDto> {
-    return new UserBankAccountDto(
-      await this.paymentsRepository.createUserBankAccount({ userId, ...dto }),
-    );
+    const selectedBankAccount =
+      await this.paymentsRepository.createUserBankAccount({ userId, ...dto });
+
+    return plainToInstance(UserBankAccountDto, selectedBankAccount);
   }
 
   async getUserRecentBankAccount(userId: number): Promise<UserBankAccountDto> {
     const selectedBankAccount =
       await this.paymentsRepository.getUserRecentBankAccount(userId);
 
-    return selectedBankAccount
-      ? new UserBankAccountDto(selectedBankAccount)
-      : null;
+    return plainToInstance(UserBankAccountDto, selectedBankAccount);
   }
 
   private getPaginationParams(
