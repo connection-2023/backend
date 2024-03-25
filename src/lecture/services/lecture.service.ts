@@ -1077,16 +1077,17 @@ export class LectureService {
     );
   }
 
-  async getLectureScheduleLearnerList(
+  async getLectureScheduleLearnersInfo(
     lecturerId: number,
+    lectureId: number,
     scheduleId: number,
   ): Promise<LectureLearnerInfoDto[]> {
-    const learnerList: Reservation[] =
-      await this.lectureRepository.getLectureScheduleLearnerList(
-        lecturerId,
-        scheduleId,
-      );
-    if (!learnerList[0]) {
+    const learnerList: Reservation[] = await this.getTargetScheduleLearners(
+      lecturerId,
+      lectureId,
+      scheduleId,
+    );
+    if (!learnerList.length) {
       return null;
     }
 
@@ -1100,6 +1101,48 @@ export class LectureService {
     );
 
     return lectureLearnerInfoList;
+  }
+
+  private async getTargetScheduleLearners(
+    lecturerId: number,
+    lectureId: number,
+    scheduleId: number,
+  ): Promise<Reservation[]> {
+    const selectedLecture = await this.validateLectureOwnership(
+      lecturerId,
+      lectureId,
+    );
+
+    return this.lectureRepository.getLectureScheduleLearnerList(
+      lecturerId,
+      selectedLecture.lectureMethodId,
+      scheduleId,
+    );
+  }
+
+  private async validateLectureOwnership(
+    lecturerId: number,
+    lectureId: number,
+  ) {
+    const selectedLecture = await this.lectureRepository.getLectureById(
+      lectureId,
+    );
+
+    if (!selectedLecture) {
+      throw new NotFoundException(
+        '존재하지 않는 강의입니다.',
+        'NotFoundLecture',
+      );
+    }
+
+    if (selectedLecture.lecturerId !== lecturerId) {
+      throw new BadRequestException(
+        '해당 강의의 접근 권한이 없습니다.',
+        'NotLectureAuthor',
+      );
+    }
+
+    return selectedLecture;
   }
 
   async getEnrollLectureList(
