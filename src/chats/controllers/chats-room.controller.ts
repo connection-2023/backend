@@ -1,4 +1,4 @@
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ChatRoomService } from './../services/chats-room.service';
 import {
   Body,
@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
   UseInterceptors,
@@ -19,6 +20,9 @@ import { ApiCreateChatRoom } from '../swagger-decorators/create-chat-room.decora
 import { ApiGetChatRoom } from '../swagger-decorators/get-chat-room.decorator';
 import { ApiGetMyChatRoom } from '../swagger-decorators/get-my-chat-room.decorator';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
+import { ParseObjectIdPipe } from '@src/common/validator/parse-object-id.pipe';
+import mongoose from 'mongoose';
+import { ApiChatRoom } from './swagger/chats.swagger';
 
 @Controller('chat-rooms/:id')
 @ApiTags('채팅방')
@@ -63,5 +67,16 @@ export class ChatRoomController {
   @Get()
   async getMyChatRooms(@GetAuthorizedUser() authorizedData: ValidateResult) {
     return await this.chatRoomService.getMyChatRoom(authorizedData);
+  }
+
+  @SetResponseKey('updatedChatRoom')
+  @ApiChatRoom.LeaveChatRoom({ summary: '채팅방 나가기' })
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Patch()
+  async leaveChatRoom(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Param('id', ParseObjectIdPipe) id: mongoose.Types.ObjectId,
+  ) {
+    return await this.chatRoomService.leaveChatRoom(authorizedData, id);
   }
 }

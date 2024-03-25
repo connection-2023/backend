@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Chats } from '../schemas/chats.schema';
@@ -25,11 +25,27 @@ export class ChatRoomRepository {
     lecturerId: number,
     roomId: uuid,
   ): Promise<ChatRoom> {
-    return await this.chatRoomModel.create({ userId, lecturerId, roomId });
+    try {
+      const createdChatRoom = await this.chatRoomModel.create({
+        user: { id: userId, participation: true },
+        lecturer: { id: lecturerId, participation: true },
+        roomId: roomId,
+      });
+      return createdChatRoom;
+    } catch (error) {
+      if (error.code === 11000 || error.code === 11001) {
+        throw new ConflictException(
+          'Duplicate key error. Please provide unique values.',
+        );
+      }
+    }
   }
 
   async getChatRoom(userId: number, lecturerId: number): Promise<ChatRoom> {
-    return await this.chatRoomModel.findOne({ userId, lecturerId });
+    return await this.chatRoomModel.findOne({
+      'user.id': userId,
+      'lecturer.id': lecturerId,
+    });
   }
 
   async getChatRoomWithChatRoomId(
@@ -55,16 +71,16 @@ export class ChatRoomRepository {
       {
         $group: {
           _id: '$_id',
-          userId: { $last: '$userId' },
-          lecturerId: { $last: '$lecturerId' },
+          user: { $last: '$user' },
+          lecturer: { $last: '$lecturer' },
           roomId: { $last: '$roomId' },
           lastChat: { $last: '$lastChat' },
         },
       },
       {
         $project: {
-          userId: 1,
-          lecturerId: 1,
+          user: 1,
+          lecturer: 1,
           roomId: 1,
           lastChat: 1,
         },
@@ -86,5 +102,18 @@ export class ChatRoomRepository {
       ...receiver,
       readedAt: null,
     });
+  }
+
+  async leaveChatRoom(
+    chattingRoomId: mongoose.Types.ObjectId,
+    updateData,
+  ): Promise<ChatRoom> {
+    return await this.chatRoomModel.findByIdAndUpdate(
+      chattingRoomId,
+      updateData,
+      {
+        new: true,
+      },
+    );
   }
 }

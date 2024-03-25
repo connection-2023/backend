@@ -52,4 +52,11 @@ export class ChatsRepository {
       readedAt: null,
     });
   }
+
+  async participateChatRoom(
+    chattingRoomId: mongoose.Types.ObjectId,
+    updateData,
+  ): Promise<void> {
+    await this.chatRoomModel.findByIdAndUpdate(chattingRoomId, updateData);
+  }
 }

@@ -42,6 +42,16 @@ export class ChatsService {
       roomObjectId,
     );
 
+    const userParticipation = chatRoom.user.participation;
+    const lecturerParticipation = chatRoom.lecturer.participation;
+
+    if (!userParticipation || !lecturerParticipation) {
+      const updateData = {
+        $set: { 'user.participation': true, 'lecturer.participation': true },
+      };
+      await this.chatsRepository.participateChatRoom(roomObjectId, updateData);
+    }
+
     const serializedChat = new ChatsDto(chat);
 
     this.eventsGateway.server

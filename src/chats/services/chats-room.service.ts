@@ -7,6 +7,7 @@ import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 import { ChatsDto } from '@src/common/dtos/chats.dto';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class ChatRoomService {
@@ -17,8 +18,8 @@ export class ChatRoomService {
 
   async getSocketRoom(authorizedData: ValidateResult) {
     const where = authorizedData.user
-      ? { userId: authorizedData.user.id }
-      : { lecturerId: authorizedData.lecturer.id };
+      ? { 'user.id': authorizedData.user.id }
+      : { 'lecturer.id': authorizedData.lecturer.id };
 
     const rooms = await this.chatRoomRepository.getSocketRoom(where);
 
@@ -69,12 +70,17 @@ export class ChatRoomService {
     const receiver = {};
 
     if (authorizedData.user) {
-      where['$match'] = { userId: authorizedData.user.id, deletedAt: null };
+      where['$match'] = {
+        'user.id': authorizedData.user.id,
+        'user.participation': true,
+        deletedAt: null,
+      };
 
       receiver['receiver.userId'] = authorizedData.user.id;
     } else {
       where['$match'] = {
-        lecturerId: authorizedData.lecturer.id,
+        'lecturer.id': authorizedData.lecturer.id,
+        'lecturer.participation': true,
         deletedAt: null,
       };
 
@@ -100,6 +106,22 @@ export class ChatRoomService {
     }
 
     return serializedChatRooms;
+  }
+
+  async leaveChatRoom(
+    authorizedData: ValidateResult,
+    chattingRoomId: mongoose.Types.ObjectId,
+  ) {
+    const updateData = authorizedData.user
+      ? { $set: { 'user.participation': false } }
+      : { $set: { 'lecturer.participation': false } };
+
+    const updatedChatRoom = await this.chatRoomRepository.leaveChatRoom(
+      chattingRoomId,
+      updateData,
+    );
+
+    return new ChatRoomDto(updatedChatRoom);
   }
 
   private createUserIdAndLecturerId(
