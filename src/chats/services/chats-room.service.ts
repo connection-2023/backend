@@ -7,13 +7,19 @@ import { CreateChatRoomDto } from '../dtos/create-chat-room.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatRoomDto } from '@src/common/dtos/chats-room.dto';
 import { ChatsDto } from '@src/common/dtos/chats.dto';
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Chats } from '../schemas/chats.schema';
+import { ChatRoom } from '../schemas/chats-room.schema';
 
 @Injectable()
 export class ChatRoomService {
   constructor(
     private readonly chatRoomRepository: ChatRoomRepository,
     private readonly chatsRepository: ChatsRepository,
+    @InjectModel(Chats.name) private readonly chatsModel: Model<Chats>,
+    @InjectModel(ChatRoom.name)
+    private readonly chatRoomModel: Model<ChatRoom>,
   ) {}
 
   async getSocketRoom(authorizedData: ValidateResult) {
@@ -122,6 +128,11 @@ export class ChatRoomService {
     );
 
     return new ChatRoomDto(updatedChatRoom);
+  }
+
+  async deleteChatRoom(chattingRoomId: mongoose.Types.ObjectId) {
+    await this.chatsModel.deleteMany({ chattingRoomId });
+    await this.chatRoomModel.findByIdAndDelete(chattingRoomId);
   }
 
   private createUserIdAndLecturerId(
