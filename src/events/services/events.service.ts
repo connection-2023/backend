@@ -1,5 +1,5 @@
 import { EventsRepository } from './../repositories/events.repository';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { OnlineMapDto } from '@src/common/dtos/online-map.dto';
 import { GetOnlineMapWithTargetQueryDto } from '../dtos/request/get-online-map-with-target.query.dto';
 
@@ -9,6 +9,12 @@ export class EventsService {
 
   async getOnlineMapWithTargetId(target: GetOnlineMapWithTargetQueryDto) {
     const online = await this.eventsRepository.getOnlineMapWithTargetId(target);
+
+    if (!online) {
+      throw new NotFoundException(
+        `Not found for user id: ${target.userId}, lecturer id: ${target.lecturerId}`,
+      );
+    }
 
     return new OnlineMapDto(online);
   }

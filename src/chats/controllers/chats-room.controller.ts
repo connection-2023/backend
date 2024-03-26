@@ -3,6 +3,7 @@ import { ChatRoomService } from './../services/chats-room.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -78,5 +79,12 @@ export class ChatRoomController {
     @Param('id', ParseObjectIdPipe) id: mongoose.Types.ObjectId,
   ) {
     return await this.chatRoomService.leaveChatRoom(authorizedData, id);
+  }
+
+  @Delete()
+  async deleteChatRoom(
+    @Param('id', ParseObjectIdPipe) id: mongoose.Types.ObjectId,
+  ) {
+    await this.chatRoomService.deleteChatRoom(id);
   }
 }
