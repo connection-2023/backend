@@ -92,7 +92,7 @@ export class DetailEnrollScheduleDto {
         )
       : undefined;
 
-    const currentTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+    const currentTime = new Date();
 
     this.isCompleted = true;
 
