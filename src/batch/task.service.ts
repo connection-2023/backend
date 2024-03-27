@@ -8,7 +8,7 @@ export class TasksService {
 
   constructor(private readonly prismaService: PrismaService) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_HOUR)
   async updateActiveLecture() {
     const closedLecture = await this.prismaService.lecture.updateMany({
       where: {
