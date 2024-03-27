@@ -1,3 +1,4 @@
+import { EventsRepository } from './../../events/repositories/events.repository';
 import { ChatsRepository } from './../repositories/chats.repository';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
@@ -11,6 +12,7 @@ import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chats } from '../schemas/chats.schema';
 import { ChatRoom } from '../schemas/chats-room.schema';
+import { EventsGateway } from '@src/events/events.gateway';
 
 @Injectable()
 export class ChatRoomService {
@@ -20,6 +22,8 @@ export class ChatRoomService {
     @InjectModel(Chats.name) private readonly chatsModel: Model<Chats>,
     @InjectModel(ChatRoom.name)
     private readonly chatRoomModel: Model<ChatRoom>,
+    private readonly eventsGateway: EventsGateway,
+    private readonly eventsRepository: EventsRepository,
   ) {}
 
   async getSocketRoom(authorizedData: ValidateResult) {
@@ -46,6 +50,23 @@ export class ChatRoomService {
       userId,
       lecturerId,
       roomId,
+    );
+
+    const onlineMap = await Promise.all([
+      this.eventsRepository.getOnlineMapWithTargetId({
+        userId,
+      }),
+      this.eventsRepository.getOnlineMapWithTargetId({ lecturerId }),
+    ]);
+
+    await Promise.all(
+      onlineMap.map((online) => {
+        if (!online.lastLogin) {
+          this.eventsGateway.server
+            .to(online.socketId)
+            .emit('handleNewChatRoom', chatRoom.roomId);
+        }
+      }),
     );
 
     return new ChatRoomDto(chatRoom);

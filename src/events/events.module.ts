@@ -13,7 +13,7 @@ import { EventsRepository } from './repositories/events.repository';
     ]),
   ],
   providers: [EventsGateway, EventsService, EventsRepository],
-  exports: [EventsGateway],
+  exports: [EventsGateway, EventsRepository],
   controllers: [EventsController],
 })
 export class EventsModule {}

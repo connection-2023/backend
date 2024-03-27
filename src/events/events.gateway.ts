@@ -43,7 +43,7 @@ export class EventsGateway
     console.log('login', data.authorizedData);
 
     const socketId = socket.id;
-    console.log(socketId);
+    console.log('socketId', socketId);
 
     data.rooms.forEach((room) => {
       console.log('join', room);
