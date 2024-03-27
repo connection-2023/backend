@@ -26,6 +26,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { WebhookModule } from './webhook/webhook.module';
 import { NotificationModule } from './notification/notification.module';
 import { CqrsModule } from '@nestjs/cqrs';
+import { BatchModule } from './batch/batch.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { CqrsModule } from '@nestjs/cqrs';
     EventsModule,
     WebhookModule,
     NotificationModule,
+    BatchModule,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],
