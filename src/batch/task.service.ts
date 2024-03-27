@@ -8,7 +8,7 @@ export class TasksService {
 
   constructor(private readonly prismaService: PrismaService) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_MINUTE)
   async updateActiveLecture() {
     const closedLecture = await this.prismaService.lecture.updateMany({
       where: {
@@ -25,6 +25,6 @@ export class TasksService {
       data: { isActive: false },
     });
 
-    this.logger.log('closed lecture:', closedLecture);
+    this.logger.log('closedLecture', closedLecture);
   }
 }
