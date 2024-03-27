@@ -10,6 +10,10 @@ import { ChatRoomService } from './services/chats-room.service';
 import { ChatRoomRepository } from './repositories/chats-room.repository';
 import { EventsGateway } from '@src/events/events.gateway';
 import { EventsModule } from '@src/events/events.module';
+import {
+  OnlineMap,
+  OnlineMapSchema,
+} from '@src/events/schemas/online-map.schema';
 
 @Module({
   imports: [
