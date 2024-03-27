@@ -13,20 +13,14 @@ export class TasksService {
     const closedLecture = await this.prismaService.lecture.updateMany({
       where: {
         isActive: true,
-        OR: [
-          {
-            lectureSchedule: { every: { startDateTime: { lte: new Date() } } },
-          },
-          {
-            regularLectureStatus: {
-              every: {
-                regularLectureSchedule: {
-                  every: { startDateTime: { lte: new Date() } },
-                },
-              },
+        lectureSchedule: { every: { startDateTime: { lte: new Date() } } },
+        regularLectureStatus: {
+          every: {
+            regularLectureSchedule: {
+              every: { startDateTime: { lte: new Date() } },
             },
           },
-        ],
+        },
       },
       data: { isActive: false },
     });
