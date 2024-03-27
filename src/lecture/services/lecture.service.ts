@@ -1160,7 +1160,7 @@ export class LectureService {
         {
           lectureSchedule: {
             startDateTime: {
-              gte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+              gte: currentTime,
             },
           },
         },
@@ -1169,7 +1169,7 @@ export class LectureService {
             regularLectureSchedule: {
               some: {
                 startDateTime: {
-                  gte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+                  gte: currentTime,
                 },
               },
             },
@@ -1181,7 +1181,7 @@ export class LectureService {
         {
           lectureSchedule: {
             startDateTime: {
-              lte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+              lte: currentTime,
             },
           },
         },
@@ -1190,7 +1190,7 @@ export class LectureService {
             regularLectureSchedule: {
               every: {
                 startDateTime: {
-                  lte: new Date(currentTime.getTime() + 9 * 60 * 60 * 1000),
+                  lte: currentTime,
                 },
               },
             },
