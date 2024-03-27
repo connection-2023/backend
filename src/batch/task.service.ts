@@ -1,14 +1,16 @@
 import { PrismaService } from '@src/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
-export class TaskService {
+export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
+
   constructor(private readonly prismaService: PrismaService) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async updateActiveLecture() {
-    await this.prismaService.lecture.updateMany({
+    const closedLecture = await this.prismaService.lecture.updateMany({
       where: {
         isActive: true,
         OR: [
@@ -28,5 +30,7 @@ export class TaskService {
       },
       data: { isActive: false },
     });
+
+    this.logger.log('closed lecture:', closedLecture);
   }
 }

@@ -1,9 +1,9 @@
 import { ScheduleModule } from '@nestjs/schedule';
 import { Module } from '@nestjs/common';
-import { TaskService } from './task.service';
+import { TasksService } from './task.service';
 
 @Module({
   imports: [ScheduleModule.forRoot()],
-  providers: [TaskService],
+  providers: [TasksService],
 })
 export class BatchModule {}
