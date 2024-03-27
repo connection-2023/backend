@@ -27,6 +27,7 @@ import { WebhookModule } from './webhook/webhook.module';
 import { NotificationModule } from './notification/notification.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { BatchModule } from './batch/batch.module';
+import { BullQueueModuleConfig } from './common/config/bull-queue-module.config';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { BatchModule } from './batch/batch.module';
     WebhookModule,
     NotificationModule,
     BatchModule,
+    BullQueueModuleConfig,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

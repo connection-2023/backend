@@ -67,9 +67,11 @@ import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 import { CouponStackability, IsPaymentApproved } from '../constants/const';
 import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
 import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
-export class PaymentsService implements OnModuleInit {
+export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
 
   private kftGetTokenUri: string;
@@ -87,9 +89,9 @@ export class PaymentsService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly paymentsRepository: PaymentsRepository,
     private readonly prismaService: PrismaService,
-  ) {}
-
-  onModuleInit() {
+    @InjectQueue('payments-queue')
+    private paymentsQueue: Queue,
+  ) {
     this.kftGetTokenUri = this.configService.get<string>('KFT_GET_TOKEN_URI');
     this.kftClientId = this.configService.get<string>('KFT_CLIENT_ID');
     this.kftClientSecret = this.configService.get<string>('KFT_CLIENT_SECRET');
@@ -125,17 +127,25 @@ export class PaymentsService implements OnModuleInit {
   //   const response = await axios.post(this.kftGetTokenUri, data);
   // }
 
+  async addLecturePaymentQueue(userId, asd) {
+    await this.paymentsQueue.add('handle-lecture-payments', { userId, ...asd });
+  }
+
   async createLecturePaymentWithToss(
-    userId: number,
-    dto: CreateLecturePaymentWithTossDto,
+    consumerData: CreateLecturePaymentWithTossDto & { userId: number },
   ): Promise<PendingPaymentInfoDto> {
-    const { lectureId, lectureSchedule, finalPrice: clientPrice } = dto;
+    const {
+      userId,
+      lectureId,
+      lectureSchedule,
+      finalPrice: clientPrice,
+    } = consumerData;
 
     // 비동기 작업을 병렬로 실행
     const [lectureValidityResult, , applicableCoupons] = await Promise.all([
       this.checkLectureValidity(lectureId, lectureSchedule),
-      this.checkUserPaymentValidity(userId, dto.orderId),
-      this.checkApplicableCoupon(userId, dto),
+      this.checkUserPaymentValidity(userId, consumerData.orderId),
+      this.checkApplicableCoupon(userId, consumerData),
     ]);
 
     const { lecture, refundableDate } = lectureValidityResult;
@@ -159,14 +169,14 @@ export class PaymentsService implements OnModuleInit {
     await this.trxCreateLecturePaymentWithToss(
       userId,
       lecture,
-      dto,
+      consumerData,
       applicableCoupons,
       refundableDate,
     );
 
     return new PendingPaymentInfoDto({
-      orderId: dto.orderId,
-      orderName: dto.orderName,
+      orderId: consumerData.orderId,
+      orderName: consumerData.orderName,
       value: clientPrice,
     });
   }
