@@ -3,23 +3,7 @@ import { LecturerLearner, Reservation } from '@prisma/client';
 import { BaseReturnDto } from '@src/common/dtos/base-return.dto';
 import { UserProfileImageDto } from '@src/common/dtos/user-profile-image.dto';
 import { UserDto } from '@src/common/dtos/user.dto';
-import { Exclude, Expose } from 'class-transformer';
-
-@Exclude()
-class PrivateUser extends PartialType(
-  PickType(UserDto, ['userProfileImage', 'nickname']),
-) {
-  @Expose()
-  userProfileImage: UserProfileImageDto;
-  @Expose()
-  nickname: string;
-
-  constructor(user: Partial<PrivateUser>) {
-    super();
-
-    Object.assign(this, user);
-  }
-}
+import { Exclude, Expose, Transform } from 'class-transformer';
 
 @Exclude()
 export class LectureLearnerInfoDto
@@ -53,10 +37,23 @@ export class LectureLearnerInfoDto
   userProfileImage: string;
 
   @ApiProperty({
+    type: Boolean,
+    description: '활성화 여부',
+  })
+  @Expose()
+  isEnabled: boolean;
+
+  @ApiProperty({
     description: '예약 대표자',
   })
   @Expose()
   representative: string;
+
+  @ApiProperty({
+    description: '요청 사항',
+  })
+  @Expose()
+  requests: string;
 
   @ApiProperty({
     description: '전화 번호',
@@ -72,21 +69,17 @@ export class LectureLearnerInfoDto
   participants: number;
 
   @ApiProperty({
-    description: '요청 사항',
-  })
-  @Expose()
-  requests: string;
-
-  @ApiProperty({
     type: Number,
     description: '수강 횟수',
   })
+  @Transform(({ value }) => value || null)
   @Expose()
   enrollmentCount: number;
 
   @ApiProperty({
     description: '강사가 작성한 메모',
   })
+  @Transform(({ value }) => value || null)
   @Expose()
   memo: string;
 
@@ -94,18 +87,5 @@ export class LectureLearnerInfoDto
   paymentId: number;
   lectureScheduleId: number;
   regularLectureStatusId: number;
-  isEnabled: boolean;
   lecturerId: number;
-  user: PrivateUser;
-
-  constructor(lectureLearnerDto: Partial<LectureLearnerInfoDto>) {
-    super();
-    Object.assign(this, lectureLearnerDto);
-
-    this.user = new PrivateUser(lectureLearnerDto.user);
-    this.nickname = this.user.nickname;
-    this.userProfileImage = this.user.userProfileImage
-      ? this.user.userProfileImage.imageUrl
-      : null;
-  }
 }
