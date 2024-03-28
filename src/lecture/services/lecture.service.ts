@@ -7,7 +7,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateLectureDto } from '@src/lecture/dtos/create-lecture.dto';
-import { Lecture, LectureHoliday, Region, Reservation } from '@prisma/client';
+import {
+  Lecture,
+  LectureHoliday,
+  Payment,
+  Region,
+  Reservation,
+} from '@prisma/client';
 import { ReadManyLectureQueryDto } from '@src/lecture/dtos/read-many-lecture-query.dto';
 import { UpdateLectureDto } from '@src/lecture/dtos/update-lecture.dto';
 import { QueryFilter } from '@src/common/filters/query.filter';
@@ -45,6 +51,8 @@ import { EventBus } from '@nestjs/cqrs';
 import { NewLectureEvent } from '@src/notification/events/notification.event';
 import { CombinedScheduleDto } from '../dtos/combined-schedule.dto';
 import { EnrolledLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
+import { PaymentOrderStatus } from '@src/payments/constants/enum';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class LectureService {
@@ -1082,25 +1090,32 @@ export class LectureService {
     lectureId: number,
     scheduleId: number,
   ): Promise<LectureLearnerInfoDto[]> {
-    const learnerList: Reservation[] = await this.getTargetScheduleLearners(
+    const learnerReservationList = await this.getTargetScheduleLearners(
       lecturerId,
       lectureId,
       scheduleId,
     );
-    if (!learnerList.length) {
+    if (!learnerReservationList.length) {
       return null;
     }
 
-    const lectureLearnerInfoList: LectureLearnerInfoDto[] = await Promise.all(
-      learnerList.map(async (learner: Reservation) => {
-        const learnerInfo = await this.lectureRepository.getLecturerLearnerInfo(
-          learner.userId,
-        );
-        return new LectureLearnerInfoDto({ ...learner, ...learnerInfo });
-      }),
-    );
+    return await Promise.all(
+      learnerReservationList.map(
+        async (learner: Reservation & { payment: Payment }) => {
+          const learnerInfo =
+            await this.lectureRepository.getLecturerLearnerInfo(learner.userId);
+          const isPaymentDone =
+            learner.payment.statusId === PaymentOrderStatus.DONE;
 
-    return lectureLearnerInfoList;
+          return plainToInstance(LectureLearnerInfoDto, {
+            ...learner,
+            ...(isPaymentDone ? { ...learnerInfo } : { phoneNumber: null }),
+            nickname: learnerInfo.user.nickname,
+            userProfileImage: learnerInfo.user.userProfileImage?.imageUrl,
+          });
+        },
+      ),
+    );
   }
 
   private async getTargetScheduleLearners(

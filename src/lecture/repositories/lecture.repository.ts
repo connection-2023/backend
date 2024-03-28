@@ -45,7 +45,10 @@ import { UpdateLectureDto } from '../dtos/update-lecture.dto';
 import { LectureScheduleWithLectureDto } from '@src/common/dtos/lecture-schedule-with-lecture.dto';
 import { RegularLectureScheduleDto } from '@src/common/dtos/regular-lecture-schedule.dto';
 import { RegularLectureStatusDto } from '@src/common/dtos/regular-lecture-status.dto';
-import { LectureMethod } from '@src/payments/constants/enum';
+import {
+  LectureMethod,
+  PaymentOrderStatus,
+} from '@src/payments/constants/enum';
 
 @Injectable()
 export class LectureRepository {
@@ -611,8 +614,17 @@ export class LectureRepository {
         ...(lectureMethod === LectureMethod.원데이
           ? { lectureScheduleId: scheduleId }
           : { regularLectureStatusId: scheduleId }),
-        isEnabled: true,
         payment: { lecturerId },
+        NOT: {
+          payment: {
+            statusId: {
+              in: [PaymentOrderStatus.CANCELED, PaymentOrderStatus.EXPIRED],
+            },
+          },
+        },
+      },
+      include: {
+        payment: true,
       },
     });
   }
