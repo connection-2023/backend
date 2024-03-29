@@ -1,7 +1,6 @@
-import { Process, Processor } from '@nestjs/bull';
+import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { PaymentsService } from './payments.service';
 import { Job } from 'bull';
-
 @Processor('payments-queue')
 export class PaymentsConsumer {
   constructor(private readonly paymentsService: PaymentsService) {}

@@ -1,10 +1,10 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateLecturePaymentWithTossDto } from '@src/payments/dtos/create-lecture-payment-with-toss.dto';
@@ -15,7 +15,6 @@ import {
   ICoupons,
   IPaymentResult,
   ISelectedUserPass,
-  LectureCouponUseage,
   ILectureSchedule,
   PaymentInfo,
   ReservationInputData,
@@ -23,11 +22,11 @@ import {
   TossPaymentVirtualAccountInfo,
   TossPaymentsConfirmResponse,
   VirtualAccountPaymentInfoInputData,
-  IWebHookData,
   IRefundPaymentInfo,
   IRefundReceiveAccount,
   ICalculatedLectureRefundResult,
   IPaymentWebhookData,
+  EventData,
 } from '@src/payments/interface/payments.interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import {
@@ -69,21 +68,17 @@ import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dt
 import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
-
-  private kftGetTokenUri: string;
-  private kftClientId: string;
-  private kftClientSecret: string;
-  private kftScope: string;
-  private kftGrantType: string;
   private tossPaymentsSecretKey: string;
   private tossPaymentsUrl: string;
   private oneHour: number;
   private cancellationAbsoluteTime: number;
   private passRefundableDaysPeriod: number;
+  private paymentTimeOutSec: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -91,12 +86,8 @@ export class PaymentsService {
     private readonly prismaService: PrismaService,
     @InjectQueue('payments-queue')
     private paymentsQueue: Queue,
+    private eventEmitter: EventEmitter2,
   ) {
-    this.kftGetTokenUri = this.configService.get<string>('KFT_GET_TOKEN_URI');
-    this.kftClientId = this.configService.get<string>('KFT_CLIENT_ID');
-    this.kftClientSecret = this.configService.get<string>('KFT_CLIENT_SECRET');
-    this.kftScope = this.configService.get<string>('KFT_SCOPE');
-    this.kftGrantType = this.configService.get<string>('KFT_GRANT_TYPE');
     this.tossPaymentsSecretKey = this.configService.get<string>(
       'TOSS_PAYMENTS_SECRET_KEY',
     );
@@ -109,76 +100,108 @@ export class PaymentsService {
     this.passRefundableDaysPeriod = this.configService.get<number>(
       'PASS_REFUNDABLE_DAYS_PERIOD',
     );
+    this.paymentTimeOutSec = this.configService.get<number>(
+      'PAYMENT_TIME_OUT_SEC',
+    );
 
     this.logger.log('PaymentsService Init');
   }
 
-  // async verifyBankAccount() {
-  //   const accessToken = this.getKFTAccessToken();
-  // }
+  addLecturePaymentQueue(
+    userId: number,
+    dto: CreateLecturePaymentWithTossDto,
+  ): Promise<PendingPaymentInfoDto> {
+    this.paymentsQueue.add(
+      'handle-lecture-payments',
+      { userId, ...dto },
+      { removeOnComplete: true, removeOnFail: true },
+    );
 
-  // private async getKFTAccessToken() {
-  //   const data = {
-  //     client_id: this.kftClientId,
-  //     client_secret: this.kftClientSecret,
-  //     scope: this.kftScope,
-  //     grant_type: this.kftGrantType,
-  //   };
-  //   const response = await axios.post(this.kftGetTokenUri, data);
-  // }
+    return this.waitQueueFinish<PendingPaymentInfoDto>(
+      dto.orderId,
+      this.paymentTimeOutSec,
+    );
+  }
 
-  async addLecturePaymentQueue(userId, asd) {
-    await this.paymentsQueue.add('handle-lecture-payments', { userId, ...asd });
+  private waitQueueFinish<T>(
+    eventName: string,
+    timeoutSec: number,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.eventEmitter.removeAllListeners(eventName);
+        reject(
+          new InternalServerErrorException('요청 처리 시간 초과', 'Timeout'),
+        );
+      }, timeoutSec * 1000);
+
+      const eventListener = ({ success, data, exception }: EventData<T>) => {
+        clearTimeout(timeoutId);
+        this.eventEmitter.removeAllListeners(eventName);
+
+        success ? resolve(data) : reject(exception);
+      };
+
+      this.eventEmitter.once(eventName, eventListener);
+    });
   }
 
   async createLecturePaymentWithToss(
     consumerData: CreateLecturePaymentWithTossDto & { userId: number },
-  ): Promise<PendingPaymentInfoDto> {
-    const {
-      userId,
-      lectureId,
-      lectureSchedule,
-      finalPrice: clientPrice,
-    } = consumerData;
+  ): Promise<void> {
+    try {
+      const {
+        userId,
+        lectureId,
+        lectureSchedule,
+        finalPrice: clientPrice,
+      } = consumerData;
+      // 비동기 작업을 병렬로 실행
+      const [lectureValidityResult, , applicableCoupons] = await Promise.all([
+        this.checkLectureValidity(lectureId, lectureSchedule),
+        this.checkUserPaymentValidity(userId, consumerData.orderId),
+        this.checkApplicableCoupon(userId, consumerData),
+      ]);
+      const { lecture, refundableDate } = lectureValidityResult;
+      const calculatedPrice = lecture.price * lectureSchedule.participants;
 
-    // 비동기 작업을 병렬로 실행
-    const [lectureValidityResult, , applicableCoupons] = await Promise.all([
-      this.checkLectureValidity(lectureId, lectureSchedule),
-      this.checkUserPaymentValidity(userId, consumerData.orderId),
-      this.checkApplicableCoupon(userId, consumerData),
-    ]);
-
-    const { lecture, refundableDate } = lectureValidityResult;
-    const calculatedPrice = lecture.price * lectureSchedule.participants;
-
-    if (!applicableCoupons) {
-      if (clientPrice !== calculatedPrice) {
-        throw new BadRequestException(
-          '결제 금액이 일치하지 않습니다.',
-          'PaymentAmountMismatch',
+      if (!applicableCoupons) {
+        if (clientPrice !== calculatedPrice) {
+          throw new BadRequestException(
+            '결제 금액이 일치하지 않습니다.',
+            'PaymentAmountMismatch',
+          );
+        }
+      } else {
+        await this.compareCouponAppliedPrice(
+          calculatedPrice,
+          clientPrice,
+          applicableCoupons,
         );
       }
-    } else {
-      await this.compareCouponAppliedPrice(
-        calculatedPrice,
-        clientPrice,
+
+      await this.trxCreateLecturePaymentWithToss(
+        userId,
+        lecture,
+        consumerData,
         applicableCoupons,
+        refundableDate,
       );
+
+      this.eventEmitter.emit(consumerData.orderId, {
+        success: true,
+        data: new PendingPaymentInfoDto({
+          orderId: consumerData.orderId,
+          orderName: consumerData.orderName,
+          value: clientPrice,
+        }),
+      });
+    } catch (error) {
+      this.eventEmitter.emit(consumerData.orderId, {
+        success: false,
+        exception: error,
+      });
     }
-
-    await this.trxCreateLecturePaymentWithToss(
-      userId,
-      lecture,
-      consumerData,
-      applicableCoupons,
-      refundableDate,
-    );
-
-    return new PendingPaymentInfoDto({
-      orderId: consumerData.orderId,
-      orderName: consumerData.orderName,
-      value: clientPrice,
-    });
   }
 
   private async trxCreateLecturePaymentWithToss(

@@ -63,11 +63,11 @@ export class PaymentsController {
   @ApiCreateLecturePaymentInfo()
   @Post('/toss/lecture')
   @UseGuards(UserAccessTokenGuard)
-  async createLecturePaymentWithToss(
+  createLecturePaymentWithToss(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createLecturePaymentDto: CreateLecturePaymentWithTossDto,
-  ) {
-    return await this.paymentsService.addLecturePaymentQueue(
+  ): Promise<PendingPaymentInfoDto> {
+    return this.paymentsService.addLecturePaymentQueue(
       authorizedData.user.id,
       createLecturePaymentDto,
     );

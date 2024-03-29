@@ -1,3 +1,4 @@
+import { HttpException } from '@nestjs/common';
 import {
   LectureCoupon,
   LectureSchedule,
@@ -288,4 +289,10 @@ export interface IPaymentWebhookData {
   useEscrow: boolean;
   virtualAccount: TossPaymentVirtualAccountInfo;
   card: TossPaymentCardInfo;
+}
+
+export interface EventData<T> {
+  success: boolean;
+  data: T;
+  exception?: HttpException;
 }
