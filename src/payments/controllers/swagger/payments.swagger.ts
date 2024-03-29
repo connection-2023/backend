@@ -81,6 +81,12 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
           description: '강의정보가 존재하지 않습니다.',
         },
       ]),
+      ExceptionResponseDto.swaggerBuilder(HttpStatus.INTERNAL_SERVER_ERROR, [
+        {
+          error: 'Timeout',
+          description: '요청 처리 시간 초과',
+        },
+      ]),
     );
   },
 

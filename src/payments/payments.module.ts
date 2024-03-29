@@ -6,13 +6,21 @@ import { UserPaymentsService } from '@src/payments/services/user-payments.servic
 import { UserPaymentsController } from '@src/payments/controllers/user-payments.controller';
 import { LecturerPaymentsController } from '@src/payments/controllers/lecturer-payments.controller';
 import { LecturerPaymentsService } from '@src/payments/services/lecturer-payments.service';
+import { BullModule } from '@nestjs/bull';
+import { PaymentsConsumer } from './services/payments-consumer';
 
 @Module({
+  imports: [
+    BullModule.registerQueue({
+      name: 'payments-queue',
+    }),
+  ],
   providers: [
     PaymentsService,
     UserPaymentsService,
     PaymentsRepository,
     LecturerPaymentsService,
+    PaymentsConsumer,
   ],
   controllers: [
     PaymentsController,

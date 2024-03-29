@@ -27,11 +27,14 @@ import { WebhookModule } from './webhook/webhook.module';
 import { NotificationModule } from './notification/notification.module';
 import { CqrsModule } from '@nestjs/cqrs';
 import { BatchModule } from './batch/batch.module';
+import { BullQueueModuleConfig } from './common/config/bull-queue-module.config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGODB_URL),
+    EventEmitterModule.forRoot(),
     UserModule,
     LectureModule,
     PrismaModule,
@@ -55,6 +58,7 @@ import { BatchModule } from './batch/batch.module';
     WebhookModule,
     NotificationModule,
     BatchModule,
+    BullQueueModuleConfig,
   ],
   controllers: [AppController],
   providers: [AppService, ConfigService],

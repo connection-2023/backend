@@ -86,6 +86,8 @@ jobs:
           echo "PASS_REFUNDABLE_DAYS_PERIOD=${{ secrets.PASS_REFUNDABLE_DAYS_PERIOD }}" >> .env
           echo "CANCELLATION_ABSOLUTE_TIME=${{ secrets.CANCELLATION_ABSOLUTE_TIME }}" >> .env
 
+          echo "PAYMENT_TIME_OUT_SEC=${{ secrets.PAYMENT_TIME_OUT_SEC }}" >> .env
+
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축
