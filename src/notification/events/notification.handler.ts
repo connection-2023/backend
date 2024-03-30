@@ -22,13 +22,15 @@ export class NotificationHandler {
           select: { userId: true },
         });
 
-        targets.map(async (target) => {
-          return await this.notificationService.createNotification(
-            target,
-            { lectureId },
-            NotificationType.NewLecture,
-          );
-        });
+        await Promise.all(
+          targets.map(async (target) => {
+            return await this.notificationService.createNotification(
+              target,
+              { lectureId },
+              NotificationType.NewLecture,
+            );
+          }),
+        );
     }
   }
 }
