@@ -8,13 +8,17 @@ import {
 } from './schemas/notification.schema';
 import { NotificationRepository } from './repositories/notification.repository';
 import { NotificationHandler } from './events/notification.handler';
-import { EventsGateway } from '@src/events/events.gateway';
 import { EventsModule } from '@src/events/events.module';
+import {
+  OnlineMap,
+  OnlineMapSchema,
+} from '@src/events/schemas/online-map.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
+      { name: OnlineMap.name, schema: OnlineMapSchema },
     ]),
     EventsModule,
   ],

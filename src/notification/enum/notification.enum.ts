@@ -1,3 +1,3 @@
 export enum NotificationType {
-  NewLecture = 'newLecture',
+  CreatedLecture = 'createdLecture',
 }
