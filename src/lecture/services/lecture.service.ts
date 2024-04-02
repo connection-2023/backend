@@ -408,6 +408,7 @@ export class LectureService {
             );
           }
         }
+
         if (endDate) {
           const isUpdatePossible = transaction.lecture.findFirst({
             where: { id: lectureId, endDate: { lt: new Date(endDate) } },
@@ -420,38 +421,13 @@ export class LectureService {
               '현재 마감일이 수정 마감일보다 큽니다.',
             );
           }
+
           const { duration } = await this.prismaService.lecture.findFirst({
             where: { id: lectureId },
             select: { duration: true },
           });
 
-          if (regularSchedules) {
-            Promise.all(
-              regularSchedules.map(async (schedule) => {
-                const regularLectureStatusInputData =
-                  this.createRegularLectureStatusInputData(lectureId, schedule);
-
-                const regularLectureStatus =
-                  await this.lectureRepository.trxCreateRegularLectureStatus(
-                    transaction,
-                    regularLectureStatusInputData,
-                  );
-
-                const regularLectureSchedulesInputData =
-                  this.createRegularLectureSchedulesInputData(
-                    regularLectureStatus.id,
-                    schedule.startDateTime,
-                    duration,
-                  );
-
-                const regularLectureSchedules =
-                  await this.lectureRepository.trxCreateRegularLectureSchedule(
-                    transaction,
-                    regularLectureSchedulesInputData,
-                  );
-              }),
-            );
-          } else if (schedules) {
+          if (schedules) {
             const createNewScheduleInputData =
               this.createLectureScheduleInputData(
                 lectureId,
@@ -474,6 +450,32 @@ export class LectureService {
               createNewScheduleInputData,
             );
           }
+        }
+
+        if (regularSchedules) {
+          const { duration } = await this.prismaService.lecture.findFirst({
+            where: { id: lectureId },
+            select: { duration: true },
+          });
+
+          // 중복 확인을 먼저 실행하고, 중복이 없을 경우 RegularSchedule 생성 작업을 처리하는 Promise.all
+          await Promise.all(
+            regularSchedules.map((schedule) =>
+              this.checkForDuplicates(lectureId, schedule),
+            ),
+          );
+
+          // RegularSchedule 생성 작업을 처리하는 Promise.all
+          await Promise.all(
+            regularSchedules.map((schedule) =>
+              this.processRegularSchedules(
+                transaction,
+                lectureId,
+                duration,
+                schedule,
+              ),
+            ),
+          );
         }
 
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(
@@ -757,6 +759,50 @@ export class LectureService {
     return new EnrolledLectureScheduleDto(lastSchedule);
   }
 
+  // RegularSchedule을 반복하며 중복을 확인하고, 중복이 있을 경우 예외를 throw하는 비동기 함수
+  private async checkForDuplicates(
+    lectureId: number,
+    schedule: RegularLectureSchedules,
+  ) {
+    for (const date of schedule.startDateTime) {
+      const existRegularLectureSchedule =
+        await this.lectureRepository.existRegularLectureSchedule(
+          lectureId,
+          date,
+        );
+      if (existRegularLectureSchedule) {
+        throw new ConflictException('exist regular lecture schedule');
+      }
+    }
+  }
+
+  // RegularSchedule을 반복하여 비동기 작업을 수행하는 함수
+  private async processRegularSchedules(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    duration: number,
+    schedule: RegularLectureSchedules,
+  ) {
+    const regularLectureStatusInputData =
+      this.createRegularLectureStatusInputData(lectureId, schedule);
+    const regularLectureStatus =
+      await this.lectureRepository.trxCreateRegularLectureStatus(
+        transaction,
+        regularLectureStatusInputData,
+      );
+
+    const regularLectureSchedulesInputData =
+      this.createRegularLectureSchedulesInputData(
+        regularLectureStatus.id,
+        schedule.startDateTime,
+        duration,
+      );
+    return this.lectureRepository.trxCreateRegularLectureSchedule(
+      transaction,
+      regularLectureSchedulesInputData,
+    );
+  }
+
   private createUserIdAndLecturerId(
     authorizedData: ValidateResult,
     targetId: number,
@@ -1015,6 +1061,7 @@ export class LectureService {
 
     return regularLectureSchedulesInputData;
   }
+
   private createLectureCouponTargetInputData(
     lectureId: number,
     coupons: number[],

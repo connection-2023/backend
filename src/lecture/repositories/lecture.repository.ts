@@ -108,6 +108,15 @@ export class LectureRepository {
     });
   }
 
+  async existRegularLectureSchedule(
+    lectureId: number,
+    startDateTime: Date,
+  ): Promise<RegularLectureSchedule> {
+    return await this.prismaService.regularLectureSchedule.findFirst({
+      where: { regularLectureStatus: { lectureId }, startDateTime },
+    });
+  }
+
   async trxCreateRegularLectureSchedule(
     transaction: PrismaTransaction,
     regularSchedules: RegularLectureSchedulesInputData[],
