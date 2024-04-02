@@ -380,6 +380,7 @@ export class LectureService {
       notification,
       endDate,
       schedules,
+      regularSchedules,
       ...lecture
     } = updateLectureDto;
     const currentTime = new Date();
@@ -393,7 +394,7 @@ export class LectureService {
             notification,
           );
         }
-        if (lecture.maxCapacity) {
+        if (lecture['maxCapacity']) {
           const readLectureParticipant =
             await this.lectureRepository.trxReadLectureParticipant(
               transaction,
@@ -424,23 +425,55 @@ export class LectureService {
             select: { duration: true },
           });
 
-          const createNewScheduleInputData =
-            this.createLectureScheduleInputData(lectureId, schedules, duration);
+          if (regularSchedules) {
+            Promise.all(
+              regularSchedules.map(async (schedule) => {
+                const regularLectureStatusInputData =
+                  this.createRegularLectureStatusInputData(lectureId, schedule);
 
-          const existLectureSchdule =
-            await this.lectureRepository.trxExistLectureSchedule(
+                const regularLectureStatus =
+                  await this.lectureRepository.trxCreateRegularLectureStatus(
+                    transaction,
+                    regularLectureStatusInputData,
+                  );
+
+                const regularLectureSchedulesInputData =
+                  this.createRegularLectureSchedulesInputData(
+                    regularLectureStatus.id,
+                    schedule.startDateTime,
+                    duration,
+                  );
+
+                const regularLectureSchedules =
+                  await this.lectureRepository.trxCreateRegularLectureSchedule(
+                    transaction,
+                    regularLectureSchedulesInputData,
+                  );
+              }),
+            );
+          } else if (schedules) {
+            const createNewScheduleInputData =
+              this.createLectureScheduleInputData(
+                lectureId,
+                schedules,
+                duration,
+              );
+
+            const existLectureSchdule =
+              await this.lectureRepository.trxExistLectureSchedule(
+                transaction,
+                createNewScheduleInputData,
+              );
+
+            if (existLectureSchdule) {
+              throw new ConflictException(schedules, 'duplicated schedules');
+            }
+
+            await this.lectureRepository.trxCreateLectureSchedule(
               transaction,
               createNewScheduleInputData,
             );
-
-          if (existLectureSchdule) {
-            throw new ConflictException(schedules, 'duplicated schedules');
           }
-
-          await this.lectureRepository.trxCreateLectureSchedule(
-            transaction,
-            createNewScheduleInputData,
-          );
         }
 
         const updatedLecture = await this.lectureRepository.trxUpdateLecture(

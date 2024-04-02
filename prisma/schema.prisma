@@ -1109,6 +1109,8 @@ model RegularLectureStatus {
   lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   regularLectureSchedule RegularLectureSchedule[]
   reservation            Reservation[]
+
+  @@unique([lectureId, day, dateTime])
 }
 
 model RegularLectureSchedule {
