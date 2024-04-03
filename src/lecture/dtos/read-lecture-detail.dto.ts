@@ -3,6 +3,7 @@ import { LectureLocationDto } from '@src/common/dtos/lecture-location.dto';
 import { LectureNotificationDto } from '@src/common/dtos/lecture-notification.dto';
 import { ILecture } from '../interface/lecture.interface';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
+import { LectureToRegionDto } from '@src/common/dtos/lecture-to-region.dto';
 
 export class LectureDetailDto {
   @ApiProperty({ description: '강의 id', type: Number })
@@ -56,6 +57,9 @@ export class LectureDetailDto {
   @ApiProperty({ description: '리뷰 평점' })
   stars: string;
 
+  @ApiProperty({ description: '지역', type: [LectureToRegionDto] })
+  lectureToRegion?: LectureToRegionDto[];
+
   constructor(lecture: Partial<ILecture>) {
     this.id = lecture.id;
     this.lecturer = new LecturerDto(lecture.lecturer);
@@ -80,6 +84,10 @@ export class LectureDetailDto {
       : undefined;
 
     this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
+
+    this.lectureToRegion = lecture.lectureToRegion
+      ? lecture.lectureToRegion.map((region) => new LectureToRegionDto(region))
+      : undefined;
 
     Object.assign(this);
   }
