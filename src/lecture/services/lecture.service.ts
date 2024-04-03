@@ -387,6 +387,11 @@ export class LectureService {
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
+        const { duration } = await this.prismaService.lecture.findFirst({
+          where: { id: lectureId },
+          select: { duration: true },
+        });
+
         if (notification || notification.length === 0) {
           await this.lectureRepository.trxUpsertLectureNotification(
             transaction,
@@ -422,42 +427,15 @@ export class LectureService {
             );
           }
 
-          const { duration } = await this.prismaService.lecture.findFirst({
-            where: { id: lectureId },
-            select: { duration: true },
-          });
-
-          if (schedules) {
-            const createNewScheduleInputData =
-              this.createLectureScheduleInputData(
-                lectureId,
-                schedules,
-                duration,
-              );
-
-            const existLectureSchdule =
-              await this.lectureRepository.trxExistLectureSchedule(
-                transaction,
-                createNewScheduleInputData,
-              );
-
-            if (existLectureSchdule) {
-              throw new ConflictException(schedules, 'duplicated schedules');
-            }
-
-            await this.lectureRepository.trxCreateLectureSchedule(
-              transaction,
-              createNewScheduleInputData,
-            );
-          }
+          await this.extendLectureEndDate(
+            transaction,
+            lectureId,
+            schedules,
+            duration,
+          );
         }
 
         if (regularSchedules) {
-          const { duration } = await this.prismaService.lecture.findFirst({
-            where: { id: lectureId },
-            select: { duration: true },
-          });
-
           // 중복 확인을 먼저 실행하고, 중복이 없을 경우 RegularSchedule 생성 작업을 처리하는 Promise.all
           await Promise.all(
             regularSchedules.map((schedule) =>
@@ -485,54 +463,12 @@ export class LectureService {
         );
 
         if (holidays) {
-          const oldHolidays =
-            await this.lectureRepository.trxReadManyLectureHoliday(
-              transaction,
-              lectureId,
-            );
-          const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
-          const schedule = this.compareHolidays(oldHolidaysArr, holidays);
-          const { createNewSchedule, deleteOldSchedule } = schedule;
-
-          await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
-
-          const { duration } = await this.prismaService.lecture.findFirst({
-            where: { id: lectureId },
-            select: { duration: true },
-          });
-          const lectureHolidayInputData = this.createLectureHolidayInputData(
+          await this.updateLectureHolidaysAndSchedules(
+            transaction,
             lectureId,
             holidays,
+            duration,
           );
-          const createNewScheduleInputData =
-            this.createLectureScheduleInputData(
-              lectureId,
-              createNewSchedule,
-              duration,
-            );
-
-          const deletedOldSchedule =
-            await this.lectureRepository.trxDeleteManyOldSchedule(
-              transaction,
-              lectureId,
-              deleteOldSchedule,
-            );
-          const createdHolidaySchedule =
-            await this.lectureRepository.trxCreateLectureSchedule(
-              transaction,
-              createNewScheduleInputData,
-            );
-
-          const deletedLectureHoliday =
-            await this.lectureRepository.trxDeleteManyLectureHoliday(
-              transaction,
-              lectureId,
-            );
-          const createdLectureHoliday =
-            await this.lectureRepository.trxCreateLectureHoliday(
-              transaction,
-              lectureHolidayInputData,
-            );
         }
 
         if (images) {
@@ -759,6 +695,36 @@ export class LectureService {
     return new EnrolledLectureScheduleDto(lastSchedule);
   }
 
+  private async extendLectureEndDate(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    schedules: Date[],
+    duration: number,
+  ) {
+    if (schedules) {
+      const createNewScheduleInputData = this.createLectureScheduleInputData(
+        lectureId,
+        schedules,
+        duration,
+      );
+
+      const existLectureSchdule =
+        await this.lectureRepository.trxExistLectureSchedule(
+          transaction,
+          createNewScheduleInputData,
+        );
+
+      if (existLectureSchdule) {
+        throw new ConflictException(schedules, 'duplicated schedules');
+      }
+
+      await this.lectureRepository.trxCreateLectureSchedule(
+        transaction,
+        createNewScheduleInputData,
+      );
+    }
+  }
+
   // RegularSchedule을 반복하며 중복을 확인하고, 중복이 있을 경우 예외를 throw하는 비동기 함수
   private async checkForDuplicates(
     lectureId: number,
@@ -800,6 +766,52 @@ export class LectureService {
     return this.lectureRepository.trxCreateRegularLectureSchedule(
       transaction,
       regularLectureSchedulesInputData,
+    );
+  }
+
+  private async updateLectureHolidaysAndSchedules(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    holidays: Date[],
+    duration: number,
+  ) {
+    const oldHolidays = await this.lectureRepository.trxReadManyLectureHoliday(
+      transaction,
+      lectureId,
+    );
+    const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
+    const schedule = this.compareHolidays(oldHolidaysArr, holidays);
+    const { createNewSchedule, deleteOldSchedule } = schedule;
+
+    await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
+
+    const lectureHolidayInputData = this.createLectureHolidayInputData(
+      lectureId,
+      holidays,
+    );
+    const createNewScheduleInputData = this.createLectureScheduleInputData(
+      lectureId,
+      createNewSchedule,
+      duration,
+    );
+
+    await this.lectureRepository.trxDeleteManyOldSchedule(
+      transaction,
+      lectureId,
+      deleteOldSchedule,
+    );
+    await this.lectureRepository.trxCreateLectureSchedule(
+      transaction,
+      createNewScheduleInputData,
+    );
+
+    await this.lectureRepository.trxDeleteManyLectureOldHoliday(
+      transaction,
+      lectureId,
+    );
+    await this.lectureRepository.trxCreateLectureHoliday(
+      transaction,
+      lectureHolidayInputData,
     );
   }
 

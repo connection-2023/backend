@@ -322,7 +322,7 @@ export class LectureRepository {
     });
   }
 
-  async trxDeleteManyLectureHoliday(
+  async trxDeleteManyLectureOldHoliday(
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {
