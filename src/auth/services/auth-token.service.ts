@@ -60,11 +60,10 @@ export class AuthTokenService implements OnModuleInit {
     });
 
     const targetId = payload.userId || payload.lecturerId || payload.adminId;
-    await this.cacheManager.set(
-      `${tokenType} ${targetId}`,
-      refreshToken,
-      this.jwtRefreshTokenTtl,
-    );
+
+    await this.cacheManager.set(`${tokenType} ${targetId}`, refreshToken, {
+      ttl: this.jwtRefreshTokenTtl,
+    });
 
     return { accessToken, refreshToken };
   }

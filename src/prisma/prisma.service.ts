@@ -13,11 +13,23 @@ import { DanceCategory, PrismaClient } from '@prisma/client';
 export class PrismaService extends PrismaClient implements OnModuleInit {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor() {
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {
     super();
   }
   async onModuleInit() {
     await this.$connect();
+    await this.cachingDanceCategory();
+  }
+
+  async cachingDanceCategory() {
+    const danceCategories: DanceCategory[] =
+      await this.danceCategory.findMany();
+
+    for (const danceCategory of danceCategories) {
+      await this.cacheManager.set(danceCategory.genre, danceCategory.id);
+    }
+
+    this.logger.log('Cache success');
   }
 
   async enableShutdownHook(app: INestApplication) {
