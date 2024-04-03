@@ -684,11 +684,13 @@ export class SearchService {
   }
 
   private buildIsGroupQuery(isGroup: Boolean) {
-    return {
-      bool: {
-        should: { match: { isgroup: isGroup } },
-      },
-    };
+    return isGroup
+      ? {
+          bool: {
+            should: { match: { isgroup: isGroup } },
+          },
+        }
+      : undefined;
   }
 
   private async addLectureLikeStatus(
