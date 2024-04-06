@@ -8,8 +8,5 @@ export class CreatedLectureEvent {
 }
 
 export class CreatedReservationEvent {
-  constructor(
-    public readonly reservationId: number,
-    public readonly target: INotificationTarget,
-  ) {}
+  constructor(public readonly reservationId: number) {}
 }
