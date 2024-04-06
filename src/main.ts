@@ -24,7 +24,10 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: configService.get<string>('FRONT_END_URL'),
+    origin: [
+      'http://localhost:3000',
+      configService.get<string>('FRONT_END_URL'),
+    ],
     credentials: true,
   });
 
