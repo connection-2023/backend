@@ -20,7 +20,7 @@ import { OnlineMap } from './schemas/online-map.schema';
 import { Model } from 'mongoose';
 import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
-@WebSocketGateway({ namespace: /\/chatroom\d+/ })
+@WebSocketGateway({ cors: true, namespace: /\/chatroom\d+/ })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
