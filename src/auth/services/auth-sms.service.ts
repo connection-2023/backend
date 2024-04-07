@@ -114,11 +114,9 @@ export class AuthSmsService implements OnModuleInit {
     userPhoneNumber: string,
     randomNumber: string,
   ) {
-    await this.cacheManager.set(
-      `${userPhoneNumber}`,
-      randomNumber,
-      this.configService.get<number>('REDIS_SMS_TTL'),
-    );
+    await this.cacheManager.set(`${userPhoneNumber}`, randomNumber, {
+      ttl: this.configService.get<number>('REDIS_SMS_TTL'),
+    });
   }
 
   private async incrementDailySentCount(userId: number) {
