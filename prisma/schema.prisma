@@ -473,6 +473,8 @@ model LectureDay {
   day       String[] @default([])
   dateTime  String[] @default([])
   lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@unique([lectureId, day, dateTime])
 }
 
 model LectureToRegion {
@@ -1109,6 +1111,8 @@ model RegularLectureStatus {
   lecture                Lecture                  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
   regularLectureSchedule RegularLectureSchedule[]
   reservation            Reservation[]
+
+  @@unique([lectureId, day, dateTime])
 }
 
 model RegularLectureSchedule {

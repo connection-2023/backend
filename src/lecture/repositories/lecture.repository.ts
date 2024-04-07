@@ -108,6 +108,15 @@ export class LectureRepository {
     });
   }
 
+  async existRegularLectureSchedule(
+    lectureId: number,
+    startDateTime: Date,
+  ): Promise<RegularLectureSchedule> {
+    return await this.prismaService.regularLectureSchedule.findFirst({
+      where: { regularLectureStatus: { lectureId }, startDateTime },
+    });
+  }
+
   async trxCreateRegularLectureSchedule(
     transaction: PrismaTransaction,
     regularSchedules: RegularLectureSchedulesInputData[],
@@ -313,7 +322,7 @@ export class LectureRepository {
     });
   }
 
-  async trxDeleteManyLectureHoliday(
+  async trxDeleteManyLectureOldHoliday(
     transaction: PrismaTransaction,
     lectureId: number,
   ): Promise<void> {
@@ -538,7 +547,17 @@ export class LectureRepository {
     transaction: PrismaTransaction,
     daySchedules: DayScheduleInputData[],
   ): Promise<void> {
-    await transaction.lectureDay.createMany({ data: daySchedules });
+    try {
+      await transaction.lectureDay.createMany({ data: daySchedules });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException(
+          'LectureDay entry with the same lectureId, day, and dateTime already exists.',
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 
   async trxReadDaySchedule(
