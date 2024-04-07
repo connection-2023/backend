@@ -25,6 +25,7 @@ import {
 } from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
+  DaySchedule,
   LectureCouponTargetInputData,
   LectureHolidayInputData,
   LectureImageInputData,
@@ -381,6 +382,7 @@ export class LectureService {
       endDate,
       schedules,
       regularSchedules,
+      daySchedules,
       ...lecture
     } = updateLectureDto;
     const currentTime = new Date();
@@ -392,13 +394,14 @@ export class LectureService {
           select: { duration: true },
         });
 
-        if (notification || notification.length === 0) {
+        if (notification !== undefined) {
           await this.lectureRepository.trxUpsertLectureNotification(
             transaction,
             lectureId,
             notification,
           );
         }
+
         if (lecture['maxCapacity']) {
           const readLectureParticipant =
             await this.lectureRepository.trxReadLectureParticipant(
@@ -426,14 +429,25 @@ export class LectureService {
               '현재 마감일이 수정 마감일보다 큽니다.',
             );
           }
+        }
 
-          await this.extendLectureEndDate(
-            transaction,
+        if (daySchedules) {
+          const daySchedulesInputData = daySchedules.map((daySchedule) => ({
             lectureId,
-            schedules,
-            duration,
+            ...daySchedule,
+          }));
+          await this.lectureRepository.trxCreateLectureDay(
+            transaction,
+            daySchedulesInputData,
           );
         }
+
+        await this.extendLectureEndDate(
+          transaction,
+          lectureId,
+          schedules,
+          duration,
+        );
 
         if (regularSchedules) {
           // 중복 확인을 먼저 실행하고, 중복이 없을 경우 RegularSchedule 생성 작업을 처리하는 Promise.all
@@ -462,45 +476,16 @@ export class LectureService {
           lecture,
         );
 
-        if (holidays) {
-          await this.updateLectureHolidaysAndSchedules(
-            transaction,
-            lectureId,
-            holidays,
-            duration,
-          );
-        }
+        await this.updateLectureHolidaysAndSchedules(
+          transaction,
+          lectureId,
+          holidays,
+          duration,
+        );
 
-        if (images) {
-          const lectureImageInputData: LectureImageInputData[] =
-            this.createLectureImageInputData(lectureId, images);
+        await this.updateLectureImage(transaction, lectureId, images);
 
-          await this.lectureRepository.trxDeleteLectureImage(
-            transaction,
-            lectureId,
-          );
-          await this.lectureRepository.trxCreateLectureImage(
-            transaction,
-            lectureImageInputData,
-          );
-        }
-
-        if (coupons) {
-          await this.getValidCouponIds(coupons);
-
-          const lectureCounponTargetInputData =
-            this.createLectureCouponTargetInputData(lectureId, coupons);
-
-          await this.lectureRepository.trxDeleteLectureCouponTarget(
-            transaction,
-            lectureId,
-          );
-
-          await this.lectureRepository.trxCreateLectureCouponTarget(
-            transaction,
-            lectureCounponTargetInputData,
-          );
-        }
+        await this.updateLectureCoupon(transaction, coupons, lectureId);
 
         return updatedLecture;
       },
@@ -701,28 +686,74 @@ export class LectureService {
     schedules: Date[],
     duration: number,
   ) {
-    if (schedules) {
-      const createNewScheduleInputData = this.createLectureScheduleInputData(
-        lectureId,
-        schedules,
-        duration,
-      );
+    if (!schedules) {
+      return;
+    }
 
-      const existLectureSchdule =
-        await this.lectureRepository.trxExistLectureSchedule(
-          transaction,
-          createNewScheduleInputData,
-        );
+    const createNewScheduleInputData = this.createLectureScheduleInputData(
+      lectureId,
+      schedules,
+      duration,
+    );
 
-      if (existLectureSchdule) {
-        throw new ConflictException(schedules, 'duplicated schedules');
-      }
-
-      await this.lectureRepository.trxCreateLectureSchedule(
+    const existLectureSchdule =
+      await this.lectureRepository.trxExistLectureSchedule(
         transaction,
         createNewScheduleInputData,
       );
+
+    if (existLectureSchdule) {
+      throw new ConflictException(schedules, 'duplicated schedules');
     }
+
+    await this.lectureRepository.trxCreateLectureSchedule(
+      transaction,
+      createNewScheduleInputData,
+    );
+  }
+
+  private async updateLectureImage(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    images: string[],
+  ) {
+    if (!images) {
+      return;
+    }
+
+    const lectureImageInputData: LectureImageInputData[] =
+      this.createLectureImageInputData(lectureId, images);
+
+    await this.lectureRepository.trxDeleteLectureImage(transaction, lectureId);
+    await this.lectureRepository.trxCreateLectureImage(
+      transaction,
+      lectureImageInputData,
+    );
+  }
+
+  private async updateLectureCoupon(
+    transaction: PrismaTransaction,
+    coupons: number[],
+    lectureId: number,
+  ) {
+    if (!coupons) {
+      return;
+    }
+
+    await this.getValidCouponIds(coupons);
+
+    const lectureCounponTargetInputData =
+      this.createLectureCouponTargetInputData(lectureId, coupons);
+
+    await this.lectureRepository.trxDeleteLectureCouponTarget(
+      transaction,
+      lectureId,
+    );
+
+    await this.lectureRepository.trxCreateLectureCouponTarget(
+      transaction,
+      lectureCounponTargetInputData,
+    );
   }
 
   // RegularSchedule을 반복하며 중복을 확인하고, 중복이 있을 경우 예외를 throw하는 비동기 함수
@@ -775,6 +806,10 @@ export class LectureService {
     holidays: Date[],
     duration: number,
   ) {
+    if (!holidays) {
+      return;
+    }
+
     const oldHolidays = await this.lectureRepository.trxReadManyLectureHoliday(
       transaction,
       lectureId,

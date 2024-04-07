@@ -1,7 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { RegularLectureSchedules } from '../interface/lecture.interface';
+import {
+  DaySchedule,
+  RegularLectureSchedules,
+} from '../interface/lecture.interface';
 
 export class UpdateLectureDto {
   @ApiPropertyOptional({
@@ -138,9 +141,20 @@ export class UpdateLectureDto {
 
   @ApiProperty({
     example: [
+      { day: ['월', '수', '금'], dateTime: ['13:00:00', '14:00:00'] },
+      { day: ['수'], dateTime: ['13:00:00'] },
+    ],
+  })
+  @IsArray()
+  @IsOptional()
+  @Type(() => Array)
+  daySchedules?: DaySchedule[];
+
+  @ApiProperty({
+    example: [
       {
         day: ['월', '화'],
-        dateTime: ['13:00:00', '14:00:00'],
+        dateTime: '13:00:00',
         startDateTime: [
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
@@ -149,7 +163,7 @@ export class UpdateLectureDto {
       },
       {
         day: ['월', '수'],
-        dateTime: ['13:00:00', '14:00:00'],
+        dateTime: '13:00:00',
         startDateTime: [
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
@@ -158,7 +172,7 @@ export class UpdateLectureDto {
       },
       {
         day: ['수', '금'],
-        dateTime: ['13:00:00', '14:00:00'],
+        dateTime: '13:00:00',
         startDateTime: [
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',
           'Tue Oct 03 2023 20:00:00 GMT+0900 (Korean Standard Time)',

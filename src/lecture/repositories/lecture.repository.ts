@@ -547,7 +547,17 @@ export class LectureRepository {
     transaction: PrismaTransaction,
     daySchedules: DayScheduleInputData[],
   ): Promise<void> {
-    await transaction.lectureDay.createMany({ data: daySchedules });
+    try {
+      await transaction.lectureDay.createMany({ data: daySchedules });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException(
+          'LectureDay entry with the same lectureId, day, and dateTime already exists.',
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 
   async trxReadDaySchedule(
