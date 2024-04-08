@@ -32,12 +32,15 @@ export class NotificationService {
     const onlineMap =
       await this.notificationRepository.getOnlineMapWithTargetId(target);
 
-    if (onlineMap) {
-      const { socketId } = onlineMap;
-      this.eventsGateway.server
-        .to(socketId)
-        .emit('handleNewNotification', notification);
+    if (!onlineMap) {
+      return;
     }
+
+    const { socketId } = onlineMap;
+
+    this.eventsGateway.server
+      .to(socketId)
+      .emit('handleNewNotification', notification);
 
     return notification;
   }
