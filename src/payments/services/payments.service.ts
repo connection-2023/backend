@@ -69,6 +69,8 @@ import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventBus } from '@nestjs/cqrs';
+import { CreatedReservationEvent } from '@src/notification/events/notification.event';
 
 @Injectable()
 export class PaymentsService {
@@ -87,6 +89,7 @@ export class PaymentsService {
     @InjectQueue('payments-queue')
     private paymentsQueue: Queue,
     private eventEmitter: EventEmitter2,
+    private readonly eventBus: EventBus,
   ) {
     this.tossPaymentsSecretKey = this.configService.get<string>(
       'TOSS_PAYMENTS_SECRET_KEY',
@@ -687,6 +690,10 @@ export class PaymentsService {
         'InvalidPaymentStatus',
       );
     }
+
+    await this.eventBus.publish(
+      new CreatedReservationEvent(paymentInfo.reservation.id),
+    );
   }
 
   // 카드 결제 정보 처리

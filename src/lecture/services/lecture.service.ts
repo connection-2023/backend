@@ -49,11 +49,11 @@ import { DetailEnrollScheduleDto } from '../dtos/get-detail-enroll-schedule.dto'
 import { GetEnrollLectureListQueryDto } from '../dtos/get-enroll-lecture-list-query.dto';
 import { CombinedEnrollLectureWithCountDto } from '../dtos/combined-enroll-lecture-with-count.dto';
 import { EventBus } from '@nestjs/cqrs';
-import { NewLectureEvent } from '@src/notification/events/notification.event';
 import { CombinedScheduleDto } from '../dtos/combined-schedule.dto';
 import { EnrolledLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
 import { PaymentOrderStatus } from '@src/payments/constants/enum';
 import { plainToInstance } from 'class-transformer';
+import { LikedLecturerNewLectureEvent } from '@src/notification/events/notification.event';
 
 @Injectable()
 export class LectureService {
@@ -233,7 +233,7 @@ export class LectureService {
         }
 
         await this.eventBus.publish(
-          new NewLectureEvent(newLecture.id, lecturerId),
+          new LikedLecturerNewLectureEvent(newLecture.id, lecturerId),
         );
 
         return {

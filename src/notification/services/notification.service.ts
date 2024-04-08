@@ -4,13 +4,10 @@ import {
   INotificationTarget,
 } from '../interfaces/notification.interface';
 import { NotificationRepository } from './../repositories/notification.repository';
-import { Inject, Injectable } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { Injectable } from '@nestjs/common';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
-import { NotificationType } from 'aws-sdk/clients/budgets';
 import mongoose from 'mongoose';
 
 @Injectable()
@@ -18,44 +15,34 @@ export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly eventsGateway: EventsGateway,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async createNotification(
     target: INotificationTarget,
+    title: string,
     source: INotificationSource,
-    type: NotificationType,
+    description: string,
   ) {
-    let description: string;
-
-    switch (type) {
-      case 'newLecture':
-        description = '관심강사가 새로운 클래스를 개설했습니다.';
-        break;
-    }
-
-    const onlineMap = await this.cacheManager.store.keys('onlineMap:*');
-
-    for (const key of onlineMap) {
-      const onlineUser = await this.cacheManager.get(key);
-
-      if (onlineUser === target) {
-        const socketId = key.slice(9);
-        const notification = { target, source, description };
-
-        this.eventsGateway.server
-          .to(socketId)
-          .emit('notificationToClient', notification);
-
-        break;
-      }
-    }
-
-    return await this.notificationRepository.createNotification(
+    const notification = await this.notificationRepository.createNotification(
       target,
+      title,
       description,
       source,
     );
+    const onlineMap =
+      await this.notificationRepository.getOnlineMapWithTargetId(target);
+
+    if (!onlineMap) {
+      return;
+    }
+
+    const { socketId } = onlineMap;
+
+    this.eventsGateway.server
+      .to(socketId)
+      .emit('handleNewNotification', notification);
+
+    return notification;
   }
 
   async getMyNotification(

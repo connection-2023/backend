@@ -19,24 +19,33 @@ export class Notification extends Document {
   @IsNotEmpty()
   target: { userId: number | null; lecturerId: number | null };
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String })
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @Prop({ required: true, type: String })
   @IsNotEmpty()
   @IsString()
   description: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: Number })
   @IsNumber()
   lectureId?: number;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: Number })
+  @IsNumber()
+  reservationId: number;
+
+  @Prop({ required: false, type: Number })
   @IsNumber()
   couponId?: number;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: Number })
   @IsNumber()
   lecturePassId?: number;
 
-  @Prop({ required: false })
+  @Prop({ required: false, type: Number })
   @IsNumber()
   userPassId?: number;
 

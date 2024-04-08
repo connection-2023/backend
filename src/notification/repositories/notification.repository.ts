@@ -7,22 +7,27 @@ import {
   INotificationTarget,
 } from '../interfaces/notification.interface';
 import { Notification } from '../schemas/notification.schema';
+import { OnlineMap } from '@src/events/schemas/online-map.schema';
 
 @Injectable()
 export class NotificationRepository {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<Notification>,
+    @InjectModel(OnlineMap.name)
+    private readonly onlineMapModel: Model<OnlineMap>,
   ) {}
 
   async createNotification(
     target: INotificationTarget,
+    title: string,
     description: string,
     source: INotificationSource,
   ): Promise<Notification> {
     try {
       return await this.notificationModel.create({
         target,
+        title,
         description,
         ...source,
       });
@@ -40,5 +45,11 @@ export class NotificationRepository {
       .sort({ _id: -1 })
       .limit(pageSize)
       .exec();
+  }
+
+  async getOnlineMapWithTargetId(
+    target: INotificationTarget,
+  ): Promise<OnlineMap> {
+    return await this.onlineMapModel.findOne({ ...target, lastLogin: null });
   }
 }
