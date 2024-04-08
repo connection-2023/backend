@@ -43,10 +43,10 @@ export class GetLectureSearchResultDto {
   @ApiProperty({
     type: Boolean,
     description: '강의 인원 형식',
-    required: true,
+    required: false,
   })
   @IsBooleanString()
-  @IsNotEmpty()
+  @IsOptional()
   isGroup: Boolean;
 
   @ApiProperty({

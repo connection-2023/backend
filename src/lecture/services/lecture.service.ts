@@ -25,6 +25,7 @@ import {
 } from '@src/common/interface/common-interface';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
+  DaySchedule,
   LectureCouponTargetInputData,
   LectureHolidayInputData,
   LectureImageInputData,
@@ -380,20 +381,28 @@ export class LectureService {
       notification,
       endDate,
       schedules,
+      regularSchedules,
+      daySchedules,
       ...lecture
     } = updateLectureDto;
     const currentTime = new Date();
 
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        if (notification || notification.length === 0) {
+        const { duration } = await this.prismaService.lecture.findFirst({
+          where: { id: lectureId },
+          select: { duration: true },
+        });
+
+        if (notification !== undefined) {
           await this.lectureRepository.trxUpsertLectureNotification(
             transaction,
             lectureId,
             notification,
           );
         }
-        if (lecture.maxCapacity) {
+
+        if (lecture['maxCapacity']) {
           const readLectureParticipant =
             await this.lectureRepository.trxReadLectureParticipant(
               transaction,
@@ -407,6 +416,7 @@ export class LectureService {
             );
           }
         }
+
         if (endDate) {
           const isUpdatePossible = transaction.lecture.findFirst({
             where: { id: lectureId, endDate: { lt: new Date(endDate) } },
@@ -419,27 +429,44 @@ export class LectureService {
               '현재 마감일이 수정 마감일보다 큽니다.',
             );
           }
-          const { duration } = await this.prismaService.lecture.findFirst({
-            where: { id: lectureId },
-            select: { duration: true },
-          });
+        }
 
-          const createNewScheduleInputData =
-            this.createLectureScheduleInputData(lectureId, schedules, duration);
-
-          const existLectureSchdule =
-            await this.lectureRepository.trxExistLectureSchedule(
-              transaction,
-              createNewScheduleInputData,
-            );
-
-          if (existLectureSchdule) {
-            throw new ConflictException(schedules, 'duplicated schedules');
-          }
-
-          await this.lectureRepository.trxCreateLectureSchedule(
+        if (daySchedules) {
+          const daySchedulesInputData = daySchedules.map((daySchedule) => ({
+            lectureId,
+            ...daySchedule,
+          }));
+          await this.lectureRepository.trxCreateLectureDay(
             transaction,
-            createNewScheduleInputData,
+            daySchedulesInputData,
+          );
+        }
+
+        await this.extendLectureEndDate(
+          transaction,
+          lectureId,
+          schedules,
+          duration,
+        );
+
+        if (regularSchedules) {
+          // 중복 확인을 먼저 실행하고, 중복이 없을 경우 RegularSchedule 생성 작업을 처리하는 Promise.all
+          await Promise.all(
+            regularSchedules.map((schedule) =>
+              this.checkForDuplicates(lectureId, schedule),
+            ),
+          );
+
+          // RegularSchedule 생성 작업을 처리하는 Promise.all
+          await Promise.all(
+            regularSchedules.map((schedule) =>
+              this.processRegularSchedules(
+                transaction,
+                lectureId,
+                duration,
+                schedule,
+              ),
+            ),
           );
         }
 
@@ -449,87 +476,16 @@ export class LectureService {
           lecture,
         );
 
-        if (holidays) {
-          const oldHolidays =
-            await this.lectureRepository.trxReadManyLectureHoliday(
-              transaction,
-              lectureId,
-            );
-          const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
-          const schedule = this.compareHolidays(oldHolidaysArr, holidays);
-          const { createNewSchedule, deleteOldSchedule } = schedule;
+        await this.updateLectureHolidaysAndSchedules(
+          transaction,
+          lectureId,
+          holidays,
+          duration,
+        );
 
-          await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
+        await this.updateLectureImage(transaction, lectureId, images);
 
-          const { duration } = await this.prismaService.lecture.findFirst({
-            where: { id: lectureId },
-            select: { duration: true },
-          });
-          const lectureHolidayInputData = this.createLectureHolidayInputData(
-            lectureId,
-            holidays,
-          );
-          const createNewScheduleInputData =
-            this.createLectureScheduleInputData(
-              lectureId,
-              createNewSchedule,
-              duration,
-            );
-
-          const deletedOldSchedule =
-            await this.lectureRepository.trxDeleteManyOldSchedule(
-              transaction,
-              lectureId,
-              deleteOldSchedule,
-            );
-          const createdHolidaySchedule =
-            await this.lectureRepository.trxCreateLectureSchedule(
-              transaction,
-              createNewScheduleInputData,
-            );
-
-          const deletedLectureHoliday =
-            await this.lectureRepository.trxDeleteManyLectureHoliday(
-              transaction,
-              lectureId,
-            );
-          const createdLectureHoliday =
-            await this.lectureRepository.trxCreateLectureHoliday(
-              transaction,
-              lectureHolidayInputData,
-            );
-        }
-
-        if (images) {
-          const lectureImageInputData: LectureImageInputData[] =
-            this.createLectureImageInputData(lectureId, images);
-
-          await this.lectureRepository.trxDeleteLectureImage(
-            transaction,
-            lectureId,
-          );
-          await this.lectureRepository.trxCreateLectureImage(
-            transaction,
-            lectureImageInputData,
-          );
-        }
-
-        if (coupons) {
-          await this.getValidCouponIds(coupons);
-
-          const lectureCounponTargetInputData =
-            this.createLectureCouponTargetInputData(lectureId, coupons);
-
-          await this.lectureRepository.trxDeleteLectureCouponTarget(
-            transaction,
-            lectureId,
-          );
-
-          await this.lectureRepository.trxCreateLectureCouponTarget(
-            transaction,
-            lectureCounponTargetInputData,
-          );
-        }
+        await this.updateLectureCoupon(transaction, coupons, lectureId);
 
         return updatedLecture;
       },
@@ -722,6 +678,176 @@ export class LectureService {
         : regularLectureSchedule;
 
     return new EnrolledLectureScheduleDto(lastSchedule);
+  }
+
+  private async extendLectureEndDate(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    schedules: Date[],
+    duration: number,
+  ) {
+    if (!schedules) {
+      return;
+    }
+
+    const createNewScheduleInputData = this.createLectureScheduleInputData(
+      lectureId,
+      schedules,
+      duration,
+    );
+
+    const existLectureSchdule =
+      await this.lectureRepository.trxExistLectureSchedule(
+        transaction,
+        createNewScheduleInputData,
+      );
+
+    if (existLectureSchdule) {
+      throw new ConflictException(schedules, 'duplicated schedules');
+    }
+
+    await this.lectureRepository.trxCreateLectureSchedule(
+      transaction,
+      createNewScheduleInputData,
+    );
+  }
+
+  private async updateLectureImage(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    images: string[],
+  ) {
+    if (!images) {
+      return;
+    }
+
+    const lectureImageInputData: LectureImageInputData[] =
+      this.createLectureImageInputData(lectureId, images);
+
+    await this.lectureRepository.trxDeleteLectureImage(transaction, lectureId);
+    await this.lectureRepository.trxCreateLectureImage(
+      transaction,
+      lectureImageInputData,
+    );
+  }
+
+  private async updateLectureCoupon(
+    transaction: PrismaTransaction,
+    coupons: number[],
+    lectureId: number,
+  ) {
+    if (!coupons) {
+      return;
+    }
+
+    await this.getValidCouponIds(coupons);
+
+    const lectureCounponTargetInputData =
+      this.createLectureCouponTargetInputData(lectureId, coupons);
+
+    await this.lectureRepository.trxDeleteLectureCouponTarget(
+      transaction,
+      lectureId,
+    );
+
+    await this.lectureRepository.trxCreateLectureCouponTarget(
+      transaction,
+      lectureCounponTargetInputData,
+    );
+  }
+
+  // RegularSchedule을 반복하며 중복을 확인하고, 중복이 있을 경우 예외를 throw하는 비동기 함수
+  private async checkForDuplicates(
+    lectureId: number,
+    schedule: RegularLectureSchedules,
+  ) {
+    for (const date of schedule.startDateTime) {
+      const existRegularLectureSchedule =
+        await this.lectureRepository.existRegularLectureSchedule(
+          lectureId,
+          date,
+        );
+      if (existRegularLectureSchedule) {
+        throw new ConflictException('exist regular lecture schedule');
+      }
+    }
+  }
+
+  // RegularSchedule을 반복하여 비동기 작업을 수행하는 함수
+  private async processRegularSchedules(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    duration: number,
+    schedule: RegularLectureSchedules,
+  ) {
+    const regularLectureStatusInputData =
+      this.createRegularLectureStatusInputData(lectureId, schedule);
+    const regularLectureStatus =
+      await this.lectureRepository.trxCreateRegularLectureStatus(
+        transaction,
+        regularLectureStatusInputData,
+      );
+
+    const regularLectureSchedulesInputData =
+      this.createRegularLectureSchedulesInputData(
+        regularLectureStatus.id,
+        schedule.startDateTime,
+        duration,
+      );
+    return this.lectureRepository.trxCreateRegularLectureSchedule(
+      transaction,
+      regularLectureSchedulesInputData,
+    );
+  }
+
+  private async updateLectureHolidaysAndSchedules(
+    transaction: PrismaTransaction,
+    lectureId: number,
+    holidays: Date[],
+    duration: number,
+  ) {
+    if (!holidays) {
+      return;
+    }
+
+    const oldHolidays = await this.lectureRepository.trxReadManyLectureHoliday(
+      transaction,
+      lectureId,
+    );
+    const oldHolidaysArr = this.createLectureHolidayArr(oldHolidays);
+    const schedule = this.compareHolidays(oldHolidaysArr, holidays);
+    const { createNewSchedule, deleteOldSchedule } = schedule;
+
+    await this.existReservationWithSchedule(lectureId, deleteOldSchedule);
+
+    const lectureHolidayInputData = this.createLectureHolidayInputData(
+      lectureId,
+      holidays,
+    );
+    const createNewScheduleInputData = this.createLectureScheduleInputData(
+      lectureId,
+      createNewSchedule,
+      duration,
+    );
+
+    await this.lectureRepository.trxDeleteManyOldSchedule(
+      transaction,
+      lectureId,
+      deleteOldSchedule,
+    );
+    await this.lectureRepository.trxCreateLectureSchedule(
+      transaction,
+      createNewScheduleInputData,
+    );
+
+    await this.lectureRepository.trxDeleteManyLectureOldHoliday(
+      transaction,
+      lectureId,
+    );
+    await this.lectureRepository.trxCreateLectureHoliday(
+      transaction,
+      lectureHolidayInputData,
+    );
   }
 
   private createUserIdAndLecturerId(
@@ -982,6 +1108,7 @@ export class LectureService {
 
     return regularLectureSchedulesInputData;
   }
+
   private createLectureCouponTargetInputData(
     lectureId: number,
     coupons: number[],

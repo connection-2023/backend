@@ -238,7 +238,7 @@ export class SearchService {
               { match: { 'lecturer.nickname.nori': value } },
               { match: { 'lecturer.nickname.ngram': value } },
             ],
-            must_not: lecturerIdQueries,
+            must_not: [...lecturerIdQueries, { term: { isactive: false } }],
           },
         },
         sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
@@ -290,7 +290,7 @@ export class SearchService {
             { match: { 'lecturePassTarget.title.ngram': value } },
           ],
           must: { match: { isdisabled: false } },
-          must_not: lecturerIdQueries,
+          must_not: [...lecturerIdQueries, { term: { isdisabled: true } }],
         },
       },
       sort: [{ updatedat: { order: 'desc' } }, { _score: { order: 'desc' } }],
@@ -586,7 +586,7 @@ export class SearchService {
             methodQuery,
             isGroupQuery,
           ].filter(Boolean),
-          must_not: lecturerIdQueries,
+          must_not: [...lecturerIdQueries, { term: { isactive: false } }],
         },
       },
       search_after: searchAfter,
@@ -684,11 +684,13 @@ export class SearchService {
   }
 
   private buildIsGroupQuery(isGroup: Boolean) {
-    return {
-      bool: {
-        should: { match: { isgroup: isGroup } },
-      },
-    };
+    return isGroup
+      ? {
+          bool: {
+            should: { match: { isgroup: isGroup } },
+          },
+        }
+      : undefined;
   }
 
   private async addLectureLikeStatus(
@@ -870,7 +872,7 @@ export class SearchService {
       query: {
         bool: {
           must: [{ match: { isdisabled: false } }, searchQuery].filter(Boolean),
-          must_not: lecturerIdQueries,
+          must_not: [...lecturerIdQueries, { term: { isdisabled: true } }],
         },
       },
       search_after: searchAfter,
