@@ -20,6 +20,7 @@ export class NotificationService {
 
   async createNotification(
     target: INotificationTarget,
+    title: string,
     source: INotificationSource,
     description: string,
   ) {
@@ -28,6 +29,7 @@ export class NotificationService {
     const { socketId } = onlineMap;
     const notification = await this.notificationRepository.createNotification(
       target,
+      title,
       description,
       source,
     );

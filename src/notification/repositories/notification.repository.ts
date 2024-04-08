@@ -20,12 +20,14 @@ export class NotificationRepository {
 
   async createNotification(
     target: INotificationTarget,
+    title: string,
     description: string,
     source: INotificationSource,
   ): Promise<Notification> {
     try {
       return await this.notificationModel.create({
         target,
+        title,
         description,
         ...source,
       });

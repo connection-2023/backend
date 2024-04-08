@@ -1,6 +1,4 @@
-import { INotificationTarget } from '../interfaces/notification.interface';
-
-export class CreatedLectureEvent {
+export class LikedLecturerNewLectureEvent {
   constructor(
     public readonly lectureId: number,
     public readonly lecturerId: number,

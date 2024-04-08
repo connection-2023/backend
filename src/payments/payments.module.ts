@@ -8,12 +8,14 @@ import { LecturerPaymentsController } from '@src/payments/controllers/lecturer-p
 import { LecturerPaymentsService } from '@src/payments/services/lecturer-payments.service';
 import { BullModule } from '@nestjs/bull';
 import { PaymentsConsumer } from './services/payments-consumer';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'payments-queue',
     }),
+    CqrsModule,
   ],
   providers: [
     PaymentsService,

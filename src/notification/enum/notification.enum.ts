@@ -1,4 +1,6 @@
 export enum NotificationType {
-  CreatedLecture = 'createdLecture',
-  CreatedReservation = 'createdReservation',
+  LikedLecturerNewLecture = 1,
+  CreatedReservation = 2,
+  DiscountCouponExpiring = 3,
+  PassExpiring = 4,
 }

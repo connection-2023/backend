@@ -53,7 +53,7 @@ import { CombinedScheduleDto } from '../dtos/combined-schedule.dto';
 import { EnrolledLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
 import { PaymentOrderStatus } from '@src/payments/constants/enum';
 import { plainToInstance } from 'class-transformer';
-import { CreatedLectureEvent } from '@src/notification/events/notification.event';
+import { LikedLecturerNewLectureEvent } from '@src/notification/events/notification.event';
 
 @Injectable()
 export class LectureService {
@@ -233,7 +233,7 @@ export class LectureService {
         }
 
         await this.eventBus.publish(
-          new CreatedLectureEvent(newLecture.id, lecturerId),
+          new LikedLecturerNewLectureEvent(newLecture.id, lecturerId),
         );
 
         return {
