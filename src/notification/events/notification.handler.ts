@@ -10,7 +10,7 @@ import {
   INotificationTarget,
 } from '../interfaces/notification.interface';
 
-@EventsHandler([LikedLecturerNewLectureEvent, CreatedReservationEvent])
+@EventsHandler(LikedLecturerNewLectureEvent, CreatedReservationEvent)
 export class NotificationHandler {
   constructor(
     private readonly notificationService: NotificationService,

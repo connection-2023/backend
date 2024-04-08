@@ -9,7 +9,6 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
-import { NotificationType } from '../enum/notification.enum';
 
 @Injectable()
 export class NotificationService {
@@ -24,19 +23,21 @@ export class NotificationService {
     source: INotificationSource,
     description: string,
   ) {
-    const onlineMap =
-      await this.notificationRepository.getOnlineMapWithTargetId(target);
-    const { socketId } = onlineMap;
     const notification = await this.notificationRepository.createNotification(
       target,
       title,
       description,
       source,
     );
+    const onlineMap =
+      await this.notificationRepository.getOnlineMapWithTargetId(target);
 
-    this.eventsGateway.server
-      .to(socketId)
-      .emit('handleNewNotification', notification);
+    if (onlineMap) {
+      const { socketId } = onlineMap;
+      this.eventsGateway.server
+        .to(socketId)
+        .emit('handleNewNotification', notification);
+    }
 
     return notification;
   }
