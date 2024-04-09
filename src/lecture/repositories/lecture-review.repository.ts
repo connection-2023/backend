@@ -278,7 +278,7 @@ export class LectureReviewRepository {
           regularLectureStatus: true,
         },
       },
-      lecture: true,
+      lecture: { include: { lecturer: true } },
       users: {
         include: {
           userProfileImage: true,

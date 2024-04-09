@@ -265,8 +265,10 @@ export class LectureReviewService {
       userId,
     );
 
-    const totalItemCount = reviews[0] ? reviews[0].lecture.reviewCount : 0;
-    const totalStars = reviews[0] ? reviews[0].lecture.stars : 0;
+    const totalItemCount = reviews[0]
+      ? reviews[0].lecture['lecturer'].reviewCount
+      : 0;
+    const totalStars = reviews[0] ? reviews[0].lecture['lecturer'].stars : 0;
 
     return new CombinedLectureReviewWithCountDto(
       reviews,
