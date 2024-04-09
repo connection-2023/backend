@@ -16,11 +16,20 @@ export class CombinedLectureReviewWithCountDto {
   @ApiProperty({ description: '리뷰 수', type: Number })
   totalItemCount: number;
 
-  constructor(reviews: ILectureReview[], totalItemCount: number) {
+  @Expose()
+  @ApiProperty({ description: '리뷰 평점' })
+  totalStars: number;
+
+  constructor(
+    reviews: ILectureReview[],
+    totalItemCount: number,
+    totalStars: number,
+  ) {
     Object.assign(this);
     this.reviews = reviews
       ? reviews.map((review) => new LectureReviewDto(review))
       : undefined;
     this.totalItemCount = totalItemCount;
+    this.totalStars = totalStars;
   }
 }
