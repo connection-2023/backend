@@ -43,10 +43,6 @@ export class Notification extends Document {
 
   @Prop({ required: false, type: Number })
   @IsNumber()
-  lecturePassId?: number;
-
-  @Prop({ required: false, type: Number })
-  @IsNumber()
   userPassId?: number;
 
   @Prop({ type: Date, default: null })

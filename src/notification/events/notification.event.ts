@@ -12,3 +12,7 @@ export class CreatedReservationEvent {
 export class DiscountCouponExpiringEvent {
   constructor(public readonly couponId: number) {}
 }
+
+export class LecturePassExpiringEvent {
+  constructor(public readonly userPassId: number) {}
+}

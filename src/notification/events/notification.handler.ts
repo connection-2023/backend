@@ -4,6 +4,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   CreatedReservationEvent,
   DiscountCouponExpiringEvent,
+  LecturePassExpiringEvent,
   LikedLecturerNewLectureEvent,
 } from './notification.event';
 import {
@@ -18,6 +19,7 @@ import { Notification } from '../schemas/notification.schema';
   LikedLecturerNewLectureEvent,
   CreatedReservationEvent,
   DiscountCouponExpiringEvent,
+  LecturePassExpiringEvent,
 )
 export class NotificationHandler {
   constructor(
@@ -31,7 +33,8 @@ export class NotificationHandler {
     event:
       | LikedLecturerNewLectureEvent
       | CreatedReservationEvent
-      | DiscountCouponExpiringEvent,
+      | DiscountCouponExpiringEvent
+      | LecturePassExpiringEvent,
   ) {
     switch (event.constructor) {
       case LikedLecturerNewLectureEvent:
@@ -51,7 +54,31 @@ export class NotificationHandler {
           event as DiscountCouponExpiringEvent,
         );
         break;
+
+      case LecturePassExpiringEvent:
+        await this.handleLecturePassExpiringEvent(
+          event as LecturePassExpiringEvent,
+        );
+        break;
     }
+  }
+
+  private async sendNotification(
+    targets: INotificationTarget[],
+    title: string,
+    source: INotificationSource,
+    description: string,
+  ) {
+    await Promise.all(
+      targets.map(async (target) => {
+        return this.notificationService.createNotification(
+          target,
+          title,
+          source,
+          description,
+        );
+      }),
+    );
   }
 
   private async handleLikedLecturerNewLectureEvent(
@@ -90,7 +117,7 @@ export class NotificationHandler {
     });
     const targets = [
       { userId: reservation.userId },
-      { lecturerId: reservation.lecture.lecturerId },
+      // { lecturerId: reservation.lecture.lecturerId },
     ];
     const title = reservation.lecture.title;
     const description = `${
@@ -119,32 +146,27 @@ export class NotificationHandler {
       : `${coupon.discountPrice}원`;
     const title = `${lecturerName}의 ${formattedDiscountType} 할인 쿠폰`;
     const description = '쿠폰 만료일이 7일 남았습니다.';
-    const notification = await this.notificationModel.findOne({
-      couponId,
-    });
-
-    if (notification) {
-      return;
-    }
 
     await this.sendNotification(targets, title, { couponId }, description);
   }
 
-  private async sendNotification(
-    targets: INotificationTarget[],
-    title: string,
-    source: INotificationSource,
-    description: string,
+  private async handleLecturePassExpiringEvent(
+    event: LecturePassExpiringEvent,
   ) {
-    await Promise.all(
-      targets.map(async (target) => {
-        return this.notificationService.createNotification(
-          target,
-          title,
-          source,
-          description,
-        );
-      }),
-    );
+    const { userPassId } = event;
+    const userPass = await this.prismaService.userPass.findFirst({
+      where: { id: userPassId },
+      include: {
+        users: true,
+        lecturePass: {
+          include: { lecturePassTarget: { include: { lecture: true } } },
+        },
+      },
+    });
+    const targets = [{ userId: userPass.userId }];
+    const title = userPass.lecturePass.title;
+    const description = '패스권 만료일이 7일 남았습니다.';
+
+    await this.sendNotification(targets, title, { userPassId }, description);
   }
 }
