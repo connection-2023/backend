@@ -10,6 +10,9 @@ import {
   INotificationSource,
   INotificationTarget,
 } from '../interfaces/notification.interface';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Notification } from '../schemas/notification.schema';
 
 @EventsHandler(
   LikedLecturerNewLectureEvent,
@@ -20,6 +23,8 @@ export class NotificationHandler {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly prismaService: PrismaService,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<Notification>,
   ) {}
 
   async handle(
@@ -109,22 +114,18 @@ export class NotificationHandler {
       userId: userCoupon.userId,
     }));
     const lecturerName = coupon.lecturer.nickname;
-    const couponExpireDate = coupon.endAt.toLocaleString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-    });
-    const formattedCouponExpireDate = new Date(couponExpireDate)
-      .toISOString()
-      .replace(/T/, ' ')
-      .replace(/\..+/, '')
-      .replace(/-/g, '년 ')
-      .replace(/:/g, '시 ')
-      .split(' ');
     const formattedDiscountType = coupon.percentage
       ? `${coupon.percentage}%`
       : `${coupon.discountPrice}원`;
-    const finalDate = `${formattedCouponExpireDate[0]}월 ${formattedCouponExpireDate[1]}일 ${formattedCouponExpireDate[2]}분`;
     const title = `${lecturerName}의 ${formattedDiscountType} 할인 쿠폰`;
-    const description = `${finalDate}에 만료 예정입니다.`;
+    const description = '쿠폰 만료일이 7일 남았습니다.';
+    const notification = await this.notificationModel.findOne({
+      couponId,
+    });
+
+    if (notification) {
+      return;
+    }
 
     await this.sendNotification(targets, title, { couponId }, description);
   }
