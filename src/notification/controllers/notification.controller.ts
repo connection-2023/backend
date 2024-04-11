@@ -19,7 +19,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
 @ApiTags('알림')
-@Controller('notifications')
+@Controller('notifications/:id')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -38,8 +38,23 @@ export class NotificationController {
   }
 
   @ApiNotification.MarkNotificationAsRead({ summary: '알림 읽음 처리' })
-  @Patch(':id')
+  @SetResponseKey('updatedNotification')
+  @Patch()
   async markNotificationAsRead(@Param('id') id: string) {
     return await this.notificationService.markNotificationAsRead(id);
+  }
+
+  @ApiNotification.GetUnreadNotificationCount({
+    summary: '읽지 않은 알림 개수 조회',
+  })
+  @SetResponseKey('unreadNotificationCount')
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Get('unread-count')
+  async getUnreadNotificationCount(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.notificationService.getUnreadNotificationCount(
+      authorizedData,
+    );
   }
 }

@@ -62,4 +62,8 @@ export class NotificationRepository {
       )
       .exec();
   }
+
+  async countUnreadNotifications(where): Promise<number> {
+    return await this.notificationModel.countDocuments(where);
+  }
 }

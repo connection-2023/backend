@@ -72,6 +72,15 @@ export class NotificationService {
     return new NotificationDto(updatedNotification);
   }
 
+  async getUnreadNotificationCount(authorizedData: ValidateResult) {
+    const where = { readedAt: null, deletedAt: null };
+    authorizedData.user
+      ? (where['target.userId'] = authorizedData.user.id)
+      : (where['target.lecturerId'] = authorizedData.lecturer.id);
+
+    return await this.notificationRepository.countUnreadNotifications(where);
+  }
+
   private getNotificationFilterOption(
     authorizedData: ValidateResult,
     lastItemId: string,
