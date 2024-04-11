@@ -65,10 +65,17 @@ export class NotificationService {
     );
   }
 
+  async markNotificationAsRead(notificationId: string) {
+    const updatedNotification =
+      await this.notificationRepository.markNotificationAsRead(notificationId);
+
+    return new NotificationDto(updatedNotification);
+  }
+
   private getNotificationFilterOption(
     authorizedData: ValidateResult,
     lastItemId: string,
-    filterOption: NotificationFilter,
+    filterOption?: NotificationFilter,
   ) {
     const where = {};
     authorizedData.user

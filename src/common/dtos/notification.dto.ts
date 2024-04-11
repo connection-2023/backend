@@ -34,6 +34,10 @@ export class NotificationDto {
   @Type(() => Number)
   userPassId: number;
 
+  @Expose()
+  @ApiProperty({ description: '읽음 여부', type: Date })
+  readedAt: Date | null;
+
   constructor(notification: Partial<NotificationDto>) {
     Object.assign(this, notification['_doc']);
 

@@ -52,4 +52,14 @@ export class NotificationRepository {
   ): Promise<OnlineMap> {
     return await this.onlineMapModel.findOne({ ...target, lastLogin: null });
   }
+
+  async markNotificationAsRead(notificationId: string): Promise<Notification> {
+    return await this.notificationModel
+      .findByIdAndUpdate(
+        notificationId,
+        { readedAt: new Date() },
+        { new: true },
+      )
+      .exec();
+  }
 }

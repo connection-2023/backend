@@ -1,4 +1,12 @@
-import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -27,5 +35,11 @@ export class NotificationController {
       authorizedData,
       getPageTokenQueryDto,
     );
+  }
+
+  @ApiNotification.MarkNotificationAsRead({ summary: '알림 읽음 처리' })
+  @Patch(':id')
+  async markNotificationAsRead(@Param('id') id: string) {
+    return await this.notificationService.markNotificationAsRead(id);
   }
 }
