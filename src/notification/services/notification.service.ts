@@ -51,9 +51,9 @@ export class NotificationService {
     { lastItemId, pageSize, filterOption }: GetPageTokenQueryDto,
   ) {
     const where = this.getNotificationFilterOption(
-      filterOption,
       authorizedData,
       lastItemId,
+      filterOption,
     );
     const notifications = await this.notificationRepository.getMyNotification(
       where,
@@ -65,17 +65,10 @@ export class NotificationService {
     );
   }
 
-  async getMyUnreadNotification(authorizedData: ValidateResult) {
-    const where = {};
-    authorizedData.user
-      ? (where['target.userId'] = authorizedData.user.id)
-      : (where['target.lecturerId'] = authorizedData.lecturer.id);
-  }
-
   private getNotificationFilterOption(
-    filterOption: NotificationFilter,
     authorizedData: ValidateResult,
     lastItemId: string,
+    filterOption: NotificationFilter,
   ) {
     const where = {};
     authorizedData.user
@@ -87,7 +80,7 @@ export class NotificationService {
       : false;
 
     switch (filterOption) {
-      case NotificationFilter.ReservedLecture:
+      case NotificationFilter.Reserved:
         where['reservationId'] = { $exists: true };
         break;
 
@@ -96,8 +89,12 @@ export class NotificationService {
         where['userPassId'] = { $exists: true };
         break;
 
-      case NotificationFilter.LikedLecture:
+      case NotificationFilter.Liked:
         where['lectureId'] = { $exists: true };
+        break;
+
+      case NotificationFilter.Unread:
+        where['readedAt'] = null;
         break;
     }
 
