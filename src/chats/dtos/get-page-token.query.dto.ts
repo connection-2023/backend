@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { NotificationFilter } from '@src/notification/enum/notification.enum';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import mongoose from 'mongoose';
 
 export class GetPageTokenQueryDto {
@@ -17,4 +24,13 @@ export class GetPageTokenQueryDto {
   @IsNumber()
   @Type(() => Number)
   pageSize: number;
+
+  @ApiProperty({
+    description: '필터 옵션',
+    enum: NotificationFilter,
+    required: true,
+  })
+  @IsEnum(NotificationFilter, { each: true })
+  @IsNotEmpty()
+  filterOption: NotificationFilter;
 }

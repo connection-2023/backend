@@ -52,4 +52,10 @@ export class NotificationRepository {
   ): Promise<OnlineMap> {
     return await this.onlineMapModel.findOne({ ...target, lastLogin: null });
   }
+
+  async getMyUnreadNotification(
+    target: INotificationTarget,
+  ): Promise<Notification[]> {
+    return await this.notificationModel.find({ target, readedAt: null });
+  }
 }

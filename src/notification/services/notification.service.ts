@@ -9,6 +9,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
+import { NotificationFilter } from '../enum/notification.enum';
 
 @Injectable()
 export class NotificationService {
@@ -47,7 +48,34 @@ export class NotificationService {
 
   async getMyNotification(
     authorizedData: ValidateResult,
-    { lastItemId, pageSize }: GetPageTokenQueryDto,
+    { lastItemId, pageSize, filterOption }: GetPageTokenQueryDto,
+  ) {
+    const where = this.getNotificationFilterOption(
+      filterOption,
+      authorizedData,
+      lastItemId,
+    );
+    const notifications = await this.notificationRepository.getMyNotification(
+      where,
+      pageSize,
+    );
+
+    return notifications.map(
+      (notification) => new NotificationDto(notification),
+    );
+  }
+
+  async getMyUnreadNotification(authorizedData: ValidateResult) {
+    const where = {};
+    authorizedData.user
+      ? (where['target.userId'] = authorizedData.user.id)
+      : (where['target.lecturerId'] = authorizedData.lecturer.id);
+  }
+
+  private getNotificationFilterOption(
+    filterOption: NotificationFilter,
+    authorizedData: ValidateResult,
+    lastItemId: string,
   ) {
     const where = {};
     authorizedData.user
@@ -58,13 +86,21 @@ export class NotificationService {
       ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(lastItemId) })
       : false;
 
-    const notifications = await this.notificationRepository.getMyNotification(
-      where,
-      pageSize,
-    );
+    switch (filterOption) {
+      case NotificationFilter.ReservedLecture:
+        where['reservationId'] = { $exists: true };
+        break;
 
-    return notifications.map(
-      (notification) => new NotificationDto(notification),
-    );
+      case NotificationFilter.CouponOrPass:
+        where['couponId'] = { $exists: true };
+        where['userPassId'] = { $exists: true };
+        break;
+
+      case NotificationFilter.LikedLecture:
+        where['lectureId'] = { $exists: true };
+        break;
+    }
+
+    return where;
   }
 }
