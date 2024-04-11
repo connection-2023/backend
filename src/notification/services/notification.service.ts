@@ -9,6 +9,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
+import { NotificationFilter } from '../enum/notification.enum';
 
 @Injectable()
 export class NotificationService {
@@ -47,7 +48,27 @@ export class NotificationService {
 
   async getMyNotification(
     authorizedData: ValidateResult,
-    { lastItemId, pageSize }: GetPageTokenQueryDto,
+    { lastItemId, pageSize, filterOption }: GetPageTokenQueryDto,
+  ) {
+    const where = this.getNotificationFilterOption(
+      authorizedData,
+      lastItemId,
+      filterOption,
+    );
+    const notifications = await this.notificationRepository.getMyNotification(
+      where,
+      pageSize,
+    );
+
+    return notifications.map(
+      (notification) => new NotificationDto(notification),
+    );
+  }
+
+  private getNotificationFilterOption(
+    authorizedData: ValidateResult,
+    lastItemId: string,
+    filterOption: NotificationFilter,
   ) {
     const where = {};
     authorizedData.user
@@ -58,13 +79,25 @@ export class NotificationService {
       ? (where['_id'] = { $lt: new mongoose.Types.ObjectId(lastItemId) })
       : false;
 
-    const notifications = await this.notificationRepository.getMyNotification(
-      where,
-      pageSize,
-    );
+    switch (filterOption) {
+      case NotificationFilter.Reserved:
+        where['reservationId'] = { $exists: true };
+        break;
 
-    return notifications.map(
-      (notification) => new NotificationDto(notification),
-    );
+      case NotificationFilter.CouponOrPass:
+        where['couponId'] = { $exists: true };
+        where['userPassId'] = { $exists: true };
+        break;
+
+      case NotificationFilter.Liked:
+        where['lectureId'] = { $exists: true };
+        break;
+
+      case NotificationFilter.Unread:
+        where['readedAt'] = null;
+        break;
+    }
+
+    return where;
   }
 }
