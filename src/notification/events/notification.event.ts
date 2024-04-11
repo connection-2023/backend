@@ -8,3 +8,11 @@ export class LikedLecturerNewLectureEvent {
 export class CreatedReservationEvent {
   constructor(public readonly reservationId: number) {}
 }
+
+export class DiscountCouponExpiringEvent {
+  constructor(public readonly couponId: number) {}
+}
+
+export class LecturePassExpiringEvent {
+  constructor(public readonly userPassId: number) {}
+}
