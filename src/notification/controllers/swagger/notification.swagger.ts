@@ -1,3 +1,4 @@
+import { StatusResponseDto } from '@src/common/swagger/dtos/status-response.dto';
 import { ApiOperator } from '@src/common/types/type';
 import { NotificationController } from '../notification.controller';
 import { OperationObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
@@ -19,6 +20,33 @@ export const ApiNotification: ApiOperator<keyof NotificationController> = {
         'notifications',
         NotificationDto,
         { isArray: true },
+      ),
+    );
+  },
+  MarkNotificationAsRead: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'updatedNotification',
+        NotificationDto,
+      ),
+    );
+  },
+  GetUnreadNotificationCount: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'unreadNotificationCount',
+        Number,
       ),
     );
   },

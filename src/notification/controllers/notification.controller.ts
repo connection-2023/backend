@@ -1,4 +1,12 @@
-import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -11,7 +19,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
 @ApiTags('알림')
-@Controller('notifications')
+@Controller('notifications/:id')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -26,6 +34,27 @@ export class NotificationController {
     return await this.notificationService.getMyNotification(
       authorizedData,
       getPageTokenQueryDto,
+    );
+  }
+
+  @ApiNotification.MarkNotificationAsRead({ summary: '알림 읽음 처리' })
+  @SetResponseKey('updatedNotification')
+  @Patch()
+  async markNotificationAsRead(@Param('id') id: string) {
+    return await this.notificationService.markNotificationAsRead(id);
+  }
+
+  @ApiNotification.GetUnreadNotificationCount({
+    summary: '읽지 않은 알림 개수 조회',
+  })
+  @SetResponseKey('unreadNotificationCount')
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Get('unread-count')
+  async getUnreadNotificationCount(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.notificationService.getUnreadNotificationCount(
+      authorizedData,
     );
   }
 }
