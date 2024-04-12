@@ -364,9 +364,11 @@ export class LectureReviewService {
         break;
     }
 
-    if (lectureId) {
-      where['lectureId'] = lectureId;
+    if (!lectureId) {
+      return where;
     }
+
+    where['lectureId'] = lectureId;
 
     return where;
   }
