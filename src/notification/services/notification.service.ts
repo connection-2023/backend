@@ -80,12 +80,16 @@ export class NotificationService {
     return await this.notificationRepository.countUnreadNotifications(where);
   }
 
+  async deleteNotification(notificationId: string) {
+    await this.notificationRepository.deleteNotification(notificationId);
+  }
+
   private getNotificationFilterOption(
     authorizedData: ValidateResult,
     lastItemId: string,
     filterOption: NotificationFilter,
   ) {
-    const where = {};
+    const where = { deletedAt: null };
     authorizedData.user
       ? (where['target.userId'] = authorizedData.user.id)
       : (where['target.lecturerId'] = authorizedData.lecturer.id);

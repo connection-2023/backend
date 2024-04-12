@@ -66,4 +66,10 @@ export class NotificationRepository {
   async countUnreadNotifications(where): Promise<number> {
     return await this.notificationModel.countDocuments(where);
   }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    await this.notificationModel.findByIdAndUpdate(notificationId, {
+      deletedAt: new Date(),
+    });
+  }
 }

@@ -65,4 +65,14 @@ export const ApiNotification: ApiOperator<keyof NotificationController> = {
       ),
     );
   },
+  DeleteNotification: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      StatusResponseDto.swaggerBuilder(HttpStatus.OK, 'deleteNotification'),
+    );
+  },
 };

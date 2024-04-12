@@ -2,6 +2,7 @@ import { PrismaService } from '@src/prisma/prisma.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
@@ -93,5 +94,12 @@ export class NotificationController {
         );
       }),
     );
+  }
+
+  @ApiNotification.DeleteNotification({ summary: '알림 삭제' })
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Delete()
+  async deleteNotification(@Param('id') id: string) {
+    await this.notificationService.deleteNotification(id);
   }
 }
