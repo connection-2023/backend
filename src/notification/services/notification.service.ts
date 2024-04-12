@@ -1,3 +1,5 @@
+import { PrismaService } from '@src/prisma/prisma.service';
+import { CreateNotificationDto } from './../dtos/create-notification.dto';
 import { EventsGateway } from '@src/events/events.gateway';
 import {
   INotificationSource,
@@ -17,6 +19,7 @@ export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly eventsGateway: EventsGateway,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async createNotification(
@@ -61,6 +64,30 @@ export class NotificationService {
 
     return notifications.map(
       (notification) => new NotificationDto(notification),
+    );
+  }
+
+  async createManyNotifications(
+    authorizedData: ValidateResult,
+    createNotificationDto: CreateNotificationDto,
+  ) {
+    const lecturerId = authorizedData.lecturer.id;
+    const { targets, description } = createNotificationDto;
+    const source = { lecturerId };
+    const lecturer = await this.prismaService.lecturer.findFirst({
+      where: { id: lecturerId },
+    });
+    const title = lecturer.nickname;
+
+    return await Promise.all(
+      targets.map(async (target) => {
+        return this.createNotification(
+          { userId: target },
+          title,
+          source,
+          description,
+        );
+      }),
     );
   }
 

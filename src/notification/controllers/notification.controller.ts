@@ -69,30 +69,16 @@ export class NotificationController {
   }
 
   @SetResponseKey('createdNotifications')
-  @ApiNotification.CreateNotification({ summary: '개인 알림 생성' })
+  @ApiNotification.CreateNotification({ summary: '강사 -> 수강생 알림 생성' })
   @UseGuards(LecturerAccessTokenGuard)
   @Post()
   async createNotification(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createNotificationDto: CreateNotificationDto,
   ) {
-    const lecturerId = authorizedData.lecturer.id;
-    const { targets, description } = createNotificationDto;
-    const source = { lecturerId };
-    const lecturer = await this.prismaService.lecturer.findFirst({
-      where: { id: lecturerId },
-    });
-    const title = lecturer.nickname;
-
-    return await Promise.all(
-      targets.map(async (target) => {
-        return this.notificationService.createNotification(
-          { userId: target },
-          title,
-          source,
-          description,
-        );
-      }),
+    return await this.notificationService.createManyNotifications(
+      authorizedData,
+      createNotificationDto,
     );
   }
 
