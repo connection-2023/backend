@@ -1,7 +1,7 @@
 export enum NotificationFilter {
-  All = '전체',
-  Reserved = '수강 클래스',
-  Liked = '관심 클래스',
-  CouponOrPass = '쿠폰/패스권',
-  Unread = '읽지 않은 알림',
+  ALL = '전체',
+  RESERVED = '수강 클래스',
+  LIKED = '관심 클래스',
+  COUPON_OR_PASS = '쿠폰/패스권',
+  UNREAD = '읽지 않은 알림',
 }

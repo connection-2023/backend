@@ -15,8 +15,9 @@ import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-
 import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
-import { OrderByEnum } from '@src/common/enum/enum';
+import { LecturerMyReviewType, OrderByEnum } from '@src/common/enum/enum';
 import { CombinedLectureReviewWithCountDto } from '../dtos/combined-lecture-review-with-count.dto';
+import { CombinedMyReviewWithCountDto } from '../dtos/combined-my-review-with-count.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -154,16 +155,35 @@ export class LectureReviewService {
 
   async readManyMyReviewWithUserId(
     userId: number,
-    query: ReadManyLectureReviewQueryDto,
+    {
+      take,
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      orderBy,
+    }: ReadManyLecturerReviewQueryDto,
   ) {
-    const { orderBy } = query;
-
     const order = this.getLectureReviewSortOption(orderBy);
+    const paginationParams: IPaginationParams = this.getPaginationParams({
+      currentPage,
+      targetPage,
+      firstItemId,
+      lastItemId,
+      take,
+    });
+    const totalItemCount =
+      await this.lectureReviewRepository.readManyMyReviewCountWithUserId(
+        userId,
+      );
+    const reviews =
+      await this.lectureReviewRepository.readManyMyReviewWithUserId(
+        userId,
+        order,
+        paginationParams,
+      );
 
-    return await this.lectureReviewRepository.readManyMyReviewWithUserId(
-      userId,
-      order,
-    );
+    return new CombinedMyReviewWithCountDto(reviews, totalItemCount);
   }
 
   async readManyReservationThatCanBeCreated(userId: number) {
@@ -185,31 +205,16 @@ export class LectureReviewService {
       lectureId,
     }: ReadManyLecturerMyReviewQueryDto,
   ) {
-    let count: number;
-    const where = { lecture: { lecturerId } };
+    const where = this.getLecturerMyReviewType(
+      lecturerMyReviewType,
+      lecturerId,
+      lectureId,
+    );
 
-    if (lecturerMyReviewType === '진행중인 클래스') {
-      where.lecture['isActive'] = true;
-      count = await this.prismaService.lectureReview.count({
-        where: { lecture: { isActive: true, lecturerId } },
-      });
-    } else if (lecturerMyReviewType === '종료된 클래스') {
-      where.lecture['isActive'] = false;
-      count = await this.prismaService.lectureReview.count({
-        where: { lecture: { isActive: false, lecturerId } },
-      });
-    } else if (lecturerMyReviewType === '전체') {
-      count = await this.prismaService.lectureReview.count({
-        where: { lecture: { lecturerId } },
-      });
-    }
-
-    if (lectureId) {
-      where['lectureId'] = lectureId;
-    }
-
+    const totalItemCount = await this.prismaService.lectureReview.count({
+      where,
+    });
     const order = this.getLectureReviewSortOption(orderBy);
-
     const paginationParams: IPaginationParams = this.getPaginationParams({
       currentPage,
       targetPage,
@@ -217,15 +222,14 @@ export class LectureReviewService {
       lastItemId,
       take,
     });
-
-    const review =
+    const reviews =
       await this.lectureReviewRepository.readManyMyReviewWithLecturerId(
         where,
         order,
         paginationParams,
       );
 
-    return { count, review };
+    return new CombinedMyReviewWithCountDto(reviews, totalItemCount);
   }
 
   async readManyLecturerReview(
@@ -338,6 +342,35 @@ export class LectureReviewService {
     order.push({ id: 'desc' });
 
     return order;
+  }
+
+  private getLecturerMyReviewType(
+    lecturerMyReviewType: LecturerMyReviewType,
+    lecturerId: number,
+    lectureId?: number,
+  ) {
+    const where = { lecture: { lecturerId } };
+
+    switch (lecturerMyReviewType) {
+      case LecturerMyReviewType.ONGOING:
+        where.lecture['isActive'] = true;
+
+        break;
+      case LecturerMyReviewType.FINISHED:
+        where.lecture['isActive'] = false;
+
+        break;
+      case LecturerMyReviewType.ALL:
+        break;
+    }
+
+    if (!lectureId) {
+      return where;
+    }
+
+    where['lectureId'] = lectureId;
+
+    return where;
   }
 
   private async increaseLectureStars(

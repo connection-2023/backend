@@ -7,6 +7,6 @@ export class LikedLectureReviewDto implements LikedLectureReview {
   id: number;
   lectureReviewId: number;
   userId: number;
-  lectureReview: LectureReviewDto;
-  user: UserDto;
+  lectureReview?: LectureReviewDto;
+  user?: UserDto;
 }

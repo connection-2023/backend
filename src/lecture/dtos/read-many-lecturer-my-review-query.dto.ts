@@ -12,9 +12,7 @@ import { Type } from 'class-transformer';
 
 export class ReadManyLecturerMyReviewQueryDto {
   @ApiProperty({
-    example: '전체',
-    description: '전체,진행중인 클래스, 종료된 클래스',
-    required: true,
+    enum: LecturerMyReviewType,
   })
   @IsNotEmpty()
   @IsEnum(LecturerMyReviewType, { each: true })

@@ -30,6 +30,7 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-review.decorator';
 import { plainToInstance } from 'class-transformer';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
+import { ApiLectureReview } from './swagger/lecture.swagger';
 
 @ApiTags('강의 리뷰')
 @Controller('lecture-reviews')
@@ -95,19 +96,19 @@ export class LectureReviewController {
     return { deletedLectureReview };
   }
 
-  @ApiReadManyLectureMyReview()
+  @ApiLectureReview.GetMyReviewWithUserId({
+    summary: '유저 내 리뷰 조회',
+  })
   @UseGuards(UserAccessTokenGuard)
   @Get('my-reviews/users')
-  async readManyMyReviewWithUserId(
+  async getMyReviewWithUserId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLectureReviewQueryDto,
   ) {
-    const review = await this.lectureReviewService.readManyMyReviewWithUserId(
+    return await this.lectureReviewService.readManyMyReviewWithUserId(
       authorizedData.user.id,
       query,
     );
-
-    return { review };
   }
 
   @ApiReadManyReservationThatCanBeCreated()
@@ -124,10 +125,10 @@ export class LectureReviewController {
     return { reservation };
   }
 
-  @ApiReadManyLecturerMyReview()
+  @ApiLectureReview.GetMyReviewWithLecturerId({ summary: '강사 내 리뷰 조회' })
   @UseGuards(LecturerAccessTokenGuard)
   @Get('my-reviews/lecturers')
-  async readManyMyReviewWithLecturerId(
+  async getMyReviewWithLecturerId(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() query: ReadManyLecturerMyReviewQueryDto,
   ) {
