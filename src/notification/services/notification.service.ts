@@ -97,20 +97,20 @@ export class NotificationService {
       : false;
 
     switch (filterOption) {
-      case NotificationFilter.Reserved:
+      case NotificationFilter.RESERVED:
         where['reservationId'] = { $exists: true };
         break;
 
-      case NotificationFilter.CouponOrPass:
+      case NotificationFilter.COUPON_OR_PASS:
         where['couponId'] = { $exists: true };
         where['userPassId'] = { $exists: true };
         break;
 
-      case NotificationFilter.Liked:
+      case NotificationFilter.LIKED:
         where['lectureId'] = { $exists: true };
         break;
 
-      case NotificationFilter.Unread:
+      case NotificationFilter.UNREAD:
         where['readedAt'] = null;
         break;
     }

@@ -43,9 +43,9 @@ export enum UserType {
 }
 
 export enum LecturerMyReviewType {
-  '전체' = '전체',
-  '진행중인 클래스' = '진행중인 클래스',
-  '종료된 클래스' = '종료된 클래스',
+  ONGOING = '진행중인 클래스',
+  FINISHED = '종료된 클래스',
+  ALL = '전체',
 }
 
 export enum OrderByEnum {

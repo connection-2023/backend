@@ -8,6 +8,8 @@ import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dt
 import { CombinedScheduleDto } from '../../dtos/combined-schedule.dto';
 import { EnrolledLectureScheduleDto } from '@src/lecture/dtos/last-regist-schedule.dto';
 import { LectureLearnerInfoDto } from '@src/lecture/dtos/lecture-learner-info.dto';
+import { LectureReviewController } from '../lecture-review.controller';
+import { CombinedMyReviewWithCountDto } from '@src/lecture/dtos/combined-my-review-with-count.dto';
 
 export const ApiLecture: ApiOperator<keyof LectureController> = {
   GetLectureSchedule: (
@@ -132,5 +134,72 @@ export const ApiLecture: ApiOperator<keyof LectureController> = {
         { isArray: true },
       ),
     );
+  },
+};
+
+export const ApiLectureReview: ApiOperator<keyof LectureReviewController> = {
+  GetMyReviewWithUserId: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      GeneralResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'userMyReview',
+        CombinedMyReviewWithCountDto,
+      ),
+    );
+  },
+  CreateLectureReview: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
+  UpdateLectureReview: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
+  ReadManyLectureReviewWithUserId: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
+  DeleteLectureReview: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
+  ReadManyReservationThatCanBeCreated: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
+  GetMyReviewWithLecturerId: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      GeneralResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'lecturerMyReview',
+        CombinedMyReviewWithCountDto,
+      ),
+    );
+  },
+  ReadManyLecturerReviewWithUserId: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
   },
 };

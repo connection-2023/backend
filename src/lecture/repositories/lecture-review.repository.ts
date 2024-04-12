@@ -188,18 +188,28 @@ export class LectureReviewRepository {
   async readManyMyReviewWithUserId(
     userId: number,
     orderBy,
-  ): Promise<LectureReview[]> {
+    { cursor, skip, take }: IPaginationParams,
+  ): Promise<ILectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
       where: { userId },
+      take,
+      skip,
+      cursor,
       include: {
-        lecture: true,
         reservation: {
-          select: {
-            lectureSchedule: { select: { startDateTime: true } },
+          include: {
+            lectureSchedule: true,
+            regularLectureStatus: true,
           },
         },
-        likedLectureReview: { where: { userId } },
+        lecture: { include: { lecturer: true } },
+        users: {
+          include: {
+            userProfileImage: true,
+          },
+        },
         _count: { select: { likedLectureReview: true } },
+        likedLectureReview: { where: { userId } },
       },
       orderBy,
     });
@@ -229,7 +239,7 @@ export class LectureReviewRepository {
     where,
     orderBy,
     { cursor, skip, take }: IPaginationParams,
-  ): Promise<LectureReview[]> {
+  ): Promise<ILectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
       where,
       take,
@@ -237,21 +247,18 @@ export class LectureReviewRepository {
       cursor,
       include: {
         reservation: {
-          select: {
-            lectureSchedule: {
-              select: {
-                startDateTime: true,
-                lecture: { select: { title: true } },
-              },
-            },
+          include: {
+            lectureSchedule: true,
+            regularLectureStatus: true,
           },
         },
+        lecture: { include: { lecturer: true } },
         users: {
-          select: {
-            nickname: true,
-            userProfileImage: { select: { imageUrl: true } },
+          include: {
+            userProfileImage: true,
           },
         },
+        _count: { select: { likedLectureReview: true } },
       },
       orderBy,
     });
@@ -263,6 +270,10 @@ export class LectureReviewRepository {
     return await this.prismaService.lectureReview.count({
       where: { lecture: { lecturerId } },
     });
+  }
+
+  async readManyMyReviewCountWithUserId(userId: number): Promise<number> {
+    return await this.prismaService.lectureReview.count({ where: { userId } });
   }
 
   async readManyLecturerReview(
