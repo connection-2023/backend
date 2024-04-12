@@ -35,7 +35,7 @@ export class NotificationService {
       await this.notificationRepository.getOnlineMapWithTargetId(target);
 
     if (!onlineMap) {
-      return;
+      return new NotificationDto(notification);
     }
 
     const { socketId } = onlineMap;
@@ -43,8 +43,6 @@ export class NotificationService {
     this.eventsGateway.server
       .to(socketId)
       .emit('handleNewNotification', notification);
-
-    return notification;
   }
 
   async getMyNotification(

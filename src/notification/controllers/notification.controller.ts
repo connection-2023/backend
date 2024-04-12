@@ -1,9 +1,12 @@
+import { PrismaService } from '@src/prisma/prisma.service';
 import {
+  Body,
   Controller,
   Get,
   Inject,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -18,11 +21,16 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
+import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
+import { CreateNotificationDto } from '../dtos/create-notification.dto';
 
 @ApiTags('알림')
 @Controller('notifications/:id')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly prismaService: PrismaService,
+  ) {}
 
   @ApiNotification.GetMyNotification({ summary: '내 알림 조회' })
   @SetResponseKey('notifications')
@@ -56,6 +64,33 @@ export class NotificationController {
   ) {
     return await this.notificationService.getUnreadNotificationCount(
       authorizedData,
+    );
+  }
+
+  @ApiNotification.CreateNotification({ summary: '개인 알림 생성' })
+  @UseGuards(LecturerAccessTokenGuard)
+  @Post()
+  async createNotification(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() createNotificationDto: CreateNotificationDto,
+  ) {
+    const lecturerId = authorizedData.lecturer.id;
+    const { targets, description } = createNotificationDto;
+    const source = { lecturerId };
+    const lecturer = await this.prismaService.lecturer.findFirst({
+      where: { id: lecturerId },
+    });
+    const title = lecturer.nickname;
+
+    return await Promise.all(
+      targets.map(async (target) => {
+        return this.notificationService.createNotification(
+          { userId: target },
+          title,
+          source,
+          description,
+        );
+      }),
     );
   }
 }

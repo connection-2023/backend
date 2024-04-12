@@ -50,4 +50,19 @@ export const ApiNotification: ApiOperator<keyof NotificationController> = {
       ),
     );
   },
+  CreateNotification: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'createdNotifications',
+        NotificationDto,
+        { isArray: true },
+      ),
+    );
+  },
 };

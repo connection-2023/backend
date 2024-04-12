@@ -20,6 +20,10 @@ export class NotificationDto {
   lectureId: number;
 
   @Expose()
+  @ApiProperty({ description: '강사 id', type: Number })
+  lecturerId: number;
+
+  @Expose()
   @ApiProperty({ description: '쿠폰 id', type: Number })
   @Type(() => Number)
   couponId: number;
@@ -37,6 +41,10 @@ export class NotificationDto {
   @Expose()
   @ApiProperty({ description: '읽음 여부', type: Date })
   readedAt: Date | null;
+
+  @Expose()
+  @ApiProperty({ description: '생성시간', type: Number })
+  createdAt: Date;
 
   constructor(notification: Partial<NotificationDto>) {
     Object.assign(this, notification['_doc']);
