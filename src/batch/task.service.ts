@@ -16,7 +16,10 @@ export class TasksService {
     private readonly eventBus: EventBus,
   ) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_HOUR, {
+    name: 'updateClosedLecture',
+    disabled: process.env.NODE_ENV === 'development',
+  })
   async updateClosedLecture() {
     const closedLectures = await this.prismaService.lecture.updateMany({
       where: {
@@ -36,7 +39,10 @@ export class TasksService {
     this.logger.log('Update closed lecture', closedLectures.count);
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_NOON)
+  @Cron(CronExpression.EVERY_DAY_AT_NOON, {
+    name: 'sendExpireCouponNotification',
+    disabled: process.env.NODE_ENV === 'development',
+  })
   async sendExpireCouponNotification() {
     const sevenDaysLater = new Date(
       new Date().setHours(0, 0, 0, 0) + 7 * 24 * 60 * 60 * 1000,
@@ -62,7 +68,10 @@ export class TasksService {
     this.logger.log('Send expire coupons notification', coupons.length);
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_NOON)
+  @Cron(CronExpression.EVERY_DAY_AT_NOON, {
+    name: 'sendExpirePassNotification',
+    disabled: process.env.NODE_ENV === 'development',
+  })
   async sendExpirePassNotification() {
     const sevenDaysLater = new Date(
       new Date().setHours(0, 0, 0, 0) + 7 * 24 * 60 * 60 * 1000,
