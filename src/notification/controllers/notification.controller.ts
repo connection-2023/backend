@@ -17,6 +17,7 @@ import { ApiNotification } from './swagger/notification.swagger';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 
 @ApiTags('알림')
 @Controller('notifications/:id')
@@ -29,11 +30,11 @@ export class NotificationController {
   @Get()
   async getMyNotification(
     @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Query() getPageTokenQueryDto: GetPageTokenQueryDto,
+    @Query() getMyNotificationQueryDto: GetMyNotificationQueryDto,
   ) {
     return await this.notificationService.getMyNotification(
       authorizedData,
-      getPageTokenQueryDto,
+      getMyNotificationQueryDto,
     );
   }
 

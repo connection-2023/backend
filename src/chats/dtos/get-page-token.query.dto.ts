@@ -24,13 +24,4 @@ export class GetPageTokenQueryDto {
   @IsNumber()
   @Type(() => Number)
   pageSize: number;
-
-  @ApiProperty({
-    description: '필터 옵션',
-    enum: NotificationFilter,
-    required: true,
-  })
-  @IsEnum(NotificationFilter, { each: true })
-  @IsNotEmpty()
-  filterOption: NotificationFilter;
 }

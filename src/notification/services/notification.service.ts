@@ -10,6 +10,7 @@ import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
 import { NotificationFilter } from '../enum/notification.enum';
+import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 
 @Injectable()
 export class NotificationService {
@@ -48,7 +49,7 @@ export class NotificationService {
 
   async getMyNotification(
     authorizedData: ValidateResult,
-    { lastItemId, pageSize, filterOption }: GetPageTokenQueryDto,
+    { lastItemId, pageSize, filterOption }: GetMyNotificationQueryDto,
   ) {
     const where = this.getNotificationFilterOption(
       authorizedData,
@@ -84,7 +85,7 @@ export class NotificationService {
   private getNotificationFilterOption(
     authorizedData: ValidateResult,
     lastItemId: string,
-    filterOption?: NotificationFilter,
+    filterOption: NotificationFilter,
   ) {
     const where = {};
     authorizedData.user
