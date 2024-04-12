@@ -67,6 +67,7 @@ export class NotificationController {
     );
   }
 
+  @SetResponseKey('createdNotifications')
   @ApiNotification.CreateNotification({ summary: '개인 알림 생성' })
   @UseGuards(LecturerAccessTokenGuard)
   @Post()

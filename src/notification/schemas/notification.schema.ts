@@ -34,6 +34,9 @@ export class Notification extends Document {
   lectureId?: number;
 
   @Prop({ required: false, type: Number })
+  lecturerId?: number;
+
+  @Prop({ required: false, type: Number })
   @IsNumber()
   reservationId: number;
 
