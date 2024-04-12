@@ -42,6 +42,7 @@ export class TasksService {
   @Cron(CronExpression.EVERY_DAY_AT_NOON, {
     name: 'sendExpireCouponNotification',
     disabled: process.env.NODE_ENV === 'development',
+    timeZone: 'Asia/Seoul',
   })
   async sendExpireCouponNotification() {
     const sevenDaysLater = new Date(
@@ -71,6 +72,7 @@ export class TasksService {
   @Cron(CronExpression.EVERY_DAY_AT_NOON, {
     name: 'sendExpirePassNotification',
     disabled: process.env.NODE_ENV === 'development',
+    timeZone: 'Asia/Seoul',
   })
   async sendExpirePassNotification() {
     const sevenDaysLater = new Date(
