@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ISenderAndReceiver } from '@src/chats/interfaces/chats.interface';
 import { Exclude, Expose, Type } from 'class-transformer';
 import mongoose from 'mongoose';
 
@@ -13,6 +14,10 @@ export class NotificationDto {
   @Expose()
   @ApiProperty({ description: '알림 내용' })
   description: string;
+
+  @Expose()
+  @ApiProperty({ description: '알림 대상' })
+  target: ISenderAndReceiver;
 
   @Expose()
   @ApiProperty({ description: '강의 id', type: Number })
@@ -49,6 +54,9 @@ export class NotificationDto {
   constructor(notification: Partial<NotificationDto>) {
     Object.assign(this, notification['_doc']);
 
+    this.target = notification.target.userId
+      ? { userId: notification.target.userId }
+      : { lecturerId: notification.target.lecturerId };
     this.id = notification._id.toString();
   }
 }

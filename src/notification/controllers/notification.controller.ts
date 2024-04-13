@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
@@ -13,14 +12,11 @@ import {
 } from '@nestjs/common';
 import { NotificationService } from '../services/notification.service';
 import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { ApiNotification } from './swagger/notification.swagger';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { CreateNotificationDto } from '../dtos/create-notification.dto';

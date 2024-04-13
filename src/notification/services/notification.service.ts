@@ -6,7 +6,7 @@ import {
   INotificationTarget,
 } from '../interfaces/notification.interface';
 import { NotificationRepository } from './../repositories/notification.repository';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
@@ -46,6 +46,8 @@ export class NotificationService {
     this.eventsGateway.server
       .to(socketId)
       .emit('handleNewNotification', notification);
+
+    return new NotificationDto(notification);
   }
 
   async getMyNotification(
@@ -81,6 +83,12 @@ export class NotificationService {
 
     return await Promise.all(
       targets.map(async (target) => {
+        const reservation = await this.prismaService.reservation.findFirst({
+          where: { lecture: { lecturerId }, userId: target },
+        });
+
+        if (!reservation) return;
+
         return this.createNotification(
           { userId: target },
           title,
