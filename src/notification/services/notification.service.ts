@@ -1,10 +1,12 @@
+import { PrismaService } from '@src/prisma/prisma.service';
+import { CreateNotificationDto } from './../dtos/create-notification.dto';
 import { EventsGateway } from '@src/events/events.gateway';
 import {
   INotificationSource,
   INotificationTarget,
 } from '../interfaces/notification.interface';
 import { NotificationRepository } from './../repositories/notification.repository';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
@@ -17,6 +19,7 @@ export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly eventsGateway: EventsGateway,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async createNotification(
@@ -35,7 +38,7 @@ export class NotificationService {
       await this.notificationRepository.getOnlineMapWithTargetId(target);
 
     if (!onlineMap) {
-      return;
+      return new NotificationDto(notification);
     }
 
     const { socketId } = onlineMap;
@@ -44,7 +47,7 @@ export class NotificationService {
       .to(socketId)
       .emit('handleNewNotification', notification);
 
-    return notification;
+    return new NotificationDto(notification);
   }
 
   async getMyNotification(
@@ -66,6 +69,36 @@ export class NotificationService {
     );
   }
 
+  async createManyNotifications(
+    authorizedData: ValidateResult,
+    createNotificationDto: CreateNotificationDto,
+  ) {
+    const lecturerId = authorizedData.lecturer.id;
+    const { targets, description } = createNotificationDto;
+    const source = { lecturerId };
+    const lecturer = await this.prismaService.lecturer.findFirst({
+      where: { id: lecturerId },
+    });
+    const title = lecturer.nickname;
+
+    return await Promise.all(
+      targets.map(async (target) => {
+        const reservation = await this.prismaService.reservation.findFirst({
+          where: { lecture: { lecturerId }, userId: target },
+        });
+
+        if (!reservation) return;
+
+        return this.createNotification(
+          { userId: target },
+          title,
+          source,
+          description,
+        );
+      }),
+    );
+  }
+
   async markNotificationAsRead(notificationId: string) {
     const updatedNotification =
       await this.notificationRepository.markNotificationAsRead(notificationId);
@@ -82,12 +115,16 @@ export class NotificationService {
     return await this.notificationRepository.countUnreadNotifications(where);
   }
 
+  async deleteNotification(notificationId: string) {
+    await this.notificationRepository.deleteNotification(notificationId);
+  }
+
   private getNotificationFilterOption(
     authorizedData: ValidateResult,
     lastItemId: string,
     filterOption: NotificationFilter,
   ) {
-    const where = {};
+    const where = { deletedAt: null };
     authorizedData.user
       ? (where['target.userId'] = authorizedData.user.id)
       : (where['target.lecturerId'] = authorizedData.lecturer.id);
