@@ -18,6 +18,7 @@ import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 import { LecturerMyReviewType, OrderByEnum } from '@src/common/enum/enum';
 import { CombinedLectureReviewWithCountDto } from '../dtos/combined-lecture-review-with-count.dto';
 import { CombinedMyReviewWithCountDto } from '../dtos/combined-my-review-with-count.dto';
+import { LectureReviewRatingsDto } from '../dtos/lecture-review-ratings.dto';
 
 @Injectable()
 export class LectureReviewService {
@@ -279,6 +280,21 @@ export class LectureReviewService {
       totalItemCount,
       totalStars,
     );
+  }
+
+  async getReviewRatingsAndCounts(authorizedData: ValidateResult) {
+    const where = authorizedData.user
+      ? { userId: authorizedData.user.id, deletedAt: null }
+      : {
+          lecture: { lecturerId: authorizedData.lecturer.id },
+          deletedAt: null,
+        };
+
+    const ratings =
+      await this.lectureReviewRepository.getReviewRatingsAndCountsByLecturerId(
+        where,
+      );
+    return ratings.map((rating) => new LectureReviewRatingsDto(rating));
   }
 
   private getPaginationParams({

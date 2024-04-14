@@ -10,6 +10,7 @@ import { EnrolledLectureScheduleDto } from '@src/lecture/dtos/last-regist-schedu
 import { LectureLearnerInfoDto } from '@src/lecture/dtos/lecture-learner-info.dto';
 import { LectureReviewController } from '../lecture-review.controller';
 import { CombinedMyReviewWithCountDto } from '@src/lecture/dtos/combined-my-review-with-count.dto';
+import { LectureReviewRatingsDto } from '@src/lecture/dtos/lecture-review-ratings.dto';
 
 export const ApiLecture: ApiOperator<keyof LectureController> = {
   GetLectureSchedule: (
@@ -201,5 +202,20 @@ export const ApiLectureReview: ApiOperator<keyof LectureReviewController> = {
       Partial<OperationObject>,
   ): PropertyDecorator {
     throw new Error('Function not implemented.');
+  },
+  GetReviewRatingsAndCounts: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'reviewRatings',
+        LectureReviewRatingsDto,
+        { isArray: true },
+      ),
+    );
   },
 };
