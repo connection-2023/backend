@@ -308,4 +308,16 @@ export class LectureReviewRepository {
       orderBy,
     });
   }
+
+  async getReviewRatingsAndCountsByLecturerId(
+    where,
+  ): Promise<{ stars: number; count: number }[]> {
+    const result = await this.prismaService.lectureReview.groupBy({
+      by: ['stars'],
+      where,
+      _count: true,
+    });
+
+    return result.map((item) => ({ stars: item.stars, count: item._count }));
+  }
 }

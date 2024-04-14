@@ -20,20 +20,17 @@ import { ReadManyLectureReviewQueryDto } from '../dtos/read-many-lecture-review-
 import { ApiReadManyLectureReview } from '../swagger-decorators/read-many-lecture-review-decorator';
 import { UpdateLectureReviewDto } from '../dtos/update-lecture-review.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
-import { ApiReadManyLectureMyReview } from '../swagger-decorators/read-many-lecture-my-review-decorator';
 import { ApiReadManyReservationThatCanBeCreated } from '../swagger-decorators/read-many-reservation-that-can-be-created-decorator';
 import { ReadManyLecturerMyReviewQueryDto } from '../dtos/read-many-lecturer-my-review-query.dto';
-import { ApiReadManyLecturerMyReview } from '../swagger-decorators/read-many-lecturer-my-reivew-decorator';
 import { ReadManyLecturerReviewQueryDto } from '../dtos/read-many-lecturer-review-query.dto';
 import { AllowUserAndGuestGuard } from '@src/common/guards/allow-user-guest.guard';
-import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { ApiReadManyLecturerReview } from '../swagger-decorators/read-many-lecturer-review.decorator';
-import { plainToInstance } from 'class-transformer';
-import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 import { ApiLectureReview } from './swagger/lecture.swagger';
+import { AllowUserAndLecturerGuard } from '@src/common/guards/allow-user-lecturer.guard';
+import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 
 @ApiTags('강의 리뷰')
-@Controller('lecture-reviews')
+@Controller('lecture-reviews/:lectureReviewId')
 export class LectureReviewController {
   constructor(private readonly lectureReviewService: LectureReviewService) {}
 
@@ -55,14 +52,14 @@ export class LectureReviewController {
   }
 
   @ApiOperation({ summary: '강의 리뷰 수정' })
-  @Patch(':lectureReviewId')
+  @Patch()
   async updateLectureReview(
-    @Param('lectureReviewId', ParseIntPipe) lectureReveiwId: number,
+    @Param('lectureReviewId', ParseIntPipe) lectureReviewId: number,
     @Body() updateLectureReview: UpdateLectureReviewDto,
   ) {
     const updatedLectureReview =
       await this.lectureReviewService.updateLectureReview(
-        lectureReveiwId,
+        lectureReviewId,
         updateLectureReview,
       );
 
@@ -86,7 +83,7 @@ export class LectureReviewController {
   }
 
   @ApiOperation({ summary: '강의 리뷰 삭제' })
-  @Delete(':lectureReviewId')
+  @Delete()
   async deleteLectureReview(
     @Param('lectureReviewId', ParseIntPipe) lectureReviewId: number,
   ) {
@@ -152,6 +149,20 @@ export class LectureReviewController {
       lecturerId,
       query,
       userId,
+    );
+  }
+
+  @SetResponseKey('reviewRatings')
+  @ApiLectureReview.GetReviewRatingsAndCounts({
+    summary: '리뷰 점수별 개수 조회',
+  })
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Get('ratings')
+  async getReviewRatingsAndCounts(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+  ) {
+    return await this.lectureReviewService.getReviewRatingsAndCounts(
+      authorizedData,
     );
   }
 }
