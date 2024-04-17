@@ -82,13 +82,19 @@ export class LectureReviewController {
     );
   }
 
-  @ApiOperation({ summary: '강의 리뷰 삭제' })
+  @ApiLectureReview.DeleteLectureReview({ summary: '강의 리뷰 삭제' })
+  @UseGuards(UserAccessTokenGuard)
   @Delete()
   async deleteLectureReview(
+    @GetAuthorizedUser() authorizedData: ValidateResult,
     @Param('lectureReviewId', ParseIntPipe) lectureReviewId: number,
   ) {
+    const userId = authorizedData.user.id;
     const deletedLectureReview =
-      await this.lectureReviewService.deleteLectureReview(lectureReviewId);
+      await this.lectureReviewService.deleteLectureReview(
+        lectureReviewId,
+        userId,
+      );
 
     return { deletedLectureReview };
   }

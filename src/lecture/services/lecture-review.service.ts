@@ -117,7 +117,7 @@ export class LectureReviewService {
     );
   }
 
-  async deleteLectureReview(lectureReviewId: number) {
+  async deleteLectureReview(lectureReviewId: number, userId: number) {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const lectureId =
@@ -129,9 +129,14 @@ export class LectureReviewService {
           where: { id: lectureId },
         });
         const lectureReview = await transaction.lectureReview.findFirst({
-          where: { id: lectureReviewId },
+          where: { id: lectureReviewId, userId },
         });
 
+        if (!lectureReview) {
+          throw new BadRequestException(
+            'Insufficient permissions for deletion.',
+          );
+        }
         const deletedLectureReview =
           await this.lectureReviewRepository.trxDeleteLectureReview(
             transaction,
