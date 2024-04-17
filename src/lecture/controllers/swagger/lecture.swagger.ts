@@ -11,6 +11,7 @@ import { LectureLearnerInfoDto } from '@src/lecture/dtos/lecture-learner-info.dt
 import { LectureReviewController } from '../lecture-review.controller';
 import { CombinedMyReviewWithCountDto } from '@src/lecture/dtos/combined-my-review-with-count.dto';
 import { LectureReviewRatingsDto } from '@src/lecture/dtos/lecture-review-ratings.dto';
+import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
 
 export const ApiLecture: ApiOperator<keyof LectureController> = {
   GetLectureSchedule: (
@@ -175,7 +176,15 @@ export const ApiLectureReview: ApiOperator<keyof LectureReviewController> = {
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
       Partial<OperationObject>,
   ): PropertyDecorator {
-    throw new Error('Function not implemented.');
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'deletedLectureReview',
+        LectureReviewDto,
+      ),
+    );
   },
   ReadManyReservationThatCanBeCreated: function (
     apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
