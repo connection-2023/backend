@@ -191,7 +191,7 @@ export class LectureReviewRepository {
     { cursor, skip, take }: IPaginationParams,
   ): Promise<ILectureReview[]> {
     return await this.prismaService.lectureReview.findMany({
-      where: { userId },
+      where: { userId, deletedAt: null },
       take,
       skip,
       cursor,
@@ -273,7 +273,9 @@ export class LectureReviewRepository {
   }
 
   async readManyMyReviewCountWithUserId(userId: number): Promise<number> {
-    return await this.prismaService.lectureReview.count({ where: { userId } });
+    return await this.prismaService.lectureReview.count({
+      where: { userId, deletedAt: null },
+    });
   }
 
   async readManyLecturerReview(
@@ -300,7 +302,7 @@ export class LectureReviewRepository {
     userId ? (include['likedLectureReview'] = { where: { userId } }) : false;
 
     return await this.prismaService.lectureReview.findMany({
-      where: { lecture: { lecturerId } },
+      where: { lecture: { lecturerId }, deletedAt: null },
       take,
       skip,
       cursor,
