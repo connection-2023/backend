@@ -251,7 +251,7 @@ export class LectureReviewService {
     userId?: number,
   ) {
     const existReview = await this.prismaService.lectureReview.findFirst({
-      where: { lecture: { lecturerId } },
+      where: { lecture: { lecturerId }, deletedAt: null },
     });
 
     if (!existReview) {
@@ -370,7 +370,7 @@ export class LectureReviewService {
     lecturerId: number,
     lectureId?: number,
   ) {
-    const where = { lecture: { lecturerId } };
+    const where = { lecture: { lecturerId }, deletedAt: null };
 
     switch (lecturerMyReviewType) {
       case LecturerMyReviewType.ONGOING:
