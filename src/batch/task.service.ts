@@ -120,15 +120,20 @@ export class TasksService {
     await Promise.all(
       lectures.map(async (lecture) => {
         const reviewCount = await this.prismaService.lectureReview.count({
-          where: { id: lecture.id, deletedAt: null },
+          where: { lectureId: lecture.id, deletedAt: null },
         });
         const stars = await this.prismaService.lectureReview.aggregate({
-          where: { id: lecture.id, deletedAt: null },
+          where: { lectureId: lecture.id, deletedAt: null },
           _avg: { stars: true },
         });
         const rountStars = Math.round(stars._avg.stars * 10) / 10;
 
-        this.prismaService.lecture.update({
+        if (lecture.id === 184) {
+          console.log(
+            `reviewCount = ${reviewCount}, rountStars: ${rountStars}`,
+          );
+        }
+        await this.prismaService.lecture.update({
           where: { id: lecture.id },
           data: { reviewCount, stars: rountStars },
         });
