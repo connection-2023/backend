@@ -98,4 +98,70 @@ export class TasksService {
 
     this.logger.log('Send expire pass notification', userPass.length);
   }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    name: 'validateLectureReview',
+    disabled: process.env.NODE_ENV === 'development',
+    timeZone: 'Asia/Seoul',
+  })
+  async validateLectureReview() {
+    await this.updateLectureReview();
+    await this.updateLecturerReveiw();
+
+    this.logger.log('Validate lecture review');
+  }
+
+  private async updateLectureReview() {
+    const lectures = await this.prismaService.lecture.findMany({
+      where: { deletedAt: null },
+      select: { id: true },
+    });
+
+    await Promise.all(
+      lectures.map(async (lecture) => {
+        const reviewCount = await this.prismaService.lectureReview.count({
+          where: { id: lecture.id, deletedAt: null },
+        });
+        const stars = await this.prismaService.lectureReview.aggregate({
+          where: { id: lecture.id, deletedAt: null },
+          _avg: { stars: true },
+        });
+
+        this.prismaService.lecture.update({
+          where: { id: lecture.id },
+          data: { reviewCount, stars: stars._avg.stars },
+        });
+      }),
+    );
+  }
+
+  private async updateLecturerReveiw() {
+    const lecturers = await this.prismaService.lecturer.findMany({
+      where: { deletedAt: null },
+      select: { id: true },
+    });
+
+    await Promise.all(
+      lecturers.map(async (lecturer) => {
+        const reviewCount = await this.prismaService.lectureReview.count({
+          where: {
+            lecture: { lecturerId: lecturer.id, deletedAt: null },
+            deletedAt: null,
+          },
+        });
+        const stars = await this.prismaService.lectureReview.aggregate({
+          where: {
+            lecture: { lecturerId: lecturer.id, deletedAt: null },
+            deletedAt: null,
+          },
+          _avg: { stars: true },
+        });
+
+        this.prismaService.lecturer.update({
+          where: { id: lecturer.id },
+          data: { reviewCount, stars: stars._avg.stars },
+        });
+      }),
+    );
+  }
 }
