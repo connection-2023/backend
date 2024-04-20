@@ -250,6 +250,9 @@ export class LecturerRepository {
         where: {
           lecturerId,
           user,
+          enrollmentCount: {
+            gt: 0,
+          },
         },
         orderBy,
         take,
@@ -291,6 +294,9 @@ export class LecturerRepository {
         where: {
           lecturerId,
           user,
+          enrollmentCount: {
+            gt: 0,
+          },
         },
       });
     } catch (error) {
