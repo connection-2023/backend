@@ -126,16 +126,11 @@ export class TasksService {
           where: { lectureId: lecture.id, deletedAt: null },
           _avg: { stars: true },
         });
-        const rountStars = Math.round(stars._avg.stars * 10) / 10;
+        const roundStars = Math.round(stars._avg.stars * 10) / 10;
 
-        if (lecture.id === 184) {
-          console.log(
-            `reviewCount = ${reviewCount}, rountStars: ${rountStars}`,
-          );
-        }
         await this.prismaService.lecture.update({
           where: { id: lecture.id },
-          data: { reviewCount, stars: rountStars },
+          data: { reviewCount, stars: roundStars },
         });
       }),
     );
@@ -162,11 +157,11 @@ export class TasksService {
           },
           _avg: { stars: true },
         });
-        const rountStars = Math.round(stars._avg.stars * 10) / 10;
+        const roundStars = Math.round(stars._avg.stars * 10) / 10;
 
-        this.prismaService.lecturer.update({
+        await this.prismaService.lecturer.update({
           where: { id: lecturer.id },
-          data: { reviewCount, stars: rountStars },
+          data: { reviewCount, stars: roundStars },
         });
       }),
     );
