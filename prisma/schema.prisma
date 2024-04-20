@@ -238,6 +238,8 @@ model LectureReview {
   likedLectureReview     LikedLectureReview[]
   userReportedReview     UserReportedReview[]
   lecturerReportedReview LecturerReportedReview[]
+
+  @@unique([userId, reservationId])
 }
 
 model LikedLectureReview {

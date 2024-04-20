@@ -129,7 +129,7 @@ export class LectureReviewService {
           where: { id: lectureId },
         });
         const lectureReview = await transaction.lectureReview.findFirst({
-          where: { id: lectureReviewId, userId },
+          where: { id: lectureReviewId, userId, deletedAt: null },
         });
 
         if (!lectureReview) {
