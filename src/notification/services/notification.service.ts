@@ -63,10 +63,14 @@ export class NotificationService {
       where,
       pageSize,
     );
+    const totalItemCount =
+      await this.notificationRepository.countMynotification(where);
 
-    return notifications.map(
+    const serializedNotifications = notifications.map(
       (notification) => new NotificationDto(notification),
     );
+
+    return { notifications: serializedNotifications, totalItemCount };
   }
 
   async createManyNotifications(
