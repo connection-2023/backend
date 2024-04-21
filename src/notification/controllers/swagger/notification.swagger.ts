@@ -6,6 +6,7 @@ import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
+import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
 
 export const ApiNotification: ApiOperator<keyof NotificationController> = {
   GetMyNotification: function (
@@ -15,11 +16,10 @@ export const ApiNotification: ApiOperator<keyof NotificationController> = {
     return applyDecorators(
       ApiOperation(apiOperationOptions),
       ApiBearerAuth(),
-      DetailResponseDto.swaggerBuilder(
+      PaginationResponseDto.swaggerBuilder(
         HttpStatus.OK,
         'notifications',
         NotificationDto,
-        { isArray: true },
       ),
     );
   },
