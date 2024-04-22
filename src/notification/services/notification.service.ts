@@ -63,6 +63,9 @@ export class NotificationService {
       where,
       pageSize,
     );
+
+    where['_id'] ? delete where['_id'] : false;
+
     const totalItemCount =
       await this.notificationRepository.countMynotification(where);
 

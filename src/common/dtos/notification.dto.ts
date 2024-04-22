@@ -31,7 +31,7 @@ export class NotificationDto {
   lectureId: number;
 
   @Expose()
-  @ApiProperty({ description: '강의 id', type: Number })
+  @ApiProperty({ description: '예약 id', type: Number })
   @Type(() => Number)
   reservationId: number;
 

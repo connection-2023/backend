@@ -47,8 +47,11 @@ export class NotificationRepository {
       .exec();
   }
 
-  async countMynotification(where): Promise<number> {
-    return await this.notificationModel.countDocuments(where);
+  async countMynotification(target): Promise<number> {
+    return await this.notificationModel.countDocuments({
+      ...target,
+      deletedAt: null,
+    });
   }
 
   async getOnlineMapWithTargetId(
