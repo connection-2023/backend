@@ -122,7 +122,7 @@ export class NotificationHandler {
     });
     const targets = [
       { userId: reservation.userId },
-      // { lecturerId: reservation.lecture.lecturerId },
+      { lecturerId: reservation.lecture.lecturerId },
     ];
     const title = reservation.lecture.title;
     const description = `${
