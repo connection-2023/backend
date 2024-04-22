@@ -132,7 +132,12 @@ export class NotificationHandler {
         : reservation.lectureSchedule.startDateTime
     } 수업을 신청하셨습니다.`;
 
-    await this.sendNotification(targets, title, { reservationId }, description);
+    await this.sendNotification(
+      targets,
+      title,
+      { lectureId: reservation.lecture.id },
+      description,
+    );
   }
 
   private async handleDiscountCouponExpiringEvent(
