@@ -31,6 +31,11 @@ export class NotificationDto {
   lectureId: number;
 
   @Expose()
+  @ApiProperty({ description: '예약 id', type: Number })
+  @Type(() => Number)
+  reservationId: number;
+
+  @Expose()
   @ApiProperty({ description: '강사 id', type: Number })
   lecturerId: number;
 
