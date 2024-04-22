@@ -1235,6 +1235,10 @@ export class PaymentsService {
     const paymentResult =
       await this.paymentsRepository.getLecturePaymentResultWithPass(payment.id);
 
+    await this.eventBus.publish(
+      new CreatedReservationEvent(paymentResult.reservation.id),
+    );
+
     return new LecturePaymentWithPassUsageDto(paymentResult);
   }
 
