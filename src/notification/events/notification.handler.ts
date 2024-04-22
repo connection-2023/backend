@@ -95,7 +95,12 @@ export class NotificationHandler {
     });
     const description = '관심강사가 새로운 클래스를 개설했습니다.';
 
-    await this.sendNotification(targets, title, { lectureId }, description);
+    await this.sendNotification(
+      targets,
+      title,
+      { lectureId, lecturerId },
+      description,
+    );
   }
 
   private async handleCreatedReservationEvent(event: CreatedReservationEvent) {
@@ -122,8 +127,9 @@ export class NotificationHandler {
     const title = reservation.lecture.title;
     const description = `${
       reservation.regularLectureStatus
-        ? reservation.regularLectureStatus.regularLectureSchedule
-        : reservation.lectureSchedule
+        ? reservation.regularLectureStatus.regularLectureSchedule[0]
+            .startDateTime
+        : reservation.lectureSchedule.startDateTime
     } 수업을 신청하셨습니다.`;
 
     await this.sendNotification(targets, title, { reservationId }, description);
