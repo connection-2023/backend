@@ -146,8 +146,10 @@ export class NotificationService {
         break;
 
       case NotificationFilter.COUPON_OR_PASS:
-        where['couponId'] = { $exists: true };
-        where['userPassId'] = { $exists: true };
+        where['$or'] = [
+          { couponId: { $exists: true } },
+          { userPassId: { $exists: true } },
+        ];
         break;
 
       case NotificationFilter.LIKED:
