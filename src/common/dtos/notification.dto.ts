@@ -55,6 +55,11 @@ export class NotificationDto {
   userPassId: number;
 
   @Expose()
+  @ApiProperty({ description: '유저 id', type: Number })
+  @Type(() => Number)
+  userId: number;
+
+  @Expose()
   @ApiProperty({ description: '읽음 여부', type: Date })
   readedAt: Date | null;
 

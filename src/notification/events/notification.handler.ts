@@ -14,6 +14,8 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Notification } from '../schemas/notification.schema';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 @EventsHandler(
   LikedLecturerNewLectureEvent,
@@ -125,17 +127,20 @@ export class NotificationHandler {
       { lecturerId: reservation.lecture.lecturerId },
     ];
     const title = reservation.lecture.title;
-    const description = `${
-      reservation.regularLectureStatus
-        ? reservation.regularLectureStatus.regularLectureSchedule[0]
-            .startDateTime
-        : reservation.lectureSchedule.startDateTime
-    } 수업을 신청하셨습니다.`;
+    const startDateTimeUTC = reservation.regularLectureStatus
+      ? reservation.regularLectureStatus.regularLectureSchedule[0].startDateTime
+      : reservation.lectureSchedule.startDateTime;
+    const startDateTimeKST = format(
+      new Date(startDateTimeUTC),
+      'yyyy.MM.dd HH:mm',
+      { locale: ko },
+    );
+    const description = `${startDateTimeKST} 수업을 신청하셨습니다.`;
 
     await this.sendNotification(
       targets,
       title,
-      { lectureId: reservation.lecture.id },
+      { reservationId, userId: reservation.userId },
       description,
     );
   }

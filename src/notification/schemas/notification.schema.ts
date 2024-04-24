@@ -48,6 +48,10 @@ export class Notification extends Document {
   @IsNumber()
   userPassId?: number;
 
+  @Prop({ required: false, type: Number })
+  @IsNumber()
+  userId?: number;
+
   @Prop({ type: Date, default: null })
   readedAt: Date | null;
 
