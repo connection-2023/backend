@@ -10,4 +10,5 @@ export interface INotificationSource {
   couponId?: number;
   lecturePassId?: number;
   userPassId?: number;
+  userId?: number;
 }
