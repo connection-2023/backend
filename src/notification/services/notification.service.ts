@@ -11,8 +11,12 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
-import { NotificationFilter } from '../enum/notification.enum';
+import {
+  NotificationFilter,
+  NotificationRecipientType,
+} from '../enum/notification.enum';
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
+import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
 
 @Injectable()
 export class NotificationService {
@@ -79,14 +83,20 @@ export class NotificationService {
   async createManyNotifications(
     authorizedData: ValidateResult,
     createNotificationDto: CreateNotificationDto,
+    createNotificationQueryDto: CreateNotificationQueryDto,
   ) {
     const lecturerId = authorizedData.lecturer.id;
-    const { targets, description } = createNotificationDto;
+    const { description } = createNotificationDto;
     const source = { lecturerId };
     const lecturer = await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId },
     });
     const title = lecturer.nickname;
+    const targets = await this.getNotificationTarget(
+      lecturerId,
+      createNotificationDto,
+      createNotificationQueryDto,
+    );
 
     return await Promise.all(
       targets.map(async (target) => {
@@ -162,5 +172,51 @@ export class NotificationService {
     }
 
     return where;
+  }
+
+  private async getNotificationTarget(
+    lecturerId: number,
+    { targets }: CreateNotificationDto,
+    { recipientType, lectureId }: CreateNotificationQueryDto,
+  ) {
+    switch (recipientType) {
+      case NotificationRecipientType.ALL_STUDENTS:
+        return this.getLecturerStudents(lecturerId);
+
+      case NotificationRecipientType.SPECIFIC_LECTURE_STUDENTS:
+        return this.getSpecificLectureStudents(lecturerId, lectureId);
+
+      case NotificationRecipientType.SPECIFIC_STUDENTS:
+        if (!targets) {
+          throw new BadRequestException(
+            'Targets do not exist',
+            'TargetsIsEmpty',
+          );
+        }
+        return targets;
+    }
+  }
+
+  private async getSpecificLectureStudents(
+    lecturerId: number,
+    lectureId: number,
+  ) {
+    const targets = await this.prismaService.reservation.findMany({
+      where: { lectureId, lecture: { lecturerId } },
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+
+    return targets.map((target) => target.userId);
+  }
+
+  private async getLecturerStudents(lecturerId: number) {
+    const targets = await this.prismaService.reservation.findMany({
+      where: { lecture: { lecturerId } },
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+
+    return targets.map((target) => target.userId);
   }
 }

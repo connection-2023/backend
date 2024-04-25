@@ -21,7 +21,7 @@ import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.dec
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { CreateNotificationDto } from '../dtos/create-notification.dto';
-import { NotificationDto } from '@src/common/dtos/notification.dto';
+import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
 
 @ApiTags('알림')
 @Controller('notifications/:id')
@@ -72,10 +72,12 @@ export class NotificationController {
   async createNotification(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() createNotificationDto: CreateNotificationDto,
+    @Query() createNotificationQueryDto: CreateNotificationQueryDto,
   ) {
     return await this.notificationService.createManyNotifications(
       authorizedData,
       createNotificationDto,
+      createNotificationQueryDto,
     );
   }
 
