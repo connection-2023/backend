@@ -188,7 +188,10 @@ export class NotificationService {
 
       case NotificationRecipientType.SPECIFIC_STUDENTS:
         if (!targets) {
-          throw new BadRequestException('Targets do not exist');
+          throw new BadRequestException(
+            'Targets do not exist',
+            'TargetsIsEmpty',
+          );
         }
         return targets;
     }
