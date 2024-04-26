@@ -11,6 +11,7 @@ import { WebhookService } from './webhook/services/webhook.service';
 import { HttpNestInternalServerErrorExceptionFilter } from './common/exceptions/http-nest-internal-server-error-excetion.filter';
 import { HttpNodeInternalServerErrorExceptionFilter } from './common/exceptions/http-node-internal-server-error.exception.filter';
 import cookieParser from 'cookie-parser';
+import { RedisIoAdapter } from './events/redis-adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +23,11 @@ async function bootstrap() {
     app.get<SuccessInterceptor>(SuccessInterceptor),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
+
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+
+  app.useWebSocketAdapter(redisIoAdapter);
 
   app.enableCors({
     origin: [
