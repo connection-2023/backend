@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: ['develop']
 
-  push:
-    branches: ['refactor/#490']
-
 jobs:
   ci:
     name: CI

@@ -2,7 +2,7 @@ name: Connection-CICD
 
 on:
   push:
-    branches: ['develop', 'refactor/#490']
+    branches: ['develop']
 
 jobs:
   cicd:
