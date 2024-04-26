@@ -6,7 +6,7 @@ export const CustomConfigModule = ConfigModule.forRoot({
   envFilePath: '.env',
   cache: true,
   validationSchema: Joi.object({
-    PORT: Joi.number().required(),
+    NODE_PORT: Joi.number().required(),
 
     SENS_URL: Joi.string().required(),
     SENS_API_KEY: Joi.string().required(),

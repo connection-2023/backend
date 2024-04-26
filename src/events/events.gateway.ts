@@ -10,15 +10,10 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { ValidateResult } from '@src/common/interface/common-interface';
 import { Server, Socket } from 'socket.io';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { RedisClientType } from 'redis';
 import { InjectModel } from '@nestjs/mongoose';
 import { OnlineMap } from './schemas/online-map.schema';
 import { Model } from 'mongoose';
-import { generateCurrentTime } from '@src/common/utils/generate-current-time';
 
 @WebSocketGateway({ cors: true, namespace: /\/chatroom\d+/ })
 export class EventsGateway

@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  nest:
+    image: server-img
+    restart: always
+    container_name: server-container
+    ports:
+      - 3001:3000
+
+  redis:
+    image: redis
+    restart: always
+    container_name: connection-redis
+    ports:
+      - 10300:6379
