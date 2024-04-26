@@ -27,7 +27,7 @@ jobs:
       - name: Setting .env
         run: |
           # .env 파일 생성
-          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "NODE_PORT=${{ secrets.NODE_PORT }}" >> .env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
 
           echo "SENS_URL=${{ secrets.SENS_URL }}" >> .env
