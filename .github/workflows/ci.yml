@@ -3,6 +3,7 @@ name: Connection-CICD
 on:
   pull_request:
     branches: ['develop']
+
 jobs:
   ci:
     name: CI
