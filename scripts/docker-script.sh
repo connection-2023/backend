@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# DOCKER_IMAGE_NAME=server-img
+DOCKER_IMAGE_NAME=server-img
 
 # DOCKER_CONTAINER_NAME=server-container
 
