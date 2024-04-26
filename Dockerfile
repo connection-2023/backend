@@ -14,8 +14,6 @@ COPY dist ./dist
 
 COPY .env .
 
-COPY Docker-compose.yaml ./
-
 # docker container의 3000번 포트
 # EC2 내부에서는 해당 이미지를 사용하는 docker container의 3000번 포트에 접근가>능
 EXPOSE 3000
