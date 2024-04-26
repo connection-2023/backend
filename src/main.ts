@@ -11,12 +11,12 @@ import { WebhookService } from './webhook/services/webhook.service';
 import { HttpNestInternalServerErrorExceptionFilter } from './common/exceptions/http-nest-internal-server-error-excetion.filter';
 import { HttpNodeInternalServerErrorExceptionFilter } from './common/exceptions/http-node-internal-server-error.exception.filter';
 import cookieParser from 'cookie-parser';
-import { RedisIoAdapter } from './events/redis-adapter';
+import { RedisIoAdapter } from './events/redis.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const port: number = configService.get<number>('PORT');
+  const port: number = configService.get<number>('NODE_PORT');
   const webhookService = app.get<WebhookService>(WebhookService);
 
   app.useGlobalInterceptors(
@@ -25,13 +25,13 @@ async function bootstrap() {
   );
 
   const redisIoAdapter = new RedisIoAdapter(app);
-  await redisIoAdapter.connectToRedis();
+  await redisIoAdapter.connectToRedis(configService);
 
   app.useWebSocketAdapter(redisIoAdapter);
 
   app.enableCors({
     origin: [
-      'http://localhost:3000',
+      `http://localhost:${port}`,
       configService.get<string>('FRONT_END_URL'),
     ],
     credentials: true,
