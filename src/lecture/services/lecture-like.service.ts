@@ -1,6 +1,7 @@
 import { PrismaService } from '@src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { LectureLikeRepository } from '../repositories/lecture-like.repository';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
 
 @Injectable()
 export class LectureLikeService {
@@ -26,9 +27,16 @@ export class LectureLikeService {
     });
   }
 
-  async readManyLikedLecture(userId: number) {
-    return await this.lectureLikeRepository.readManyLikedLectureWithUserId(
+  async getLikedLecture(userId: number) {
+    const lectures = await this.lectureLikeRepository.getLikedLectureWithUserId(
       userId,
     );
+    const totalItemCount =
+      await this.lectureLikeRepository.countLikedLectureWithUserId(userId);
+    const serializedLikedLectures = lectures.map(
+      (lecture) => new LectureDto(lecture),
+    );
+
+    return { totalItemCount, likedLectures: serializedLikedLectures };
   }
 }

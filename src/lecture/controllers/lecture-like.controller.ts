@@ -14,6 +14,7 @@ import { ApiCreateLectureLike } from '../swagger-decorators/create-lecture-like-
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadManyLikedLecture } from '../swagger-decorators/read-many-liked-lecture-decorator';
+import { ApiLikedLecture } from './swagger/lecture.swagger';
 
 @ApiTags('강의 좋아요')
 @Controller('lecture-likes')
@@ -49,16 +50,12 @@ export class LectureLikeController {
     );
   }
 
-  @ApiReadManyLikedLecture()
+  @ApiLikedLecture.GetLikedLecture({ summary: '유저 관심 강의 조회' })
   @UseGuards(UserAccessTokenGuard)
   @Get('users')
-  async readManyLikedLecture(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ) {
-    const likedLecture = await this.lectureLikeService.readManyLikedLecture(
+  async getLikedLecture(@GetAuthorizedUser() authorizedData: ValidateResult) {
+    return await this.lectureLikeService.getLikedLecture(
       authorizedData.user.id,
     );
-
-    return { likedLecture };
   }
 }
