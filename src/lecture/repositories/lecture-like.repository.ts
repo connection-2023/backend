@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { LectureLikeInputData } from '../interface/lecture.interface';
-import { Lecture, LikedLecture } from '@prisma/client';
+import { LikedLecture } from '@prisma/client';
 
 @Injectable()
 export class LectureLikeRepository {
@@ -16,18 +15,21 @@ export class LectureLikeRepository {
     });
   }
 
-  async getLikedLectureWithUserId(userId: number): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({
-      where: { likedLecture: { some: { userId } }, deletedAt: null },
+  async getLikedLectureWithUserId(userId: number): Promise<LikedLecture[]> {
+    return await this.prismaService.likedLecture.findMany({
+      where: { userId, lecture: { deletedAt: null } },
       include: {
-        lectureImage: true,
-        lectureToDanceGenre: {
-          include: { danceCategory: true },
+        lecture: {
+          include: {
+            lectureImage: true,
+            lectureToDanceGenre: {
+              include: { danceCategory: true },
+            },
+            lectureToRegion: { select: { region: true } },
+            lectureMethod: { select: { name: true } },
+            lecturer: true,
+          },
         },
-        lectureToRegion: { select: { region: true } },
-        lectureMethod: { select: { name: true } },
-        lecturer: true,
-        likedLecture: { where: { userId } },
       },
     });
   }

@@ -28,14 +28,17 @@ export class LectureLikeService {
   }
 
   async getLikedLecture(userId: number) {
-    const lectures = await this.lectureLikeRepository.getLikedLectureWithUserId(
-      userId,
-    );
+    const likedLectures =
+      await this.lectureLikeRepository.getLikedLectureWithUserId(userId);
     const totalItemCount =
       await this.lectureLikeRepository.countLikedLectureWithUserId(userId);
-    const serializedLikedLectures = lectures.map(
-      (lecture) => new LectureDto(lecture),
-    );
+    const serializedLikedLectures = likedLectures.map((likedLecture) => {
+      const serializedLikedLecture = new LectureDto(likedLecture['lecture']);
+
+      serializedLikedLecture.isLike = true;
+
+      return serializedLikedLecture;
+    });
 
     return { totalItemCount, likedLectures: serializedLikedLectures };
   }
