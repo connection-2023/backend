@@ -28,15 +28,15 @@ export class LectureLikeService {
   }
 
   async getLikedLecture(userId: number) {
-    const likedLectures =
-      await this.lectureLikeRepository.getLikedLectureWithUserId(userId);
-
-    if (!likedLectures[0]) {
-      return { totalItemCount: 0, likedLectures: [] };
-    }
-
     const totalItemCount =
       await this.lectureLikeRepository.countLikedLectureWithUserId(userId);
+
+    if (totalItemCount === 0) {
+      return { totalItemCount, likedLectures: [] };
+    }
+
+    const likedLectures =
+      await this.lectureLikeRepository.getLikedLectureWithUserId(userId);
     const serializedLikedLectures = likedLectures.map((likedLecture) => {
       const serializedLikedLecture = new LectureDto(likedLecture['lecture']);
 
