@@ -31,7 +31,7 @@ export class LectureDto extends BaseReturnDto {
   price: number;
 
   @ApiProperty({ description: '평점' })
-  stars: string;
+  stars: number;
 
   @ApiProperty({ description: '리뷰 수', type: Number })
   reviewCount: number;
@@ -68,7 +68,7 @@ export class LectureDto extends BaseReturnDto {
   lectureImage?: LectureImageDto[];
 
   @ApiProperty({ description: '좋아요 여부' })
-  isLike: boolean;
+  isLike?: boolean;
 
   lecturerId: number;
   lectureTypeId: number;
@@ -97,7 +97,7 @@ export class LectureDto extends BaseReturnDto {
     this.endDate = lecture.endDate;
     this.isActive = lecture.isActive;
     this.price = lecture.price;
-    this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
+    this.stars = lecture.stars === 0 ? 0 : parseFloat(lecture.stars.toFixed(1));
     this.reviewCount = lecture.reviewCount;
     this.isGroup = lecture.isGroup;
     this.lectureToDanceGenre = lecture.lectureToDanceGenre
@@ -126,5 +126,9 @@ export class LectureDto extends BaseReturnDto {
       : undefined;
 
     Object.seal(this);
+  }
+
+  updateIsLikeToTrue() {
+    this.isLike = true;
   }
 }

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { LectureLikeInputData } from '../interface/lecture.interface';
 import { LikedLecture } from '@prisma/client';
@@ -16,12 +15,28 @@ export class LectureLikeRepository {
     });
   }
 
-  async readManyLikedLectureWithUserId(
-    userId: number,
-  ): Promise<LikedLecture[]> {
+  async getLikedLectureWithUserId(userId: number): Promise<LikedLecture[]> {
     return await this.prismaService.likedLecture.findMany({
-      where: { userId },
-      include: { lecture: true },
+      where: { userId, lecture: { deletedAt: null } },
+      include: {
+        lecture: {
+          include: {
+            lectureImage: true,
+            lectureToDanceGenre: {
+              include: { danceCategory: true },
+            },
+            lectureToRegion: { select: { region: true } },
+            lectureMethod: { select: { name: true } },
+            lecturer: true,
+          },
+        },
+      },
+    });
+  }
+
+  async countLikedLectureWithUserId(userId: number): Promise<number> {
+    return await this.prismaService.likedLecture.count({
+      where: { userId, lecture: { deletedAt: null } },
     });
   }
 }

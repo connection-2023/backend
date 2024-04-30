@@ -10,8 +10,8 @@ export class LikedLectureDto implements LikedLecture {
   lectureId: number;
   userId: number;
 
-  lecture: LectureDto;
-  user: UserDto;
+  lecture?: LectureDto;
+  user?: UserDto;
 
   constructor(likedLecture: Partial<LikedLectureDto>) {
     this.id = likedLecture.id;

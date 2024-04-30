@@ -2,7 +2,11 @@ import { ApiOperator } from '@src/common/types/type';
 import { LectureController } from '../lecture.controller';
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { OperationObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiOperationOptions,
+} from '@nestjs/swagger';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { GeneralResponseDto } from '@src/common/swagger/dtos/general-response.dto';
 import { CombinedScheduleDto } from '../../dtos/combined-schedule.dto';
@@ -12,6 +16,9 @@ import { LectureReviewController } from '../lecture-review.controller';
 import { CombinedMyReviewWithCountDto } from '@src/lecture/dtos/combined-my-review-with-count.dto';
 import { LectureReviewRatingsDto } from '@src/lecture/dtos/lecture-review-ratings.dto';
 import { LectureReviewDto } from '@src/common/dtos/lecture-review.dto';
+import { LectureLikeController } from '../lecture-like.controller';
+import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
+import { LectureDto } from '@src/common/dtos/lecture.dto';
 
 export const ApiLecture: ApiOperator<keyof LectureController> = {
   GetLectureSchedule: (
@@ -226,5 +233,33 @@ export const ApiLectureReview: ApiOperator<keyof LectureReviewController> = {
         { isArray: true },
       ),
     );
+  },
+};
+export const ApiLikedLecture: ApiOperator<keyof LectureLikeController> = {
+  GetLikedLecture: (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator => {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      PaginationResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'likedLectures',
+        LectureDto,
+      ),
+    );
+  },
+  CreateLectureLike: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
+  DeleteLectureLike: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
   },
 };
