@@ -127,4 +127,8 @@ export class LectureDto extends BaseReturnDto {
 
     Object.seal(this);
   }
+
+  updateIsLikeToTrue() {
+    this.isLike = true;
+  }
 }

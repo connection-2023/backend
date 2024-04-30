@@ -40,7 +40,7 @@ export class LectureLikeService {
     const serializedLikedLectures = likedLectures.map((likedLecture) => {
       const serializedLikedLecture = new LectureDto(likedLecture['lecture']);
 
-      serializedLikedLecture.isLike = true;
+      serializedLikedLecture.updateIsLikeToTrue();
 
       return serializedLikedLecture;
     });
