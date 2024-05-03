@@ -218,6 +218,7 @@ export class NotificationService {
         if (!deviceTypeInfo) {
           throw new BadRequestException(
             `Device type '${deviceType}' is not recognized or supported.`,
+            'InvalidDeviceType',
           );
         }
         const userDeviceToken =
