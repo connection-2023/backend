@@ -1,8 +1,12 @@
 import * as admin from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
-export class FirebaseAdminInitializer {
-  constructor(private configService: ConfigService) {
+@Injectable()
+export class FirebaseAdminInitializer implements OnModuleInit {
+  constructor(private configService: ConfigService) {}
+
+  onModuleInit() {
     this.initializeFirebaseAdmin();
   }
 
@@ -16,7 +20,14 @@ export class FirebaseAdminInitializer {
       );
     }
 
-    const serviceAccount = JSON.parse(firebaseAdminSDKJSON);
+    let serviceAccount;
+    try {
+      serviceAccount = JSON.parse(firebaseAdminSDKJSON);
+    } catch (error) {
+      throw new Error(
+        'Failed to parse Firebase Admin SDK JSON from environment variables.',
+      );
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
