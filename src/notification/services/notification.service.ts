@@ -1,3 +1,4 @@
+import { RegisterDeviceTokenDto } from './../dtos/register-device-token.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateNotificationDto } from './../dtos/create-notification.dto';
 import { EventsGateway } from '@src/events/events.gateway';
@@ -11,6 +12,7 @@ import { ValidateResult } from '@src/common/interface/common-interface';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
 import {
+  DeviceType,
   NotificationFilter,
   NotificationRecipientType,
 } from '../enum/notification.enum';
@@ -151,6 +153,30 @@ export class NotificationService {
     } catch (error) {
       console.error('Error sending message:', error);
     }
+  }
+
+  async registerDeviceToken(
+    userId: number,
+    { deviceToken, deviceType }: RegisterDeviceTokenDto,
+  ) {
+    const deviceTypeInfo = await this.notificationRepository.getDeviceType(
+      deviceType,
+    );
+
+    if (!deviceTypeInfo) {
+      throw new BadRequestException(
+        `Device type '${deviceType}' is not recognized or supported.`,
+      );
+    }
+    const userDeviceToken =
+      await this.notificationRepository.createUserDeviceToken(
+        userId,
+        deviceToken,
+      );
+    await this.notificationRepository.createUserDeviceTokenToDeviceType(
+      userDeviceToken.id,
+      deviceTypeInfo.id,
+    );
   }
 
   private getNotificationFilterOption(

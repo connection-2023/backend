@@ -11,3 +11,8 @@ export enum NotificationRecipientType {
   SPECIFIC_LECTURE_STUDENTS = 'SPECIFIC_LECTURE_STUDENTS',
   SPECIFIC_STUDENTS = 'SPECIFIC_STUDENTS',
 }
+
+export enum DeviceType {
+  IOS = 'IOS',
+  ANDROID = 'ANDROID',
+}

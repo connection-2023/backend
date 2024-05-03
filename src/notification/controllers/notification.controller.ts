@@ -87,4 +87,16 @@ export class NotificationController {
   async deleteNotification(@Param('id') id: string) {
     await this.notificationService.deleteNotification(id);
   }
+
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Post('register-device-token')
+  async registerDeviceToken(
+    @Body() body: { userId: number; deviceToken: string; deviceType: string },
+  ) {
+    return this.deviceService.registerToken(
+      body.userId,
+      body.deviceToken,
+      body.deviceType,
+    );
+  }
 }
