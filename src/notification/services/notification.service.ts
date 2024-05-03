@@ -8,7 +8,7 @@ import {
   INotificationTarget,
 } from '../interfaces/notification.interface';
 import { NotificationRepository } from './../repositories/notification.repository';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {
   PrismaTransaction,
   ValidateResult,
@@ -16,16 +16,17 @@ import {
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
 import {
-  DeviceType,
   NotificationFilter,
   NotificationRecipientType,
 } from '../enum/notification.enum';
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
 import * as admin from 'firebase-admin';
+import { UserDeviceToken } from '@prisma/client';
 
 @Injectable()
 export class NotificationService {
+  private logger = new Logger(NotificationService.name);
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly eventsGateway: EventsGateway,
@@ -38,26 +39,64 @@ export class NotificationService {
     source: INotificationSource,
     description: string,
   ) {
-    const notification = await this.notificationRepository.createNotification(
-      target,
-      title,
-      description,
-      source,
-    );
-    const onlineMap =
-      await this.notificationRepository.getOnlineMapWithTargetId(target);
+    try {
+      const userId = await this.getUserId(target);
+      const notification = await this.notificationRepository.createNotification(
+        target,
+        title,
+        description,
+        source,
+      );
+      const userDeviceTokens = await this.getUserDeviceToken(userId);
 
-    if (!onlineMap) {
+      await this.sendNotificationsToAllDevices(
+        userDeviceTokens,
+        title,
+        description,
+      );
+
+      const onlineMap =
+        await this.notificationRepository.getOnlineMapWithTargetId(target);
+
+      if (!onlineMap) {
+        return;
+      }
+
+      const { socketId } = onlineMap;
+      this.eventsGateway.server
+        .to(socketId)
+        .emit('handleNewNotification', notification);
+
       return new NotificationDto(notification);
+    } catch (error) {
+      // 로깅 또는 에러 처리 로직
+      throw new Error('Failed to create notification: ' + error.message);
+    }
+  }
+
+  private async sendNotificationsToAllDevices(
+    userDeviceTokens: UserDeviceToken[],
+    title: string,
+    description: string,
+  ) {
+    if (!userDeviceTokens[0]) {
+      return;
     }
 
-    const { socketId } = onlineMap;
-
-    this.eventsGateway.server
-      .to(socketId)
-      .emit('handleNewNotification', notification);
-
-    return new NotificationDto(notification);
+    try {
+      await Promise.all(
+        userDeviceTokens.map(async (userDeviceToken) => {
+          await this.sendPushNotification(
+            userDeviceToken.deviceToken,
+            title,
+            description,
+          );
+        }),
+      );
+    } catch (error) {
+      // 실패한 푸시 알림에 대한 로깅 또는 추가적인 에러 처리
+      throw new Error('Error sending push notifications: ' + error.message);
+    }
   }
 
   async getMyNotification(
@@ -104,13 +143,20 @@ export class NotificationService {
       createNotificationQueryDto,
     );
 
+    // Fetch all reservations in one go
+    const reservations = await this.prismaService.reservation.findMany({
+      where: {
+        lecture: { lecturerId },
+        userId: { in: targets },
+      },
+    });
+    const reservationMap = new Map(
+      reservations.map((res) => [res.userId, res]),
+    );
+
     return await Promise.all(
       targets.map(async (target) => {
-        const reservation = await this.prismaService.reservation.findFirst({
-          where: { lecture: { lecturerId }, userId: target },
-        });
-
-        if (!reservation) return;
+        if (!reservationMap.has(target)) return;
 
         return this.createNotification(
           { userId: target },
@@ -121,7 +167,6 @@ export class NotificationService {
       }),
     );
   }
-
   async markNotificationAsRead(notificationId: string) {
     const updatedNotification =
       await this.notificationRepository.markNotificationAsRead(notificationId);
@@ -142,7 +187,11 @@ export class NotificationService {
     await this.notificationRepository.deleteNotification(notificationId);
   }
 
-  async sendPushNotification(token: string, title: string, body: string) {
+  private async sendPushNotification(
+    token: string,
+    title: string,
+    body: string,
+  ) {
     const message = {
       notification: {
         title: title,
@@ -151,12 +200,9 @@ export class NotificationService {
       token: token,
     };
 
-    try {
-      const response = await admin.messaging().send(message);
-      console.log('Successfully sent message:', response);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
+    const response = await admin.messaging().send(message);
+
+    this.logger.log(response);
   }
 
   async registerDeviceToken(
@@ -191,7 +237,7 @@ export class NotificationService {
     );
   }
 
-  async getUserDeviceToken(userId: number) {
+  private async getUserDeviceToken(userId: number) {
     const userDeviceTokenInfo =
       await this.notificationRepository.getUserDeviceToken(userId);
 
@@ -282,5 +328,20 @@ export class NotificationService {
     });
 
     return targets.map((target) => target.userId);
+  }
+
+  private async getUserId(target: INotificationTarget) {
+    let userId: number;
+    if (target.lecturerId) {
+      const lecturer = await this.prismaService.lecturer.findFirst({
+        where: { id: target.lecturerId },
+      });
+
+      userId = lecturer.userId;
+    } else {
+      userId = target.userId;
+    }
+
+    return userId;
   }
 }

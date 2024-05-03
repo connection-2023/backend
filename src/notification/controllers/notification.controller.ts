@@ -100,6 +100,7 @@ export class NotificationController {
     const userId = authorizedData.lecturer
       ? authorizedData.lecturer.userId
       : authorizedData.user.id;
+
     return await this.notificationService.registerDeviceToken(
       userId,
       registerDeviceTokenDto,
