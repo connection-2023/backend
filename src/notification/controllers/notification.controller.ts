@@ -22,6 +22,7 @@ import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
 import { CreateNotificationDto } from '../dtos/create-notification.dto';
 import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
+import { RegisterDeviceTokenDto } from '../dtos/register-device-token.dto';
 
 @ApiTags('알림')
 @Controller('notifications/:id')
@@ -88,15 +89,20 @@ export class NotificationController {
     await this.notificationService.deleteNotification(id);
   }
 
+  @ApiNotification.RegisterDeviceToken({ summary: '유저 fmc 기기 토큰 등록' })
+  @SetResponseKey('userDeviceToken')
   @UseGuards(AllowUserAndLecturerGuard)
   @Post('register-device-token')
   async registerDeviceToken(
-    @Body() body: { userId: number; deviceToken: string; deviceType: string },
+    @GetAuthorizedUser() authorizedData: ValidateResult,
+    @Body() registerDeviceTokenDto: RegisterDeviceTokenDto,
   ) {
-    return this.deviceService.registerToken(
-      body.userId,
-      body.deviceToken,
-      body.deviceType,
+    const userId = authorizedData.lecturer
+      ? authorizedData.lecturer.userId
+      : authorizedData.user.id;
+    return await this.notificationService.registerDeviceToken(
+      userId,
+      registerDeviceTokenDto,
     );
   }
 }

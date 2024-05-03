@@ -1,3 +1,4 @@
+import { UserDeviceTokenDto } from './../../common/dtos/user-device-token.dto';
 import { RegisterDeviceTokenDto } from './../dtos/register-device-token.dto';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { CreateNotificationDto } from './../dtos/create-notification.dto';
@@ -185,8 +186,17 @@ export class NotificationService {
           deviceTypeInfo.id,
         );
 
-        return userDeviceToken;
+        return new UserDeviceTokenDto(userDeviceToken);
       },
+    );
+  }
+
+  async getUserDeviceToken(userId: number) {
+    const userDeviceTokenInfo =
+      await this.notificationRepository.getUserDeviceToken(userId);
+
+    return userDeviceTokenInfo.map(
+      (userDeviceToken) => new UserDeviceTokenDto(userDeviceToken),
     );
   }
 

@@ -10,6 +10,7 @@ import { Notification } from '../schemas/notification.schema';
 import { OnlineMap } from '@src/events/schemas/online-map.schema';
 import { DeviceType, UserDeviceToken } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { UserDeviceTokenDto } from '@src/common/dtos/user-device-token.dto';
 
 @Injectable()
 export class NotificationRepository {
@@ -112,6 +113,12 @@ export class NotificationRepository {
         userDeviceTokenId: userDeviceTokenId,
         deviceTypeId: deviceTypeId,
       },
+    });
+  }
+
+  async getUserDeviceToken(userId: number): Promise<UserDeviceTokenDto[]> {
+    return await this.prismaService.userDeviceToken.findMany({
+      where: { userId },
     });
   }
 }
