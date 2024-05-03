@@ -8,7 +8,6 @@ import {
 import { NotificationRepository } from './../repositories/notification.repository';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { GetPageTokenQueryDto } from '@src/chats/dtos/get-page-token.query.dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
 import {
@@ -17,6 +16,7 @@ import {
 } from '../enum/notification.enum';
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class NotificationService {
@@ -134,6 +134,23 @@ export class NotificationService {
 
   async deleteNotification(notificationId: string) {
     await this.notificationRepository.deleteNotification(notificationId);
+  }
+
+  async sendPushNotification(token: string, title: string, body: string) {
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: token,
+    };
+
+    try {
+      const response = await admin.messaging().send(message);
+      console.log('Successfully sent message:', response);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   }
 
   private getNotificationFilterOption(

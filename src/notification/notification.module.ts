@@ -13,6 +13,7 @@ import {
   OnlineMap,
   OnlineMapSchema,
 } from '@src/events/schemas/online-map.schema';
+import { FirebaseAdminInitializer } from './firebase/firebase-admin.init';
 
 @Module({
   imports: [
@@ -23,6 +24,11 @@ import {
     EventsModule,
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, NotificationRepository, NotificationHandler],
+  providers: [
+    NotificationService,
+    NotificationRepository,
+    NotificationHandler,
+    FirebaseAdminInitializer,
+  ],
 })
 export class NotificationModule {}
