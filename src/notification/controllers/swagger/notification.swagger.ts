@@ -7,6 +7,7 @@ import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
+import { RegisterDeviceTokenDto } from '@src/notification/dtos/register-device-token.dto';
 
 export const ApiNotification: ApiOperator<keyof NotificationController> = {
   GetMyNotification: function (
@@ -73,6 +74,20 @@ export const ApiNotification: ApiOperator<keyof NotificationController> = {
       ApiOperation(apiOperationOptions),
       ApiBearerAuth(),
       StatusResponseDto.swaggerBuilder(HttpStatus.OK, 'deleteNotification'),
+    );
+  },
+  RegisterDeviceToken: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      DetailResponseDto.swaggerBuilder(
+        HttpStatus.OK,
+        'registerUserDeviceToken',
+        RegisterDeviceTokenDto,
+      ),
     );
   },
 };

@@ -25,7 +25,6 @@ import { EventsModule } from './events/events.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { WebhookModule } from './webhook/webhook.module';
 import { NotificationModule } from './notification/notification.module';
-import { CqrsModule } from '@nestjs/cqrs';
 import { BatchModule } from './batch/batch.module';
 import { BullQueueModuleConfig } from './common/config/bull-queue-module.config';
 import { EventEmitterModule } from '@nestjs/event-emitter';

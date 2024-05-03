@@ -8,6 +8,9 @@ import {
 } from '../interfaces/notification.interface';
 import { Notification } from '../schemas/notification.schema';
 import { OnlineMap } from '@src/events/schemas/online-map.schema';
+import { DeviceType, UserDeviceToken } from '@prisma/client';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
+import { UserDeviceTokenDto } from '@src/common/dtos/user-device-token.dto';
 
 @Injectable()
 export class NotificationRepository {
@@ -16,6 +19,7 @@ export class NotificationRepository {
     private readonly notificationModel: Model<Notification>,
     @InjectModel(OnlineMap.name)
     private readonly onlineMapModel: Model<OnlineMap>,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async createNotification(
@@ -77,6 +81,44 @@ export class NotificationRepository {
   async deleteNotification(notificationId: string): Promise<void> {
     await this.notificationModel.findByIdAndUpdate(notificationId, {
       deletedAt: new Date(),
+    });
+  }
+
+  async getDeviceType(deviceType: string): Promise<DeviceType> {
+    return await this.prismaService.deviceType.findFirst({
+      where: { type: deviceType },
+    });
+  }
+
+  async createUserDeviceToken(
+    transaction: PrismaTransaction,
+    userId: number,
+    deviceToken: string,
+  ): Promise<UserDeviceToken> {
+    return await transaction.userDeviceToken.create({
+      data: {
+        userId,
+        deviceToken,
+      },
+    });
+  }
+
+  async createUserDeviceTokenToDeviceType(
+    transaction: PrismaTransaction,
+    userDeviceTokenId: number,
+    deviceTypeId: number,
+  ): Promise<void> {
+    await transaction.userDeviceTokenToDeviceType.create({
+      data: {
+        userDeviceTokenId: userDeviceTokenId,
+        deviceTypeId: deviceTypeId,
+      },
+    });
+  }
+
+  async getUserDeviceToken(userId: number): Promise<UserDeviceTokenDto[]> {
+    return await this.prismaService.userDeviceToken.findMany({
+      where: { userId },
     });
   }
 }
