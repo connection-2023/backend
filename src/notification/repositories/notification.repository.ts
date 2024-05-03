@@ -9,6 +9,7 @@ import {
 import { Notification } from '../schemas/notification.schema';
 import { OnlineMap } from '@src/events/schemas/online-map.schema';
 import { DeviceType, UserDeviceToken } from '@prisma/client';
+import { PrismaTransaction } from '@src/common/interface/common-interface';
 
 @Injectable()
 export class NotificationRepository {
@@ -89,10 +90,11 @@ export class NotificationRepository {
   }
 
   async createUserDeviceToken(
+    transaction: PrismaTransaction,
     userId: number,
     deviceToken: string,
   ): Promise<UserDeviceToken> {
-    return await this.prismaService.userDeviceToken.create({
+    return await transaction.userDeviceToken.create({
       data: {
         userId,
         deviceToken,
@@ -101,13 +103,14 @@ export class NotificationRepository {
   }
 
   async createUserDeviceTokenToDeviceType(
+    transaction: PrismaTransaction,
     userDeviceTokenId: number,
     deviceTypeId: number,
   ): Promise<void> {
-    await this.prisma.userDeviceTokenToDeviceType.create({
+    await transaction.userDeviceTokenToDeviceType.create({
       data: {
-        userDeviceTokenId: userDeviceToken.id,
-        deviceTypeId: deviceTypeInfo.id,
+        userDeviceTokenId: userDeviceTokenId,
+        deviceTypeId: deviceTypeId,
       },
     });
   }

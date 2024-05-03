@@ -8,7 +8,10 @@ import {
 } from '../interfaces/notification.interface';
 import { NotificationRepository } from './../repositories/notification.repository';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ValidateResult } from '@src/common/interface/common-interface';
+import {
+  PrismaTransaction,
+  ValidateResult,
+} from '@src/common/interface/common-interface';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
 import mongoose from 'mongoose';
 import {
@@ -159,23 +162,31 @@ export class NotificationService {
     userId: number,
     { deviceToken, deviceType }: RegisterDeviceTokenDto,
   ) {
-    const deviceTypeInfo = await this.notificationRepository.getDeviceType(
-      deviceType,
-    );
+    return await this.prismaService.$transaction(
+      async (transaction: PrismaTransaction) => {
+        const deviceTypeInfo = await this.notificationRepository.getDeviceType(
+          deviceType,
+        );
 
-    if (!deviceTypeInfo) {
-      throw new BadRequestException(
-        `Device type '${deviceType}' is not recognized or supported.`,
-      );
-    }
-    const userDeviceToken =
-      await this.notificationRepository.createUserDeviceToken(
-        userId,
-        deviceToken,
-      );
-    await this.notificationRepository.createUserDeviceTokenToDeviceType(
-      userDeviceToken.id,
-      deviceTypeInfo.id,
+        if (!deviceTypeInfo) {
+          throw new BadRequestException(
+            `Device type '${deviceType}' is not recognized or supported.`,
+          );
+        }
+        const userDeviceToken =
+          await this.notificationRepository.createUserDeviceToken(
+            transaction,
+            userId,
+            deviceToken,
+          );
+        await this.notificationRepository.createUserDeviceTokenToDeviceType(
+          transaction,
+          userDeviceToken.id,
+          deviceTypeInfo.id,
+        );
+
+        return userDeviceToken;
+      },
     );
   }
 
