@@ -185,7 +185,7 @@ export class NotificationService {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
         const userDeviceToken =
-          await this.notificationRepository.createUserDeviceToken(
+          await this.notificationRepository.upsertUserDeviceToken(
             transaction,
             userId,
             deviceToken,

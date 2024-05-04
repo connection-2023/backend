@@ -84,13 +84,17 @@ export class NotificationRepository {
     });
   }
 
-  async createUserDeviceToken(
+  async upsertUserDeviceToken(
     transaction: PrismaTransaction,
     userId: number,
     deviceToken: string,
   ): Promise<UserDeviceToken> {
-    return await transaction.userDeviceToken.create({
-      data: {
+    return await transaction.userDeviceToken.upsert({
+      where: { userId },
+      update: {
+        deviceToken,
+      },
+      create: {
         userId,
         deviceToken,
       },
