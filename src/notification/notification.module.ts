@@ -30,5 +30,6 @@ import { FirebaseAdminInitializer } from './firebase/firebase-admin.init';
     NotificationHandler,
     FirebaseAdminInitializer,
   ],
+  exports: [NotificationService],
 })
 export class NotificationModule {}

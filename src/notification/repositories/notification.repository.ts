@@ -85,11 +85,10 @@ export class NotificationRepository {
   }
 
   async upsertUserDeviceToken(
-    transaction: PrismaTransaction,
     userId: number,
     deviceToken: string,
   ): Promise<UserDeviceToken> {
-    return await transaction.userDeviceToken.upsert({
+    return await this.prismaService.userDeviceToken.upsert({
       where: { userId },
       update: {
         deviceToken,

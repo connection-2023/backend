@@ -1,3 +1,4 @@
+import { NotificationService } from './../../notification/services/notification.service';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -15,6 +16,7 @@ export class ChatsService {
     private readonly chatsRepository: ChatsRepository,
     private readonly chatRoomRepository: ChatRoomRepository,
     private readonly eventsGateway: EventsGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createChats(

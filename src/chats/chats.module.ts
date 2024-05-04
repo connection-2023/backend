@@ -8,12 +8,9 @@ import { ChatsService } from './services/chats.service';
 import { ChatsRepository } from './repositories/chats.repository';
 import { ChatRoomService } from './services/chats-room.service';
 import { ChatRoomRepository } from './repositories/chats-room.repository';
-import { EventsGateway } from '@src/events/events.gateway';
 import { EventsModule } from '@src/events/events.module';
-import {
-  OnlineMap,
-  OnlineMapSchema,
-} from '@src/events/schemas/online-map.schema';
+import { NotificationService } from '@src/notification/services/notification.service';
+import { NotificationModule } from '@src/notification/notification.module';
 
 @Module({
   imports: [
@@ -22,6 +19,7 @@ import {
       { name: ChatRoom.name, schema: ChatRoomSchema },
     ]),
     EventsModule,
+    NotificationModule,
   ],
   controllers: [ChatRoomController, ChatsController],
   providers: [

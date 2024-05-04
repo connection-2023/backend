@@ -38,6 +38,7 @@ export class NotificationService {
     title: string,
     source: INotificationSource,
     description: string,
+    retryCount = 3,
   ) {
     try {
       const userId = await this.getUserId(target);
@@ -69,7 +70,23 @@ export class NotificationService {
 
       return new NotificationDto(notification);
     } catch (error) {
-      throw new Error('Failed to create notification: ' + error.message);
+      this.logger.error(
+        `Failed to create notification: ${error.message}. Retrying...`,
+      );
+      if (retryCount > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
+        return this.createNotification(
+          target,
+          title,
+          source,
+          description,
+          retryCount - 1,
+        );
+      } else {
+        throw new Error(
+          'Failed to create notification after retries: ' + error.message,
+        );
+      }
     }
   }
 
@@ -160,11 +177,7 @@ export class NotificationService {
     await this.notificationRepository.deleteNotification(notificationId);
   }
 
-  private async sendPushNotification(
-    token: string,
-    title: string,
-    body: string,
-  ) {
+  async sendPushNotification(token: string, title: string, body: string) {
     const message = {
       notification: {
         title: title,
@@ -182,18 +195,13 @@ export class NotificationService {
     userId: number,
     { deviceToken }: RegisterDeviceTokenDto,
   ) {
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const userDeviceToken =
-          await this.notificationRepository.upsertUserDeviceToken(
-            transaction,
-            userId,
-            deviceToken,
-          );
+    const userDeviceToken =
+      await this.notificationRepository.upsertUserDeviceToken(
+        userId,
+        deviceToken,
+      );
 
-        return new UserDeviceTokenDto(userDeviceToken);
-      },
-    );
+    return new UserDeviceTokenDto(userDeviceToken);
   }
 
   private async getUserDeviceToken(userId: number) {
