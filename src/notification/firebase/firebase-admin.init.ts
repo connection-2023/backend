@@ -11,21 +11,21 @@ export class FirebaseAdminInitializer implements OnModuleInit {
   }
 
   private async initializeFirebaseAdmin() {
-    const firebaseAdminSDKJSON = this.configService.get<string>(
-      'FIREBASE_ADMIN_SDK_JSON',
-    );
-    if (!firebaseAdminSDKJSON) {
-      throw new Error(
-        'Firebase Admin SDK JSON is not defined in the environment variables.',
-      );
-    }
+    const serviceAccount: admin.ServiceAccount = {
+      projectId: this.configService.get<string>(
+        'FIREBASE_ADMIN_SDK_PROJECT_ID',
+      ),
+      privateKey: this.configService
+        .get<string>('FIREBASE_ADMIN_SDK_PRIVATE_KEY')
+        .replace(/\\n/g, '\n'),
+      clientEmail: this.configService.get<string>(
+        'FIREBASE_ADMIN_SDK_CLIENT_EMAIL',
+      ),
+    };
 
-    let serviceAccount;
-    try {
-      serviceAccount = JSON.parse(firebaseAdminSDKJSON);
-    } catch (error) {
+    if (!serviceAccount.privateKey || !serviceAccount.clientEmail) {
       throw new Error(
-        'Failed to parse Firebase Admin SDK JSON from environment variables.',
+        'Firebase Admin SDK credentials are not fully defined in the environment variables.',
       );
     }
 
