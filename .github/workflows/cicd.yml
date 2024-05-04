@@ -90,7 +90,7 @@ jobs:
 
           echo "NODE_ENV=${{secrets.NODE_ENV}}" >> .env
 
-          echo "FIREBASE_ADMIN_SDK_JSON=${{secrets.FIREBASE_ADMIN_SDK_JSON}}"
+          echo "FIREBASE_ADMIN_SDK_JSON=${{secrets.FIREBASE_ADMIN_SDK_JSON}}" >> .env
 
           cat .env
 
