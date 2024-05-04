@@ -6,11 +6,11 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 export class FirebaseAdminInitializer implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
-  onModuleInit() {
-    this.initializeFirebaseAdmin();
+  async onModuleInit() {
+    await this.initializeFirebaseAdmin();
   }
 
-  private initializeFirebaseAdmin() {
+  private async initializeFirebaseAdmin() {
     const firebaseAdminSDKJSON = this.configService.get<string>(
       'FIREBASE_ADMIN_SDK_JSON',
     );
