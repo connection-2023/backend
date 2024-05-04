@@ -47,10 +47,10 @@ export class NotificationService {
         description,
         source,
       );
-      const userDeviceTokens = await this.getUserDeviceToken(userId);
+      const userDeviceToken = await this.getUserDeviceToken(userId);
 
-      await this.sendNotificationsToAllDevices(
-        userDeviceTokens,
+      await this.sendPushNotification(
+        userDeviceToken.deviceToken,
         title,
         description,
       );
@@ -69,33 +69,7 @@ export class NotificationService {
 
       return new NotificationDto(notification);
     } catch (error) {
-      // 로깅 또는 에러 처리 로직
       throw new Error('Failed to create notification: ' + error.message);
-    }
-  }
-
-  private async sendNotificationsToAllDevices(
-    userDeviceTokens: UserDeviceToken[],
-    title: string,
-    description: string,
-  ) {
-    if (!userDeviceTokens[0]) {
-      return;
-    }
-
-    try {
-      await Promise.all(
-        userDeviceTokens.map(async (userDeviceToken) => {
-          await this.sendPushNotification(
-            userDeviceToken.deviceToken,
-            title,
-            description,
-          );
-        }),
-      );
-    } catch (error) {
-      // 실패한 푸시 알림에 대한 로깅 또는 추가적인 에러 처리
-      throw new Error('Error sending push notifications: ' + error.message);
     }
   }
 
@@ -143,7 +117,6 @@ export class NotificationService {
       createNotificationQueryDto,
     );
 
-    // Fetch all reservations in one go
     const reservations = await this.prismaService.reservation.findMany({
       where: {
         lecture: { lecturerId },
@@ -207,31 +180,16 @@ export class NotificationService {
 
   async registerDeviceToken(
     userId: number,
-    { deviceToken, deviceType }: RegisterDeviceTokenDto,
+    { deviceToken }: RegisterDeviceTokenDto,
   ) {
     return await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
-        const deviceTypeInfo = await this.notificationRepository.getDeviceType(
-          deviceType,
-        );
-
-        if (!deviceTypeInfo) {
-          throw new BadRequestException(
-            `Device type '${deviceType}' is not recognized or supported.`,
-            'InvalidDeviceType',
-          );
-        }
         const userDeviceToken =
           await this.notificationRepository.createUserDeviceToken(
             transaction,
             userId,
             deviceToken,
           );
-        await this.notificationRepository.createUserDeviceTokenToDeviceType(
-          transaction,
-          userDeviceToken.id,
-          deviceTypeInfo.id,
-        );
 
         return new UserDeviceTokenDto(userDeviceToken);
       },
@@ -242,9 +200,7 @@ export class NotificationService {
     const userDeviceTokenInfo =
       await this.notificationRepository.getUserDeviceToken(userId);
 
-    return userDeviceTokenInfo.map(
-      (userDeviceToken) => new UserDeviceTokenDto(userDeviceToken),
-    );
+    return new UserDeviceTokenDto(userDeviceTokenInfo);
   }
 
   private getNotificationFilterOption(

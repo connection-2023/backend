@@ -50,31 +50,15 @@ model Users {
   blockedLecturer          BlockedLecturer[]
   userBankAccount          UserBankAccount[]
   searchHistory            SearchHistory[]
-  userDeviceToken          UserDeviceToken[]
+  userDeviceToken          UserDeviceToken?
 }
 
 model UserDeviceToken {
-  id                          Int                           @id @default(autoincrement())
-  userId                      Int
-  deviceToken                 String                        @db.VarChar(255)
-  createdAt                   DateTime                      @default(now()) @db.Timestamp(6)
-  users                       Users                         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userDeviceTokenToDeviceType UserDeviceTokenToDeviceType[]
-}
-
-model DeviceType {
-  id                          Int                           @id @default(autoincrement())
-  //'ios' 또는 'android'
-  type                        String
-  userDeviceTokenToDeviceType UserDeviceTokenToDeviceType[]
-}
-
-model UserDeviceTokenToDeviceType {
-  id                Int             @id @default(autoincrement())
-  userDeviceTokenId Int
-  deviceTypeId      Int
-  userDeviceToken   UserDeviceToken @relation(fields: [userDeviceTokenId], references: [id], onDelete: Cascade)
-  deviceType        DeviceType      @relation(fields: [deviceTypeId], references: [id])
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  deviceToken String   @db.VarChar(255)
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  users       Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserProfileImage {
