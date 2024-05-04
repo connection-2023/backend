@@ -90,7 +90,9 @@ jobs:
 
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
 
-          echo "FIREBASE_ADMIN_SDK_JSON=${{ secrets.FIREBASE_ADMIN_SDK_JSON }}" >> .env
+          echo "FIREBASE_ADMIN_SDK_PROJECT_ID=${{ secrets.FIREBASE_ADMIN_SDK_PROJECT_ID }}" >> .env
+          echo "FIREBASE_ADMIN_SDK_PRIVATE_KEY=${{ secrets.FIREBASE_ADMIN_SDK_PRIVATE_KEY }}" >> .env
+          echo "FIREBASE_ADMIN_SDK_CLIENT_EMAIL=${{ secrets.FIREBASE_ADMIN_SDK_CLIENT_EMAIL }}" >> .env
 
           cat .env
 
