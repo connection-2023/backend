@@ -41,20 +41,14 @@ export class NotificationService {
     retryCount = 3,
   ) {
     try {
-      const userId = await this.getUserId(target);
       const notification = await this.notificationRepository.createNotification(
         target,
         title,
         description,
         source,
       );
-      const userDeviceToken = await this.getUserDeviceToken(userId);
 
-      await this.sendPushNotification(
-        userDeviceToken.deviceToken,
-        title,
-        description,
-      );
+      await this.sendPushNotification(target, description);
 
       const onlineMap =
         await this.notificationRepository.getOnlineMapWithTargetId(target);
@@ -177,13 +171,25 @@ export class NotificationService {
     await this.notificationRepository.deleteNotification(notificationId);
   }
 
-  async sendPushNotification(token: string, title: string, body: string) {
+  async sendPushNotification(target: INotificationTarget, body: string) {
+    let userId: number;
+
+    if (target.lecturerId) {
+      const lecturer = await this.prismaService.lecturer.findFirst({
+        where: { id: target.lecturerId },
+      });
+      userId = lecturer.userId;
+    } else {
+      userId = target.userId;
+    }
+
+    const userDeviceToken = await this.getUserDeviceToken(userId);
     const message = {
       notification: {
-        title: title,
+        title: 'connection',
         body: body,
       },
-      token: token,
+      token: userDeviceToken.deviceToken,
     };
 
     const response = await admin.messaging().send(message);

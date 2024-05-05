@@ -1,4 +1,4 @@
-import { NotificationService } from './../../notification/services/notification.service';
+import { NotificationService } from '@src/notification/services/notification.service';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -55,6 +55,11 @@ export class ChatsService {
     }
 
     const serializedChat = new ChatsDto(chat);
+
+    await this.notificationService.sendPushNotification(
+      receiver,
+      '새로운 메시지가 있습니다.',
+    );
 
     this.eventsGateway.server
       .to(chatRoom.roomId)
