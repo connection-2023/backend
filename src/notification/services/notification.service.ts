@@ -172,7 +172,7 @@ export class NotificationService {
   }
 
   async sendPushNotification(target: INotificationTarget, body: string) {
-    const userId = this.getUserId(target);
+    const userId = await this.getUserId(target);
     const userDeviceToken = await this.getUserDeviceToken(userId);
     const message = {
       notification: {
