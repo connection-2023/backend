@@ -172,17 +172,7 @@ export class NotificationService {
   }
 
   async sendPushNotification(target: INotificationTarget, body: string) {
-    let userId: number;
-
-    if (target.lecturerId) {
-      const lecturer = await this.prismaService.lecturer.findFirst({
-        where: { id: target.lecturerId },
-      });
-      userId = lecturer.userId;
-    } else {
-      userId = target.userId;
-    }
-
+    const userId = this.getUserId(target);
     const userDeviceToken = await this.getUserDeviceToken(userId);
     const message = {
       notification: {
