@@ -93,3 +93,8 @@ export interface IPaginationOptions {
   firstItemId?: number;
   lastItemId?: number;
 }
+
+export interface IPushNotificationMessage {
+  notification: { title: string; body: string; chatRoomId?: string };
+  token: string;
+}

@@ -55,10 +55,17 @@ export class ChatsService {
     }
 
     const serializedChat = new ChatsDto(chat);
+    const pushNotificationMessage =
+      await this.notificationService.buildPushNotificationMessage(
+        receiver,
+        'connection',
+        '새로운 메세지가 있습니다.',
+        chatRoom._id,
+      );
 
     await this.notificationService.sendPushNotification(
       receiver,
-      '새로운 메시지가 있습니다.',
+      pushNotificationMessage,
     );
 
     this.eventsGateway.server

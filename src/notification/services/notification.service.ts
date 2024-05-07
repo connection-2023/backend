@@ -10,7 +10,7 @@ import {
 import { NotificationRepository } from './../repositories/notification.repository';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {
-  PrismaTransaction,
+  IPushNotificationMessage,
   ValidateResult,
 } from '@src/common/interface/common-interface';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
@@ -22,7 +22,6 @@ import {
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
 import * as admin from 'firebase-admin';
-import { UserDeviceToken } from '@prisma/client';
 
 @Injectable()
 export class NotificationService {
@@ -47,8 +46,13 @@ export class NotificationService {
         description,
         source,
       );
+      const message = await this.buildPushNotificationMessage(
+        target,
+        title,
+        description,
+      );
 
-      await this.sendPushNotification(target, description);
+      await this.sendPushNotification(target, message);
 
       const onlineMap =
         await this.notificationRepository.getOnlineMapWithTargetId(target);
@@ -171,17 +175,10 @@ export class NotificationService {
     await this.notificationRepository.deleteNotification(notificationId);
   }
 
-  async sendPushNotification(target: INotificationTarget, body: string) {
-    const userId = await this.getUserId(target);
-    const userDeviceToken = await this.getUserDeviceToken(userId);
-    const message = {
-      notification: {
-        title: 'connection',
-        body: body,
-      },
-      token: userDeviceToken.deviceToken,
-    };
-
+  async sendPushNotification(
+    target: INotificationTarget,
+    message: IPushNotificationMessage,
+  ) {
     const response = await admin.messaging().send(message);
 
     this.logger.log(response);
@@ -304,5 +301,20 @@ export class NotificationService {
     }
 
     return userId;
+  }
+
+  async buildPushNotificationMessage(
+    target: INotificationTarget,
+    title: string,
+    body: string,
+    chatRoomId?: string,
+  ) {
+    const userId = await this.getUserId(target);
+    const userDeviceToken = await this.getUserDeviceToken(userId);
+
+    return {
+      notification: { title, body, chatRoomId },
+      token: userDeviceToken.deviceToken,
+    };
   }
 }
