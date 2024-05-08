@@ -60,8 +60,8 @@ export class ChatsService {
     const pushNotificationMessage =
       await this.notificationService.buildPushNotificationMessage(
         receiver,
-        'connection',
-        '새로운 메세지가 있습니다.',
+        title,
+        description,
         chatRoom._id,
       );
 
