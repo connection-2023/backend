@@ -55,6 +55,8 @@ export class ChatsService {
     }
 
     const serializedChat = new ChatsDto(chat);
+    const title = 'connection';
+    const description = '새로운 메세지가 있습니다.';
     const pushNotificationMessage =
       await this.notificationService.buildPushNotificationMessage(
         receiver,
