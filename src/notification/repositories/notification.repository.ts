@@ -8,7 +8,7 @@ import {
 } from '../interfaces/notification.interface';
 import { Notification } from '../schemas/notification.schema';
 import { OnlineMap } from '@src/events/schemas/online-map.schema';
-import { DeviceType, UserDeviceToken } from '@prisma/client';
+import { UserDeviceToken } from '@prisma/client';
 import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { UserDeviceTokenDto } from '@src/common/dtos/user-device-token.dto';
 
@@ -84,40 +84,24 @@ export class NotificationRepository {
     });
   }
 
-  async getDeviceType(deviceType: string): Promise<DeviceType> {
-    return await this.prismaService.deviceType.findFirst({
-      where: { type: deviceType },
-    });
-  }
-
-  async createUserDeviceToken(
-    transaction: PrismaTransaction,
+  async upsertUserDeviceToken(
     userId: number,
     deviceToken: string,
   ): Promise<UserDeviceToken> {
-    return await transaction.userDeviceToken.create({
-      data: {
+    return await this.prismaService.userDeviceToken.upsert({
+      where: { userId },
+      update: {
+        deviceToken,
+      },
+      create: {
         userId,
         deviceToken,
       },
     });
   }
 
-  async createUserDeviceTokenToDeviceType(
-    transaction: PrismaTransaction,
-    userDeviceTokenId: number,
-    deviceTypeId: number,
-  ): Promise<void> {
-    await transaction.userDeviceTokenToDeviceType.create({
-      data: {
-        userDeviceTokenId: userDeviceTokenId,
-        deviceTypeId: deviceTypeId,
-      },
-    });
-  }
-
-  async getUserDeviceToken(userId: number): Promise<UserDeviceTokenDto[]> {
-    return await this.prismaService.userDeviceToken.findMany({
+  async getUserDeviceToken(userId: number): Promise<UserDeviceTokenDto> {
+    return await this.prismaService.userDeviceToken.findFirst({
       where: { userId },
     });
   }

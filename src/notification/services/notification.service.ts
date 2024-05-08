@@ -10,7 +10,7 @@ import {
 import { NotificationRepository } from './../repositories/notification.repository';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {
-  PrismaTransaction,
+  IPushNotificationMessage,
   ValidateResult,
 } from '@src/common/interface/common-interface';
 import { NotificationDto } from '@src/common/dtos/notification.dto';
@@ -22,7 +22,6 @@ import {
 import { GetMyNotificationQueryDto } from '../dtos/get-my-notification-query.dto';
 import { CreateNotificationQueryDto } from '../dtos/create-notification-query.dto';
 import * as admin from 'firebase-admin';
-import { UserDeviceToken } from '@prisma/client';
 
 @Injectable()
 export class NotificationService {
@@ -38,22 +37,22 @@ export class NotificationService {
     title: string,
     source: INotificationSource,
     description: string,
+    retryCount = 3,
   ) {
     try {
-      const userId = await this.getUserId(target);
       const notification = await this.notificationRepository.createNotification(
         target,
         title,
         description,
         source,
       );
-      const userDeviceTokens = await this.getUserDeviceToken(userId);
-
-      await this.sendNotificationsToAllDevices(
-        userDeviceTokens,
+      const message = await this.buildPushNotificationMessage(
+        target,
         title,
         description,
       );
+
+      await this.sendPushNotification(target, message);
 
       const onlineMap =
         await this.notificationRepository.getOnlineMapWithTargetId(target);
@@ -69,33 +68,23 @@ export class NotificationService {
 
       return new NotificationDto(notification);
     } catch (error) {
-      // 로깅 또는 에러 처리 로직
-      throw new Error('Failed to create notification: ' + error.message);
-    }
-  }
-
-  private async sendNotificationsToAllDevices(
-    userDeviceTokens: UserDeviceToken[],
-    title: string,
-    description: string,
-  ) {
-    if (!userDeviceTokens[0]) {
-      return;
-    }
-
-    try {
-      await Promise.all(
-        userDeviceTokens.map(async (userDeviceToken) => {
-          await this.sendPushNotification(
-            userDeviceToken.deviceToken,
-            title,
-            description,
-          );
-        }),
+      this.logger.error(
+        `Failed to create notification: ${error.message}. Retrying...`,
       );
-    } catch (error) {
-      // 실패한 푸시 알림에 대한 로깅 또는 추가적인 에러 처리
-      throw new Error('Error sending push notifications: ' + error.message);
+      if (retryCount > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
+        return this.createNotification(
+          target,
+          title,
+          source,
+          description,
+          retryCount - 1,
+        );
+      } else {
+        throw new Error(
+          'Failed to create notification after retries: ' + error.message,
+        );
+      }
     }
   }
 
@@ -143,7 +132,6 @@ export class NotificationService {
       createNotificationQueryDto,
     );
 
-    // Fetch all reservations in one go
     const reservations = await this.prismaService.reservation.findMany({
       where: {
         lecture: { lecturerId },
@@ -187,19 +175,10 @@ export class NotificationService {
     await this.notificationRepository.deleteNotification(notificationId);
   }
 
-  private async sendPushNotification(
-    token: string,
-    title: string,
-    body: string,
+  async sendPushNotification(
+    target: INotificationTarget,
+    message: IPushNotificationMessage,
   ) {
-    const message = {
-      notification: {
-        title: title,
-        body: body,
-      },
-      token: token,
-    };
-
     const response = await admin.messaging().send(message);
 
     this.logger.log(response);
@@ -207,44 +186,22 @@ export class NotificationService {
 
   async registerDeviceToken(
     userId: number,
-    { deviceToken, deviceType }: RegisterDeviceTokenDto,
+    { deviceToken }: RegisterDeviceTokenDto,
   ) {
-    return await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        const deviceTypeInfo = await this.notificationRepository.getDeviceType(
-          deviceType,
-        );
+    const userDeviceToken =
+      await this.notificationRepository.upsertUserDeviceToken(
+        userId,
+        deviceToken,
+      );
 
-        if (!deviceTypeInfo) {
-          throw new BadRequestException(
-            `Device type '${deviceType}' is not recognized or supported.`,
-            'InvalidDeviceType',
-          );
-        }
-        const userDeviceToken =
-          await this.notificationRepository.createUserDeviceToken(
-            transaction,
-            userId,
-            deviceToken,
-          );
-        await this.notificationRepository.createUserDeviceTokenToDeviceType(
-          transaction,
-          userDeviceToken.id,
-          deviceTypeInfo.id,
-        );
-
-        return new UserDeviceTokenDto(userDeviceToken);
-      },
-    );
+    return new UserDeviceTokenDto(userDeviceToken);
   }
 
   private async getUserDeviceToken(userId: number) {
     const userDeviceTokenInfo =
       await this.notificationRepository.getUserDeviceToken(userId);
 
-    return userDeviceTokenInfo.map(
-      (userDeviceToken) => new UserDeviceTokenDto(userDeviceToken),
-    );
+    return new UserDeviceTokenDto(userDeviceTokenInfo);
   }
 
   private getNotificationFilterOption(
@@ -344,5 +301,20 @@ export class NotificationService {
     }
 
     return userId;
+  }
+
+  async buildPushNotificationMessage(
+    target: INotificationTarget,
+    title: string,
+    body: string,
+    chatRoomId?: string,
+  ) {
+    const userId = await this.getUserId(target);
+    const userDeviceToken = await this.getUserDeviceToken(userId);
+
+    return {
+      notification: { title, body, chatRoomId },
+      token: userDeviceToken.deviceToken,
+    };
   }
 }

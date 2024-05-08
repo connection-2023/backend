@@ -1,3 +1,4 @@
+import { NotificationService } from '@src/notification/services/notification.service';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
 import { ValidateResult } from '@src/common/interface/common-interface';
@@ -15,6 +16,7 @@ export class ChatsService {
     private readonly chatsRepository: ChatsRepository,
     private readonly chatRoomRepository: ChatRoomRepository,
     private readonly eventsGateway: EventsGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createChats(
@@ -53,6 +55,20 @@ export class ChatsService {
     }
 
     const serializedChat = new ChatsDto(chat);
+    const title = 'connection';
+    const description = '새로운 메세지가 있습니다.';
+    const pushNotificationMessage =
+      await this.notificationService.buildPushNotificationMessage(
+        receiver,
+        title,
+        description,
+        chatRoom._id,
+      );
+
+    await this.notificationService.sendPushNotification(
+      receiver,
+      pushNotificationMessage,
+    );
 
     this.eventsGateway.server
       .to(chatRoom.roomId)
