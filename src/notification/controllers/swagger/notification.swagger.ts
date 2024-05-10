@@ -90,4 +90,14 @@ export const ApiNotification: ApiOperator<keyof NotificationController> = {
       ),
     );
   },
+  DeleteDeviceToken: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    return applyDecorators(
+      ApiOperation(apiOperationOptions),
+      ApiBearerAuth(),
+      StatusResponseDto.swaggerBuilder(HttpStatus.OK, 'deleteUserDeviceToken'),
+    );
+  },
 };

@@ -317,4 +317,8 @@ export class NotificationService {
       token: userDeviceToken.deviceToken,
     };
   }
+
+  async deleteUserDeviceToken(userId: number) {
+    return await this.notificationRepository.deleteUserDeviceToken(userId);
+  }
 }
