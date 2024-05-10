@@ -62,7 +62,7 @@ export class ChatsService {
         receiver,
         title,
         description,
-        chatRoom._id,
+        chatRoomId,
       );
 
     await this.notificationService.sendPushNotification(
