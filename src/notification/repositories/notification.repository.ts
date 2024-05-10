@@ -105,4 +105,8 @@ export class NotificationRepository {
       where: { userId },
     });
   }
+
+  async deleteUserDeviceToken(userId: number): Promise<void> {
+    await this.prismaService.userDeviceToken.delete({ where: { userId } });
+  }
 }

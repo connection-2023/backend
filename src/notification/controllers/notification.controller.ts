@@ -106,4 +106,15 @@ export class NotificationController {
       registerDeviceTokenDto,
     );
   }
+
+  @ApiNotification.DeleteDeviceToken({ summary: 'fcm 디바이스 토큰 삭제' })
+  @UseGuards(AllowUserAndLecturerGuard)
+  @Delete('device-token')
+  async deleteDeviceToken(@GetAuthorizedUser() authorizedData: ValidateResult) {
+    const userId = authorizedData.lecturer
+      ? authorizedData.lecturer.userId
+      : authorizedData.user.id;
+
+    return await this.notificationService.deleteUserDeviceToken(userId);
+  }
 }
