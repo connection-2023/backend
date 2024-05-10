@@ -92,7 +92,7 @@ export class NotificationController {
   @ApiNotification.RegisterDeviceToken({ summary: '유저 fmc 기기 토큰 등록' })
   @SetResponseKey('userDeviceToken')
   @UseGuards(AllowUserAndLecturerGuard)
-  @Post('register-device-token')
+  @Patch('register-device-token')
   async registerDeviceToken(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Body() registerDeviceTokenDto: RegisterDeviceTokenDto,
