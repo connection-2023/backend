@@ -95,6 +95,6 @@ export interface IPaginationOptions {
 }
 
 export interface IPushNotificationMessage {
-  notification: { title: string; body: string; chatRoomId?: string };
+  data: { title: string; body: string; chatRoomId?: string };
   token: string;
 }
