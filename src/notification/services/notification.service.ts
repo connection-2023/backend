@@ -52,7 +52,7 @@ export class NotificationService {
         description,
       );
 
-      await this.sendPushNotification(target, message);
+      await this.sendPushNotification(message);
 
       const onlineMap =
         await this.notificationRepository.getOnlineMapWithTargetId(target);
@@ -175,10 +175,7 @@ export class NotificationService {
     await this.notificationRepository.deleteNotification(notificationId);
   }
 
-  async sendPushNotification(
-    target: INotificationTarget,
-    message: IPushNotificationMessage,
-  ) {
+  async sendPushNotification(message: IPushNotificationMessage) {
     const response = await admin.messaging().send(message);
 
     this.logger.log(response);
@@ -313,7 +310,7 @@ export class NotificationService {
     const userDeviceToken = await this.getUserDeviceToken(userId);
 
     return {
-      notification: { title, body, chatRoomId },
+      data: { title, body, chatRoomId },
       token: userDeviceToken.deviceToken,
     };
   }

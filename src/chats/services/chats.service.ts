@@ -66,7 +66,6 @@ export class ChatsService {
       );
 
     await this.notificationService.sendPushNotification(
-      receiver,
       pushNotificationMessage,
     );
 
