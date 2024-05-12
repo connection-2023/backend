@@ -37,55 +37,34 @@ export class NotificationService {
     title: string,
     source: INotificationSource,
     description: string,
-    retryCount = 3,
   ) {
-    try {
-      const notification = await this.notificationRepository.createNotification(
-        target,
-        title,
-        description,
-        source,
-      );
-      const message = await this.buildPushNotificationMessage(
-        target,
-        title,
-        description,
-      );
+    const notification = await this.notificationRepository.createNotification(
+      target,
+      title,
+      description,
+      source,
+    );
+    const message = await this.buildPushNotificationMessage(
+      target,
+      title,
+      description,
+    );
 
-      await this.sendPushNotification(message);
+    await this.sendPushNotification(message);
 
-      const onlineMap =
-        await this.notificationRepository.getOnlineMapWithTargetId(target);
+    const onlineMap =
+      await this.notificationRepository.getOnlineMapWithTargetId(target);
 
-      if (!onlineMap) {
-        return;
-      }
-
-      const { socketId } = onlineMap;
-      this.eventsGateway.server
-        .to(socketId)
-        .emit('handleNewNotification', notification);
-
-      return new NotificationDto(notification);
-    } catch (error) {
-      this.logger.error(
-        `Failed to create notification: ${error.message}. Retrying...`,
-      );
-      if (retryCount > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
-        return this.createNotification(
-          target,
-          title,
-          source,
-          description,
-          retryCount - 1,
-        );
-      } else {
-        throw new Error(
-          'Failed to create notification after retries: ' + error.message,
-        );
-      }
+    if (!onlineMap) {
+      return;
     }
+
+    const { socketId } = onlineMap;
+    this.eventsGateway.server
+      .to(socketId)
+      .emit('handleNewNotification', notification);
+
+    return new NotificationDto(notification);
   }
 
   async getMyNotification(
@@ -176,9 +155,26 @@ export class NotificationService {
   }
 
   async sendPushNotification(message: IPushNotificationMessage) {
-    const response = await admin.messaging().send(message);
+    if (!message || !message.token) {
+      return;
+    }
 
-    this.logger.log(response);
+    try {
+      const response = await admin.messaging().send(message);
+      this.logger.log(response);
+    } catch (error) {
+      if (error.code == 'messaging/registration-token-not-registered') {
+        throw new BadRequestException(
+          'The device token is no longer registered. Please refresh the token.',
+          'TokenNotRegistered',
+        );
+      } else {
+        throw new BadRequestException(
+          `Failed to send push notification`,
+          'PushNotificationError',
+        );
+      }
+    }
   }
 
   async registerDeviceToken(
@@ -309,10 +305,16 @@ export class NotificationService {
     const userId = await this.getUserId(target);
     const userDeviceToken = await this.getUserDeviceToken(userId);
 
-    return {
-      data: { title, body, chatRoomId },
-      token: userDeviceToken.deviceToken,
-    };
+    if (!userDeviceToken || !userDeviceToken.deviceToken) {
+      return;
+    }
+
+    return chatRoomId
+      ? {
+          data: { title, body, chatRoomId },
+          token: userDeviceToken.deviceToken,
+        }
+      : { data: { title, body }, token: userDeviceToken.deviceToken };
   }
 
   async deleteUserDeviceToken(userId: number) {
