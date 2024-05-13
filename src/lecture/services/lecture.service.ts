@@ -248,11 +248,19 @@ export class LectureService {
       ? await this.lectureRepository.readLecture(lectureId, userId)
       : await this.lectureRepository.readLecture(lectureId);
 
+    if (!lecture) {
+      throw new NotFoundException('Lecture was not found', 'NotFoundLecture');
+    }
+
     return new LecturePreviewDto(lecture);
   }
 
   async readLectureDetail(lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
+
+    if (!lecture) {
+      throw new NotFoundException('Lecture was not found', 'NotFoundLecture');
+    }
 
     return new LectureDetailDto(lecture);
   }

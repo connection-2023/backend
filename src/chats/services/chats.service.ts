@@ -44,6 +44,10 @@ export class ChatsService {
       roomObjectId,
     );
 
+    if (!chatRoom) {
+      throw new NotFoundException('ChatRoom was not found', 'NotFoundChatRoom');
+    }
+
     const userParticipation = chatRoom.user.participation;
     const lecturerParticipation = chatRoom.lecturer.participation;
 
