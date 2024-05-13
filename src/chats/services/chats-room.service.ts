@@ -61,7 +61,7 @@ export class ChatRoomService {
 
     await Promise.all(
       onlineMap.map((online) => {
-        if (!online.lastLogin) {
+        if (online && !online.lastLogin) {
           this.eventsGateway.server
             .to(online.socketId)
             .emit('handleNewChatRoom', chatRoom.roomId);
