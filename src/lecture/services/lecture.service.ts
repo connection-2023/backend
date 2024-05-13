@@ -258,6 +258,10 @@ export class LectureService {
   async readLectureDetail(lectureId: number) {
     const lecture = await this.lectureRepository.readLecture(lectureId);
 
+    if (!lecture) {
+      throw new NotFoundException('Lecture was not found', 'NotFoundLecture');
+    }
+
     return new LectureDetailDto(lecture);
   }
 
