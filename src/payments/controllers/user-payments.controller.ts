@@ -83,7 +83,7 @@ export class UserPaymentsController {
   }
 
   @ApiUserPayments.GetUserRecentBankAccount({
-    summary: '유저의 최근 계좌 정보 조회',
+    summary: '최근 계좌 정보 조회',
   })
   @SetResponseKey('userRecentBankAccount')
   @Get('/recent-bank-account')
@@ -97,7 +97,7 @@ export class UserPaymentsController {
   }
 
   @ApiUserPayments.CreateUserBankAccount({
-    summary: '유저 계좌 정보 생성',
+    summary: '계좌 정보 생성',
   })
   @SetResponseKey('createdUserBankAccount')
   @Post('/bank-account')

@@ -33,7 +33,7 @@ export const ApiUserPayments: ApiOperator<keyof UserPaymentsController> = {
     return applyDecorators(
       ApiOperation(apiOperationOptions),
       ApiBearerAuth(),
-      PaginationResponseDto.swaggerBuilder(
+      DetailResponseDto.swaggerBuilder(
         HttpStatus.OK,
         'receipt',
         DetailPaymentInfoDto,
