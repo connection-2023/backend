@@ -14,14 +14,9 @@ import { GetUserPaymentsHistoryDto } from '@src/payments/dtos/get-user-payments-
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiGetUserPaymentsHistory } from '@src/payments/swagger-decorators/get-user-payments-history-decorator';
-import { ApiPaymentVirtualAccount } from '@src/payments/swagger-decorators/get-payment-virtual-account-decorator';
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { UserBankAccountDto } from '@src/payments/dtos/user-bank-account.dto';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
-import { ApiCreateUserBankAccount } from '../swagger-decorators/save-user-bank-account.decorator';
-import { ApiGetUserRecentBankAccount } from '../swagger-decorators/get-user-recent-bank-account.decorator';
-import { ApiGetUserReceipt } from '../swagger-decorators/get-user-receipt-decorator';
 import { DetailPaymentInfoDto } from '../dtos/response/detail-payment.dto';
 import { plainToInstance } from 'class-transformer';
 import { VirtualAccountDepositDetailsDto } from '../dtos/response/virtual-account-deposit-details.dto';
@@ -32,7 +27,7 @@ import { ApiUserPayments } from './swagger/user-payments.swagger';
 export class UserPaymentsController {
   constructor(private readonly userPaymentsService: UserPaymentsService) {}
 
-  @ApiGetUserPaymentsHistory()
+  @ApiUserPayments.GetUserPaymentsHistory({ summary: '결제 내역 조회' })
   @Get('/history')
   @UseGuards(UserAccessTokenGuard)
   async GetUserPaymentsHistory(
@@ -57,7 +52,7 @@ export class UserPaymentsController {
     };
   }
 
-  @ApiGetUserReceipt()
+  @ApiUserPayments.GetUserReceipt({ summary: '결제 정보 상세 조회(유저)' })
   @SetResponseKey('receipt')
   @Get('/history/:orderId')
   @UseGuards(UserAccessTokenGuard)
@@ -87,7 +82,9 @@ export class UserPaymentsController {
     );
   }
 
-  @ApiGetUserRecentBankAccount()
+  @ApiUserPayments.GetUserRecentBankAccount({
+    summary: '유저의 최근 계좌 정보 조회',
+  })
   @SetResponseKey('userRecentBankAccount')
   @Get('/recent-bank-account')
   @UseGuards(UserAccessTokenGuard)
@@ -99,7 +96,9 @@ export class UserPaymentsController {
     );
   }
 
-  @ApiCreateUserBankAccount()
+  @ApiUserPayments.CreateUserBankAccount({
+    summary: '유저 계좌 정보 생성',
+  })
   @SetResponseKey('createdUserBankAccount')
   @Post('/bank-account')
   @UseGuards(UserAccessTokenGuard)
