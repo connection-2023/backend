@@ -1021,7 +1021,6 @@ export class PaymentsRepository {
       },
     });
   }
-
   async getLecturerLectureList(lecturerId: number): Promise<Lecture[]> {
     return await this.prismaService.lecture.findMany({ where: { lecturerId } });
   }

@@ -9,7 +9,6 @@ import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
 import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
 import { Lecture, LecturePass } from '@prisma/client';
-import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
 import {
   LectureMethod,
   PaymentHistoryTypes,
@@ -29,6 +28,7 @@ import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
 import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
 import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
+import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -168,7 +168,6 @@ export class LecturerPaymentsService {
 
     return selectedPayment;
   }
-
   private async processPaymentDoneStatus(paymentId: number): Promise<void> {
     await this.prismaService.$transaction(
       async (transaction: PrismaTransaction) => {
@@ -422,7 +421,7 @@ export class LecturerPaymentsService {
     );
 
     if (!selectedPass) {
-      throw new NotFoundException(`패스권이 존재하지 않습니다`);
+      throw new NotFoundException(`패스권이 존재하지 않습니다`, 'PassNotFound');
     }
 
     return selectedPass;
