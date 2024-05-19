@@ -29,6 +29,9 @@ import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-
 import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
 import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
 import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
+import { generatePaginationParams } from '@src/common/utils/generate-pagination-params';
+import { DateUtils } from '@src/common/utils/date.utils';
+import { PaginatedResponse } from '@src/common/types/type';
 
 @Injectable()
 export class LecturerPaymentsService {
@@ -525,89 +528,44 @@ export class LecturerPaymentsService {
   async getLecturerPaymentList(
     lecturerId: number,
     dto: GetLecturerPaymentListDto,
-  ): Promise<{
-    totalItemCount: Number;
-    lecturerPaymentList?: LecturerPaymentItemDto[];
-  }> {
-    const {
-      currentPage,
-      targetPage,
-      firstItemId,
-      lastItemId,
-      take,
-      productType,
-      startDate,
-      endDate,
-      lectureId,
-    } = dto;
+  ): Promise<PaginatedResponse<LecturerPaymentItemDto, 'lecturerPaymentList'>> {
+    const { productType, startDate, endDate, lectureId, ...paginationOptions } =
+      dto;
 
-    const paymentProductTypeId =
-      productType === PaymentHistoryTypes.전체 ? undefined : productType;
+    const paymentProductTypeId = this.getPaymentTypeId(productType);
 
-    const convertedStartDate = new Date(startDate);
-    const convertedEndDate = new Date(endDate);
-    convertedStartDate.setHours(9, 0, 0);
-    convertedEndDate.setHours(32, 59, 59);
-
-    const paginationParams: IPaginationParams = this.getPaginationParams(
-      currentPage,
-      targetPage,
-      firstItemId,
-      lastItemId,
-      take,
+    const { startOfDay, endOfDay } = DateUtils.getUTCStartAndEndOfRange(
+      new Date(startDate),
+      new Date(endDate),
     );
+
+    const paginationParams: IPaginationParams =
+      generatePaginationParams(paginationOptions);
 
     const totalItemCount =
       await this.paymentsRepository.getLecturerPaymentCount(
         lecturerId,
         paymentProductTypeId,
-        convertedStartDate,
-        convertedEndDate,
+        startOfDay,
+        endOfDay,
         lectureId,
       );
 
-    if (!totalItemCount) {
-      return { totalItemCount };
+    if (totalItemCount === 0) {
+      return { totalItemCount, lecturerPaymentList: [] };
     }
 
     const lecturerPaymentList =
       await this.paymentsRepository.getLecturerPaymentList(
         lecturerId,
         paymentProductTypeId,
-        convertedStartDate,
-        convertedEndDate,
+        startOfDay,
+        endOfDay,
         paginationParams,
         lectureId,
       );
 
     return { totalItemCount, lecturerPaymentList };
-  }
-
-  private getPaginationParams(
-    currentPage: number,
-    targetPage: number,
-    firstItemId: number,
-    lastItemId: number,
-    take: number,
-  ): IPaginationParams {
-    let cursor;
-    let skip;
-    let updatedTake = take;
-
-    const isPagination = currentPage && targetPage;
-    const isInfiniteScroll = lastItemId && take;
-
-    if (isPagination) {
-      const pageDiff = currentPage - targetPage;
-      cursor = { id: pageDiff <= -1 ? lastItemId : firstItemId };
-      skip = Math.abs(pageDiff) === 1 ? 1 : (Math.abs(pageDiff) - 1) * take + 1;
-      updatedTake = pageDiff >= 1 ? -take : take;
-    } else if (isInfiniteScroll) {
-      cursor = { id: lastItemId };
-      skip = 1;
-    }
-
-    return { cursor, skip, take: updatedTake };
   }
 
   async getTotalRevenue(
@@ -616,20 +574,27 @@ export class LecturerPaymentsService {
   ): Promise<number> {
     const { productType, startDate, endDate, lectureId } = dto;
 
-    const paymentProductTypeId =
-      productType === PaymentHistoryTypes.전체 ? undefined : productType;
+    const paymentProductTypeId = this.getPaymentTypeId(productType);
 
-    const convertedStartDate = new Date(startDate);
-    const convertedEndDate = new Date(endDate);
-    convertedStartDate.setHours(9, 0, 0);
-    convertedEndDate.setHours(32, 59, 59);
+    const { startOfDay, endOfDay } = DateUtils.getUTCStartAndEndOfRange(
+      new Date(startDate),
+      new Date(endDate),
+    );
 
     return await this.paymentsRepository.getLecturerPaymentTotalRevenue(
       lecturerId,
       paymentProductTypeId,
-      convertedStartDate,
-      convertedEndDate,
+      startOfDay,
+      endOfDay,
       lectureId,
     );
+  }
+
+  private getPaymentTypeId(
+    paymentHistoryType: PaymentHistoryTypes,
+  ): number | undefined {
+    return paymentHistoryType === PaymentHistoryTypes.전체
+      ? undefined
+      : paymentHistoryType;
   }
 }

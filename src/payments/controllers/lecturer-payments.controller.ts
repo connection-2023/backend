@@ -27,6 +27,7 @@ import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.d
 import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
 import { ApiLecturerPayments } from './swagger/lecturer-payments.swagger';
 import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
+import { PaginatedResponse } from '@src/common/types/type';
 
 @ApiTags('강사-결제')
 @UseGuards(LecturerAccessTokenGuard)
@@ -41,10 +42,7 @@ export class LecturerPaymentsController {
   async getLecturerPaymentList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() getLecturerPaymentListDto: GetLecturerPaymentListDto,
-  ): Promise<{
-    totalItemCount: Number;
-    lecturerPaymentList: LecturerPaymentItemDto[];
-  }> {
+  ): Promise<PaginatedResponse<LecturerPaymentItemDto, 'lecturerPaymentList'>> {
     const { totalItemCount, lecturerPaymentList } =
       await this.lecturerPaymentsService.getLecturerPaymentList(
         authorizedData.lecturer.id,
