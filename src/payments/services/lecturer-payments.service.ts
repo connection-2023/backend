@@ -17,11 +17,7 @@ import {
   PaymentStatusForLecturer,
   RefundStatuses,
 } from '@src/payments/constants/enum';
-import {
-  IPaginationParams,
-  PrismaTransaction,
-} from '@src/common/interface/common-interface';
-import { IPayment } from '@src/payments/interface/payments.interface';
+import { IPaginationParams } from '@src/common/interface/common-interface';
 import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
 import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
 import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
@@ -35,10 +31,7 @@ import { PaginatedResponse } from '@src/common/types/type';
 
 @Injectable()
 export class LecturerPaymentsService {
-  constructor(
-    private readonly paymentsRepository: PaymentsRepository,
-    private readonly prismaService: PrismaService,
-  ) {}
+  constructor(private readonly paymentsRepository: PaymentsRepository) {}
 
   async createLecturerBankAccount(
     lecturerId: number,
@@ -61,313 +54,6 @@ export class LecturerPaymentsService {
     return selectedBankAccount
       ? new LecturerBankAccountDto(selectedBankAccount)
       : null;
-  }
-
-  async getPaymentRequestList(
-    lecturerId: number,
-  ): Promise<PaymentRequestDto[]> {
-    const lectureList: Lecture[] =
-      await this.paymentsRepository.getLecturerLectureList(lecturerId);
-
-    if (!lectureList || lectureList.length === 0) {
-      return [];
-    }
-
-    //각각의 강의에 해당하는 결제내역들을 합쳐서 반환
-    const paymentList = await Promise.all(
-      lectureList.map(async (lecture) => {
-        const payments =
-          await this.paymentsRepository.getPaymentRequestListByLecturerId(
-            lecture.id,
-          );
-        return payments.length > 0 ? { lecture, payments } : null;
-      }),
-    );
-
-    const finalPaymentList = paymentList.filter((item) => item !== null);
-
-    return finalPaymentList.length > 0
-      ? finalPaymentList.map((payment) => new PaymentRequestDto(payment))
-      : [];
-  }
-
-  async updatePaymentRequestStatus(
-    lecturerId: number,
-    dto: UpdatePaymentRequestStatusDto,
-  ): Promise<void> {
-    const { paymentId, status, cancelAmount, refusedReason, lectureId } = dto;
-
-    //결제 정보 확인
-    const payment: IPayment = await this.checkPaymentValidity(
-      paymentId,
-      lecturerId,
-      status,
-    );
-
-    switch (status) {
-      case PaymentStatusForLecturer.DONE:
-        await this.processPaymentDoneStatus(payment.id);
-        break;
-
-      case PaymentStatusForLecturer.REFUSED:
-        await this.processPaymentRefusedStatus(
-          payment,
-          cancelAmount,
-          refusedReason,
-        );
-        break;
-
-      case PaymentStatusForLecturer.WAITING_FOR_DEPOSIT:
-        await this.processPaymentWaitingForDePositStatus(payment, lectureId);
-        break;
-    }
-  }
-
-  private async checkPaymentValidity(
-    paymentId: number,
-    lecturerId: number,
-    status: number,
-  ): Promise<IPayment> {
-    const selectedPayment: IPayment =
-      await this.paymentsRepository.getPaymentRequest(paymentId, lecturerId);
-
-    if (!selectedPayment) {
-      throw new BadRequestException(
-        `잘못된 결제 정보입니다.`,
-        'InvalidPayment',
-      );
-    }
-
-    //일반결제가 아닌 경우
-    if (
-      selectedPayment.paymentMethodId !== PaymentMethods.선결제 &&
-      selectedPayment.paymentMethodId !== PaymentMethods.현장결제
-    ) {
-      throw new BadRequestException(
-        `해당 결제 정보는 변경이 불가능한 결제 방식입니다.`,
-        'InvalidPaymentMethod',
-      );
-    }
-
-    //승인일때 거절이 들어온 경우 거절일때 승인이 들어온 경우
-    if (
-      (selectedPayment.statusId === PaymentOrderStatus.DONE &&
-        status === PaymentOrderStatus.REFUSED) ||
-      (selectedPayment.statusId === PaymentOrderStatus.REFUSED &&
-        status === PaymentOrderStatus.DONE)
-    ) {
-      throw new BadRequestException(
-        `해당 결제 정보는 이미 변경된 상태입니다.`,
-        'PaymentStatusAlreadyUpdated',
-      );
-    }
-
-    if (selectedPayment.statusId === status) {
-      throw new BadRequestException(
-        `해당 결제 정보는 이미 변경된 상태입니다.`,
-        'PaymentStatusAlreadyUpdated',
-      );
-    }
-
-    return selectedPayment;
-  }
-  private async processPaymentDoneStatus(paymentId: number): Promise<void> {
-    await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.updatePaymentStatus(
-          paymentId,
-          PaymentStatusForLecturer.DONE,
-          transaction,
-        );
-
-        await this.paymentsRepository.trxUpdateReservationEnabled(
-          transaction,
-          paymentId,
-          true,
-        );
-      },
-    );
-  }
-
-  private async processPaymentRefusedStatus(
-    payment: IPayment,
-    cancelAmount: number,
-    refusedReason: string,
-  ): Promise<void> {
-    await this.compareCancelAmount(payment, cancelAmount);
-
-    await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.updatePaymentStatus(
-          payment.id,
-          PaymentStatusForLecturer.REFUSED,
-          transaction,
-        );
-
-        await this.paymentsRepository.trxUpdateTransferPayment(
-          transaction,
-          payment.id,
-          {
-            cancelAmount,
-            refusedReason,
-            refundStatusId: RefundStatuses.PENDING,
-          },
-        );
-
-        await this.trxRollbackReservationRelatedData(
-          transaction,
-          payment,
-          false,
-        );
-      },
-    );
-  }
-
-  private async compareCancelAmount(
-    payment: IPayment,
-    clientCancelAmount,
-  ): Promise<void> {
-    let targetAmount;
-
-    //현장 결제일때는 보증금, 현장일때는 최종 결제 금액 비교
-    switch (payment.paymentMethodId) {
-      case PaymentMethods.선결제:
-        targetAmount = payment.finalPrice;
-        break;
-      case PaymentMethods.현장결제:
-        targetAmount = payment.transferPaymentInfo.noShowDeposit;
-        break;
-    }
-
-    if (targetAmount !== clientCancelAmount) {
-      throw new BadRequestException(
-        `환불금액이 올바르지 않습니다.`,
-        'InvalidRefundAmount',
-      );
-    }
-  }
-
-  private async trxRollbackReservationRelatedData(
-    transaction: PrismaTransaction,
-    payment: IPayment,
-    isIncrement: boolean,
-    lectureMaxCapacity?: number,
-  ): Promise<void> {
-    const { reservation } = payment;
-    let lectureMethod;
-    let numberOfParticipants;
-    if (reservation.lectureScheduleId) {
-      lectureMethod = LectureMethod.원데이;
-      numberOfParticipants = reservation.lectureSchedule.numberOfParticipants;
-    } else {
-      lectureMethod = LectureMethod.정기;
-      numberOfParticipants =
-        reservation.regularLectureStatus.numberOfParticipants;
-    }
-
-    const trxUpdateParticipantsMethod = isIncrement
-      ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
-      : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
-
-    const trxUpdateLearnerCountMethod = isIncrement
-      ? this.paymentsRepository.trxIncrementLectureLearner
-      : this.paymentsRepository.trxDecrementLectureLearnerEnrollmentCount;
-
-    //각 스케쥴의 현재 인원 수정
-    //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
-    if (isIncrement && lectureMaxCapacity) {
-      const remainingCapacity = lectureMaxCapacity - numberOfParticipants;
-
-      if (remainingCapacity < reservation.participants) {
-        throw new BadRequestException(
-          `최대 인원 초과로 인해 취소할 수 없습니다.`,
-          'ExceededMaxParticipants',
-        );
-      }
-    }
-
-    await trxUpdateParticipantsMethod(transaction, lectureMethod, reservation);
-
-    //수강생의 신청 횟수 수정
-    await trxUpdateLearnerCountMethod(
-      transaction,
-      payment.userId,
-      payment.lecturerId,
-    );
-  }
-
-  private async processPaymentWaitingForDePositStatus(
-    payment: IPayment,
-    lectureId: number,
-  ): Promise<void> {
-    switch (payment.statusId) {
-      case PaymentOrderStatus.DONE:
-        await this.rollbackPaymentDoneStatus(payment.id);
-        break;
-      case PaymentOrderStatus.REFUSED:
-        await this.rollbackPaymentRefusedStatus(payment, lectureId);
-        break;
-    }
-  }
-
-  private async rollbackPaymentDoneStatus(paymentId: number) {
-    await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.updatePaymentStatus(
-          paymentId,
-          PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
-          transaction,
-        );
-
-        await this.paymentsRepository.trxUpdateReservationEnabled(
-          transaction,
-          paymentId,
-          false,
-        );
-      },
-    );
-  }
-
-  private async rollbackPaymentRefusedStatus(
-    payment: IPayment,
-    lectureId: number,
-  ): Promise<void> {
-    const lecture: Lecture = await this.paymentsRepository.getLecture(
-      lectureId,
-    );
-
-    await this.prismaService.$transaction(
-      async (transaction: PrismaTransaction) => {
-        await this.paymentsRepository.updatePaymentStatus(
-          payment.id,
-          PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
-          transaction,
-        );
-
-        await this.paymentsRepository.trxUpdateTransferPayment(
-          transaction,
-          payment.id,
-          {
-            refundStatusId: RefundStatuses.NONE,
-            cancelAmount: null,
-            refusedReason: null,
-          },
-        );
-
-        await this.trxRollbackReservationRelatedData(
-          transaction,
-          payment,
-          true,
-          lecture.maxCapacity,
-        );
-      },
-    );
-  }
-
-  async getPaymentRequestCount(lecturerId: number): Promise<number> {
-    return await this.paymentsRepository.countLecturerPaymentRequestCount(
-      lecturerId,
-    );
   }
 
   async getPassSituation(
@@ -438,10 +124,12 @@ export class LecturerPaymentsService {
 
     if (statisticsType === 'MONTHLY') {
       return await this.getMonthlyRevenue(lecturerId);
-    } else if (statisticsType === 'DAILY') {
+    }
+
+    if (statisticsType === 'DAILY') {
       const endDate = date ? new Date(date) : new Date();
       const startDate = date ? new Date(date) : new Date();
-      startDate.setDate(endDate.getDate() - 30);
+      startDate.setDate(startDate.getDate() - 30);
 
       return await this.getDailyRevenue(lecturerId, startDate, endDate);
     }
@@ -451,22 +139,20 @@ export class LecturerPaymentsService {
     lecturerId: number,
     startDate: Date,
     endDate: Date,
-  ) {
+  ): Promise<RevenueStatisticDto[]> {
     const dailyRevenue = [];
 
     while (startDate <= endDate) {
-      startDate.setHours(9, 0, 0); // startDate를 00시 00분 00초로 설정
-
-      const nextDate = new Date(startDate);
-      nextDate.setHours(32, 59, 59); // nextDate를 23시 59분 59초로 설정
+      const { convertedStartDate, convertedEndDate } =
+        DateUtils.getUTCStartAndEndOfRange(startDate);
 
       const { totalSales, totalPrice } = await this.getRevenueForDate(
         lecturerId,
-        startDate,
-        nextDate,
+        convertedStartDate,
+        convertedEndDate,
       );
 
-      const formattedDate = startDate.toISOString().slice(0, 10); // "yyyy-mm-dd" 형식으로 변환
+      const formattedDate = convertedStartDate.toISOString().slice(0, 10); // "yyyy-mm-dd" 형식으로 변환
 
       dailyRevenue.push({ date: formattedDate, totalSales, totalPrice });
       startDate.setDate(startDate.getDate() + 1);
@@ -480,20 +166,21 @@ export class LecturerPaymentsService {
 
     const monthlyRevenues = [];
     const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
+    const currentMonth = currentDate.getMonth();
 
     for (let i = 0; i < 12; i++) {
       const year = currentMonth - i >= 0 ? currentYear : currentYear - 1;
       const month = (currentMonth - i + 12) % 12;
 
-      const startDate = new Date(year, month - 1, 1, 9); // 각 월의 시작일
-      const nextDate = new Date(year, month, 0, 9); // 각 월의 마지막일
+      const { convertedStartDate, convertedEndDate } =
+        DateUtils.getUTCStartAndEndOfMonth(year, month);
+
       const { totalSales, totalPrice } = await this.getRevenueForDate(
         lecturerId,
-        startDate,
-        nextDate,
+        convertedStartDate,
+        convertedEndDate,
       );
-      const formattedDate = startDate.toISOString().slice(0, 7); // "yyyy-mm" 형식으로 변환
+      const formattedDate = convertedStartDate.toISOString().slice(0, 7); // "yyyy-mm" 형식으로 변환
       monthlyRevenues.push({
         date: formattedDate,
         totalSales,
@@ -520,9 +207,7 @@ export class LecturerPaymentsService {
       0,
     );
 
-    const totalSales = revenue.length;
-
-    return { totalSales, totalPrice };
+    return { totalSales: revenue.length, totalPrice };
   }
 
   async getLecturerPaymentList(
@@ -534,10 +219,11 @@ export class LecturerPaymentsService {
 
     const paymentProductTypeId = this.getPaymentTypeId(productType);
 
-    const { startOfDay, endOfDay } = DateUtils.getUTCStartAndEndOfRange(
-      new Date(startDate),
-      new Date(endDate),
-    );
+    const { convertedStartDate, convertedEndDate } =
+      DateUtils.getUTCStartAndEndOfRange(
+        new Date(startDate),
+        new Date(endDate),
+      );
 
     const paginationParams: IPaginationParams =
       generatePaginationParams(paginationOptions);
@@ -546,8 +232,8 @@ export class LecturerPaymentsService {
       await this.paymentsRepository.getLecturerPaymentCount(
         lecturerId,
         paymentProductTypeId,
-        startOfDay,
-        endOfDay,
+        convertedStartDate,
+        convertedEndDate,
         lectureId,
       );
 
@@ -559,8 +245,8 @@ export class LecturerPaymentsService {
       await this.paymentsRepository.getLecturerPaymentList(
         lecturerId,
         paymentProductTypeId,
-        startOfDay,
-        endOfDay,
+        convertedStartDate,
+        convertedEndDate,
         paginationParams,
         lectureId,
       );
@@ -576,16 +262,17 @@ export class LecturerPaymentsService {
 
     const paymentProductTypeId = this.getPaymentTypeId(productType);
 
-    const { startOfDay, endOfDay } = DateUtils.getUTCStartAndEndOfRange(
-      new Date(startDate),
-      new Date(endDate),
-    );
+    const { convertedStartDate, convertedEndDate } =
+      DateUtils.getUTCStartAndEndOfRange(
+        new Date(startDate),
+        new Date(endDate),
+      );
 
     return await this.paymentsRepository.getLecturerPaymentTotalRevenue(
       lecturerId,
       paymentProductTypeId,
-      startOfDay,
-      endOfDay,
+      convertedStartDate,
+      convertedEndDate,
       lectureId,
     );
   }
@@ -597,4 +284,313 @@ export class LecturerPaymentsService {
       ? undefined
       : paymentHistoryType;
   }
+
+  // async getPaymentRequestList(
+  //   lecturerId: number,
+  // ): Promise<PaymentRequestDto[]> {
+  //   const lectureList: Lecture[] =
+  //     await this.paymentsRepository.getLecturerLectureList(lecturerId);
+
+  //   if (!lectureList || lectureList.length === 0) {
+  //     return [];
+  //   }
+
+  //   //각각의 강의에 해당하는 결제내역들을 합쳐서 반환
+  //   const paymentList = await Promise.all(
+  //     lectureList.map(async (lecture) => {
+  //       const payments =
+  //         await this.paymentsRepository.getPaymentRequestListByLecturerId(
+  //           lecture.id,
+  //         );
+  //       return payments.length > 0 ? { lecture, payments } : null;
+  //     }),
+  //   );
+
+  //   const finalPaymentList = paymentList.filter((item) => item !== null);
+
+  //   return finalPaymentList.length > 0
+  //     ? finalPaymentList.map((payment) => new PaymentRequestDto(payment))
+  //     : [];
+  // }
+
+  // async updatePaymentRequestStatus(
+  //   lecturerId: number,
+  //   dto: UpdatePaymentRequestStatusDto,
+  // ): Promise<void> {
+  //   const { paymentId, status, cancelAmount, refusedReason, lectureId } = dto;
+
+  //   //결제 정보 확인
+  //   const payment: IPayment = await this.checkPaymentValidity(
+  //     paymentId,
+  //     lecturerId,
+  //     status,
+  //   );
+
+  //   switch (status) {
+  //     case PaymentStatusForLecturer.DONE:
+  //       await this.processPaymentDoneStatus(payment.id);
+  //       break;
+
+  //     case PaymentStatusForLecturer.REFUSED:
+  //       await this.processPaymentRefusedStatus(
+  //         payment,
+  //         cancelAmount,
+  //         refusedReason,
+  //       );
+  //       break;
+
+  //     case PaymentStatusForLecturer.WAITING_FOR_DEPOSIT:
+  //       await this.processPaymentWaitingForDePositStatus(payment, lectureId);
+  //       break;
+  //   }
+  // }
+
+  // private async checkPaymentValidity(
+  //   paymentId: number,
+  //   lecturerId: number,
+  //   status: number,
+  // ): Promise<IPayment> {
+  //   const selectedPayment: IPayment =
+  //     await this.paymentsRepository.getPaymentRequest(paymentId, lecturerId);
+
+  //   if (!selectedPayment) {
+  //     throw new BadRequestException(
+  //       `잘못된 결제 정보입니다.`,
+  //       'InvalidPayment',
+  //     );
+  //   }
+
+  //   //일반결제가 아닌 경우
+  //   if (
+  //     selectedPayment.paymentMethodId !== PaymentMethods.선결제 &&
+  //     selectedPayment.paymentMethodId !== PaymentMethods.현장결제
+  //   ) {
+  //     throw new BadRequestException(
+  //       `해당 결제 정보는 변경이 불가능한 결제 방식입니다.`,
+  //       'InvalidPaymentMethod',
+  //     );
+  //   }
+
+  //   //승인일때 거절이 들어온 경우 거절일때 승인이 들어온 경우
+  //   if (
+  //     (selectedPayment.statusId === PaymentOrderStatus.DONE &&
+  //       status === PaymentOrderStatus.REFUSED) ||
+  //     (selectedPayment.statusId === PaymentOrderStatus.REFUSED &&
+  //       status === PaymentOrderStatus.DONE)
+  //   ) {
+  //     throw new BadRequestException(
+  //       `해당 결제 정보는 이미 변경된 상태입니다.`,
+  //       'PaymentStatusAlreadyUpdated',
+  //     );
+  //   }
+
+  //   if (selectedPayment.statusId === status) {
+  //     throw new BadRequestException(
+  //       `해당 결제 정보는 이미 변경된 상태입니다.`,
+  //       'PaymentStatusAlreadyUpdated',
+  //     );
+  //   }
+
+  //   return selectedPayment;
+  // }
+
+  // private async processPaymentDoneStatus(paymentId: number): Promise<void> {
+  //   await this.prismaService.$transaction(
+  //     async (transaction: PrismaTransaction) => {
+  //       await this.paymentsRepository.updatePaymentStatus(
+  //         paymentId,
+  //         PaymentStatusForLecturer.DONE,
+  //         transaction,
+  //       );
+
+  //       await this.paymentsRepository.trxUpdateReservationEnabled(
+  //         transaction,
+  //         paymentId,
+  //         true,
+  //       );
+  //     },
+  //   );
+  // }
+
+  // private async processPaymentRefusedStatus(
+  //   payment: IPayment,
+  //   cancelAmount: number,
+  //   refusedReason: string,
+  // ): Promise<void> {
+  //   await this.compareCancelAmount(payment, cancelAmount);
+
+  //   await this.prismaService.$transaction(
+  //     async (transaction: PrismaTransaction) => {
+  //       await this.paymentsRepository.updatePaymentStatus(
+  //         payment.id,
+  //         PaymentStatusForLecturer.REFUSED,
+  //         transaction,
+  //       );
+
+  //       await this.paymentsRepository.trxUpdateTransferPayment(
+  //         transaction,
+  //         payment.id,
+  //         {
+  //           cancelAmount,
+  //           refusedReason,
+  //           refundStatusId: RefundStatuses.PENDING,
+  //         },
+  //       );
+
+  //       await this.trxRollbackReservationRelatedData(
+  //         transaction,
+  //         payment,
+  //         false,
+  //       );
+  //     },
+  //   );
+  // }
+
+  // private async compareCancelAmount(
+  //   payment: IPayment,
+  //   clientCancelAmount,
+  // ): Promise<void> {
+  //   let targetAmount;
+
+  //   //현장 결제일때는 보증금, 현장일때는 최종 결제 금액 비교
+  //   switch (payment.paymentMethodId) {
+  //     case PaymentMethods.선결제:
+  //       targetAmount = payment.finalPrice;
+  //       break;
+  //     case PaymentMethods.현장결제:
+  //       targetAmount = payment.transferPaymentInfo.noShowDeposit;
+  //       break;
+  //   }
+
+  //   if (targetAmount !== clientCancelAmount) {
+  //     throw new BadRequestException(
+  //       `환불금액이 올바르지 않습니다.`,
+  //       'InvalidRefundAmount',
+  //     );
+  //   }
+  // }
+
+  // private async trxRollbackReservationRelatedData(
+  //   transaction: PrismaTransaction,
+  //   payment: IPayment,
+  //   isIncrement: boolean,
+  //   lectureMaxCapacity?: number,
+  // ): Promise<void> {
+  //   const { reservation } = payment;
+  //   let lectureMethod;
+  //   let numberOfParticipants;
+
+  //   if (reservation.lectureScheduleId) {
+  //     lectureMethod = LectureMethod.원데이;
+  //     numberOfParticipants = reservation.lectureSchedule.numberOfParticipants;
+  //   } else {
+  //     lectureMethod = LectureMethod.정기;
+  //     numberOfParticipants =
+  //       reservation.regularLectureStatus.numberOfParticipants;
+  //   }
+
+  //   const trxUpdateParticipantsMethod = isIncrement
+  //     ? this.paymentsRepository.trxIncrementLectureScheduleParticipants
+  //     : this.paymentsRepository.trxDecrementLectureScheduleParticipants;
+
+  //   const trxUpdateLearnerCountMethod = isIncrement
+  //     ? this.paymentsRepository.trxIncrementLectureLearner
+  //     : this.paymentsRepository.trxDecrementLectureLearnerEnrollmentCount;
+
+  //   //각 스케쥴의 현재 인원 수정
+  //   //되돌릴 때 신청한 인원이 초과되면 에러 반환 및 롤백 취소
+  //   if (isIncrement && lectureMaxCapacity) {
+  //     const remainingCapacity = lectureMaxCapacity - numberOfParticipants;
+
+  //     if (remainingCapacity < reservation.participants) {
+  //       throw new BadRequestException(
+  //         `최대 인원 초과로 인해 취소할 수 없습니다.`,
+  //         'ExceededMaxParticipants',
+  //       );
+  //     }
+  //   }
+
+  //   await trxUpdateParticipantsMethod(transaction, lectureMethod, reservation);
+
+  //   //수강생의 신청 횟수 수정
+  //   await trxUpdateLearnerCountMethod(
+  //     transaction,
+  //     payment.userId,
+  //     payment.lecturerId,
+  //   );
+  // }
+
+  // private async processPaymentWaitingForDePositStatus(
+  //   payment: IPayment,
+  //   lectureId: number,
+  // ): Promise<void> {
+  //   switch (payment.statusId) {
+  //     case PaymentOrderStatus.DONE:
+  //       await this.rollbackPaymentDoneStatus(payment.id);
+  //       break;
+  //     case PaymentOrderStatus.REFUSED:
+  //       await this.rollbackPaymentRefusedStatus(payment, lectureId);
+  //       break;
+  //   }
+  // }
+
+  // private async rollbackPaymentDoneStatus(paymentId: number) {
+  //   await this.prismaService.$transaction(
+  //     async (transaction: PrismaTransaction) => {
+  //       await this.paymentsRepository.updatePaymentStatus(
+  //         paymentId,
+  //         PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+  //         transaction,
+  //       );
+
+  //       await this.paymentsRepository.trxUpdateReservationEnabled(
+  //         transaction,
+  //         paymentId,
+  //         false,
+  //       );
+  //     },
+  //   );
+  // }
+
+  // private async rollbackPaymentRefusedStatus(
+  //   payment: IPayment,
+  //   lectureId: number,
+  // ): Promise<void> {
+  //   const lecture: Lecture = await this.paymentsRepository.getLecture(
+  //     lectureId,
+  //   );
+
+  //   await this.prismaService.$transaction(
+  //     async (transaction: PrismaTransaction) => {
+  //       await this.paymentsRepository.updatePaymentStatus(
+  //         payment.id,
+  //         PaymentStatusForLecturer.WAITING_FOR_DEPOSIT,
+  //         transaction,
+  //       );
+
+  //       await this.paymentsRepository.trxUpdateTransferPayment(
+  //         transaction,
+  //         payment.id,
+  //         {
+  //           refundStatusId: RefundStatuses.NONE,
+  //           cancelAmount: null,
+  //           refusedReason: null,
+  //         },
+  //       );
+
+  //       await this.trxRollbackReservationRelatedData(
+  //         transaction,
+  //         payment,
+  //         true,
+  //         lecture.maxCapacity,
+  //       );
+  //     },
+  //   );
+  // }
+
+  // async getPaymentRequestCount(lecturerId: number): Promise<number> {
+  //   return await this.paymentsRepository.countLecturerPaymentRequestCount(
+  //     lecturerId,
+  //   );
+  // }
 }
