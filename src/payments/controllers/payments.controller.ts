@@ -18,7 +18,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
-import { ApiCreateLecturePaymentInfo } from '../swagger-decorators/ApiCreateLecturePaymentInfo';
 import { ConfirmLecturePaymentDto } from '@src/payments/dtos/confirm-lecture-payment.dto';
 import { CreatePassPaymentDto } from '@src/payments/dtos/create-pass-payment.dto';
 import { CreateLecturePaymentWithPassDto } from '@src/payments/dtos/create-lecture-payment-with-pass.dto';
@@ -60,7 +59,6 @@ export class PaymentsController {
     summary: '토스-강의 결제를 위한 기본 결제 정보 생성',
   })
   @SetResponseKey('pendingPaymentInfo')
-  @ApiCreateLecturePaymentInfo()
   @Post('/toss/lecture')
   @UseGuards(UserAccessTokenGuard)
   createLecturePaymentWithToss(

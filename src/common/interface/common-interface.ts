@@ -98,3 +98,8 @@ export interface IPushNotificationMessage {
   data: { title: string; body: string; chatRoomId?: string };
   token: string;
 }
+
+export interface IConvertedDate {
+  convertedStartDate: Date;
+  convertedEndDate: Date;
+}

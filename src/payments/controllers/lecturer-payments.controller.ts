@@ -11,30 +11,23 @@ import {
 } from '@nestjs/common';
 import { LecturerPaymentsService } from '@src/payments/services/lecturer-payments.service';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiCreateLecturerBankAccount } from '@src/payments/swagger-decorators/create-lecturer-bank-account.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { CreateBankAccountDto } from '@src/payments/dtos/create-bank-account.dto';
 import { LecturerBankAccountDto } from '@src/payments/dtos/lecturer-bank-account.dto';
 import { LecturerAccessTokenGuard } from '@src/common/guards/lecturer-access-token.guard';
-import { ApiGetLecturerRecentBankAccount } from '@src/payments/swagger-decorators/get-lecturer-recent-bank-account.decorator';
-import { ApiGetPaymentRequestList } from '@src/payments/swagger-decorators/get-payment-request-list.decorator';
 import { PaymentRequestDto } from '@src/payments/dtos/payment-request.dto';
-import { UpdatePaymentRequestStatusDto } from '@src/payments/dtos/update-payment-request.dto';
-import { ApiUpdatePaymentRequestStatus } from '@src/payments/swagger-decorators/update-payment-request-status.decorator';
-import { ApiGetPaymentRequestCount } from '@src/payments/swagger-decorators/get-lecturer-payment-request-count.decorator';
 import { PassSituationDto } from '@src/payments/dtos/response/pass-situation.dto';
-import { ApiGetMyPassSituation } from '@src/payments/swagger-decorators/get-my-pass-situation.decorator';
 import { GetRevenueStatisticsDto } from '../dtos/request/get-revenue-statistics.dto';
-import { ApiGetRevenueStatistics } from '../swagger-decorators/get-revenue-statistics.decorator';
 import { plainToInstance } from 'class-transformer';
 import { RevenueStatisticDto } from '../dtos/response/revenue-statistic.dto';
 import { GetLecturerPaymentListDto } from '../dtos/request/get-lecturer-payment-list.dto';
 import { LecturerPaymentItemDto } from '../dtos/response/lecturer-payment-item.dto';
-import { ApiGetLecturerPaymentList } from '../swagger-decorators/get-lecturer-payment-list.decorator';
 import { GetTotalRevenueDto } from '../dtos/request/get-total-revenue.dto';
-import { ApiGetTotalRevenue } from '../swagger-decorators/get-total-revenue.decorator';
+import { ApiLecturerPayments } from './swagger/lecturer-payments.swagger';
+import { UpdatePaymentRequestStatusDto } from '../dtos/update-payment-request.dto';
+import { PaginatedResponse } from '@src/common/types/type';
 
 @ApiTags('강사-결제')
 @UseGuards(LecturerAccessTokenGuard)
@@ -44,15 +37,12 @@ export class LecturerPaymentsController {
     private readonly lecturerPaymentsService: LecturerPaymentsService,
   ) {}
 
-  @ApiGetLecturerPaymentList()
+  @ApiLecturerPayments.GetLecturerPaymentList({ summary: '판매 내역' })
   @Get()
   async getLecturerPaymentList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() getLecturerPaymentListDto: GetLecturerPaymentListDto,
-  ): Promise<{
-    totalItemCount: Number;
-    lecturerPaymentList: LecturerPaymentItemDto[];
-  }> {
+  ): Promise<PaginatedResponse<LecturerPaymentItemDto, 'lecturerPaymentList'>> {
     const { totalItemCount, lecturerPaymentList } =
       await this.lecturerPaymentsService.getLecturerPaymentList(
         authorizedData.lecturer.id,
@@ -68,7 +58,7 @@ export class LecturerPaymentsController {
     };
   }
 
-  @ApiGetTotalRevenue()
+  @ApiLecturerPayments.GetTotalRevenue({ summary: '총 매출액' })
   @SetResponseKey('totalRevenue')
   @Get('/total-revenue')
   async getTotalRevenue(
@@ -81,7 +71,7 @@ export class LecturerPaymentsController {
     );
   }
 
-  @ApiGetRevenueStatistics()
+  @ApiLecturerPayments.GetRevenueStatistics({ summary: '매출 통계' })
   @SetResponseKey('revenueStatistics')
   @Get('/revenue-statistics')
   async getRevenueStatistics(
@@ -97,7 +87,9 @@ export class LecturerPaymentsController {
     return plainToInstance(RevenueStatisticDto, revenueStatistics);
   }
 
-  @ApiGetLecturerRecentBankAccount()
+  @ApiLecturerPayments.GetUserRecentBankAccount({
+    summary: '강사가 최근 등록(사용)한 계좌 조회',
+  })
   @SetResponseKey('lecturerRecentBankAccount')
   @Get('/recent-bank-account')
   async getUserRecentBankAccount(
@@ -108,7 +100,9 @@ export class LecturerPaymentsController {
     );
   }
 
-  @ApiCreateLecturerBankAccount()
+  @ApiLecturerPayments.CreateLecturerBankAccount({
+    summary: '강사 계좌 등록',
+  })
   @SetResponseKey('createdLecturerBankAccount')
   @Post('/bank-account')
   async createLecturerBankAccount(
@@ -121,41 +115,7 @@ export class LecturerPaymentsController {
     );
   }
 
-  @ApiGetPaymentRequestList()
-  @SetResponseKey('requestList')
-  @Get('/requests')
-  async getPaymentRequestList(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ): Promise<PaymentRequestDto[]> {
-    return await this.lecturerPaymentsService.getPaymentRequestList(
-      authorizedData.lecturer.id,
-    );
-  }
-
-  @ApiGetPaymentRequestCount()
-  @SetResponseKey('requestCount')
-  @Get('/requests/count')
-  async getPaymentRequestCount(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-  ): Promise<number> {
-    return await this.lecturerPaymentsService.getPaymentRequestCount(
-      authorizedData.lecturer.id,
-    );
-  }
-
-  @ApiUpdatePaymentRequestStatus()
-  @Patch('/request')
-  async updatePaymentRequestStatus(
-    @GetAuthorizedUser() authorizedData: ValidateResult,
-    @Body() updatePaymentRequestStatusDto: UpdatePaymentRequestStatusDto,
-  ): Promise<void> {
-    await this.lecturerPaymentsService.updatePaymentRequestStatus(
-      authorizedData.lecturer.id,
-      updatePaymentRequestStatusDto,
-    );
-  }
-
-  @ApiGetMyPassSituation()
+  @ApiLecturerPayments.GetMyPassSituation({ summary: '패스권 판매 현황' })
   @SetResponseKey('passSituationList')
   @Get('passes/:passId')
   async getMyPassSituation(
@@ -167,4 +127,45 @@ export class LecturerPaymentsController {
       passId,
     );
   }
+
+  //todo 사용 여부 확이
+  // @ApiLecturerPayments.GetPaymentRequestList({
+  //   summary: '입금 대기 중인 결제내역 조회',
+  // })
+  // @SetResponseKey('requestList')
+  // @Get('/requests')
+  // async getPaymentRequestList(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  // ): Promise<PaymentRequestDto[]> {
+  //   return await this.lecturerPaymentsService.getPaymentRequestList(
+  //     authorizedData.lecturer.id,
+  //   );
+  // }
+
+  // @ApiLecturerPayments.GetPaymentRequestCount({
+  //   summary: '입금 대기 중인 결제 건수 조회',
+  // })
+  // @SetResponseKey('requestCount')
+  // @Get('/requests/count')
+  // async getPaymentRequestCount(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  // ): Promise<number> {
+  //   return await this.lecturerPaymentsService.getPaymentRequestCount(
+  //     authorizedData.lecturer.id,
+  //   );
+  // }
+
+  // @ApiLecturerPayments.UpdatePaymentRequestStatus({
+  //   summary: '결제 요청 상태 변경',
+  // })
+  // @Patch('/request')
+  // async updatePaymentRequestStatus(
+  //   @GetAuthorizedUser() authorizedData: ValidateResult,
+  //   @Body() updatePaymentRequestStatusDto: UpdatePaymentRequestStatusDto,
+  // ): Promise<void> {
+  //   await this.lecturerPaymentsService.updatePaymentRequestStatus(
+  //     authorizedData.lecturer.id,
+  //     updatePaymentRequestStatusDto,
+  //   );
+  // }
 }

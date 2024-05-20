@@ -1022,78 +1022,6 @@ export class PaymentsRepository {
     });
   }
 
-  async getLecturerLectureList(lecturerId: number): Promise<Lecture[]> {
-    return await this.prismaService.lecture.findMany({ where: { lecturerId } });
-  }
-
-  async getPaymentRequestListByLecturerId(lectureId: number) {
-    return await this.prismaService.payment.findMany({
-      where: {
-        statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
-        paymentMethodId: {
-          in: [PaymentMethods.현장결제, PaymentMethods.선결제],
-        },
-        OR: [
-          {
-            reservation: {
-              lectureSchedule: { lectureId },
-            },
-          },
-          {
-            reservation: {
-              regularLectureStatus: { lectureId },
-            },
-          },
-        ],
-      },
-      include: {
-        user: { include: { userProfileImage: true } },
-        paymentProductType: true,
-        paymentStatus: true,
-        paymentMethod: true,
-        paymentCouponUsage: true,
-        transferPaymentInfo: { include: { lecturerBankAccount: true } },
-        refundPaymentInfo: {
-          include: { refundStatus: true, refundUserBankAccount: true },
-        },
-        reservation: {
-          include: {
-            lectureSchedule: true,
-            regularLectureStatus: { include: { regularLectureSchedule: true } },
-          },
-        },
-        cardPaymentInfo: { include: { issuer: true, acquirer: true } },
-        virtualAccountPaymentInfo: { include: { bank: true } },
-        paymentPassUsage: {
-          include: { lecturePass: true },
-        },
-        userPass: { include: { lecturePass: true } },
-      },
-      orderBy: {
-        id: 'asc',
-      },
-    });
-  }
-
-  async getPaymentRequest(
-    paymentId: number,
-    lecturerId: number,
-  ): Promise<IPayment> {
-    return this.prismaService.payment.findFirst({
-      where: {
-        id: paymentId,
-        lecturerId,
-        paymentProductType: { name: PaymentProductTypes.클래스 },
-      },
-      include: {
-        transferPaymentInfo: true,
-        reservation: {
-          include: { lectureSchedule: true, regularLectureStatus: true },
-        },
-      },
-    });
-  }
-
   async getTransferPayment(paymentId: number) {
     return this.prismaService.transferPaymentInfo.findUnique({
       where: { paymentId },
@@ -1126,18 +1054,6 @@ export class PaymentsRepository {
     await transaction.lecturerLearner.update({
       where: { userId_lecturerId: { userId, lecturerId } },
       data: { enrollmentCount: { increment: 1 } },
-    });
-  }
-
-  async countLecturerPaymentRequestCount(lecturerId: number): Promise<number> {
-    return await this.prismaService.payment.count({
-      where: {
-        lecturerId,
-        statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
-        paymentMethodId: {
-          in: [PaymentMethods.현장결제, PaymentMethods.선결제],
-        },
-      },
     });
   }
 
@@ -1384,4 +1300,88 @@ export class PaymentsRepository {
       );
     }
   }
+
+  // async countLecturerPaymentRequestCount(lecturerId: number): Promise<number> {
+  //   return await this.prismaService.payment.count({
+  //     where: {
+  //       lecturerId,
+  //       statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+  //       paymentMethodId: {
+  //         in: [PaymentMethods.현장결제, PaymentMethods.선결제],
+  //       },
+  //     },
+  //   });
+  // }
+
+  // async getLecturerLectureList(lecturerId: number): Promise<Lecture[]> {
+  //   return await this.prismaService.lecture.findMany({ where: { lecturerId } });
+  // }
+
+  // async getPaymentRequestListByLecturerId(lectureId: number) {
+  //   return await this.prismaService.payment.findMany({
+  //     where: {
+  //       statusId: PaymentOrderStatus.WAITING_FOR_DEPOSIT,
+  //       paymentMethodId: {
+  //         in: [PaymentMethods.현장결제, PaymentMethods.선결제],
+  //       },
+  //       OR: [
+  //         {
+  //           reservation: {
+  //             lectureSchedule: { lectureId },
+  //           },
+  //         },
+  //         {
+  //           reservation: {
+  //             regularLectureStatus: { lectureId },
+  //           },
+  //         },
+  //       ],
+  //     },
+  //     include: {
+  //       user: { include: { userProfileImage: true } },
+  //       paymentProductType: true,
+  //       paymentStatus: true,
+  //       paymentMethod: true,
+  //       paymentCouponUsage: true,
+  //       transferPaymentInfo: { include: { lecturerBankAccount: true } },
+  //       refundPaymentInfo: {
+  //         include: { refundStatus: true, refundUserBankAccount: true },
+  //       },
+  //       reservation: {
+  //         include: {
+  //           lectureSchedule: true,
+  //           regularLectureStatus: { include: { regularLectureSchedule: true } },
+  //         },
+  //       },
+  //       cardPaymentInfo: { include: { issuer: true, acquirer: true } },
+  //       virtualAccountPaymentInfo: { include: { bank: true } },
+  //       paymentPassUsage: {
+  //         include: { lecturePass: true },
+  //       },
+  //       userPass: { include: { lecturePass: true } },
+  //     },
+  //     orderBy: {
+  //       id: 'asc',
+  //     },
+  //   });
+  // }
+
+  // async getPaymentRequest(
+  //   paymentId: number,
+  //   lecturerId: number,
+  // ): Promise<IPayment> {
+  //   return this.prismaService.payment.findFirst({
+  //     where: {
+  //       id: paymentId,
+  //       lecturerId,
+  //       paymentProductType: { name: PaymentProductTypes.클래스 },
+  //     },
+  //     include: {
+  //       transferPaymentInfo: true,
+  //       reservation: {
+  //         include: { lectureSchedule: true, regularLectureStatus: true },
+  //       },
+  //     },
+  //   });
+  // }
 }
