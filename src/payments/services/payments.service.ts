@@ -81,6 +81,7 @@ export class PaymentsService {
   private cancellationAbsoluteTime: number;
   private passRefundableDaysPeriod: number;
   private paymentTimeOutSec: number;
+  private minPaymentAmount: number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -106,6 +107,8 @@ export class PaymentsService {
     this.paymentTimeOutSec = this.configService.get<number>(
       'PAYMENT_TIME_OUT_SEC',
     );
+    this.minPaymentAmount =
+      this.configService.get<number>('MIN_PAYMENT_AMOUNT');
 
     this.logger.log('PaymentsService Init');
   }
@@ -447,7 +450,7 @@ export class PaymentsService {
         price -= coupon.discountPrice;
       }
 
-      return Math.max(0, price);
+      return Math.max(this.minPaymentAmount, price);
     };
 
     const { coupon, stackableCoupon } = coupons;

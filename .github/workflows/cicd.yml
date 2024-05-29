@@ -94,6 +94,8 @@ jobs:
           echo "FIREBASE_ADMIN_SDK_PRIVATE_KEY=${{ secrets.FIREBASE_ADMIN_SDK_PRIVATE_KEY }}" >> .env
           echo "FIREBASE_ADMIN_SDK_CLIENT_EMAIL=${{ secrets.FIREBASE_ADMIN_SDK_CLIENT_EMAIL }}" >> .env
 
+          echo "MIN_PAYMENT_AMOUNT=${{ secrets.MIN_PAYMENT_AMOUNT }}" >> .env
+
           cat .env
 
       #  "node_modules/*" "coverage/*" "src/*" "test/*" "README.md" "*.git*" "/common" "tsconfig.json" "tsconfig.build.json" "nest-cli.json" 파일 제외 후 레퍼지토리 압축
