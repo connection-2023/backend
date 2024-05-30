@@ -694,9 +694,11 @@ export class PaymentsService {
       );
     }
 
-    await this.eventBus.publish(
-      new CreatedReservationEvent(paymentInfo.reservation.id),
-    );
+    if (paymentInfo.reservation) {
+      await this.eventBus.publish(
+        new CreatedReservationEvent(paymentInfo.reservation.id),
+      );
+    }
   }
 
   // 카드 결제 정보 처리
