@@ -32,10 +32,11 @@ import { ApiDeleteSingleSearchHistory } from '../swagger-decorators/delete-singl
 import { SearchPassListDto } from '../dtos/request/search-pass-list.dto';
 import { EsPassDto } from '../dtos/response/es-pass.dto ';
 import { ApiSearchPassList } from '../swagger-decorators/search-pass-list.decorator';
-import { IEsPass } from '../interface/search.interface';
+import { IEsLecturer, IEsPass } from '../interface/search.interface';
 import { ApiDeleteAllSearchHistory } from '../swagger-decorators/delete-all-search-history.decorator';
 import { PopularSearchTermDto } from '../dtos/response/popular-search-term.dto';
 import { ApiGetPopularSearchTerms } from '../swagger-decorators/get-popular-search-terms.decorator';
+import { PaginatedResponse } from '@src/common/types/type';
 
 @ApiTags('검색')
 @Controller('search')
@@ -58,13 +59,12 @@ export class SearchController {
   }
 
   @ApiSearchLecturerList()
-  @SetResponseKey('lecturerList')
   @UseGuards(AllowUserLecturerAndGuestGuard)
   @Get('/lecturer')
   async searchLecturerList(
     @GetAuthorizedUser() authorizedData: ValidateResult,
     @Query() dto: GetLecturerSearchResultDto,
-  ): Promise<EsLecturerDto[]> {
+  ): Promise<PaginatedResponse<EsLecturerDto, 'lecturerList'>> {
     const userId: number = authorizedData?.user?.id;
     if (userId && dto.value) {
       await this.searchService.saveSearchTerm(userId, dto.value);
@@ -74,13 +74,12 @@ export class SearchController {
   }
 
   @ApiSearchLectureList()
-  @SetResponseKey('lectureList')
   @UseGuards(AllowUserLecturerAndGuestGuard)
   @Get('/lecture')
   async searchLectureList(
     @GetUserId() authorizedData: ValidateResult,
     @Query() dto: GetLectureSearchResultDto,
-  ): Promise<EsLectureDto[]> {
+  ): Promise<PaginatedResponse<EsLectureDto, 'lectureList'>> {
     const userId: number = authorizedData?.user?.id;
     if (userId && dto.value) {
       await this.searchService.saveSearchTerm(userId, dto.value);
@@ -90,24 +89,18 @@ export class SearchController {
   }
 
   @ApiSearchPassList()
-  @SetResponseKey('searchedPassList')
   @UseGuards(AllowUserLecturerAndGuestGuard)
   @Get('/pass')
   async searchPassList(
     @GetUserId() authorizedData: ValidateResult,
     @Query() dto: SearchPassListDto,
-  ): Promise<EsPassDto[]> {
+  ): Promise<PaginatedResponse<EsPassDto, 'passList'>> {
     const userId: number = authorizedData?.user?.id;
     if (userId && dto.value) {
       await this.searchService.saveSearchTerm(userId, dto.value);
     }
 
-    const passList: IEsPass[] = await this.searchService.getPassList(
-      userId,
-      dto,
-    );
-
-    return plainToInstance(EsPassDto, passList);
+    return await this.searchService.getPassList(userId, dto);
   }
 
   @ApiGetSearchHistory()

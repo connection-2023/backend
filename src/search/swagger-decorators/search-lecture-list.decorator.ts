@@ -1,6 +1,7 @@
 import { HttpStatus, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DetailResponseDto } from '@src/common/swagger/dtos/detail-response-dto';
+import { PaginationResponseDto } from '@src/common/swagger/dtos/pagination-response.dto';
 import { EsLectureDto } from '@src/search/dtos/response/es-lecture.dto';
 
 export function ApiSearchLectureList() {
@@ -9,11 +10,10 @@ export function ApiSearchLectureList() {
       summary: '강의 검색 회원/비회원 가능',
     }),
     ApiBearerAuth(),
-    DetailResponseDto.swaggerBuilder(
+    PaginationResponseDto.swaggerBuilder(
       HttpStatus.OK,
       'lectureList',
       EsLectureDto,
-      { isArray: true },
     ),
   );
 }

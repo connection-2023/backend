@@ -8,7 +8,7 @@ export class EsRegionDto {
     description: '지역 Id',
   })
   @Expose()
-  @Transform(({ obj }) => obj.regionId)
+  @Transform(({ obj }) => obj.regionId, { toClassOnly: true })
   id: number;
 
   @ApiProperty({
@@ -22,8 +22,4 @@ export class EsRegionDto {
   })
   @Expose()
   district: string;
-
-  constructor(region: Partial<IEsRegion>) {
-    Object.assign(this, region);
-  }
 }

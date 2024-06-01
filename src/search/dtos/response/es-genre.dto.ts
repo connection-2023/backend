@@ -9,7 +9,7 @@ export class EsGenreDto {
     description: '장르 Id',
   })
   @Expose()
-  @Transform(({ obj }) => obj.categoryId)
+  @Transform(({ obj }) => obj.categoryId, { toClassOnly: true })
   id: number;
 
   @ApiProperty({
@@ -17,8 +17,4 @@ export class EsGenreDto {
   })
   @Expose()
   genre: string;
-
-  constructor(genre: Partial<IEsGenre>) {
-    Object.assign(this, genre);
-  }
 }
