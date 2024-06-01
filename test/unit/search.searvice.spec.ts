@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { SearchService } from '@src/search/services/search.service';
-import { PrismaService } from '@src/prisma/prisma.service'; // PrismaService를 임포트합니다.
+import { PrismaService } from '@src/prisma/prisma.service';
 import { PaginatedResponse } from '@src/common/types/type';
 import { SearchRepository } from '@src/search/repository/search.repository';
 

@@ -56,6 +56,7 @@ import { PaginatedResponse } from '@src/common/types/type';
 import { DateUtils } from '@src/common/utils/date.utils';
 import { plainToClass, plainToInstance } from 'class-transformer';
 import { th } from 'date-fns/locale';
+import { PopularSearchTermDto } from '../dtos/response/popular-search-term.dto';
 
 @Injectable()
 export class SearchService {
@@ -794,10 +795,13 @@ export class SearchService {
       lastItemId,
     );
 
-    return await this.searchRepository.getUserSearchHistoryList(
-      userId,
-      paginationParams,
-    );
+    const userHistory: SearchHistoryDto[] =
+      await this.searchRepository.getUserSearchHistoryList(
+        userId,
+        paginationParams,
+      );
+
+    return plainToInstance(SearchHistoryDto, userHistory);
   }
 
   private getPaginationParams(
@@ -919,8 +923,11 @@ export class SearchService {
     await this.searchRepository.deleteSearchHistoryByUserId(userId);
   }
 
-  async getPopularSearchTerms() {
-    return await this.searchRepository.getPopularSearchTerms();
+  async getPopularSearchTerms(): Promise<PopularSearchTermDto[]> {
+    const popularSearchTerms =
+      await this.searchRepository.getPopularSearchTerms();
+
+    return plainToInstance(PopularSearchTermDto, popularSearchTerms);
   }
 
   generateESResponse<T, K extends string>(
