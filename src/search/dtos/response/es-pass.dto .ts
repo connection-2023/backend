@@ -105,12 +105,4 @@ export class EsPassDto {
   @Expose()
   @Type(() => EsPassLecturerDto)
   lecturer: EsPassLecturerDto;
-
-  constructor(pass: Partial<IEsPass>) {
-    if (pass) {
-      Object.assign(this, pass);
-      this.maxUsageCount = pass.maxusagecount;
-      this.availableMonths = pass.availablemonths;
-    }
-  }
 }

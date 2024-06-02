@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IEsLecturer } from '../../interface/search.interface';
 import { EsRegionDto } from './es-region.dto';
 import { EsGenreDto } from './es-genre.dto';
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { ToFixedStars } from '@src/common/validator/format-stars-as-single-decimal.validator';
 
 @Exclude()
 export class EsLecturerDto {
@@ -37,6 +38,7 @@ export class EsLecturerDto {
   @ApiProperty({
     description: '별점',
   })
+  @ToFixedStars()
   @Expose()
   stars: string;
 
@@ -59,6 +61,7 @@ export class EsLecturerDto {
     type: Boolean,
     description: '좋아요 여부',
   })
+  @Transform(({ obj }) => (obj.isliked ? true : false))
   @Expose()
   isLiked: boolean;
 
@@ -74,9 +77,7 @@ export class EsLecturerDto {
     isArray: true,
     description: '지역',
   })
-  @Transform(({ value }) =>
-    value ? value.map((region) => new EsRegionDto(region)) : [],
-  )
+  @Type(() => EsRegionDto)
   @Expose()
   regions: EsRegionDto[];
 
@@ -85,19 +86,9 @@ export class EsLecturerDto {
     isArray: true,
     description: '장르',
   })
-  @Transform(({ value }) =>
-    value ? value.map((genre) => new EsGenreDto(genre)) : [],
-  )
+  @Type(() => EsGenreDto)
   @Expose()
   genres: EsGenreDto[];
 
   updatedat: Date;
-
-  constructor(lecturer: Partial<IEsLecturer>) {
-    Object.assign(this, lecturer);
-
-    this.stars = lecturer.stars ? lecturer.stars.toFixed(1) : '0';
-
-    this.isLiked = lecturer.isLiked ? true : false;
-  }
 }

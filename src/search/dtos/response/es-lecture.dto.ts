@@ -4,6 +4,7 @@ import { EsGenreDto } from './es-genre.dto';
 import { EsRegionDto } from './es-region.dto';
 import { EsSimpleLecturerDto } from './es-simple-lecturer.dto';
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { ToFixedStars } from '@src/common/validator/format-stars-as-single-decimal.validator';
 
 @Exclude()
 export class EsLectureDto {
@@ -47,7 +48,7 @@ export class EsLectureDto {
     description: '시작일',
   })
   @Expose()
-  @Transform(({ obj }) => obj.startdate)
+  @Transform(({ obj }) => obj.startdate, { toClassOnly: true })
   startDate: Date;
 
   @ApiProperty({
@@ -55,7 +56,7 @@ export class EsLectureDto {
     description: '종료일',
   })
   @Expose()
-  @Transform(({ obj }) => obj.enddate)
+  @Transform(({ obj }) => obj.enddate, { toClassOnly: true })
   endDate: Date;
 
   @ApiProperty({
@@ -63,19 +64,20 @@ export class EsLectureDto {
     description: '그룹 여부',
   })
   @Expose()
-  @Transform(({ obj }) => obj.isgroup)
+  @Transform(({ obj }) => obj.isgroup, { toClassOnly: true })
   isGroup: boolean;
 
   @ApiProperty({
     description: '강의 형식',
   })
   @Expose()
-  @Transform(({ obj }) => obj.lecturemethod)
+  @Transform(({ obj }) => obj.lecturemethod, { toClassOnly: true })
   lectureMethod: string;
 
   @ApiProperty({
     description: '별점',
   })
+  @ToFixedStars()
   @Expose()
   stars: string;
 
@@ -84,7 +86,7 @@ export class EsLectureDto {
     description: '리뷰 수',
   })
   @Expose()
-  @Transform(({ obj }) => obj.reviewcount)
+  @Transform(({ obj }) => obj.reviewcount, { toClassOnly: true })
   reviewCount: number;
 
   @ApiProperty({
@@ -105,7 +107,7 @@ export class EsLectureDto {
     description: '활성화 여부',
   })
   @Expose()
-  @Transform(({ obj }) => obj.isactive)
+  @Transform(({ obj }) => obj.isactive, { toClassOnly: true })
   isActive: boolean;
 
   updatedAt: Date;
@@ -124,9 +126,7 @@ export class EsLectureDto {
     description: '지역',
   })
   @Expose()
-  @Transform(({ value }) =>
-    value ? value.map((region) => new EsRegionDto(region)) : [],
-  )
+  @Type(() => EsRegionDto)
   regions: EsRegionDto[];
 
   @ApiProperty({
@@ -135,14 +135,6 @@ export class EsLectureDto {
     description: '장르',
   })
   @Expose()
-  @Transform(({ value }) =>
-    value ? value.map((genre) => new EsGenreDto(genre)) : [],
-  )
+  @Type(() => EsGenreDto)
   genres: EsGenreDto[];
-
-  constructor(lecture: Partial<IEsLecture>) {
-    Object.assign(this, lecture);
-
-    this.stars = lecture.stars === 0 ? '0' : lecture.stars.toFixed(1);
-  }
 }

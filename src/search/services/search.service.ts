@@ -52,6 +52,11 @@ import { GetUserSearchHistoryListDto } from '../dtos/request/get-user-search-his
 import { SearchHistoryDto } from '../dtos/response/search-history.dto';
 import { SearchPassListDto } from '../dtos/request/search-pass-list.dto';
 import { EsPassDto } from '../dtos/response/es-pass.dto ';
+import { PaginatedResponse } from '@src/common/types/type';
+import { DateUtils } from '@src/common/utils/date.utils';
+import { plainToClass, plainToInstance } from 'class-transformer';
+import { th } from 'date-fns/locale';
+import { PopularSearchTermDto } from '../dtos/response/popular-search-term.dto';
 
 @Injectable()
 export class SearchService {
@@ -73,33 +78,25 @@ export class SearchService {
       userId,
     );
 
-    const searchedLecturers: IEsLecturer[] = await this.searchLecturers(
-      userId,
-      dto,
-      idQueries,
-    );
-    const searchedLectures: IEsLecture[] = await this.searchLectures(
-      userId,
-      dto,
-      lecturerIdQueries,
-    );
-    const searchedPasses: IEsPass[] = await this.searchPasses(
-      dto,
-      lecturerIdQueries,
-    );
+    const [searchedLecturers, searchedLectures, searchedPasses] =
+      await Promise.all([
+        this.searchLecturers(userId, dto, idQueries),
+        this.searchLectures(userId, dto, lecturerIdQueries),
+        this.searchPasses(dto, lecturerIdQueries),
+      ]);
 
-    return new CombinedSearchResultDto({
+    return {
       searchedLecturers,
       searchedLectures,
       searchedPasses,
-    });
+    };
   }
 
   private async searchLecturers(
     userId: number,
     { value, take }: GetCombinedSearchResultDto,
     idQueries: IIdQuery[],
-  ): Promise<IEsLecturer[]> {
+  ): Promise<EsLecturerDto[]> {
     const searchedLecturers = await this.searchLecturersWithElasticsearch({
       value,
       take,
@@ -107,19 +104,23 @@ export class SearchService {
     });
 
     if (!searchedLecturers || !userId) {
-      return searchedLecturers;
+      return plainToInstance(EsLecturerDto, searchedLecturers);
     }
 
     //isLiked 속성 추가
     const lecturersWithLikeStatus: IEsLecturer[] =
       await this.addLecturerLikeStatus(userId, searchedLecturers);
 
-    return lecturersWithLikeStatus;
+    return plainToInstance(EsLecturerDto, lecturersWithLikeStatus);
   }
 
   private async getBlockedLecturerIds(
     userId: number,
   ): Promise<IBlockedLecturerQuery> {
+    if (!userId) {
+      return { idQueries: [], lecturerIdQueries: [] };
+    }
+
     const blockedLecturer =
       await this.searchRepository.getUserblockedLecturerList(userId);
 
@@ -197,7 +198,7 @@ export class SearchService {
     userId: number,
     { value, take }: GetCombinedSearchResultDto,
     lecturerIdQueries: IBlockedLecturerIdQuery[],
-  ): Promise<IEsLecture[]> {
+  ): Promise<EsLectureDto[]> {
     const searchedLectures = await this.searchLecturesWithElasticsearch({
       value,
       take,
@@ -205,14 +206,14 @@ export class SearchService {
     });
 
     if (!searchedLectures || !userId) {
-      return searchedLectures;
+      return plainToInstance(EsLectureDto, searchedLectures);
     }
 
     //isLiked 속성 추가
     const lecturesWithLikeStatus: IEsLecture[] =
       await this.addLectureLikeStatus(userId, searchedLectures);
 
-    return lecturesWithLikeStatus;
+    return plainToInstance(EsLectureDto, lecturesWithLikeStatus);
   }
 
   private async searchLecturesWithElasticsearch({
@@ -263,12 +264,14 @@ export class SearchService {
   private async searchPasses(
     { value, take }: GetCombinedSearchResultDto,
     lecturerIdQueries: IBlockedLecturerIdQuery[],
-  ): Promise<IEsPass[]> {
-    return await this.searchPassesWithElasticsearch({
+  ): Promise<EsPassDto[]> {
+    const searchedPasses = await this.searchPassesWithElasticsearch({
       value,
       take,
       lecturerIdQueries,
     });
+
+    return plainToInstance(EsPassDto, searchedPasses);
   }
 
   private async searchPassesWithElasticsearch({
@@ -309,68 +312,70 @@ export class SearchService {
   async getLecturerList(
     userId: number,
     dto: GetLecturerSearchResultDto,
-  ): Promise<EsLecturerDto[]> {
+  ): Promise<PaginatedResponse<EsLecturerDto, 'lecturerList'>> {
     const { idQueries } = await this.getBlockedLecturerIds(userId);
 
-    const searchedLecturers: IEsLecturer[] =
-      await this.detailSearchLecturersWithElasticsearch({ ...dto, idQueries });
-    if (!searchedLecturers) {
-      return;
+    const { totalItemCount, lecturerList } =
+      await this.detailSearchLecturersWithElasticsearch({
+        ...dto,
+        idQueries,
+      });
+    if (!totalItemCount) {
+      return {
+        totalItemCount,
+        lecturerList: [],
+      };
     }
 
     if (!userId) {
-      return searchedLecturers.map((lecturer) => new EsLecturerDto(lecturer));
+      return {
+        totalItemCount,
+        lecturerList: plainToInstance(EsLecturerDto, lecturerList),
+      };
     }
 
     //isLiked 속성 추가
     const lecturersWithLikeStatus: IEsLecturer[] =
-      await this.addLecturerLikeStatus(userId, searchedLecturers);
+      await this.addLecturerLikeStatus(userId, lecturerList);
 
-    return lecturersWithLikeStatus.map(
-      (lecturer) => new EsLecturerDto(lecturer),
-    );
+    return {
+      totalItemCount,
+      lecturerList: plainToInstance(EsLecturerDto, lecturersWithLikeStatus),
+    };
   }
 
-  private async detailSearchLecturersWithElasticsearch({
-    value,
-    take,
-    genres,
-    regions,
-    searchAfter,
-    stars,
-    sortOption,
-    idQueries,
-  }: ILecturerSearchParams): Promise<IEsLecturer[]> {
-    const searchQuery = this.buildSearchQuery(SearchTypes.LECTURER, value);
-    const genreQuery = this.buildGenreQuery(genres);
-    const starQuery = this.buildStarQuery(stars);
-    const regionQuery = this.buildRegionQuery(regions);
-    const sortQuery: any[] = this.buildSortQuery(sortOption);
+  private async detailSearchLecturersWithElasticsearch(
+    searchParams: ILecturerSearchParams,
+  ): Promise<PaginatedResponse<IEsLecturer, 'lecturerList'>> {
+    const searchQuery = this.buildSearchQuery(
+      SearchTypes.LECTURER,
+      searchParams.value,
+    );
+    const genreQuery = this.buildGenreQuery(searchParams.genres);
+    const starQuery = this.buildStarQuery(searchParams.stars);
+    const regionQuery = this.buildRegionQuery(searchParams.regions);
+    const sortQuery: any[] = this.buildSortQuery(searchParams.sortOption);
 
     const { hits } = await this.esService.search({
       index: 'lecturer',
-      size: take,
+      size: searchParams.take,
       query: {
         bool: {
           // undefined면 에러가 발생하기 떄문에 값이 있는 쿼리만 담을 수 있도록 필터링
           must: [searchQuery, genreQuery, regionQuery, starQuery].filter(
             Boolean,
           ),
-          must_not: idQueries,
+          must_not: searchParams.idQueries,
         },
       },
-      search_after: searchAfter,
+      search_after: searchParams.searchAfter,
       sort: sortQuery,
     });
 
-    if (typeof hits.total === 'object' && hits.total.value > 0) {
-      return hits.hits.map(
-        (hit: any): IEsLecturer => ({
-          ...hit._source,
-          searchAfter: hit.sort,
-        }),
-      );
-    }
+    return this.generateESResponse<IEsLecturer, 'lecturerList'>(
+      hits,
+      'lecturerList',
+    );
   }
 
   private buildSearchQuery(searchType: SearchTypes, value: string) {
@@ -505,100 +510,98 @@ export class SearchService {
     return regionQuery;
   }
 
-  private sliceResults(results: any[], take: number): any[] {
-    return results ? results.slice(0, take) : null;
-  }
-
   async getLectureList(
     userId: number,
     dto: GetLectureSearchResultDto,
-  ): Promise<EsLectureDto[]> {
+  ): Promise<PaginatedResponse<EsLectureDto, 'lectureList'>> {
     const { lecturerIdQueries } = await this.getBlockedLecturerIds(userId);
 
-    const searchedLectures: IEsLecture[] =
+    const { totalItemCount, lectureList } =
       await this.detailSearchLecturesWithElasticsearch({
         ...dto,
         lecturerIdQueries,
       });
-    if (!searchedLectures) {
-      return;
+
+    if (!totalItemCount) {
+      return {
+        totalItemCount,
+        lectureList: [],
+      };
     }
 
-    //지정 날짜 필터링
-    const filteredLectures: IEsLecture[] = await this.filterLecturesByDate(
-      searchedLectures,
-      dto,
-    );
-    if (!filteredLectures) {
-      return;
-    }
-
+    // 지정 날짜 필터링
+    const filteredLectures = await this.filterLecturesByDate(lectureList, dto);
     if (!userId) {
-      const slicedLectures = this.sliceResults(filteredLectures, dto.take);
-
-      return slicedLectures.map((lecture) => new EsLectureDto(lecture));
+      return {
+        totalItemCount,
+        lectureList: plainToInstance(EsLectureDto, filteredLectures),
+      };
     }
 
-    //isLiked 속성 추가
-    const lecturesWithLikeStatus: IEsLecture[] =
-      await this.addLectureLikeStatus(userId, filteredLectures);
-
-    return lecturesWithLikeStatus.map((lecture) => new EsLectureDto(lecture));
+    // isLiked 속성 추가
+    const lecturesWithLike = await this.addLectureLikeStatus(
+      userId,
+      filteredLectures,
+    );
+    return {
+      totalItemCount,
+      lectureList: plainToInstance(EsLectureDto, lecturesWithLike),
+    };
   }
 
-  private async detailSearchLecturesWithElasticsearch({
-    value,
-    take,
-    timeOfDay,
-    stars,
-    regions,
-    genres,
-    gtePrice,
-    ltePrice,
-    lectureMethod,
-    isGroup,
-    sortOption,
-    searchAfter,
-    lecturerIdQueries,
-  }: ILectureSearchParams): Promise<IEsLecture[]> {
-    const sortQuery: any[] = this.buildSortQuery(sortOption);
-    const isGroupQuery = this.buildIsGroupQuery(isGroup);
-    const searchQuery = this.buildSearchQuery(SearchTypes.LECTURE, value);
-    const timeQuery = this.buildTimeQuery(timeOfDay);
-    const starQuery = this.buildStarQuery(stars);
-    const regionQuery = this.buildRegionQuery(regions);
-    const genreQuery = this.buildGenreQuery(genres);
-    const priceQuery = this.buildPriceQuery(ltePrice, gtePrice);
-    const methodQuery = this.buildMethodQuery(lectureMethod);
+  private async detailSearchLecturesWithElasticsearch(
+    searchParams: ILectureSearchParams,
+  ): Promise<PaginatedResponse<IEsLecture, 'lectureList'>> {
+    const sortQuery: any[] = this.buildSortQuery(searchParams.sortOption);
+    const isGroupQuery = this.buildIsGroupQuery(searchParams.isGroup);
+    const searchQuery = this.buildSearchQuery(
+      SearchTypes.LECTURE,
+      searchParams.value,
+    );
+    const timeQuery = this.buildTimeQuery(searchParams.timeOfDay);
+    const starQuery = this.buildStarQuery(searchParams.stars);
+    const regionQuery = this.buildRegionQuery(searchParams.regions);
+    const genreQuery = this.buildGenreQuery(searchParams.genres);
+    const priceQuery = this.buildPriceQuery(
+      searchParams.ltePrice,
+      searchParams.gtePrice,
+    );
+    const methodQuery = this.buildMethodQuery(searchParams.lectureMethod);
 
-    const { hits } = await this.esService.search({
-      index: 'lecture',
-      size: take,
-      query: {
-        bool: {
-          must: [
-            searchQuery,
-            timeQuery,
-            starQuery,
-            regionQuery,
-            genreQuery,
-            priceQuery,
-            methodQuery,
-            isGroupQuery,
-          ].filter(Boolean),
-          must_not: [...lecturerIdQueries, { term: { isactive: false } }],
+    try {
+      const { hits } = await this.esService.search({
+        index: 'lecture',
+        size: searchParams.take,
+        query: {
+          bool: {
+            must: [
+              searchQuery,
+              timeQuery,
+              starQuery,
+              regionQuery,
+              genreQuery,
+              priceQuery,
+              methodQuery,
+              isGroupQuery,
+            ].filter(Boolean),
+            must_not: [
+              ...searchParams.lecturerIdQueries,
+              { term: { isactive: false } },
+            ],
+          },
         },
-      },
-      search_after: searchAfter,
-      sort: sortQuery,
-    });
+        search_after: searchParams.searchAfter,
+        sort: sortQuery,
+      });
 
-    if (typeof hits.total === 'object' && hits.total.value > 0) {
-      return hits.hits.map(
-        (hit: any): IEsLecture => ({
-          ...hit._source,
-          searchAfter: hit.sort,
-        }),
+      return this.generateESResponse<IEsLecture, 'lectureList'>(
+        hits,
+        'lectureList',
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `검색 서버 에러 ${error}`,
+        'ElasticSearchServer',
       );
     }
   }
@@ -722,24 +725,16 @@ export class SearchService {
     }
     const convertedDays = days?.map((day) => Week[day as keyof typeof Week]);
 
-    const formattedGteDate = gteDate
-      ? new Date(gteDate.setHours(9, 0, 0, 0))
-      : undefined;
-
-    const formattedLteDate =
-      gteDate && lteDate
-        ? new Date(lteDate.setHours(32, 59, 59, 999))
-        : gteDate
-        ? new Date(gteDate.setHours(32, 59, 59, 999))
-        : undefined;
+    const { convertedStartDate, convertedEndDate } =
+      DateUtils.getUTCStartAndEndOfRange(gteDate, lteDate);
 
     const selectedLectures = await Promise.all(
       lectures.map(async (lecture) => {
         if (lecture.lecturemethod === '원데이') {
           return await this.searchRepository.getLecturesByDate(
             lecture.id,
-            formattedGteDate,
-            formattedLteDate,
+            convertedStartDate,
+            convertedEndDate,
             convertedDays,
           );
         }
@@ -747,8 +742,8 @@ export class SearchService {
         if (lecture.lecturemethod === '정기') {
           return await this.searchRepository.getRegularLecturesByDate(
             lecture.id,
-            formattedGteDate,
-            formattedLteDate,
+            convertedStartDate,
+            convertedEndDate,
             days,
           );
         }
@@ -800,10 +795,13 @@ export class SearchService {
       lastItemId,
     );
 
-    return await this.searchRepository.getUserSearchHistoryList(
-      userId,
-      paginationParams,
-    );
+    const userHistory: SearchHistoryDto[] =
+      await this.searchRepository.getUserSearchHistoryList(
+        userId,
+        paginationParams,
+      );
+
+    return plainToInstance(SearchHistoryDto, userHistory);
   }
 
   private getPaginationParams(
@@ -847,44 +845,54 @@ export class SearchService {
   async getPassList(
     userId: number,
     dto: SearchPassListDto,
-  ): Promise<IEsPass[]> {
+  ): Promise<PaginatedResponse<EsPassDto, 'passList'>> {
     const { lecturerIdQueries } = await this.getBlockedLecturerIds(userId);
 
-    return await this.detailSearchPassesWithElasticsearch({
-      ...dto,
-      lecturerIdQueries,
-    });
+    const { totalItemCount, passList } =
+      await this.detailSearchPassesWithElasticsearch({
+        ...dto,
+        lecturerIdQueries,
+      });
+
+    return {
+      totalItemCount,
+      passList: passList.length > 0 ? plainToInstance(EsPassDto, passList) : [],
+    };
   }
 
-  private async detailSearchPassesWithElasticsearch({
-    take,
-    sortOption,
-    value,
-    searchAfter,
-    lecturerIdQueries,
-  }: IPassSearchParams): Promise<IEsPass[]> {
-    const searchQuery = this.buildSearchQuery(SearchTypes.PASS, value);
-    const sortQuery: any[] = this.buildPassSortQuery(sortOption);
+  private async detailSearchPassesWithElasticsearch(
+    searchParams: IPassSearchParams,
+  ): Promise<PaginatedResponse<IEsPass, 'passList'>> {
+    try {
+      const searchQuery = this.buildSearchQuery(
+        SearchTypes.PASS,
+        searchParams.value,
+      );
+      const sortQuery: any[] = this.buildPassSortQuery(searchParams.sortOption);
 
-    const { hits } = await this.esService.search({
-      index: 'lecture_pass',
-      size: take,
-      query: {
-        bool: {
-          must: [{ match: { isdisabled: false } }, searchQuery].filter(Boolean),
-          must_not: [...lecturerIdQueries, { term: { isdisabled: true } }],
+      const { hits } = await this.esService.search({
+        index: 'lecture_pass',
+        size: searchParams.take,
+        query: {
+          bool: {
+            must: [{ match: { isdisabled: false } }, searchQuery].filter(
+              Boolean,
+            ),
+            must_not: [
+              ...searchParams.lecturerIdQueries,
+              { term: { isdisabled: true } },
+            ],
+          },
         },
-      },
-      search_after: searchAfter,
-      sort: sortQuery,
-    });
+        search_after: searchParams.searchAfter,
+        sort: sortQuery,
+      });
 
-    if (typeof hits.total === 'object' && hits.total.value > 0) {
-      return hits.hits.map(
-        (hit: any): IEsPass => ({
-          ...hit._source,
-          searchAfter: hit.sort,
-        }),
+      return this.generateESResponse<IEsPass, 'passList'>(hits, 'passList');
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `검색 서버 에러 ${error}`,
+        'ElasticSearchServer',
       );
     }
   }
@@ -915,7 +923,25 @@ export class SearchService {
     await this.searchRepository.deleteSearchHistoryByUserId(userId);
   }
 
-  async getPopularSearchTerms() {
-    return await this.searchRepository.getPopularSearchTerms();
+  async getPopularSearchTerms(): Promise<PopularSearchTermDto[]> {
+    const popularSearchTerms =
+      await this.searchRepository.getPopularSearchTerms();
+
+    return plainToInstance(PopularSearchTermDto, popularSearchTerms);
+  }
+
+  generateESResponse<T, K extends string>(
+    hits: any,
+    key: K,
+  ): PaginatedResponse<T, K> {
+    const totalItemCount =
+      typeof hits.total === 'object' ? hits.total.value : 0;
+    const items =
+      totalItemCount > 0 ? hits.hits.map((hit: any) => hit._source) : [];
+
+    return {
+      totalItemCount,
+      [key]: items,
+    } as PaginatedResponse<T, K>;
   }
 }
