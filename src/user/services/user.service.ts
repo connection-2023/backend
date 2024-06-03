@@ -66,6 +66,7 @@ export class UserService {
             authEmail: user.authEmail,
             signUpType: user.provider,
           };
+
           const createAuth = await this.authService.trxCreateUserAuth(
             transaction,
             auth,
@@ -86,6 +87,8 @@ export class UserService {
         },
       );
     } catch (error) {
+      console.log(error);
+
       throw error;
     }
   }

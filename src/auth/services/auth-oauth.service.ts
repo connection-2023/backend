@@ -17,6 +17,7 @@ import {
 import { SignUpType } from '@src/common/config/sign-up-type.config';
 import { Auth } from '@prisma/client';
 import { AuthRepository } from '@src/auth/repository/auth.repository';
+import { OAuthProvider } from '../constants/const';
 
 @Injectable()
 export class AuthOAuthService implements OnModuleInit {
@@ -40,17 +41,21 @@ export class AuthOAuthService implements OnModuleInit {
     this.logger.log('AuthOAuthService init');
   }
   async signIn(
-    provider: string,
+    provider: OAuthProvider,
     accessToken: string,
   ): Promise<GetUserResponse> {
     let userEmail: string;
 
-    if (provider === 'KAKAO') {
-      userEmail = await this.getKakaoUserEmail(accessToken);
-    } else if (provider === 'GOOGLE') {
-      userEmail = await this.getGoogleUserEmail(accessToken);
-    } else if (provider === 'NAVER') {
-      userEmail = await this.getNaverUserEmail(accessToken);
+    switch (provider) {
+      case OAuthProvider.KAKAO:
+        userEmail = await this.getKakaoUserEmail(accessToken);
+        break;
+      case OAuthProvider.GOOGLE:
+        userEmail = await this.getGoogleUserEmail(accessToken);
+        break;
+      case OAuthProvider.NAVER:
+        userEmail = await this.getNaverUserEmail(accessToken);
+        break;
     }
 
     const userAuth: Auth = await this.authRepository.getUserAuth(
