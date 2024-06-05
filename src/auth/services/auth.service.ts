@@ -40,14 +40,16 @@ export class AuthService implements OnModuleInit {
 
   async trxCreateUserAuth(
     tx: PrismaTransaction,
-    { userId, authEmail, signUpType }: CreateUserAuthDto,
+    authInfo: CreateUserAuthDto,
   ): Promise<any> {
-    const mappedSignUpType: SignUpType = this.mapSignUpType(signUpType);
-    await this.trxValidateUserAuth(tx, userId, authEmail);
+    const mappedSignUpType: SignUpType = this.mapSignUpType(
+      authInfo.signUpType,
+    );
+    await this.trxValidateUserAuth(tx, authInfo.userId, authInfo.authEmail);
 
     const authData: AuthInputData = {
-      userId,
-      email: authEmail,
+      userId: authInfo.userId,
+      email: authInfo.authEmail,
       signUpTypeId: mappedSignUpType,
     };
 
@@ -136,7 +138,6 @@ export class AuthService implements OnModuleInit {
 
   private mapSignUpType(signUpTypeString): SignUpType {
     let mappedSignUpType: SignUpType;
-
     switch (signUpTypeString) {
       case 'KAKAO':
         mappedSignUpType = SignUpType.KAKAO;
