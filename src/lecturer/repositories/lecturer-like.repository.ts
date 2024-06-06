@@ -48,4 +48,13 @@ export class LecturerLikeRepository {
   async getCountLecturerLike(userId: number): Promise<number> {
     return await this.prismaService.likedLecturer.count({ where: { userId } });
   }
+
+  async findUserLikeByUserIdAndLecturerId(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LikedLecturer> {
+    return await this.prismaService.likedLecturer.findFirst({
+      where: { userId, lecturerId },
+    });
+  }
 }
