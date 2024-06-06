@@ -13,8 +13,19 @@ import { PopularLecturerService } from './services/popular-lecturer.service';
 import { PopularLecturerRepository } from './repositories/popular-lecturer.repository';
 import { PopularLecturerController } from './controllers/popular-lecturer.controller';
 import { LectureLikeRepository } from '@src/lecture/repositories/lecture-like.repository';
+import { ChatRoomRepository } from '@src/chats/repositories/chats-room.repository';
+import { ChatsModule } from '@src/chats/chats.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ChatRoom, ChatRoomSchema } from '@src/chats/schemas/chats-room.schema';
+import { Chats, ChatsSchema } from '@src/chats/schemas/chats.schema';
 
 @Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: Chats.name, schema: ChatsSchema },
+      { name: ChatRoom.name, schema: ChatRoomSchema },
+    ]),
+  ],
   providers: [
     LecturerService,
     LecturerRepository,
@@ -25,6 +36,7 @@ import { LectureLikeRepository } from '@src/lecture/repositories/lecture-like.re
     PopularLecturerService,
     PopularLecturerRepository,
     LectureLikeRepository,
+    ChatRoomRepository,
   ],
   controllers: [
     LecturerController,

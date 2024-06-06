@@ -1,3 +1,4 @@
+import { ChatRoomRepository } from './../../chats/repositories/chats-room.repository';
 import { LectureLikeRepository } from './../../lecture/repositories/lecture-like.repository';
 import { LecturerLikeRepository } from './../repositories/lecturer-like.repository';
 import { Injectable } from '@nestjs/common';
@@ -9,6 +10,7 @@ export class LecturerBlockService {
     private readonly lecturerBlockRepository: LecturerBlockRepository,
     private readonly lecturerLikeRepository: LecturerLikeRepository,
     private readonly lectureLikeRepository: LectureLikeRepository,
+    private readonly chatRoomRepository: ChatRoomRepository,
   ) {}
 
   async createLecturerBlock(lecturerId: number, userId: number) {
@@ -32,6 +34,20 @@ export class LecturerBlockService {
       await this.lectureLikeRepository.deleteUserLikeLectureByUserIdAndLecturerId(
         userId,
         lecturerId,
+      );
+    }
+
+    const chatRoomExist = await this.chatRoomRepository.getChatRoom(
+      userId,
+      lecturerId,
+    );
+
+    if (chatRoomExist) {
+      const leaveChatRoomUpdateData = { $set: { 'user.participation': false } };
+
+      await this.chatRoomRepository.leaveChatRoom(
+        chatRoomExist._id,
+        leaveChatRoomUpdateData,
       );
     }
 
