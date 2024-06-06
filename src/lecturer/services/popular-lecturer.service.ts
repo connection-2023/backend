@@ -54,7 +54,7 @@ export class PopularLecturerService {
           }
         });
 
-        const topFivePopularScores = popularScores.slice(0, 8);
+        const topFivePopularScores = popularScores.slice(0, 6);
         const popularLecturers = [];
 
         for (const popularLecturer of topFivePopularScores) {
