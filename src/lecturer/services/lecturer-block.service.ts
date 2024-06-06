@@ -12,11 +12,28 @@ export class LecturerBlockService {
   ) {}
 
   async createLecturerBlock(lecturerId: number, userId: number) {
-    await this.lecturerLikeRepository.deleteLecturerLike(lecturerId, userId);
-    await this.lectureLikeRepository.deleteUserLikeLectureByUserIdAndLecturerId(
-      userId,
-      lecturerId,
-    );
+    const lecturerLikeExist =
+      await this.lecturerLikeRepository.findUserLikeLecturerByUserIdAndLecturerId(
+        userId,
+        lecturerId,
+      );
+
+    if (lecturerLikeExist) {
+      await this.lecturerLikeRepository.deleteLecturerLike(lecturerId, userId);
+    }
+
+    const lecturesLikeExist =
+      await this.lectureLikeRepository.findUserLikeLecturesByUserIdAndLecturerId(
+        userId,
+        lecturerId,
+      );
+
+    if (lecturesLikeExist) {
+      await this.lectureLikeRepository.deleteUserLikeLectureByUserIdAndLecturerId(
+        userId,
+        lecturerId,
+      );
+    }
 
     return await this.lecturerBlockRepository.createLecturerBlock(
       lecturerId,
