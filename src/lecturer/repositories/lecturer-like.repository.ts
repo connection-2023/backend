@@ -49,7 +49,7 @@ export class LecturerLikeRepository {
     return await this.prismaService.likedLecturer.count({ where: { userId } });
   }
 
-  async findUserLikeByUserIdAndLecturerId(
+  async findUserLikeLecturerByUserIdAndLecturerId(
     userId: number,
     lecturerId: number,
   ): Promise<LikedLecturer> {
