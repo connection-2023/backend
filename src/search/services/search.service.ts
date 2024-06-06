@@ -57,6 +57,10 @@ import { DateUtils } from '@src/common/utils/date.utils';
 import { plainToClass, plainToInstance } from 'class-transformer';
 import { th } from 'date-fns/locale';
 import { PopularSearchTermDto } from '../dtos/response/popular-search-term.dto';
+import {
+  SearchHit,
+  SearchHitsMetadata,
+} from '@elastic/elasticsearch/lib/api/types';
 
 @Injectable()
 export class SearchService {
@@ -931,13 +935,17 @@ export class SearchService {
   }
 
   generateESResponse<T, K extends string>(
-    hits: any,
+    hits: SearchHitsMetadata,
     key: K,
   ): PaginatedResponse<T, K> {
     const totalItemCount =
       typeof hits.total === 'object' ? hits.total.value : 0;
+
     const items =
-      totalItemCount > 0 ? hits.hits.map((hit: any) => hit._source) : [];
+      hits.hits?.map((hit: SearchHit<T>) => ({
+        ...hit._source,
+        searchAfter: hit.sort,
+      })) || [];
 
     return {
       totalItemCount,
