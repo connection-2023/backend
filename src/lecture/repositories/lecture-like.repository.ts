@@ -39,4 +39,22 @@ export class LectureLikeRepository {
       where: { userId, lecture: { deletedAt: null } },
     });
   }
+
+  async findUserLikeLecturesByUserIdAndLecturerId(
+    userId: number,
+    lecturerId: number,
+  ): Promise<LikedLecture[]> {
+    return await this.prismaService.likedLecture.findMany({
+      where: { userId, lecture: { lecturerId } },
+    });
+  }
+
+  async deleteUserLikeLectureByUserIdAndLecturerId(
+    userId: number,
+    lecturerId: number,
+  ): Promise<void> {
+    await this.prismaService.likedLecture.deleteMany({
+      where: { userId, lecture: { lecturerId } },
+    });
+  }
 }

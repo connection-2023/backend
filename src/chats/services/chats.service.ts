@@ -1,3 +1,4 @@
+import { PrismaService } from './../../prisma/prisma.service';
 import { NotificationService } from '@src/notification/services/notification.service';
 import { ChatRoomRepository } from './../repositories/chats-room.repository';
 import { CreateChatsDto } from './../dtos/create-chats.dto';
@@ -17,6 +18,7 @@ export class ChatsService {
     private readonly chatRoomRepository: ChatRoomRepository,
     private readonly eventsGateway: EventsGateway,
     private readonly notificationService: NotificationService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async createChats(
@@ -39,6 +41,15 @@ export class ChatsService {
     };
 
     const chat = await this.chatsRepository.createChats(chatInpuData);
+
+    const isUserBlockLecturer =
+      await this.prismaService.blockedLecturer.findFirst({
+        where: { ...sender, ...receiver },
+      });
+
+    if (isUserBlockLecturer) {
+      return;
+    }
 
     const chatRoom = await this.chatRoomRepository.getChatRoomWithChatRoomId(
       roomObjectId,

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
 import { AuthOAuthService } from '@src/auth/services/auth-oauth.service';
 import { AuthTokenService } from '@src/auth/services/auth-token.service';
 import { Token } from '@src/common/interface/common-interface';
@@ -9,6 +9,8 @@ import { GetUserResponse } from '@src/auth/interface/interface';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiSignInGoogle } from '@src/auth/swagger-decorators/oauth/sign-in-google-decorator';
 import { ApiSignInNaver } from '../swagger-decorators/oauth/sign-in-naver-decorator';
+import { OAuthProvider } from '../constants/const';
+import { ProviderValidator } from '../validators/auth-provider.validator';
 
 @ApiTags('OAuth')
 @Controller('auth/oauth')
@@ -19,13 +21,14 @@ export class AuthOAuthController {
   ) {}
 
   @ApiSignInKakao()
-  @Get('/signin/kakao')
-  async signInKakao(
+  @Get('/signin/:provider')
+  async signIn(
     @Query('access-token') accessToken: string,
+    @Param('provider', ProviderValidator) provider: OAuthProvider,
     @Res({ passthrough: true }) response: Response,
   ) {
     const user: GetUserResponse = await this.authOAuthService.signIn(
-      'KAKAO',
+      provider,
       accessToken,
     );
 
@@ -33,68 +36,7 @@ export class AuthOAuthController {
       return {
         statusCode: HttpStatus.CREATED,
         authEmail: user.userEmail,
-        signUpType: 'KAKAO',
-      };
-    } else {
-      const token: Token = await this.authTokenService.generateToken(
-        { userId: user.userId },
-        TokenTypes.User,
-      );
-
-      response.cookie('refreshToken', token.refreshToken, {
-        httpOnly: true,
-      });
-
-      return { userAccessToken: token.accessToken };
-    }
-  }
-  @ApiSignInGoogle()
-  @Get('/signin/google')
-  async signInGoogle(
-    @Query('access-token') accessToken: string,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const user: GetUserResponse = await this.authOAuthService.signIn(
-      'GOOGLE',
-      accessToken,
-    );
-
-    if (user.userEmail) {
-      return {
-        statusCode: HttpStatus.CREATED,
-        authEmail: user.userEmail,
-        signUpType: 'GOOGLE',
-      };
-    } else {
-      const token: Token = await this.authTokenService.generateToken(
-        { userId: user.userId },
-        TokenTypes.User,
-      );
-
-      response.cookie('refreshToken', token.refreshToken, {
-        httpOnly: true,
-      });
-
-      return { userAccessToken: token.accessToken };
-    }
-  }
-
-  @ApiSignInNaver()
-  @Get('/signin/naver')
-  async signInNaver(
-    @Query('access-token') accessToken: string,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const user: GetUserResponse = await this.authOAuthService.signIn(
-      'NAVER',
-      accessToken,
-    );
-
-    if (user.userEmail) {
-      return {
-        statusCode: HttpStatus.CREATED,
-        authEmail: user.userEmail,
-        signUpType: 'NAVER',
+        signUpType: provider,
       };
     } else {
       const token: Token = await this.authTokenService.generateToken(
