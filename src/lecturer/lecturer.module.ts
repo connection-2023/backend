@@ -12,6 +12,7 @@ import { LecturerBlockController } from './controllers/lecturer-block.controller
 import { PopularLecturerService } from './services/popular-lecturer.service';
 import { PopularLecturerRepository } from './repositories/popular-lecturer.repository';
 import { PopularLecturerController } from './controllers/popular-lecturer.controller';
+import { LectureLikeRepository } from '@src/lecture/repositories/lecture-like.repository';
 
 @Module({
   providers: [
@@ -23,8 +24,8 @@ import { PopularLecturerController } from './controllers/popular-lecturer.contro
     LecturerBlockRepository,
     PopularLecturerService,
     PopularLecturerRepository,
+    LectureLikeRepository,
   ],
-  exports: [LecturerRepository],
   controllers: [
     LecturerController,
     LecturerLikeController,

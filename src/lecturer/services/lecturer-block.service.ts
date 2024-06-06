@@ -1,3 +1,5 @@
+import { LectureLikeRepository } from './../../lecture/repositories/lecture-like.repository';
+import { LecturerLikeRepository } from './../repositories/lecturer-like.repository';
 import { Injectable } from '@nestjs/common';
 import { LecturerBlockRepository } from '../repositories/lecturer-block.repository';
 
@@ -5,9 +7,17 @@ import { LecturerBlockRepository } from '../repositories/lecturer-block.reposito
 export class LecturerBlockService {
   constructor(
     private readonly lecturerBlockRepository: LecturerBlockRepository,
+    private readonly lecturerLikeRepository: LecturerLikeRepository,
+    private readonly lectureLikeRepository: LectureLikeRepository,
   ) {}
 
   async createLecturerBlock(lecturerId: number, userId: number) {
+    await this.lecturerLikeRepository.deleteLecturerLike(lecturerId, userId);
+    await this.lectureLikeRepository.deleteUserLikeLectureByUserIdAndLecturerId(
+      userId,
+      lecturerId,
+    );
+
     return await this.lecturerBlockRepository.createLecturerBlock(
       lecturerId,
       userId,
