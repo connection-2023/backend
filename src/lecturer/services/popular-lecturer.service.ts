@@ -54,10 +54,10 @@ export class PopularLecturerService {
           }
         });
 
-        const topFivePopularScores = popularScores.slice(0, 6);
+        const topEightPopularScores = popularScores.slice(0, 8);
         const popularLecturers = [];
 
-        for (const popularLecturer of topFivePopularScores) {
+        for (const popularLecturer of topEightPopularScores) {
           const lecturer =
             await this.popularLecturerRepository.trxReadLecturerWithLecturerId(
               trasaction,
