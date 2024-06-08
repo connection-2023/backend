@@ -46,7 +46,7 @@ export class PopularLectureService {
 
         const sortedPopularScores = this.sortPopularScores(popularScores);
 
-        const topFivePopularScores = sortedPopularScores.slice(0, 6);
+        const topFivePopularScores = sortedPopularScores.slice(0, 5);
 
         const popularLectures = [];
 
