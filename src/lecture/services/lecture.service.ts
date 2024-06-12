@@ -54,6 +54,7 @@ import { EnrolledLectureScheduleDto } from '../dtos/last-regist-schedule.dto';
 import { PaymentOrderStatus } from '@src/payments/constants/enum';
 import { plainToInstance } from 'class-transformer';
 import { LikedLecturerNewLectureEvent } from '@src/notification/events/notification.event';
+import { DateUtils } from '@src/common/utils/date.utils';
 
 @Injectable()
 export class LectureService {
@@ -573,8 +574,8 @@ export class LectureService {
     userId: number,
     { year, month }: ReadManyEnrollLectureQueryDto,
   ) {
-    const startDate = new Date(year, month - 1, 2, -15);
-    const endDate = new Date(year, month, 1, 8, 59, 59, 999);
+    const { convertedStartDate, convertedEndDate } =
+      DateUtils.getUTCStartAndEndOfMonth(year, month - 1);
 
     const existEnrollLecture = await this.prismaService.reservation.findFirst({
       where: { userId, isEnabled: true },
@@ -585,15 +586,15 @@ export class LectureService {
 
     const onedaySchedules = await this.lectureRepository.getEnrollSchedule(
       userId,
-      startDate,
-      endDate,
+      convertedStartDate,
+      convertedEndDate,
     );
 
     const regularSchedules =
       await this.lectureRepository.getEnrollRegularSchedule(
         userId,
-        startDate,
-        endDate,
+        convertedStartDate,
+        convertedEndDate,
       );
 
     const schedules = [...onedaySchedules, ...regularSchedules];
@@ -630,12 +631,12 @@ export class LectureService {
   ) {
     const where = { lecture: { lecturerId } };
     const { year, month } = query;
-    const startDate = new Date(year, month - 1, 2, -15);
-    const endDate = new Date(year, month, 1, 8, 59, 59, 999);
+    const { convertedStartDate, convertedEndDate } =
+      DateUtils.getUTCStartAndEndOfMonth(year, month - 1);
 
     where['startDateTime'] = {
-      gte: startDate,
-      lte: endDate,
+      gte: convertedStartDate,
+      lte: convertedEndDate,
     };
 
     return await this.lectureRepository.readManyLectureSchedulesWithLecturerId(
@@ -644,13 +645,12 @@ export class LectureService {
   }
 
   async readManyDailySchedulesWithLecturerId(lecturerId: number, date: Date) {
-    const startDate = new Date(date);
-    const endDate = new Date(date);
-    endDate.setHours(32, 59, 59, 999);
+    const { convertedStartDate, convertedEndDate } =
+      DateUtils.getUTCStartAndEndOfRange(new Date(date), new Date(date));
 
     const where = {
       lecture: { lecturerId, deletedAt: null },
-      startDateTime: { gte: startDate, lte: endDate.toISOString() },
+      startDateTime: { gte: convertedStartDate, lte: convertedEndDate },
     };
 
     return await this.lectureRepository.readManyDailySchedulesWithLecturerId(
