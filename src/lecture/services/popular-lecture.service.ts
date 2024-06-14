@@ -46,11 +46,11 @@ export class PopularLectureService {
 
         const sortedPopularScores = this.sortPopularScores(popularScores);
 
-        const topFivePopularScores = sortedPopularScores.slice(0, 5);
+        const topEightPopularScores = sortedPopularScores.slice(0, 8);
 
         const popularLectures = [];
 
-        for (const popularLecture of topFivePopularScores) {
+        for (const popularLecture of topEightPopularScores) {
           const lecture =
             await this.popularLectureRepository.trxReadLectureWithUserId(
               trasaction,

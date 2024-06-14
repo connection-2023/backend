@@ -2,7 +2,6 @@ import { PopularLectureService } from './../services/popular-lecture.service';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { GetAuthorizedUser } from '@src/common/decorator/get-user.decorator';
-import { UserAccessTokenGuard } from '@src/common/guards/user-access-token.guard';
 import { ValidateResult } from '@src/common/interface/common-interface';
 import { ApiReadManyPopularLecturesWithUserId } from '../swagger-decorators/read-many-popular-lecture-with-user-id.decorator';
 import { SetResponseKey } from '@src/common/decorator/set-response-meta-data.decorator';
