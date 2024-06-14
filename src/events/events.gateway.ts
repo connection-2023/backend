@@ -1,5 +1,3 @@
-import { Inject } from '@nestjs/common';
-import { ChatsRepository } from './../chats/repositories/chats.repository';
 import {
   ConnectedSocket,
   MessageBody,
