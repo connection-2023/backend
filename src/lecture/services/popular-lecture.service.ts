@@ -18,7 +18,7 @@ export class PopularLectureService {
       ? (where['lecturer'] = { blockedLecturer: { none: { userId } } })
       : false;
 
-    const lectures = await trasaction.lecture.findMany({
+    const lectures = await this.prismaService.lecture.findMany({
       where,
       select: { id: true },
     });
@@ -26,12 +26,10 @@ export class PopularLectureService {
     for (const lecture of lectures) {
       const reservationCount =
         await this.popularLectureRepository.trxReadLectureReservationCount(
-          trasaction,
           lecture.id,
         );
       const likesCount =
         await this.popularLectureRepository.trxReadLectureLikesCount(
-          trasaction,
           lecture.id,
         );
       const popularScore = this.createPopularScore(
@@ -51,7 +49,6 @@ export class PopularLectureService {
     for (const popularLecture of topEightPopularScores) {
       const lecture =
         await this.popularLectureRepository.trxReadLectureWithUserId(
-          trasaction,
           popularLecture.id,
           userId,
         );

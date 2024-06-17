@@ -7,27 +7,20 @@ import { Lecturer } from '@prisma/client';
 export class PopularLecturerRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async trxReadLecturerReservationCount(
-    trasaction: PrismaTransaction,
-    lecturerId: number,
-  ): Promise<number> {
-    return await trasaction.reservation.count({
+  async trxReadLecturerReservationCount(lecturerId: number): Promise<number> {
+    return await this.prismaService.reservation.count({
       where: { lectureSchedule: { lecture: { lecturerId } } },
     });
   }
 
-  async trxReadLecturerLikesCount(
-    trasaction: PrismaTransaction,
-    lecturerId: number,
-  ): Promise<number> {
-    return await trasaction.likedLecturer.count({ where: { lecturerId } });
+  async trxReadLecturerLikesCount(lecturerId: number): Promise<number> {
+    return await this.prismaService.likedLecturer.count({
+      where: { lecturerId },
+    });
   }
 
-  async trxReadLecturerWithLecturerId(
-    transaction: PrismaTransaction,
-    lecturerId: number,
-  ): Promise<Lecturer> {
-    return await transaction.lecturer.findFirst({
+  async trxReadLecturerWithLecturerId(lecturerId: number): Promise<Lecturer> {
+    return await this.prismaService.lecturer.findFirst({
       where: { id: lecturerId },
       include: { lecturerProfileImageUrl: true },
     });
