@@ -1,7 +1,6 @@
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PopularLecturerRepository } from './../repositories/popular-lecturer.repository';
 import { Injectable } from '@nestjs/common';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 
 @Injectable()
@@ -24,11 +23,11 @@ export class PopularLecturerService {
 
     for (const lecturer of lecturers) {
       const reservationCount =
-        await this.popularLecturerRepository.trxReadLecturerReservationCount(
+        await this.popularLecturerRepository.readLecturerReservationCount(
           lecturer.id,
         );
       const likesCount =
-        await this.popularLecturerRepository.trxReadLecturerLikesCount(
+        await this.popularLecturerRepository.readLecturerLikesCount(
           lecturer.id,
         );
       const popularScore = this.createPopularScore(
@@ -47,7 +46,7 @@ export class PopularLecturerService {
 
     for (const popularLecturer of topTenPopularScores) {
       const lecturer =
-        await this.popularLecturerRepository.trxReadLecturerWithLecturerId(
+        await this.popularLecturerRepository.readLecturerWithLecturerId(
           popularLecturer.id,
         );
 

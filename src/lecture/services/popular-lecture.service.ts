@@ -25,13 +25,11 @@ export class PopularLectureService {
 
     for (const lecture of lectures) {
       const reservationCount =
-        await this.popularLectureRepository.trxReadLectureReservationCount(
+        await this.popularLectureRepository.readLectureReservationCount(
           lecture.id,
         );
       const likesCount =
-        await this.popularLectureRepository.trxReadLectureLikesCount(
-          lecture.id,
-        );
+        await this.popularLectureRepository.readLectureLikesCount(lecture.id);
       const popularScore = this.createPopularScore(
         lecture.id,
         reservationCount,
@@ -47,11 +45,10 @@ export class PopularLectureService {
     const popularLectures = [];
 
     for (const popularLecture of topEightPopularScores) {
-      const lecture =
-        await this.popularLectureRepository.trxReadLectureWithUserId(
-          popularLecture.id,
-          userId,
-        );
+      const lecture = await this.popularLectureRepository.readLectureWithUserId(
+        popularLecture.id,
+        userId,
+      );
 
       popularLectures.push(new LectureDto(lecture));
     }

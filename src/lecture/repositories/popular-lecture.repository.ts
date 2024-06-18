@@ -6,19 +6,19 @@ import { PrismaService } from '@src/prisma/prisma.service';
 export class PopularLectureRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async trxReadLectureReservationCount(lectureId: number): Promise<number> {
+  async readLectureReservationCount(lectureId: number): Promise<number> {
     return await this.prismaService.reservation.count({
       where: { lectureSchedule: { lectureId } },
     });
   }
 
-  async trxReadLectureLikesCount(lectureId: number): Promise<number> {
+  async readLectureLikesCount(lectureId: number): Promise<number> {
     return await this.prismaService.likedLecture.count({
       where: { lectureId },
     });
   }
 
-  async trxReadLectureWithUserId(
+  async readLectureWithUserId(
     lectureId: number,
     userId?: number,
   ): Promise<Lecture> {
@@ -44,7 +44,7 @@ export class PopularLectureRepository {
     });
   }
 
-  async trxReadLecture(lectureId: number): Promise<Lecture> {
+  async readLecture(lectureId: number): Promise<Lecture> {
     return await this.prismaService.lecture.findFirst({
       where: { id: lectureId, isActive: true },
       include: {
