@@ -1,4 +1,3 @@
-import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { Injectable } from '@nestjs/common';
 import { Lecture, Reservation } from '@prisma/client';
 import { PrismaService } from '@src/prisma/prisma.service';
@@ -7,24 +6,19 @@ import { PrismaService } from '@src/prisma/prisma.service';
 export class PopularLectureRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async trxReadLectureReservationCount(
-    trasaction: PrismaTransaction,
-    lectureId: number,
-  ): Promise<number> {
-    return await trasaction.reservation.count({
+  async readLectureReservationCount(lectureId: number): Promise<number> {
+    return await this.prismaService.reservation.count({
       where: { lectureSchedule: { lectureId } },
     });
   }
 
-  async trxReadLectureLikesCount(
-    trasaction: PrismaTransaction,
-    lectureId: number,
-  ): Promise<number> {
-    return await trasaction.likedLecture.count({ where: { lectureId } });
+  async readLectureLikesCount(lectureId: number): Promise<number> {
+    return await this.prismaService.likedLecture.count({
+      where: { lectureId },
+    });
   }
 
-  async trxReadLectureWithUserId(
-    transaction: PrismaTransaction,
+  async readLectureWithUserId(
     lectureId: number,
     userId?: number,
   ): Promise<Lecture> {
@@ -44,17 +38,14 @@ export class PopularLectureRepository {
 
     userId ? (include['likedLecture'] = { where: { userId } }) : false;
 
-    return await transaction.lecture.findFirst({
+    return await this.prismaService.lecture.findFirst({
       where: { id: lectureId, isActive: true },
       include,
     });
   }
 
-  async trxReadLecture(
-    transaction: PrismaTransaction,
-    lectureId: number,
-  ): Promise<Lecture> {
-    return await transaction.lecture.findFirst({
+  async readLecture(lectureId: number): Promise<Lecture> {
+    return await this.prismaService.lecture.findFirst({
       where: { id: lectureId, isActive: true },
       include: {
         lecturer: true,
