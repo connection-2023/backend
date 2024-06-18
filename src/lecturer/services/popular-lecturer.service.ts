@@ -42,7 +42,7 @@ export class PopularLecturerService {
 
     const sortedPopularScores = this.sortPopularScores(popularScores);
 
-    const topTenPopularScores = popularScores.slice(0, 10);
+    const topTenPopularScores = sortedPopularScores.slice(0, 10);
     const popularLecturers = [];
 
     for (const popularLecturer of topTenPopularScores) {
