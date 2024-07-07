@@ -59,10 +59,9 @@ export class PaymentsRepository {
     lectureId: number,
     couponId: number,
     isStackable: boolean,
+    currentDate: Date = new Date(),
   ): Promise<LectureCoupon> {
     try {
-      const currentDate = generateCurrentTime();
-
       return await this.prismaService.lectureCoupon.findFirst({
         where: {
           id: couponId,
