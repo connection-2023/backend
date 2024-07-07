@@ -1,7 +1,6 @@
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PopularLecturerRepository } from './../repositories/popular-lecturer.repository';
 import { Injectable } from '@nestjs/common';
-import { PrismaTransaction } from '@src/common/interface/common-interface';
 import { LecturerDto } from '@src/common/dtos/lecturer.dto';
 
 @Injectable()
@@ -12,63 +11,76 @@ export class PopularLecturerService {
   ) {}
 
   async readManyPopularLecturer(userId?: number): Promise<LecturerDto[]> {
-    return await this.prismaService.$transaction(
-      async (trasaction: PrismaTransaction) => {
-        const where = { deletedAt: null };
+    const where = { deletedAt: null };
 
-        userId ? (where['blockedLecturer'] = { none: { userId } }) : false;
+    userId ? (where['blockedLecturer'] = { none: { userId } }) : false;
 
-        const popularScores = [];
-        const lecturers = await trasaction.lecturer.findMany({
-          where,
-          select: { id: true },
-        });
+    const popularScores = [];
+    const lecturers = await this.prismaService.lecturer.findMany({
+      where,
+      select: { id: true },
+    });
 
-        for (const lecturer of lecturers) {
-          const reservationCount =
-            await this.popularLecturerRepository.trxReadLecturerReservationCount(
-              trasaction,
-              lecturer.id,
-            );
-          const likesCount =
-            await this.popularLecturerRepository.trxReadLecturerLikesCount(
-              trasaction,
-              lecturer.id,
-            );
-          const popularScore = {
-            id: lecturer.id,
-            reservationCount,
-            likesCount,
-            score:
-              Math.round((reservationCount * 0.6 + likesCount * 0.4) * 100) /
-              100,
-          };
-          popularScores.push(popularScore);
-        }
+    for (const lecturer of lecturers) {
+      const reservationCount =
+        await this.popularLecturerRepository.readLecturerReservationCount(
+          lecturer.id,
+        );
+      const likesCount =
+        await this.popularLecturerRepository.readLecturerLikesCount(
+          lecturer.id,
+        );
+      const popularScore = this.createPopularScore(
+        lecturer.id,
+        reservationCount,
+        likesCount,
+      );
 
-        popularScores.sort((a, b) => {
-          if (a.score !== b.score) {
-            return b.score - a.score;
-          } else {
-            return b.reservationCount - a.reservationCount;
-          }
-        });
+      popularScores.push(popularScore);
+    }
 
-        const topTenPopularScores = popularScores.slice(0, 10);
-        const popularLecturers = [];
+    const sortedPopularScores = this.sortPopularScores(popularScores);
 
-        for (const popularLecturer of topTenPopularScores) {
-          const lecturer =
-            await this.popularLecturerRepository.trxReadLecturerWithLecturerId(
-              trasaction,
-              popularLecturer.id,
-            );
+    const topTenPopularScores = sortedPopularScores.slice(0, 10);
+    const popularLecturers = [];
 
-          popularLecturers.push(new LecturerDto(lecturer));
-        }
+    for (const popularLecturer of topTenPopularScores) {
+      const lecturer =
+        await this.popularLecturerRepository.readLecturerWithLecturerId(
+          popularLecturer.id,
+        );
 
-        return popularLecturers;
-      },
-    );
+      popularLecturers.push(new LecturerDto(lecturer));
+    }
+
+    return popularLecturers;
+  }
+
+  private createPopularScore(
+    lecturerId: number,
+    reservationCount: number,
+    likesCount: number,
+  ) {
+    const popularScore = {
+      id: lecturerId,
+      reservationCount,
+      likesCount,
+      score:
+        Math.round((reservationCount * 0.6 + likesCount * 0.4) * 100) / 100,
+    };
+
+    return popularScore;
+  }
+
+  private sortPopularScores(popularScores) {
+    popularScores.sort((a, b) => {
+      if (a.score !== b.score) {
+        return b.score - a.score;
+      } else {
+        return b.reservationCount - a.reservationCount;
+      }
+    });
+
+    return popularScores;
   }
 }

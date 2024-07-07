@@ -12,58 +12,48 @@ export class PopularLectureService {
   ) {}
 
   async readPopularLecture(userId?: number): Promise<LectureDto[]> {
-    return await this.prismaService.$transaction(
-      async (trasaction: PrismaTransaction) => {
-        const popularScores = [];
-        const where = { isActive: true };
-        userId
-          ? (where['lecturer'] = { blockedLecturer: { none: { userId } } })
-          : false;
+    const popularScores = [];
+    const where = { isActive: true };
+    userId
+      ? (where['lecturer'] = { blockedLecturer: { none: { userId } } })
+      : false;
 
-        const lectures = await trasaction.lecture.findMany({
-          where,
-          select: { id: true },
-        });
+    const lectures = await this.prismaService.lecture.findMany({
+      where,
+      select: { id: true },
+    });
 
-        for (const lecture of lectures) {
-          const reservationCount =
-            await this.popularLectureRepository.trxReadLectureReservationCount(
-              trasaction,
-              lecture.id,
-            );
-          const likesCount =
-            await this.popularLectureRepository.trxReadLectureLikesCount(
-              trasaction,
-              lecture.id,
-            );
-          const popularScore = this.createPopularScore(
-            lecture.id,
-            reservationCount,
-            likesCount,
-          );
-          popularScores.push(popularScore);
-        }
+    for (const lecture of lectures) {
+      const reservationCount =
+        await this.popularLectureRepository.readLectureReservationCount(
+          lecture.id,
+        );
+      const likesCount =
+        await this.popularLectureRepository.readLectureLikesCount(lecture.id);
+      const popularScore = this.createPopularScore(
+        lecture.id,
+        reservationCount,
+        likesCount,
+      );
+      popularScores.push(popularScore);
+    }
 
-        const sortedPopularScores = this.sortPopularScores(popularScores);
+    const sortedPopularScores = this.sortPopularScores(popularScores);
 
-        const topEightPopularScores = sortedPopularScores.slice(0, 8);
+    const topEightPopularScores = sortedPopularScores.slice(0, 8);
 
-        const popularLectures = [];
+    const popularLectures = [];
 
-        for (const popularLecture of topEightPopularScores) {
-          const lecture =
-            await this.popularLectureRepository.trxReadLectureWithUserId(
-              trasaction,
-              popularLecture.id,
-              userId,
-            );
+    for (const popularLecture of topEightPopularScores) {
+      const lecture = await this.popularLectureRepository.readLectureWithUserId(
+        popularLecture.id,
+        userId,
+      );
 
-          popularLectures.push(new LectureDto(lecture));
-        }
+      popularLectures.push(new LectureDto(lecture));
+    }
 
-        return popularLectures;
-      },
-    );
+    return popularLectures;
   }
 
   private createPopularScore(
