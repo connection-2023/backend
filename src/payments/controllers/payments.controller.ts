@@ -31,15 +31,15 @@ import { ApiPayments } from './swagger/payments.swagger';
 import { PaymentResultDto } from '../dtos/response/payment-result.dto';
 import { HandleDepositStatusDto } from '../dtos/request/handle-deposit-status.dto';
 import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
-import { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
 
 @ApiTags('결제')
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+  @Get('test')
+  async test() {
+    return this.paymentsService.test();
+  }
 
   @ApiPayments.GetPaymentResult({ summary: '결제 결과 조회' })
   @SetResponseKey('paymentResult')

@@ -14,10 +14,11 @@
     "start:prod": "TZ=Asia/Seoul node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
-    "test:watch": "jest --watch",
+    "test:watch": "jest --watch --detectOpenHandles",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --testPathPattern=test/e2e"
+    "test:e2e": "jest --testPathPattern=test/e2e",
+    "test:unit": "jest --testPathPattern=test/unit --detectOpenHandles"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.10.0",

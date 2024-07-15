@@ -4,6 +4,7 @@ import { SearchService } from '@src/search/services/search.service';
 import { PrismaService } from '@src/prisma/prisma.service';
 import { PaginatedResponse } from '@src/common/types/type';
 import { SearchRepository } from '@src/search/repository/search.repository';
+import { SearchHitsMetadata } from '@elastic/elasticsearch/lib/api/types';
 
 describe('SearchService', () => {
   let service: SearchService;
@@ -40,7 +41,7 @@ describe('SearchService', () => {
           { _source: { id: 1, name: 'Item 1' } },
           { _source: { id: 2, name: 'Item 2' } },
         ],
-      };
+      } as unknown as SearchHitsMetadata<unknown>;
 
       const result = service.generateESResponse(hits, 'items');
       const expected: PaginatedResponse<{ id: number; name: string }, 'items'> =
@@ -59,7 +60,7 @@ describe('SearchService', () => {
       const hits = {
         total: { value: 0 },
         hits: [],
-      };
+      } as unknown as SearchHitsMetadata<unknown>;
 
       const result = service.generateESResponse(hits, 'items');
       const expected: PaginatedResponse<{ id: number; name: string }, 'items'> =

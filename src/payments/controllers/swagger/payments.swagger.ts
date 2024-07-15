@@ -318,4 +318,10 @@ export const ApiPayments: ApiOperator<keyof PaymentsController> = {
       ),
     );
   },
+  Test: function (
+    apiOperationOptions: Required<Pick<Partial<OperationObject>, 'summary'>> &
+      Partial<OperationObject>,
+  ): PropertyDecorator {
+    throw new Error('Function not implemented.');
+  },
 };

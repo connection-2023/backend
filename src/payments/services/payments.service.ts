@@ -390,7 +390,11 @@ export class PaymentsService {
   //적용할 쿠폰이 올바른지 확인
   private async checkApplicableCoupon(
     userId: number,
-    { lectureId, couponId, stackableCouponId }: CreateLecturePaymentWithTossDto,
+    {
+      lectureId,
+      couponId,
+      stackableCouponId,
+    }: Partial<CreateLecturePaymentWithTossDto>,
   ) {
     const [coupon, stackableCoupon] = await Promise.all([
       couponId &&
@@ -1739,5 +1743,15 @@ export class PaymentsService {
     if (convertedStatus === PaymentOrderStatus.EXPIRED) {
       await this.cancelPayment(orderId, convertedStatus);
     }
+  }
+
+  async test() {
+    await this.checkApplicableCoupon(1, {
+      lectureId: 290,
+      couponId: 378,
+      stackableCouponId: 374,
+    });
+
+    return 'test';
   }
 }
