@@ -4,8 +4,11 @@ import { LectureCoupon } from '@prisma/client';
 export interface ICoupon {
   validateUsageCount(): void;
   applyDiscount(price: number): number;
+  readonly id: number;
   readonly percentage: number;
   readonly discountPrice: number;
+  readonly maxDiscountPrice: number;
+  readonly title: string;
 }
 
 export default class Coupon implements Coupon {
@@ -66,7 +69,20 @@ export default class Coupon implements Coupon {
   get percentage(): number {
     return this._percentage;
   }
+
   get discountPrice(): number {
     return this._discountPrice;
+  }
+
+  get id(): number {
+    return this._id;
+  }
+
+  get title(): string {
+    return this._title;
+  }
+
+  get maxDiscountPrice(): number {
+    return this._maxDiscountPrice;
   }
 }

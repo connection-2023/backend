@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { ICoupon } from '@src/coupon/coupon';
 
 export default class PaymentCoupons {
@@ -62,5 +63,42 @@ export default class PaymentCoupons {
         'PaymentAmountMismatch',
       );
     }
+  }
+
+  getPaymentCouponUsageData(
+    paymentId: number,
+  ): Prisma.PaymentCouponUsageUncheckedCreateInput {
+    const data: Prisma.PaymentCouponUsageUncheckedCreateInput = {
+      paymentId,
+    };
+
+    const addCouponData = (coupon: ICoupon | null, prefix: string = '') => {
+      if (coupon) {
+        data[`${prefix}Id`] = coupon.id;
+        data[`${prefix}Title`] = coupon.title;
+        data[`${prefix}Percentage`] = coupon.percentage;
+        data[`${prefix}DiscountPrice`] = coupon.discountPrice;
+        data[`${prefix}MaxDiscountPrice`] = coupon.maxDiscountPrice;
+      }
+    };
+
+    addCouponData(this._coupon, 'coupon');
+    addCouponData(this._stackableCoupon, 'stackableCoupon');
+
+    return data;
+  }
+
+  get couponIds(): number[] {
+    return [this._coupon?.id, this._stackableCoupon?.id].filter(
+      (id) => id !== undefined,
+    );
+  }
+
+  get coupon(): ICoupon | null {
+    return this._coupon;
+  }
+
+  get stackableCoupon(): ICoupon | null {
+    return this._stackableCoupon;
   }
 }

@@ -43,12 +43,14 @@ import {
   Payment,
   PaymentProductType,
   PaymentStatus,
+  Prisma,
   RegularLectureSchedule,
   RegularLectureStatus,
   UserBankAccount,
   UserCoupon,
 } from '@prisma/client';
 import { generateCurrentTime } from '@src/common/utils/generate-current-time';
+import Coupon from '@src/coupon/coupon';
 
 @Injectable()
 export class PaymentsRepository {
@@ -60,9 +62,9 @@ export class PaymentsRepository {
     couponId: number,
     isStackable: boolean,
     currentDate: Date = new Date(),
-  ): Promise<LectureCoupon> {
+  ): Promise<Coupon> {
     try {
-      return await this.prismaService.lectureCoupon.findFirst({
+      const coupon = await this.prismaService.lectureCoupon.findFirst({
         where: {
           id: couponId,
           userCoupon: {
@@ -80,6 +82,8 @@ export class PaymentsRepository {
           },
         },
       });
+
+      return coupon ? new Coupon(coupon) : null;
     } catch (error) {
       throw new InternalServerErrorException(
         `Prisma 유저 쿠폰 조회 실패: ${error}`,
@@ -314,7 +318,7 @@ export class PaymentsRepository {
 
   async trxCreatePaymentCouponUsage(
     transaction: PrismaTransaction,
-    paymentCouponUsageInputData,
+    paymentCouponUsageInputData: Prisma.PaymentCouponUsageUncheckedCreateInput,
   ) {
     try {
       await transaction.paymentCouponUsage.create({

@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { LectureCoupon } from '@prisma/client';
 import Coupon from '@src/coupon/coupon';
 
@@ -33,12 +34,19 @@ describe('Coupon', () => {
   describe('validateUsageCount', () => {
     it('사용횟수가 초과되지 않았다면 오류가 발생하지 않아야 한다.', () => {
       const coupon = generateCoupon({ usageCount: 0, maxUsageCount: 10 });
+
       expect(() => coupon.validateUsageCount()).not.toThrow();
     });
 
     it('사용횟수가 초과되었다면 오류가 발생해야 한다.', () => {
       const coupon = generateCoupon({ usageCount: 10, maxUsageCount: 10 });
-      expect(() => coupon.validateUsageCount()).toThrow();
+
+      expect(() => coupon.validateUsageCount()).toThrow(
+        new BadRequestException(
+          `쿠폰 사용 제한 횟수를 초과했습니다.`,
+          'CouponLimit',
+        ),
+      );
     });
   });
 

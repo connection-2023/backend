@@ -36,10 +36,6 @@ import { HandlePaymentDto } from '../dtos/request/handle-payment.dto';
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
-  @Get('test')
-  async test() {
-    return this.paymentsService.test();
-  }
 
   @ApiPayments.GetPaymentResult({ summary: '결제 결과 조회' })
   @SetResponseKey('paymentResult')
