@@ -1,4 +1,4 @@
-import { Type } from '@nestjs/common';
+import { ApiPropertyOptions } from '@nestjs/swagger';
 import { ApiErrorResponse } from '../interface/common-interface';
 
 export const SwaggerApiResponse: any = {
@@ -13,11 +13,17 @@ export const SwaggerApiResponse: any = {
     };
   },
 
-  exception: (responses: ApiErrorResponse[]) => {
+  exception: (
+    responses: ApiErrorResponse[],
+    options: Omit<ApiPropertyOptions, 'name' | 'type'> = {},
+  ) => {
+    const { isArray } = options;
     const examples = {};
 
     responses.forEach(({ name, example }) => {
-      examples[name] = { value: example };
+      examples[name] = isArray
+        ? { value: { errors: [example] } }
+        : { value: example };
     });
 
     return {
